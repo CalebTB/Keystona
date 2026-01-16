@@ -1,70 +1,18 @@
+# Ignore everything
+*
+
+# Except hometrack_mobile folder
+!hometrack_mobile/
+!hometrack_mobile/**
+
+# But ignore build artifacts and dependencies inside hometrack_mobile
+hometrack_mobile/build/
+hometrack_mobile/.dart_tool/
+hometrack_mobile/.flutter-plugins
+hometrack_mobile/.flutter-plugins-dependencies
+hometrack_mobile/.packages
+hometrack_mobile/.pub-cache/
+hometrack_mobile/.pub/
+
 # macOS
 .DS_Store
-.AppleDouble
-.LSOverride
-Icon
-._*
-.DocumentRevisions-V100
-.fseventsd
-.Spotlight-V100
-.TemporaryItems
-.Trashes
-.VolumeIcon.icns
-.com.apple.timemachine.donotpresent
-.AppleDB
-.AppleDesktop
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.project
-.classpath
-.settings/
-
-# Temporary files
-*.tmp
-*.temp
-*.bak
-*.backup
-~$*
-
-# Office temporary files
-~$*.doc*
-~$*.xls*
-~$*.ppt*
-.~lock.*
-
-# Log files
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Environment files
-.env
-.env.local
-.env.development
-.env.production
-
-# Claude Code
-.claude/mcp_logs/
-
-# Build output directories (if any documentation builds are added)
-dist/
-build/
-out/
-
-# Dependencies (if any tools are added)
-node_modules/
-.npm/
-.yarn/
-
-# Keep all documentation and specs
-!*.md
-!*.html
-!*.docx
-!.claude/agents/
-!.claude/skills/
