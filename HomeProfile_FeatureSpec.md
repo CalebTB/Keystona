@@ -1,7 +1,7 @@
 # Home Profile
 ## Complete Feature Specification
 
-**HomeTrack MVP — Core Feature #2**  
+**Keystona MVP — Core Feature #2**  
 *Version 1.0 | January 2026*
 
 ---
@@ -27,7 +27,7 @@
 
 ### 1.1 Purpose
 
-The Home Profile is the central hub of HomeTrack—a comprehensive digital record of everything about your home. It captures property details, tracks every major system and appliance, monitors their age against expected lifespan, and provides visual documentation. Think of it as your home's permanent medical record.
+The Home Profile is the central hub of Keystona—a comprehensive digital record of everything about your home. It captures property details, tracks every major system and appliance, monitors their age against expected lifespan, and provides visual documentation. Think of it as your home's permanent medical record.
 
 ### 1.2 Problem Statement
 

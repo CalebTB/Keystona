@@ -1,7 +1,7 @@
 # Emergency Hub
 ## Complete Feature Specification
 
-**HomeTrack MVP — Core Feature #4**  
+**Keystona MVP — Core Feature #4**  
 *Version 1.0 | January 2026*
 
 ---
@@ -28,7 +28,7 @@
 
 ### 1.1 Purpose
 
-The Emergency Hub is a centralized, **offline-capable** repository for critical home emergency information. When disaster strikes—a burst pipe, gas leak, or electrical fire—homeowners need instant access to shutoff locations, emergency contacts, and insurance details, even without internet connectivity. This is HomeTrack's key differentiator: **no competitor executes offline emergency access well**.
+The Emergency Hub is a centralized, **offline-capable** repository for critical home emergency information. When disaster strikes—a burst pipe, gas leak, or electrical fire—homeowners need instant access to shutoff locations, emergency contacts, and insurance details, even without internet connectivity. This is Keystona's key differentiator: **no competitor executes offline emergency access well**.
 
 ### 1.2 Problem Statement
 

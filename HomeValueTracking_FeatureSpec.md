@@ -1,7 +1,7 @@
 # Home Value Tracking
 ## Complete Feature Specification
 
-**HomeTrack MVP — Core Feature #5**  
+**Keystona MVP — Core Feature #5**  
 *Version 1.0 | January 2026*
 
 ---
@@ -968,7 +968,7 @@ Home Value is a Premium feature:
 │                                                                 │
 │  ─────────────────────────────────────────────────────────────  │
 │                                                                 │
-│  Included with HomeTrack Premium                                │
+│  Included with Keystona Premium                                │
 │  $7.99/month                                                    │
 │                                                                 │
 │                    [Upgrade to Premium]                         │
@@ -1491,7 +1491,7 @@ Plaid Liabilities API enables automatic mortgage balance sync, eliminating manua
 | **HomeZada** | Manual + Zillow | Dated, not integrated |
 | **Trulia** | Zillow-powered | Zillow acquisition |
 
-### HomeTrack Differentiation
+### Keystona Differentiation
 
 1. **Honest about limitations** — Always show range, explain methodology
 2. **Integrated with equity** — Not just value, but what it means
@@ -1514,7 +1514,7 @@ Plaid Liabilities API enables automatic mortgage balance sync, eliminating manua
 
 - AVM algorithms must not discriminate based on protected classes
 - ATTOM and major providers are subject to fair lending compliance
-- HomeTrack displays data, does not create the model
+- Keystona displays data, does not create the model
 
 ---
 

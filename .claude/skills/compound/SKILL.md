@@ -164,9 +164,9 @@ Provide a summary of what was extracted:
 
 ---
 
-## HomeTrack-Specific Areas to Watch
+## Keystona-Specific Areas to Watch
 
-When analyzing HomeTrack work, pay special attention to:
+When analyzing Keystona work, pay special attention to:
 
 - **Supabase patterns**: RLS policies, Edge Functions, real-time subscriptions
 - **Flutter patterns**: Riverpod state management, offline-first data handling
@@ -175,6 +175,6 @@ When analyzing HomeTrack work, pay special attention to:
 - **Cross-platform considerations**: Differences between mobile and web implementations
 
 Always reference the existing project documentation:
-- `HomeTrack_TechnicalArchitecture.md`
+- `Keystona_TechnicalArchitecture.md`
 - Feature specs in `/mnt/project/`
 - `Keystona_PremiumHome_Theme.md`

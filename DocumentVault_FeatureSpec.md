@@ -1,7 +1,7 @@
 # Document Vault
 ## Complete Feature Specification
 
-**HomeTrack MVP — Core Feature #1**  
+**Keystona MVP — Core Feature #1**  
 *Version 1.0 | January 2026*
 
 ---
@@ -29,7 +29,7 @@
 
 ### 1.1 Purpose
 
-The Document Vault is the foundational feature of HomeTrack—a secure, organized, and searchable repository for all home-related documents. It eliminates the chaos of paper files, scattered digital photos, and forgotten warranties by creating a single source of truth for every important document related to the home.
+The Document Vault is the foundational feature of Keystona—a secure, organized, and searchable repository for all home-related documents. It eliminates the chaos of paper files, scattered digital photos, and forgotten warranties by creating a single source of truth for every important document related to the home.
 
 ### 1.2 Problem Statement
 
@@ -534,7 +534,7 @@ When search bar is focused but empty:
 
 ### 5.1 Overview
 
-The expiration tracking system is a **key differentiator** that prevents users from missing warranty claims, insurance renewals, and other time-sensitive deadlines. It's one of the primary reasons users will choose HomeTrack over generic file storage.
+The expiration tracking system is a **key differentiator** that prevents users from missing warranty claims, insurance renewals, and other time-sensitive deadlines. It's one of the primary reasons users will choose Keystona over generic file storage.
 
 ### 5.2 Documents with Expiration Tracking
 
@@ -854,7 +854,7 @@ Optimized flow for sharing with professionals:
 5. **Send**
 
 Recipient receives:
-- Email with HomeTrack branding
+- Email with Keystona branding
 - Custom message from homeowner
 - Secure link to view documents
 - Option to download (if enabled)

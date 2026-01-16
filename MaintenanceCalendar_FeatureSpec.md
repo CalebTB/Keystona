@@ -1,7 +1,7 @@
 # Maintenance Calendar
 ## Complete Feature Specification
 
-**HomeTrack MVP — Core Feature #3**  
+**Keystona MVP — Core Feature #3**  
 *Version 1.0 | January 2026*
 
 ---
@@ -30,7 +30,7 @@
 
 ### 1.1 Purpose
 
-The Maintenance Calendar is a smart, proactive scheduling system that helps homeowners stay on top of routine home care. Unlike generic reminder apps, HomeTrack's calendar understands your specific home systems, local climate, and seasonal needs—automatically generating personalized maintenance schedules that prevent costly repairs and extend the life of home systems.
+The Maintenance Calendar is a smart, proactive scheduling system that helps homeowners stay on top of routine home care. Unlike generic reminder apps, Keystona's calendar understands your specific home systems, local climate, and seasonal needs—automatically generating personalized maintenance schedules that prevent costly repairs and extend the life of home systems.
 
 ### 1.2 Problem Statement
 
@@ -66,7 +66,7 @@ A climate-aware, system-linked maintenance calendar that:
 
 ### 1.5 Key Differentiators
 
-| Feature | HomeTrack | Generic Reminder Apps |
+| Feature | Keystona | Generic Reminder Apps |
 |---------|-----------|----------------------|
 | Climate-aware scheduling | ✅ Adjusts to local weather | ❌ One-size-fits-all |
 | System-linked tasks | ✅ Based on your actual equipment | ❌ Generic home tasks |
@@ -179,7 +179,7 @@ Each task includes a recommendation:
 
 ### 3.1 IECC Climate Zones
 
-HomeTrack uses the International Energy Conservation Code (IECC) climate zones to customize maintenance schedules:
+Keystona uses the International Energy Conservation Code (IECC) climate zones to customize maintenance schedules:
 
 | Zone | Climate Type | Example Regions | Key Considerations |
 |------|--------------|-----------------|-------------------|
@@ -261,7 +261,7 @@ Future enhancement: Real-time weather adjustments
 
 ### 4.1 Schedule Generation Logic
 
-When a user registers a home system or appliance, HomeTrack automatically generates relevant maintenance tasks:
+When a user registers a home system or appliance, Keystona automatically generates relevant maintenance tasks:
 
 ```
 ┌────────────────────────────────────────────────────────────────┐

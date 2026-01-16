@@ -16,7 +16,7 @@ Generate complete feature specs using this exact structure:
 ```markdown
 # Feature Name
 ## Complete Feature Specification
-**HomeTrack [MVP/v1.5/v2.0] - Feature #X**
+**Keystona [MVP/v1.5/v2.0] - Feature #X**
 *Version 1.0 | [Date]*
 
 ---

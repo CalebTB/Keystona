@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**HomeTrack** is a comprehensive home management platform helping homeowners organize documents, track maintenance, monitor property value, and manage home-related tasks.
+**Keystona** is a comprehensive home management platform helping homeowners organize documents, track maintenance, monitor property value, and manage home-related tasks.
 
 **Technology Stack:**
 - **Mobile**: Flutter (iOS & Android)
@@ -23,7 +23,7 @@ This is a **planning and specification repository**. The actual implementation w
 
 This repository contains:
 - Feature specifications (`*_FeatureSpec.md`)
-- Technical architecture ([HomeTrack_TechnicalArchitecture.md](HomeTrack_TechnicalArchitecture.md))
+- Technical architecture ([Keystona_TechnicalArchitecture.md](Keystona_TechnicalArchitecture.md))
 - Wireframes (`.html` files)
 - Agent definitions (`.claude/agents/`)
 - Development guides
@@ -57,7 +57,7 @@ This repository contains:
 ### When Implementing Features
 
 1. **Read the feature spec first** - All features have detailed specs in `*_FeatureSpec.md`
-2. **Reference the technical architecture** - See [HomeTrack_TechnicalArchitecture.md](HomeTrack_TechnicalArchitecture.md)
+2. **Reference the technical architecture** - See [Keystona_TechnicalArchitecture.md](Keystona_TechnicalArchitecture.md)
 3. **Use specialized agents** - See `.claude/agents/` for agent definitions:
    - `flutter-ui-builder` - Mobile UI components
    - `nextjs-web-builder` - Web pages and components
@@ -373,13 +373,13 @@ export async function getHomeValue(address: string) {
 ## Resource Files
 
 For detailed information, refer to:
-- [HomeTrack_TechnicalArchitecture.md](HomeTrack_TechnicalArchitecture.md) - Complete technical architecture
+- [Keystona_TechnicalArchitecture.md](Keystona_TechnicalArchitecture.md) - Complete technical architecture
 - [DocumentVault_FeatureSpec.md](DocumentVault_FeatureSpec.md) - Document management feature
 - [MaintenanceCalendar_FeatureSpec.md](MaintenanceCalendar_FeatureSpec.md) - Maintenance scheduling
 - [EmergencyHub_FeatureSpec.md](EmergencyHub_FeatureSpec.md) - Emergency information (offline-first)
 - [HomeValueTracking_FeatureSpec.md](HomeValueTracking_FeatureSpec.md) - Property valuation tracking
 - [HomeProfile_FeatureSpec.md](HomeProfile_FeatureSpec.md) - Home profile management
-- [HomeTrack_Agent_Quick_Reference.md](HomeTrack_Agent_Quick_Reference.md) - Agent usage guide
+- [Keystona_Agent_Quick_Reference.md](Keystona_Agent_Quick_Reference.md) - Agent usage guide
 
 ## Custom Claude Code Commands
 
