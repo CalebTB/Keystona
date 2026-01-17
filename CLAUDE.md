@@ -74,6 +74,18 @@ This repository contains:
    - Spacing: 4px base unit (4, 8, 12, 16, 24, 32, 48)
    - Border radius: 8px standard, 12px cards, 16px modals
 
+### Code Style
+- Prefer duplication over premature abstraction
+- Simple, clear code over clever code
+- Self-documenting names; comments only when non-obvious
+
+### Before You Code
+
+1. Check for existing patterns: `git log --oneline -20`
+2. Look for similar features in codebase
+3. Reference feature specs in the repository
+4. Plan before implementing
+
 ### Code Organization Patterns
 
 #### Flutter (Mobile)
@@ -159,6 +171,10 @@ npx supabase db diff               # Generate migration from changes
 npx supabase functions serve       # Run functions locally
 npx supabase functions deploy      # Deploy all functions
 ```
+
+## Patterns
+
+<!-- Add patterns discovered during development here -->
 
 ## Critical Implementation Patterns
 
@@ -380,6 +396,17 @@ For detailed information, refer to:
 - [HomeValueTracking_FeatureSpec.md](HomeValueTracking_FeatureSpec.md) - Property valuation tracking
 - [HomeProfile_FeatureSpec.md](HomeProfile_FeatureSpec.md) - Home profile management
 - [Keystona_Agent_Quick_Reference.md](Keystona_Agent_Quick_Reference.md) - Agent usage guide
+
+## Lessons
+
+<!-- Document bugs, failures, and how to prevent them here -->
+
+### Lesson: [Template]
+**Symptom:** [What was observed]
+**Root cause:** [Why it happened]
+**Prevention:** [How to avoid in future]
+
+---
 
 ## Custom Claude Code Commands
 
