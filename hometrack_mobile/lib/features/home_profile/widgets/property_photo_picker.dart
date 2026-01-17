@@ -164,6 +164,7 @@ class _PropertyPhotoPickerState extends ConsumerState<PropertyPhotoPicker> {
               _uploadedPhotoUrl!.isNotEmpty)
             Image.network(
               _uploadedPhotoUrl!,
+              key: ValueKey(_uploadedPhotoUrl),
               fit: BoxFit.cover,
               loadingBuilder: (context, child, loadingProgress) {
                 if (loadingProgress == null) return child;

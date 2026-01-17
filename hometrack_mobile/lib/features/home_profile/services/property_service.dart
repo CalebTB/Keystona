@@ -236,9 +236,10 @@ class PropertyService {
             ),
           );
 
-      // Get public URL
-      final publicUrl =
+      // Get public URL with cache-busting parameter
+      final baseUrl =
           _client.storage.from('property-photos').getPublicUrl(storagePath);
+      final publicUrl = '$baseUrl?t=${DateTime.now().millisecondsSinceEpoch}';
 
       // Update property record with photo URL
       await _client
