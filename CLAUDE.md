@@ -137,7 +137,13 @@ hometrack_mobile/
         *_test.dart  # Tests (must end with _test.dart)
 ```
 
-**State Management:** Use Riverpod with AsyncNotifier for complex state, FutureProvider for async data loading.
+**State Management:**
+- **Current Approach (Auth MVP):** Manual Riverpod providers (`Provider`, `StreamProvider`, `FutureProvider`)
+- **Future Features:** Evaluate code generation with `@riverpod` annotation for new features
+- **When to Use Each:**
+  - **Manual Providers:** Simple providers, quick MVPs, learning Riverpod basics
+  - **Code Generation:** Complex state with AsyncNotifier, features with many providers, when developer experience matters more than setup simplicity
+- **Migration:** Don't rewrite working manual providers - only use codegen for new features
 
 #### Next.js (Web)
 ```
@@ -387,6 +393,8 @@ final currentUserProvider = Provider<UserModel?>((ref) {
 
 **Why:** Code generation adds build complexity and watch mode requirements. Manual providers are sufficient for MVPs and can be migrated to codegen later if needed.
 
+**Future Direction:** For features beyond the authentication MVP, evaluate using Riverpod code generation (`@riverpod` annotation with `riverpod_generator`) for improved developer experience and reduced boilerplate. The existing auth code will remain with manual providers - don't rewrite working code.
+
 ## Critical Implementation Patterns
 
 ### Pattern: Supabase Row Level Security
@@ -611,6 +619,22 @@ export async function getHomeValue(address: string) {
 - Manual boilerplate for providers (acceptable for MVP scope)
 - No auto-dispose or family providers (not needed yet)
 - Follows hybrid approach: simplify until proven necessary
+
+**Going Forward:**
+- **Keep auth MVP as-is** - Don't rewrite working manual providers
+- **For new features** - Evaluate code generation on a case-by-case basis:
+  - Use **manual providers** when: Simple state, few providers, quick prototypes
+  - Use **code generation** when: Complex AsyncNotifier patterns, many interdependent providers, long-term feature development
+- **Setup for codegen** (if needed):
+  ```yaml
+  dependencies:
+    riverpod_annotation: ^2.3.0
+  dev_dependencies:
+    riverpod_generator: ^2.3.0
+    build_runner: ^2.4.0
+  ```
+  Run: `dart run build_runner watch --delete-conflicting-outputs`
+- **Migration not required** - Both approaches coexist in the same codebase
 
 ## Testing Strategy
 
