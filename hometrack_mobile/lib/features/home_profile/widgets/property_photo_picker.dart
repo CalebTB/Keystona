@@ -47,12 +47,17 @@ class _PropertyPhotoPickerState extends ConsumerState<PropertyPhotoPicker> {
     try {
       final XFile? image = await _picker.pickImage(
         source: source,
-        maxWidth: 1920,
-        maxHeight: 1080,
         imageQuality: 85,
       );
 
-      if (image == null) return;
+      if (image == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No image selected')),
+          );
+        }
+        return;
+      }
 
       setState(() {
         _pendingImage = File(image.path);
@@ -79,6 +84,10 @@ class _PropertyPhotoPickerState extends ConsumerState<PropertyPhotoPicker> {
           });
           widget.onPhotoUploaded?.call(data);
 
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Photo uploaded successfully')),
+          );
+
         case PropertyFailure(:final error):
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(error.message)),
@@ -93,7 +102,7 @@ class _PropertyPhotoPickerState extends ConsumerState<PropertyPhotoPicker> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick image: $e')),
+        SnackBar(content: Text('Error: $e')),
       );
     }
   }
