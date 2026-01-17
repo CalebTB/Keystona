@@ -47,8 +47,14 @@ dependencies:
   # Environment Configuration
   flutter_dotenv: ^5.2.1
 
+  # Image Handling
+  image_picker: ^1.0.7
+  flutter_image_compress: ^2.1.0
+
 dev_dependencies:
   flutter_test:
+    sdk: flutter
+  integration_test:
     sdk: flutter
 
   # The "flutter_lints" package below contains a set of recommended lints to
