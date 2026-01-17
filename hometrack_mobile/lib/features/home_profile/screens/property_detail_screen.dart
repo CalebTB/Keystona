@@ -5,6 +5,7 @@ import 'package:hometrack_mobile/features/home_profile/models/property_result.da
 import 'package:hometrack_mobile/features/home_profile/providers/property_providers.dart';
 import 'package:hometrack_mobile/features/home_profile/screens/property_setup_screen.dart';
 import 'package:hometrack_mobile/features/home_profile/widgets/property_photo_picker.dart';
+import 'package:hometrack_mobile/features/system_registry/screens/system_list_screen.dart';
 
 class PropertyDetailScreen extends ConsumerStatefulWidget {
   final Property property;
@@ -213,6 +214,32 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                       ),
                     const SizedBox(height: 24),
                   ],
+
+                  // Home Systems section
+                  Text(
+                    'Home Systems',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.home_repair_service),
+                      title: const Text('Manage Home Systems'),
+                      subtitle: const Text(
+                        'Track HVAC, water heater, roof, and more',
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              SystemListScreen(propertyId: _currentProperty.id),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
 
                   // Timestamps
                   Text(
