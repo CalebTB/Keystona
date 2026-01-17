@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hometrack_mobile/core/config/supabase_client.dart';
 import 'package:hometrack_mobile/core/theme/keystona_theme.dart';
 import 'package:hometrack_mobile/features/auth/widgets/auth_gate.dart';
@@ -7,6 +8,10 @@ import 'package:hometrack_mobile/features/auth/widgets/auth_gate.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Load environment variables
+  await dotenv.load(fileName: '.env.development');
+
+  // Initialize Supabase
   await initializeSupabase();
 
   runApp(
