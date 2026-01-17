@@ -2,7 +2,7 @@
 ///
 /// Uses sealed classes for exhaustive pattern matching and type-safe error handling.
 /// Follows auth MVP pattern for consistency.
-
+///
 /// Base sealed class for property operation results
 sealed class PropertyResult<T> {
   const PropertyResult();
