@@ -16,17 +16,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Structure
 
-This is a **planning and specification repository**. The actual implementation will be in separate repositories:
-- `hometrack-mobile/` - Flutter mobile app
-- `hometrack-web/` - Next.js web app
-- `hometrack-supabase/` - Supabase migrations and Edge Functions
-
-This repository contains:
+This repository contains both planning/specifications AND implementation:
+- `hometrack_mobile/` - **Flutter mobile app (PRIMARY IMPLEMENTATION)** - Use this directory for all Flutter development
+- `hometrack_web/` - Next.js web app (future implementation)
+- `hometrack_supabase/` - Supabase migrations and Edge Functions (future implementation)
 - Feature specifications (`*_FeatureSpec.md`)
 - Technical architecture ([Keystona_TechnicalArchitecture.md](Keystona_TechnicalArchitecture.md))
 - Wireframes (`.html` files)
 - Agent definitions (`.claude/agents/`)
 - Development guides
+
+**IMPORTANT:** All Flutter development work happens in `/Users/calebbyers/Code/Keystona/hometrack_mobile/`
 
 ## Core Architecture Principles
 
@@ -79,25 +79,62 @@ This repository contains:
 - Simple, clear code over clever code
 - Self-documenting names; comments only when non-obvious
 
+### Git Workflow - CRITICAL REQUIREMENTS
+
+**NEVER PUSH DIRECTLY TO MAIN BRANCH**
+
+Always follow this workflow:
+1. Create a feature branch: `git checkout -b feature/your-feature-name`
+2. Make your changes and commit frequently
+3. Push to the feature branch: `git push origin feature/your-feature-name`
+4. Create a Pull Request for review
+5. Only merge to main through approved PRs
+
+**Branch Naming Convention:**
+- Features: `feature/authentication-mvp`, `feature/document-vault`
+- Bugs: `bugfix/fix-session-persistence`
+- Hotfixes: `hotfix/critical-crash-fix`
+
+**Commit Message Format:**
+```
+Brief description of change (imperative mood)
+
+Optional detailed explanation of what and why.
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+```
+
 ### Before You Code
 
-1. Check for existing patterns: `git log --oneline -20`
-2. Look for similar features in codebase
-3. Reference feature specs in the repository
-4. Plan before implementing
+1. Create a feature branch (NEVER work on main)
+2. Check for existing patterns: `git log --oneline -20`
+3. Look for similar features in codebase
+4. Reference feature specs in the repository
+5. Plan before implementing
 
 ### Code Organization Patterns
 
 #### Flutter (Mobile)
+**Location:** `/Users/calebbyers/Code/Keystona/hometrack_mobile/lib/`
+
 ```
-lib/
-  features/
-    feature_name/
-      models/          # Data classes
-      providers/       # Riverpod state management
-      screens/         # Full page views
-      widgets/         # Reusable components
-      services/        # Business logic
+hometrack_mobile/
+  lib/
+    core/
+      config/        # Supabase client, app configuration
+      theme/         # App theme and design system
+    features/
+      feature_name/
+        models/      # Data classes
+        providers/   # Riverpod state management
+        screens/     # Full page views
+        widgets/     # Reusable components
+        services/    # Business logic
+    main.dart        # App entry point
+  test/
+    features/
+      feature_name/
+        *_test.dart  # Tests (must end with _test.dart)
 ```
 
 **State Management:** Use Riverpod with AsyncNotifier for complex state, FutureProvider for async data loading.
@@ -130,8 +167,11 @@ supabase/
 ## Common Commands
 
 ### Flutter Development
+**Project Location:** `/Users/calebbyers/Code/Keystona/hometrack_mobile/`
+
 ```bash
 # Setup and development
+cd /Users/calebbyers/Code/Keystona/hometrack_mobile
 flutter pub get                    # Install dependencies
 flutter run                        # Run on connected device
 flutter analyze                    # Static analysis
@@ -141,6 +181,7 @@ flutter test                       # Run unit tests
 flutter build apk --release        # Android APK
 flutter build appbundle            # Android App Bundle (for Play Store)
 flutter build ios --release        # iOS build
+flutter build ios --debug --no-codesign  # iOS debug build (also runs pod install)
 ```
 
 ### Next.js Development
