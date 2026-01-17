@@ -5,6 +5,12 @@
 !hometrack_mobile/
 !hometrack_mobile/**
 
+# Allow scripts and documentation
+!scripts/
+!scripts/**
+!docs/
+!docs/**
+
 # But ignore build artifacts and dependencies inside hometrack_mobile
 hometrack_mobile/build/
 hometrack_mobile/.dart_tool/
