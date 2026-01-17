@@ -26,6 +26,22 @@ class _PropertyPhotoPickerState extends ConsumerState<PropertyPhotoPicker> {
   final ImagePicker _picker = ImagePicker();
   bool _isUploading = false;
   File? _pendingImage;
+  String? _uploadedPhotoUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _uploadedPhotoUrl = widget.currentPhotoUrl;
+  }
+
+  @override
+  void didUpdateWidget(PropertyPhotoPicker oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update local state if parent passes a new URL
+    if (widget.currentPhotoUrl != oldWidget.currentPhotoUrl) {
+      _uploadedPhotoUrl = widget.currentPhotoUrl;
+    }
+  }
 
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -58,6 +74,9 @@ class _PropertyPhotoPickerState extends ConsumerState<PropertyPhotoPicker> {
 
       switch (result) {
         case PropertySuccess(:final data):
+          setState(() {
+            _uploadedPhotoUrl = data;
+          });
           widget.onPhotoUploaded?.call(data);
 
         case PropertyFailure(:final error):
@@ -102,7 +121,7 @@ class _PropertyPhotoPickerState extends ConsumerState<PropertyPhotoPicker> {
                 _pickImage(ImageSource.gallery);
               },
             ),
-            if (widget.currentPhotoUrl != null)
+            if (_uploadedPhotoUrl != null && _uploadedPhotoUrl!.isNotEmpty)
               ListTile(
                 leading: const Icon(Icons.delete),
                 title: const Text('Remove Photo'),
@@ -120,6 +139,9 @@ class _PropertyPhotoPickerState extends ConsumerState<PropertyPhotoPicker> {
   Future<void> _removePhoto() async {
     // For MVP, we don't actually delete from storage, just update the URL to null
     // This is acceptable since storage cleanup can be handled later
+    setState(() {
+      _uploadedPhotoUrl = null;
+    });
     widget.onPhotoUploaded?.call('');
   }
 
@@ -138,10 +160,10 @@ class _PropertyPhotoPickerState extends ConsumerState<PropertyPhotoPicker> {
               _pendingImage!,
               fit: BoxFit.cover,
             )
-          else if (widget.currentPhotoUrl != null &&
-              widget.currentPhotoUrl!.isNotEmpty)
+          else if (_uploadedPhotoUrl != null &&
+              _uploadedPhotoUrl!.isNotEmpty)
             Image.network(
-              widget.currentPhotoUrl!,
+              _uploadedPhotoUrl!,
               fit: BoxFit.cover,
               loadingBuilder: (context, child, loadingProgress) {
                 if (loadingProgress == null) return child;
