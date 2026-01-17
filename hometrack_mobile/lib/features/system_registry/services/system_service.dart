@@ -54,9 +54,15 @@ class SystemService {
     }
 
     try {
+      // Exclude id, created_at, updated_at - let database generate these
+      final json = system.toJson();
+      json.remove('id');
+      json.remove('created_at');
+      json.remove('updated_at');
+
       final response = await _supabase
           .from('home_systems')
-          .insert(system.toJson())
+          .insert(json)
           .select()
           .single();
 
