@@ -174,7 +174,177 @@ npx supabase functions deploy      # Deploy all functions
 
 ## Patterns
 
-<!-- Add patterns discovered during development here -->
+### Pattern: Supabase SecureLocalStorage for Session Management
+Supabase sessions must be stored using hardware-backed encryption instead of SharedPreferences.
+
+```dart
+// lib/core/config/supabase_client.dart
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class SecureLocalStorage extends LocalStorage {
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+
+  @override
+  Future<void> initialize() async {
+    // No initialization needed
+  }
+
+  @override
+  Future<String?> accessToken() async {
+    return await _storage.read(key: 'supabase.auth.token');
+  }
+
+  @override
+  Future<void> persistSession(String persistSessionString) async {
+    await _storage.write(
+      key: 'supabase.auth.token',
+      value: persistSessionString,
+    );
+  }
+
+  @override
+  Future<void> removePersistedSession() async {
+    await _storage.delete(key: 'supabase.auth.token');
+  }
+
+  @override
+  Future<bool> hasAccessToken() async {
+    final token = await accessToken();
+    return token != null;
+  }
+}
+
+// Usage in initialization
+await Supabase.initialize(
+  url: supabaseUrl,
+  anonKey: supabaseAnonKey,
+  authOptions: FlutterAuthClientOptions(
+    authFlowType: AuthFlowType.pkce,
+    localStorage: SecureLocalStorage(), // Custom secure storage
+  ),
+);
+```
+
+**Why:** Default Supabase storage uses SharedPreferences which stores data unencrypted. FlutterSecureStorage provides hardware-backed encryption (iOS Keychain, Android Keystore) for sensitive authentication tokens.
+
+### Pattern: Sealed Class Error Handling
+Use sealed classes for exhaustive, type-safe error handling without silent failures.
+
+```dart
+// features/auth/models/auth_result.dart
+sealed class AuthResult<T> {
+  const AuthResult();
+}
+
+class AuthSuccess<T> extends AuthResult<T> {
+  final T data;
+  const AuthSuccess(this.data);
+}
+
+class AuthFailure<T> extends AuthResult<T> {
+  final AuthError error;
+  const AuthFailure(this.error);
+}
+
+sealed class AuthError {
+  final String message;
+  const AuthError(this.message);
+}
+
+class NetworkError extends AuthError {
+  const NetworkError() : super('No internet connection. Please try again.');
+}
+
+class InvalidCredentialsError extends AuthError {
+  const InvalidCredentialsError() : super('Invalid email or password.');
+}
+
+// Usage with exhaustive pattern matching
+final result = await authService.signIn(email: email, password: password);
+
+switch (result) {
+  case AuthSuccess(:final data):
+    // Handle success - compiler ensures you handle this
+  case AuthFailure(:final error):
+    // Handle error - compiler ensures you handle this
+}
+```
+
+**Why:** Sealed classes with pattern matching prevent forgotten error cases at compile-time, unlike traditional try-catch which can silently fail.
+
+### Pattern: Exception-to-Error Mapping
+Map low-level SDK exceptions to user-friendly, actionable error types.
+
+```dart
+// features/auth/services/auth_service.dart
+AuthError _mapAuthException(AuthException e) {
+  if (e.message.contains('Invalid login credentials')) {
+    return const InvalidCredentialsError();
+  } else if (e.message.contains('User already registered')) {
+    return const EmailAlreadyExistsError();
+  } else if (e.message.contains('Password should be')) {
+    return const WeakPasswordError();
+  } else {
+    return UnknownError(e.message);
+  }
+}
+
+Future<AuthResult<UserModel>> signUp({
+  required String email,
+  required String password,
+  required String fullName,
+}) async {
+  try {
+    final response = await _auth.signUp(
+      email: email,
+      password: password,
+      data: {'full_name': fullName},
+    );
+
+    if (response.user == null) {
+      return const AuthFailure(UnknownError('Failed to create account'));
+    }
+
+    return AuthSuccess(UserModel.fromSupabaseUser(response.user!));
+  } on AuthException catch (e) {
+    return AuthFailure(_mapAuthException(e)); // Map to user-friendly errors
+  } catch (e) {
+    return AuthFailure(UnknownError(e.toString()));
+  }
+}
+```
+
+**Why:** SDK exceptions contain technical messages ("Invalid login credentials") that need translation to user-friendly errors ("Invalid email or password"). Centralized mapping prevents duplicate error handling logic across the app.
+
+### Pattern: Manual Riverpod Providers (No Code Generation)
+For MVPs, use manual Riverpod providers to avoid build_runner complexity.
+
+```dart
+// features/auth/providers/auth_providers.dart
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final authServiceProvider = Provider<AuthService>((ref) {
+  return AuthService();
+});
+
+final authStateProvider = StreamProvider<User?>((ref) {
+  final authService = ref.watch(authServiceProvider);
+  return authService.authStateChanges;
+});
+
+final currentUserProvider = Provider<UserModel?>((ref) {
+  final authState = ref.watch(authStateProvider);
+
+  return authState.when(
+    data: (user) => user != null ? UserModel.fromSupabaseUser(user) : null,
+    loading: () => null,
+    error: (_, __) => null,
+  );
+});
+```
+
+**Why:** Code generation adds build complexity and watch mode requirements. Manual providers are sufficient for MVPs and can be migrated to codegen later if needed.
 
 ## Critical Implementation Patterns
 
@@ -341,6 +511,66 @@ export async function getHomeValue(address: string) {
 - Additional service dependency (accepted for significantly reduced complexity)
 - Small per-transaction fee (worth it for time saved)
 
+### Decision: flutter_dotenv for Environment Configuration
+**Context:** Need to configure Supabase URL and anon key without hardcoding credentials in source code.
+
+**Chosen:** `flutter_dotenv` package for runtime environment variable loading
+
+**Alternatives Considered:**
+1. **String.fromEnvironment()** - Compile-time only, requires `--dart-define` flags in every command
+2. **Hardcoded values** - Explicitly rejected by user, security risk
+3. **JSON config files** - More complex, no environment-specific support
+
+**Rationale:**
+- Runtime loading from `.env.development` / `.env.production` files
+- Standard pattern familiar to web developers
+- Simple API: `dotenv.env['KEY']`
+- Supports multiple environments without build configuration
+
+**Trade-offs:**
+- Requires declaring .env files in pubspec.yaml assets
+- Not as "pure" as compile-time constants but more practical for MVP
+
+### Decision: Supabase user_metadata for User Profile Data
+**Context:** Need to store user's full name during signup.
+
+**Chosen:** Use Supabase's built-in `auth.users.user_metadata` JSON field
+
+**Alternatives Considered:**
+1. **Separate users_metadata table** - Risk of orphaned records if signup fails partway
+2. **profiles table** - Requires separate transaction, more complex error handling
+
+**Rationale:**
+- Atomic operation - metadata saved with user creation
+- No orphaned records if transaction fails
+- Built-in Supabase feature designed for this use case
+- Simpler error handling (single transaction)
+
+**Trade-offs:**
+- JSON field less structured than relational table (acceptable for MVP with only full_name)
+- Can migrate to profiles table later if complex user data is needed
+
+### Decision: Manual Riverpod Providers vs Code Generation
+**Context:** Need state management for authentication but want to ship MVP quickly.
+
+**Chosen:** Manual Riverpod providers without `riverpod_generator`
+
+**Alternatives Considered:**
+1. **riverpod_generator with build_runner** - Industry best practice but adds complexity
+2. **Provider package** - Older, less type-safe
+3. **BLoC pattern** - More boilerplate
+
+**Rationale:**
+- No build_runner watch mode required during development
+- Simpler project setup for MVP
+- Still get Riverpod's benefits (type safety, compile-time dependency tracking)
+- Can migrate to codegen later if codebase grows
+
+**Trade-offs:**
+- Manual boilerplate for providers (acceptable for MVP scope)
+- No auto-dispose or family providers (not needed yet)
+- Follows hybrid approach: simplify until proven necessary
+
 ## Testing Strategy
 
 ### Unit Tests
@@ -399,12 +629,84 @@ For detailed information, refer to:
 
 ## Lessons
 
-<!-- Document bugs, failures, and how to prevent them here -->
+### Lesson: String.fromEnvironment Only Works at Compile-Time
+**Symptom:** Supabase initialization fails with "No host specified in URI /auth/v1/signup?" when using `String.fromEnvironment('SUPABASE_URL')`.
 
-### Lesson: [Template]
-**Symptom:** [What was observed]
-**Root cause:** [Why it happened]
-**Prevention:** [How to avoid in future]
+**Root cause:** `String.fromEnvironment()` reads compile-time constants passed via `--dart-define` flags, NOT runtime .env files. Without `--dart-define`, it returns empty strings.
+
+**Prevention:**
+- Use `flutter_dotenv` package for runtime environment variables
+- Load dotenv BEFORE initializing Supabase in main.dart:
+```dart
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env.development'); // Load FIRST
+  await initializeSupabase(); // Then initialize
+  runApp(const MyApp());
+}
+```
+- Read values with `dotenv.env['KEY']`
+- Never hardcode credentials in source code
+
+### Lesson: Supabase LocalStorage Interface Requirements
+**Symptom:** Authentication works but sessions don't persist securely across app restarts.
+
+**Root cause:** Supabase's default storage uses SharedPreferences (unencrypted). Custom storage must implement the `LocalStorage` interface with specific methods.
+
+**Prevention:**
+- Always implement custom `LocalStorage` extending Supabase's interface
+- Use FlutterSecureStorage for hardware-backed encryption
+- Implement all required methods: `initialize()`, `accessToken()`, `persistSession()`, `removePersistedSession()`, `hasAccessToken()`
+- Pass custom storage to `FlutterAuthClientOptions`:
+```dart
+authOptions: FlutterAuthClientOptions(
+  authFlowType: AuthFlowType.pkce,
+  localStorage: SecureLocalStorage(),
+)
+```
+
+### Lesson: iOS Build Requires Podfile Generation
+**Symptom:** Build error "Module 'app_links' not found" after adding Flutter dependencies.
+
+**Root cause:** New Flutter plugins require iOS Podfile updates. Running `flutter pub get` only updates Dart dependencies, not native iOS CocoaPods.
+
+**Prevention:**
+- After adding new dependencies with native code (Supabase, secure storage), run:
+```bash
+flutter build ios --debug --no-codesign
+```
+- This automatically runs `pod install` and generates plugin registrant files
+- Alternatively, manually run `cd ios && pod install` if only iOS changes are needed
+
+### Lesson: Environment Files Must Be in Assets
+**Symptom:** `flutter_dotenv` throws "Unable to load asset: .env.development" at runtime.
+
+**Root cause:** The .env file exists in the project root but isn't declared in `pubspec.yaml` assets section. Flutter doesn't bundle files unless explicitly declared.
+
+**Prevention:**
+- Add .env files to assets in pubspec.yaml:
+```yaml
+flutter:
+  assets:
+    - .env.development
+```
+- Create `.env.development.example` (committed to git) as template
+- Add `.env.development` to `.gitignore` (contains secrets)
+- Verify file is in project root, not subdirectory
+
+### Lesson: Sealed Classes Require Dart 3.0+
+**Symptom:** "The 'sealed' modifier can only be used in libraries with language version 3.0 or greater" error.
+
+**Root cause:** Sealed classes are a Dart 3.0+ feature. Project SDK constraint must be `>=3.0.0`.
+
+**Prevention:**
+- Ensure `pubspec.yaml` has SDK constraint:
+```yaml
+environment:
+  sdk: ^3.10.4  # Must be 3.0.0 or higher
+```
+- Sealed classes enable exhaustive pattern matching for type-safe error handling
+- Alternative for Dart 2.x: Use abstract classes with factory constructors (but no exhaustiveness checking)
 
 ---
 
