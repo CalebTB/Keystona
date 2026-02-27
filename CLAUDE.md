@@ -247,6 +247,7 @@ Comprehensive specifications in `keystona-project-files/`:
 - **Empty migration files create phantom applied state**: `supabase db push` records migration names in `schema_migrations` even when files are empty — tables are never created; always verify with `execute_sql SELECT table_name FROM information_schema.tables` after applying
 - **`handle_new_user` trigger only fires on new signups**: Users who signed up before the `profiles` table existed have no profile row; backfill with `INSERT INTO profiles SELECT id, email, ... FROM auth.users WHERE id NOT IN (SELECT id FROM profiles) ON CONFLICT DO NOTHING` after applying migrations
 - **Supabase `.single()` throws `PGRST116` on 0 rows**: Error cascades as an unhandled exception → error state in UI; use `.maybeSingle()` and guard with `if (row == null) return []` for any query where the user may not have data yet (pre-onboarding)
+- **`showCupertinoModalPopup` requires `rootNavigator: true` to dismiss**: Modal is pushed onto root navigator; `Navigator.of(context).pop()` resolves to GoRouter's inner navigator, empties its stack and crashes with "no pages left to show" → always dismiss with `Navigator.of(context, rootNavigator: true).pop()`
 - **Freezed v3 requires `abstract class`**: `@freezed class Foo with _$Foo` fails — Freezed v3 generates abstract property getters in `_$Foo` that the concrete class can't satisfy; always use `@freezed abstract class Foo with _$Foo`
 
 ## Philosophy
