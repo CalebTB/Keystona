@@ -193,6 +193,8 @@ Comprehensive specifications in `keystona-project-files/`:
 - **Side-by-side fields in Row**: Short fields (State/ZIP, Bedrooms/Bathrooms) use `Row` + `Flexible` — cleaner than full-width for 2-char inputs
 - **ValueKey for dropdown auto-fill**: `ValueKey(_value)` on `DropdownButtonFormField` forces rebuild when value is programmatically set from outside
 - **AsyncNotifier for DB writes**: Feature data mutations use `AsyncNotifier` + `AsyncValue.guard` — caller inspects state after notifier call completes
+- **Router-driven auth navigation**: After sign-in/sign-up never call `context.go()` — remove it and let `routerProvider` redirect automatically when `isAuthenticatedProvider` updates → `lib/core/router/app_router.dart`
+- **Onboarding routes in publicRoutes**: Onboarding screens must be in `_publicRoutes` so the auth guard doesn't intercept during the auth-stream update window → `lib/core/router/app_router.dart`
 
 ## Decisions
 
@@ -211,6 +213,8 @@ Comprehensive specifications in `keystona-project-files/`:
 - **`StateProvider` from legacy import**: Riverpod v3 moved `StateProvider` to `legacy.dart` — use `NotifierProvider` for all new state going forward
 - **`initialValue` over `value` on dropdowns**: `DropdownButtonFormField.value` deprecated in Flutter 3.33+ — always use `initialValue`
 - **`completeOnboarding()` as top-level function**: Called from 3 screens with no shared state — top-level async function cleaner than a provider method
+- **`String.fromEnvironment` needs `defaultValue` for dev**: No default = empty string at runtime when `--dart-define-from-file` is omitted → always add `defaultValue` for dev credentials in `config.dart`
+- **Supabase `external_email_enabled` off by default**: New projects ship with email/password auth disabled — enable via Management API or Dashboard before first run
 
 ## Lessons
 
@@ -224,6 +228,11 @@ Comprehensive specifications in `keystona-project-files/`:
 - **`DropdownButtonFormField.value` deprecated**: Flutter 3.33+ → always use `initialValue`; add `ValueKey` if value is set programmatically
 - **`FileOptions` needs explicit import**: Requires `import 'package:supabase_flutter/supabase_flutter.dart'` — not resolved through transitive imports
 - **Email regex in single-quoted strings**: Regex containing `'` inside a single-quoted Dart string causes parse errors → Use double-quoted or raw double-quoted strings (`r"..."`)
+- **iOS deployment target 13 → 15 required**: `firebase_core` requires minimum iOS 15.0 — bump `Podfile` platform and all `IPHONEOS_DEPLOYMENT_TARGET` entries in `project.pbxproj` before first build
+- **`pod install` required on fresh clone**: `flutter run` alone won't install pods on a new machine → run `flutter pub get && cd ios && pod install --repo-update` first
+- **Router race condition on auth navigation**: `context.go('/dashboard')` fires before `isAuthenticatedProvider` stream updates — router sees stale `isAuthenticated = false` and redirects back to login → remove manual `context.go` after auth calls, let router self-redirect
+- **Supabase `external_email_enabled` off by default**: Must `PATCH /v1/projects/{ref}/config/auth` with `{"external_email_enabled": true}` or toggle in Dashboard → Auth → Providers before email/password auth works
+- **CocoaPods specs repo needs update for new Firebase**: `firebase_core` 4.x requires Firebase SDK 12.8.0 — run `pod repo update` if CocoaPods can't find the spec
 
 ## Philosophy
 
