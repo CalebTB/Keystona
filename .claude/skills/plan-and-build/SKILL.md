@@ -1,6 +1,6 @@
 ---
 name: plan-and-build
-description: Use this skill before building any feature issue for Keystona. Combines planning (with look-ahead at dependent issues) and building into one workflow. Trigger whenever the user says 'plan and build issue X', 'start issue X', 'build issue #N', or before implementing any chunk from the Sprint Plan. Produces a written plan approved by the user BEFORE writing any code, with architecture decisions that account for all issues that depend on this one.
+description: Use this skill before building any feature issue for Keystona. Combines planning (with look-ahead at dependent issues) and building into one workflow. Trigger whenever the user says 'plan and build issue X', 'start issue X', 'build issue #N', or before implementing any chunk from the Sprint Plan. Works for any phase (1–9). Produces a written plan approved by the user BEFORE writing any code, with architecture decisions that account for all issues that depend on this one.
 ---
 
 # Plan-and-Build Skill — Keystona
@@ -13,6 +13,8 @@ The output of this skill is:
 1. A written implementation plan, approved by the user
 2. A complete feature implementation that accounts for all dependent issues
 
+This skill works for any issue in any phase. Nothing is hardcoded.
+
 ## Step 1 — Issue Intake
 
 Read the target issue from GitHub:
@@ -22,175 +24,248 @@ gh issue view {issue_number} --repo CalebTB/Keystona
 ```
 
 Extract:
-- Acceptance criteria
+- Phase label (e.g. `phase-1`, `phase-2`) — you'll use this to find related issues
+- Feature name (e.g. `document-vault`, `maintenance`, `projects`)
+- Acceptance criteria (every checkbox)
 - Spec sections referenced (Key references)
-- Which issues this depends on (Depends on)
+- Which issues this depends on (Depends on field)
 
 ## Step 2 — Look-Ahead Analysis
 
-Find every issue that depends on the current one. These are "downstream issues."
+Find every open issue in the same phase that could depend on this one.
 
-**For the current issue**, scan all open Phase 1 issues:
+**Step 2a — List all issues in the same phase:**
 ```bash
-gh issue list --repo CalebTB/Keystona --label phase-1 --state open
+gh issue list --repo CalebTB/Keystona --label {phase-label} --state open
 ```
 
-Read each dependent issue:
+**Step 2b — Find downstream issues** (issues that list this issue number in their "Depends on"):
 ```bash
-gh issue view {downstream_issue_number} --repo CalebTB/Keystona
+gh issue list --repo CalebTB/Keystona --label {phase-label} --state open \
+  --search "#{current_issue_number}"
 ```
 
-For each downstream issue, extract:
-- What **model fields** it will need (look at its acceptance criteria and spec references)
-- What **provider methods** it will call (create, read, update, delete, search, etc.)
-- What **routes** it will add under the current feature
-- What **shared widgets** it will reuse
+For any ambiguous cases, read the issue body to confirm the dependency:
+```bash
+gh issue view {candidate_issue_number} --repo CalebTB/Keystona
+```
 
-**Produce a look-ahead summary:**
+**Step 2c — For each confirmed downstream issue, extract:**
+- What **model fields** it will need (from acceptance criteria and spec references)
+- What **provider methods** it will call (create, read, update, delete, search, filter, etc.)
+- What **routes** it will add as children of the current feature
+- What **shared widgets** it will reuse from the current issue's widgets
+
+**Step 2d — Produce a look-ahead summary before continuing:**
 ```
-Downstream issues analysis:
-- #21 (Upload): needs Document.categoryId, Document.thumbnailPath, provider.add()
-- #22 (Detail): needs Document.expirationDate, provider.getById(), provider.softDelete(), provider.update()
-- #23 (Search): needs provider.search(query), debounce pattern
-- #25 (Categories): needs DocumentCategory model, category provider
+Downstream issues:
+- #{N} ({title}): needs {ModelName}.{field}, provider.{method}()
+- #{N} ({title}): needs {ModelName}.{field}, provider.{method}()
+...
+
+Fields to include in model now (for downstream):
+- {field}: needed by #{N}
+- {field}: needed by #{N}
+
+Provider methods to stub now (for downstream):
+- {method}(): needed by #{N}
 ```
+
+If no downstream issues exist, note that explicitly and skip stub methods.
 
 ## Step 3 — Spec Research
 
-Read all spec sections referenced across the current issue AND downstream issues.
+Read the spec sections referenced in the current issue AND all downstream issues.
 
-Minimum reads:
-- `keystona-project-files/HomeTrack_API_Contract.md` — your feature's section
+**Always read:**
+- `keystona-project-files/HomeTrack_Sprint_Plan.md` — find the current phase, read all chunk descriptions for context
+- `keystona-project-files/HomeTrack_API_Contract.md` — the section(s) listed in Key references
 - `keystona-project-files/HomeTrack_Database_Schema.md` — the tables you'll query
-- `keystona-project-files/HomeTrack_Error_Handling.md` — your feature's edge cases (Section 14)
-- `keystona-project-files/HomeTrack_Empty_States_Catalog.md` — exact empty state copy
-- `keystona-project-files/HomeTrack_Platform_UI_Guide.md` — adaptive components
+- `keystona-project-files/HomeTrack_Error_Handling.md` — Section 14 for your feature's edge cases
+- `keystona-project-files/HomeTrack_Empty_States_Catalog.md` — exact empty state copy for your screens
+- `keystona-project-files/HomeTrack_Platform_UI_Guide.md` — which components must be adaptive
 
-Also explore existing code for patterns:
+**Read if referenced by the issue:**
+- `keystona-project-files/HomeTrack_Dashboard_Spec.md` — for Home tab / dashboard work
+- `keystona-project-files/HomeTrack_Health_Score_Algorithm.md` — for health score work
+- `keystona-project-files/HomeTrack_Security_Guide.md` — for auth, payments, or sensitive data work
+
+**Explore existing code for patterns:**
+```bash
+# Always check for prior feature implementations — learn from them
+ls lib/features/
 ```
-lib/features/auth/         — screen structure, ConsumerStatefulWidget, form patterns
-lib/core/theme/            — design tokens
-lib/core/widgets/          — shared widgets available
-lib/core/router/app_router.dart — how routes are wired
+
+For each existing feature directory found, skim its structure:
+- How are models defined?
+- How are providers structured?
+- What does the screen's `.when()` block look like?
+
+Also always check:
+```
+lib/core/theme/         — design tokens (AppColors, AppSizes, AppTextStyles)
+lib/core/widgets/       — shared widgets already available (don't rebuild what exists)
+lib/core/router/app_router.dart — how routes and branches are wired
 ```
 
 ## Step 4 — Write the Plan
 
-Write a complete implementation plan. Structure it as:
+Write a complete implementation plan. Use this structure:
 
 ```markdown
-# Plan: [Issue Title]
+# Plan: #{N} — {Issue Title}
+
+## Phase & Feature
+Phase {X} — {Feature Name}
+
+## Downstream Issues Accounted For
+- #{N} ({title}): {what we're pre-wiring for it}
+- #{N} ({title}): {what we're pre-wiring for it}
 
 ## Architecture Decisions
-Decisions made now to support downstream issues, with rationale:
-- **Decision**: [What] → because [downstream issue #X] will need [Y]
+Decisions made now to support downstream issues:
+- **{Decision}**: {What} → because #{N} will need {Y}
 
 ## Model Design
-Complete model with ALL fields needed by current + downstream issues.
-Fields marked: [current] or [for #21] etc.
+{ModelName}:
+- {field}: {type} — [current issue] used for {purpose}
+- {field}: {type} — [for #{N}] used for {purpose}
+- {field}: {type} — [for #{N}] used for {purpose}
 
 ## Provider Interface
-All methods the current AND downstream issues will call, defined as stubs now.
-Current issue implements them; downstream issues fill in the stubs.
+{FeatureProvider} methods:
+- {method}(): — implemented now (current issue)
+- {method}(): — stub now, implemented by #{N}
+- {method}(): — stub now, implemented by #{N}
 
 ## File Structure
-Exact files to create in lib/features/documents/:
-- models/document.dart
-- models/document_category.dart
-- providers/documents_provider.dart
-- providers/document_categories_provider.dart
-- screens/documents_screen.dart
-- widgets/document_card.dart
-- widgets/document_list_skeleton.dart
-- widgets/document_empty_state.dart
+lib/features/{feature}/
+├── models/
+│   └── {model}.dart
+├── providers/
+│   └── {feature}_provider.dart
+├── screens/
+│   └── {feature}_screen.dart
+└── widgets/
+    ├── {feature}_card.dart
+    ├── {feature}_list_skeleton.dart
+    └── {feature}_empty_state.dart
 
 ## Screen Build Order
-Step-by-step order to build each piece.
+1. {model}.dart — data class
+2. {feature}_provider.dart — AsyncNotifier + stubs
+3. {feature}_list_skeleton.dart — skeleton widget
+4. {feature}_empty_state.dart — empty state widget
+5. {feature}_card.dart — list item widget
+6. {feature}_screen.dart — screen combining all above
+7. {form widgets if needed}
 
 ## Acceptance Criteria Checklist
-Every checkbox from the GitHub issue.
+(copy every checkbox from the GitHub issue verbatim)
+- [ ] ...
 
 ## Extension Points for Downstream
-Explicit notes for agents building dependent issues:
-- "Agent building #21: call `documentsProvider.notifier.add(doc)` — method stub is ready"
-- "Agent building #22: `Document.thumbnailPath` field already defined — just display it"
+Notes for agents building dependent issues:
+- "Agent building #{N}: {provider method} is stubbed at {file}:{line} — implement {what}"
+- "Agent building #{N}: {model field} is already defined — just {display/use} it"
 ```
 
-**Show the plan to the user and wait for approval before writing any code.**
+**Stop here. Show the plan to the user and wait for approval.**
 
 Ask:
-> "Here's the plan for #[N]. Does this look right before I start building?"
+> "Here's the plan for #{N}. Does this look right before I start building?"
+
+Do not write any code until the user approves.
 
 ## Step 5 — Build
 
-Only after plan approval, execute the plan from feature-agent guidelines:
+Only after plan approval. Execute the plan following these rules:
 
 ### Build order (never skip steps)
 1. **Models** — Dart data classes with all fields (current + downstream)
-2. **Providers** — AsyncNotifier with all methods (current implemented, downstream stubbed)
-3. **Skeleton widget** — loading state matching real card layout
-4. **Empty state widget** — exact copy from Empty States Catalog
+2. **Providers** — AsyncNotifier with all methods (current implemented, downstream as `throw UnimplementedError()` stubs)
+3. **Skeleton widget** — pulse animation, layout matching real content card exactly
+4. **Empty state widget** — exact copy/illustration from Empty States Catalog
 5. **List/detail widgets** — content display
 6. **Screen widget** — `.when(loading/error/data)` combining all above
-7. **Form widgets** — create/edit with validation
+7. **Form widgets** — create/edit with validation (if this issue includes forms)
 
-### Non-negotiable screen requirements
-Every screen must have before it is considered done:
-- Skeleton loading (pulse animation, layout matching)
+### Non-negotiable on every screen
+- Skeleton loading (pulse animation, layout matches real card)
 - Error state with retry button
-- Empty state (motivational for primary, instructional for sub-screens)
-- Pull-to-refresh on scrollable lists
+- Empty state (motivational for primary screens, instructional for sub-screens)
+- Pull-to-refresh on all scrollable lists
 - `const` on every widget that can be const
 
+### Supabase query rules
+- Always filter by `property_id` first
+- Always include `deleted_at IS NULL` for soft-delete tables
+- Never `SELECT *` — list only the columns the screen actually needs
+- Use nested selects to avoid N+1 (e.g. fetch category name alongside document in one query)
+
 ### After building
-Run:
 ```bash
-flutter analyze
+cd apps/keystona && flutter analyze
 ```
-Zero warnings = required. Fix any issues before reporting done.
+Zero warnings required. Fix all issues before reporting done.
 
 ## Step 6 — Hand-off Notes
 
-After building, produce a hand-off comment for the PR:
+After the build passes `flutter analyze`, produce a PR description:
 
 ```markdown
-## Built: [Issue Title]
+## Built: #{N} — {Issue Title}
 
-### Extension points for dependent issues
-- **#21 (Upload)**: `DocumentsProvider.add(doc)` method is stubbed at line X — implement the Supabase insert
-- **#22 (Detail)**: `Document` model has all fields needed — `thumbnailPath`, `expirationDate`, `linkedSystemId`
-- **#23 (Search)**: `DocumentsProvider` accepts optional `searchQuery` param — hook up Supabase ilike query
-- **#25 (Categories)**: `DocumentCategory` model and `documentCategoriesProvider` already exist
+### What was built
+{1–2 sentence summary}
+
+### Extension points for downstream issues
+- **#{N} ({title})**: `{ProviderName}.{method}()` stubbed at `{file}:{line}` — implement {what}
+- **#{N} ({title})**: `{ModelName}.{field}` already defined — agent just needs to {display/use} it
 
 ### Routes to wire (for integrator)
-Add to app_router.dart under the documents branch:
-- `/documents/upload` → DocumentUploadScreen
-- `/documents/:documentId` → DocumentDetailScreen
+Add to app_router.dart:
+- `{path}` → {ScreenName}
 
 ### Deferred to downstream issues
-- OCR text display (#26)
-- Full-text search (#23)
-- Category management UI (#25)
+- {Feature} (#{N})
+- {Feature} (#{N})
+
+### Acceptance criteria
+- [x] {criterion}
+- [x] {criterion}
 ```
 
 ## Quality Bar
 
-Do not report complete until:
-- [ ] All acceptance criteria from the GitHub issue are met
+Do not report complete until all of these pass:
+
+- [ ] Every acceptance criteria checkbox from the GitHub issue is met
 - [ ] Every screen has skeleton + error + empty states
-- [ ] `flutter analyze` is clean
-- [ ] Model includes fields needed by all downstream issues
-- [ ] Provider includes stub methods for all downstream issues
-- [ ] Hand-off notes written
+- [ ] `flutter analyze` shows zero warnings
+- [ ] Model includes all fields needed by downstream issues
+- [ ] Provider stubs exist for all methods downstream issues will call
+- [ ] PR hand-off notes written
 
-## Feature Reference Table
+## How to Find Spec References for Any Issue
 
-| Issue | Phase | API Contract | DB Tables | Error Handling |
-|-------|-------|-------------|-----------|----------------|
-| #20 Doc List | 1.1 | §6.1 | documents, document_categories | §§3–4, 14.1 |
-| #21 Doc Upload | 1.2 | §6.4 | documents, document_categories | §§10–11 |
-| #22 Doc Detail | 1.3 | §§6.2, 6.5–6.7 | documents | §§3, 7 |
-| #23 Search | 1.4 | §6.3 | documents | §10 |
-| #24 Expiration | 1.5 | §6.8 | documents | §§3–4 |
-| #25 Categories | 1.6 | §§6.9–6.11 | document_categories | §14.1 |
-| #26 OCR | 1.7 | §14.2 | documents | §14.1 |
+The GitHub issue's **Key references** section lists exact doc + section numbers.
+When in doubt, the Sprint Plan (`HomeTrack_Sprint_Plan.md`) is the source of truth —
+find the chunk matching the issue title, read its "Key references" field.
+
+All spec docs live in `keystona-project-files/`:
+```
+HomeTrack_SRS.md                  — requirements, design system
+HomeTrack_Database_Schema.md      — all tables, RLS, storage buckets
+HomeTrack_API_Contract.md         — all queries and Edge Functions
+HomeTrack_Sprint_Plan.md          — phases, chunks, acceptance criteria
+HomeTrack_Platform_UI_Guide.md    — adaptive widget matrix
+HomeTrack_Performance_Guide.md    — time budgets, caching rules
+HomeTrack_Error_Handling.md       — loading/error/empty/form/offline patterns
+HomeTrack_Empty_States_Catalog.md — exact copy for all 25 empty states
+HomeTrack_Security_Guide.md       — auth, PII, validation checklist
+HomeTrack_Dashboard_Spec.md       — Home tab (Phase 3+)
+HomeTrack_Health_Score_Algorithm.md — scoring formula (Phase 3+)
+HomeTrack_Dashboard_States.md     — 8 dashboard states (Phase 3+)
+HomeTrack_Notification_Priority.md — notification tiers (Phase 7)
+```
