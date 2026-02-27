@@ -185,6 +185,10 @@ Comprehensive specifications in `keystona-project-files/`:
 - **routerProvider watches auth**: `Provider<GoRouter>` watches `isAuthenticatedProvider` — router rebuilds automatically on sign-in/out, redirect fires on every navigation
 - **PlaceholderScreen pattern**: Single reusable widget for all unbuilt routes keeps route tree complete without stub files per feature → `lib/core/widgets/placeholder_screen.dart`
 - **goBranch with initialLocation**: `goBranch(index, initialLocation: index == currentIndex)` — active tab tap pops to root, other tabs preserve state
+- **Auth screens skip AppScaffold**: Landing screens (login, signup) use plain `Scaffold` with no app bar — `AppScaffold` only for sub-screens
+- **ConsumerStatefulWidget for forms**: Forms need both Riverpod ref (services) and local state (loading, controllers) → `ConsumerStatefulWidget` is the correct base
+- **Loading state on submit button**: Disable button + swap label for `CircularProgressIndicator` during async call — prevents double-submit
+- **Confirm password validated against controller**: Validator closes over `_passwordController.text` directly — no cross-field form validator needed
 
 ## Decisions
 
@@ -195,6 +199,8 @@ Comprehensive specifications in `keystona-project-files/`:
 - **`get` over `const` for TextStyles**: `GoogleFonts.*` returns runtime instances so TextStyle constants must be getters, not `const` fields
 - **OfflineBanner self-contained**: Chose `ConsumerWidget` watching `isOnlineProvider` internally over requiring parent to pass state — simplifies every screen
 - **`hideCurrentSnackBar()` before showing**: Prevents snackbar stacking when errors fire rapidly
+- **`context.go()` for auth transitions**: Auth nav (login→dashboard, signup→onboarding) uses `go()` not `push()` — replaces stack so no back button returns to auth after sign-in
+- **`ref.read()` for one-shot service calls**: Auth screen calls `ref.read(authServiceProvider).signIn()` directly — no notifier needed for simple fire-and-forget actions
 - **`StatefulShellRoute.indexedStack` over `ShellRoute`**: Preserves scroll/state per tab — `ShellRoute` rebuilds on every tab switch
 - **`BottomNavigationBar` over `NavigationBar`**: Material 2 bar matches iOS feel better for MVP — upgrade to `NavigationBar` in polish phase
 - **Auth providers separate from router**: Router watches auth providers, doesn't own auth logic — cleaner separation of concerns
