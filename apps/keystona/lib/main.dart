@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config.dart';
+import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 
 Future<void> main() async {
@@ -20,20 +21,22 @@ Future<void> main() async {
   );
 }
 
-class KeystonaApp extends StatelessWidget {
+/// Root application widget.
+///
+/// Uses [ConsumerWidget] so it can watch [routerProvider] and rebuild when
+/// authentication state transitions cause a new [GoRouter] to be produced.
+class KeystonaApp extends ConsumerWidget {
   const KeystonaApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+
+    return MaterialApp.router(
       title: 'Keystona',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: const Scaffold(
-        body: Center(
-          child: Text('Keystona'),
-        ),
-      ),
+      routerConfig: router,
     );
   }
 }
