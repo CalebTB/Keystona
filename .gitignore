@@ -1,0 +1,42 @@
+# ─── Secrets ─────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ─── Claude Code (local only) ─────────────────
+.claude/settings.local.json
+
+# ─── Flutter ──────────────────────────────────
+apps/keystona/.dart_tool/
+apps/keystona/.packages
+apps/keystona/build/
+apps/keystona/.flutter-plugins
+apps/keystona/.flutter-plugins-dependencies
+apps/keystona/ios/Pods/
+apps/keystona/ios/.symlinks/
+apps/keystona/android/.gradle/
+apps/keystona/android/app/debug/
+apps/keystona/android/app/profile/
+apps/keystona/android/app/release/
+
+# ─── Generated Dart ───────────────────────────
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# ─── Supabase ─────────────────────────────────
+supabase/.temp/
+supabase/.branches/
+
+# ─── OS ───────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── IDE ──────────────────────────────────────
+.idea/
+.vscode/settings.json
+*.iml
+
+# ─── Misc ─────────────────────────────────────
+node_modules/
+hometrack-dashboard-C-home-intelligence.html

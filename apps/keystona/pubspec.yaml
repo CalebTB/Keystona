@@ -1,0 +1,82 @@
+name: keystona
+description: "Keystona — The smart way to manage your home."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # ─── Supabase ───────────────────
+  supabase_flutter: ^2.5.0
+
+  # ─── State Management ──────────
+  flutter_riverpod: ^3.1.0
+  riverpod_annotation: ^4.0.0
+
+  # ─── Navigation ─────────────────
+  go_router: ^17.1.0
+
+  # ─── UI Components ─────────────
+  google_fonts: ^8.0.2
+  flutter_svg: ^2.0.0
+  cached_network_image: ^3.3.0
+  shimmer: ^3.0.0
+
+  # ─── Forms & Validation ────────
+  flutter_form_builder: ^10.3.0+2
+  form_builder_validators: ^11.3.0
+
+  # ─── Local Storage & Offline ───
+  sqflite: ^2.3.0
+  shared_preferences: ^2.2.0
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.0
+
+  # ─── File & Camera ─────────────
+  image_picker: ^1.1.0
+  file_picker: ^10.3.10
+  image_cropper: ^11.0.0
+  flutter_image_compress: ^2.3.0
+
+  # ─── Notifications ─────────────
+  firebase_core: ^4.4.0
+  firebase_messaging: ^16.1.1
+  flutter_local_notifications: ^20.1.0
+
+  # ─── Analytics & Monitoring ────
+  posthog_flutter: ^5.15.2
+  sentry_flutter: ^9.14.0
+
+  # ─── Payments ──────────────────
+  purchases_flutter: ^9.12.3
+
+  # ─── Utilities ─────────────────
+  intl: any
+  url_launcher: ^6.2.0
+  share_plus: ^12.0.1
+  connectivity_plus: ^7.0.0
+  permission_handler: ^12.0.1
+  package_info_plus: ^9.0.0
+  uuid: ^4.4.0
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.9.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.0
+  riverpod_generator: ^4.0.0+1
+  freezed: ^3.2.3
+  json_serializable: ^6.8.0
+  mockito: ^5.4.0
+
+flutter:
+  uses-material-design: true
