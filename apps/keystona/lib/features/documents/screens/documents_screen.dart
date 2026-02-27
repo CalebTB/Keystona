@@ -377,7 +377,7 @@ class _SortButton extends StatelessWidget {
             .map(
               (opt) => CupertinoActionSheetAction(
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  Navigator.of(context, rootNavigator: true).pop();
                   onSortSelected(opt.order);
                 },
                 child: Text(opt.label),
@@ -386,7 +386,7 @@ class _SortButton extends StatelessWidget {
             .toList(),
         cancelButton: CupertinoActionSheetAction(
           isDestructiveAction: false,
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
           child: const Text('Cancel'),
         ),
       ),
