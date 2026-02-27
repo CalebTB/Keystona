@@ -53,7 +53,8 @@ Use skills for common workflows:
 
 | Skill | Use For |
 |-------|---------|
-| `feature-agent` | Build complete features from start to finish |
+| `plan-and-build` | **Start here for any issue** — plans with look-ahead at dependent issues, then builds |
+| `feature-agent` | Build complete features from start to finish (used inside plan-and-build) |
 | `flutter-agent` | Flutter/Dart coding with iOS-first adaptive widgets |
 | `supabase-agent` | Supabase queries, RLS policies, Edge Functions |
 | `migration-writer` | Database migrations with RLS policies |
