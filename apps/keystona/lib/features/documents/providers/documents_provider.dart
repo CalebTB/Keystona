@@ -38,8 +38,7 @@ class DocumentsNotifier extends _$DocumentsNotifier {
     final user = SupabaseService.client.auth.currentUser;
     if (user == null) return [];
 
-    // Fetch the user's primary property. Properties are ordered by creation
-    // date so the most recent property is always returned first.
+    // Fetch the user's primary property. Returns null if onboarding incomplete.
     final profileRow = await SupabaseService.client
         .from('properties')
         .select('id')
@@ -47,8 +46,9 @@ class DocumentsNotifier extends _$DocumentsNotifier {
         .isFilter('deleted_at', null)
         .order('created_at', ascending: false)
         .limit(1)
-        .single();
+        .maybeSingle();
 
+    if (profileRow == null) return [];
     final propertyId = profileRow['id'] as String;
 
     // Build the base filter chain. Always filter by property first, then

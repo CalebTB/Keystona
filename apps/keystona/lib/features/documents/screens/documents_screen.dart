@@ -85,10 +85,9 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
           // TODO(#23): implement search bar — insert SliverToBoxAdapter with
           // a CupertinoSearchTextField here, debounced at 300ms.
 
-          // Sticky filter chips row.
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _FilterChipHeaderDelegate(
+          // Filter chips row.
+          SliverToBoxAdapter(
+            child: _FilterRow(
               categoriesState: categoriesState,
               selectedCategoryId: _selectedCategoryId,
               onCategorySelected: (id) {
@@ -322,48 +321,6 @@ class _FilterChip extends StatelessWidget {
             color: isSelected ? AppColors.textInverse : AppColors.textPrimary,
           ),
         ),
-      ),
-    );
-  }
-}
-
-// ── Sticky filter header delegate (iOS) ───────────────────────────────────────
-
-class _FilterChipHeaderDelegate extends SliverPersistentHeaderDelegate {
-  const _FilterChipHeaderDelegate({
-    required this.categoriesState,
-    required this.selectedCategoryId,
-    required this.onCategorySelected,
-  });
-
-  final AsyncValue<List<DocumentCategory>> categoriesState;
-  final String? selectedCategoryId;
-  final void Function(String? id) onCategorySelected;
-
-  @override
-  double get minExtent => 56;
-
-  @override
-  double get maxExtent => 56;
-
-  @override
-  bool shouldRebuild(_FilterChipHeaderDelegate oldDelegate) {
-    return oldDelegate.selectedCategoryId != selectedCategoryId ||
-        oldDelegate.categoriesState != categoriesState;
-  }
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return ColoredBox(
-      color: CupertinoTheme.of(context).scaffoldBackgroundColor,
-      child: _FilterRow(
-        categoriesState: categoriesState,
-        selectedCategoryId: selectedCategoryId,
-        onCategorySelected: onCategorySelected,
       ),
     );
   }
