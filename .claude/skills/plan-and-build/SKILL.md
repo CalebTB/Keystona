@@ -73,7 +73,7 @@ Provider methods to stub now (for downstream):
 
 If no downstream issues exist, note that explicitly and skip stub methods.
 
-## Step 3 — Spec Research
+## Step 3 — Spec Research (Local)
 
 Read the spec sections referenced in the current issue AND all downstream issues.
 
@@ -107,6 +107,65 @@ lib/core/theme/         — design tokens (AppColors, AppSizes, AppTextStyles)
 lib/core/widgets/       — shared widgets already available (don't rebuild what exists)
 lib/core/router/app_router.dart — how routes and branches are wired
 ```
+
+Check `pubspec.yaml` to understand which packages are already in the project —
+note the exact versions before searching for documentation.
+
+## Step 3b — Web Research (Best Practices)
+
+Search online to validate your approach before writing the plan. This prevents
+building with outdated patterns or the wrong packages.
+
+**Step 3b-1 — Identify what needs researching.**
+
+From your spec + codebase reading, list the specific technical questions you
+need answered before you can confidently write the plan. Examples:
+
+- "Which Flutter PDF viewer package is recommended in 2026?"
+- "What is the current AsyncNotifier best practice with Riverpod 3.x?"
+- "Are there known issues with CupertinoSliverRefreshControl + SliverAppBar?"
+- "How does Supabase Flutter SDK handle nested selects in the current version?"
+- "What is the correct way to do HEIC → JPEG conversion on iOS in Flutter?"
+
+Only search for things that would meaningfully change your implementation
+decisions. Skip if the spec already gives you the exact code and it uses
+stable, well-known APIs.
+
+**Step 3b-2 — Search in parallel where possible.**
+
+For each question, search using terms like:
+- `flutter [feature] best practices 2026`
+- `riverpod [specific pattern] example`
+- `supabase flutter [operation] current`
+- `[package name] flutter pub.dev`
+- `[package name] known issues`
+
+**Step 3b-3 — Synthesize findings into a "Research Notes" section.**
+
+Add to the plan:
+
+```markdown
+## Research Notes
+- **[Topic]**: [What you found] → [How it affects the implementation]
+- **[Package]**: v{version} — [Current recommendation, any gotchas]
+- **[Pattern]**: [Current best practice] — differs from spec in that [X]
+```
+
+If a finding contradicts the spec or suggests a better approach, call it out
+explicitly so the user can decide. The spec was written at a point in time —
+packages change, APIs deprecate, better patterns emerge.
+
+**What to research for common Keystona feature types:**
+
+| Feature type | Always research |
+|---|---|
+| Any list screen | Current Riverpod `AsyncNotifier` pattern, `flutter_riverpod` version changelog |
+| File upload | Current Supabase Storage Flutter SDK, MIME type handling, size validation |
+| PDF/image viewing | Best package for PDF viewer, image zoom packages |
+| Search with debounce | Current Flutter debounce patterns, Supabase `textSearch` vs `ilike` |
+| Camera / photo picker | `image_picker` current version, HEIC handling, permissions |
+| Adaptive UI | Flutter `Platform.isIOS` vs `defaultTargetPlatform` current recommendation |
+| Any new Supabase query | Supabase Flutter SDK docs for that specific query type |
 
 ## Step 4 — Write the Plan
 
