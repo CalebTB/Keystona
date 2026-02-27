@@ -5,6 +5,9 @@ import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
+import '../../features/onboarding/screens/property_setup_screen.dart';
+import '../../features/onboarding/screens/trial_screen.dart';
+import '../../features/onboarding/screens/welcome_screen.dart';
 import '../widgets/placeholder_screen.dart';
 import 'app_shell.dart';
 
@@ -134,15 +137,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ── Onboarding routes (no shell) ─────────────────────────────────────
       GoRoute(
         path: AppRoutes.onboarding,
-        builder: (_, _) => const PlaceholderScreen(name: 'Welcome'),
+        builder: (_, _) => const WelcomeScreen(),
       ),
       GoRoute(
         path: AppRoutes.onboardingProperty,
-        builder: (_, _) => const PlaceholderScreen(name: 'Property Setup'),
+        builder: (_, _) => const PropertySetupScreen(),
       ),
       GoRoute(
         path: AppRoutes.onboardingTrial,
-        builder: (_, _) => const PlaceholderScreen(name: 'Trial Offer'),
+        builder: (_, _) => const TrialScreen(),
       ),
 
       // ── Shell — five tabs with persistent state ──────────────────────────
