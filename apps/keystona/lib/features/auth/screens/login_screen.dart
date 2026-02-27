@@ -37,15 +37,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
-      if (mounted) {
-        context.go(AppRoutes.dashboard);
-      }
+      // Router auto-redirects to dashboard when isAuthenticatedProvider updates.
     } catch (e) {
       if (mounted) {
-        SnackbarService.showError(
-          context,
-          'Sign in failed. Check your email and password.',
-        );
+        SnackbarService.showError(context, e.toString());
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

@@ -1,3 +1,6 @@
+# Dart defines (contains secrets)
+dart-defines.json
+
 # Miscellaneous
 *.class
 *.log

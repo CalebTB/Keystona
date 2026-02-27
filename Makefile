@@ -21,16 +21,16 @@ db-push:
 
 # ─── Flutter App ─────────────────────────────
 app-run:
-	cd apps/keystona && flutter run --dart-define-from-file=.env
+	cd apps/keystona && flutter run --dart-define-from-file=dart-defines.json
 
 app-test:
 	cd apps/keystona && flutter test
 
 app-build-apk:
-	cd apps/keystona && flutter build apk --release --dart-define-from-file=.env
+	cd apps/keystona && flutter build apk --release --dart-define-from-file=dart-defines.json
 
 app-build-ios:
-	cd apps/keystona && flutter build ios --release --dart-define-from-file=.env
+	cd apps/keystona && flutter build ios --release --dart-define-from-file=dart-defines.json
 
 app-analyze:
 	cd apps/keystona && flutter analyze

@@ -45,11 +45,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       if (mounted) {
         context.go(AppRoutes.onboarding);
       }
+      // Note: if onboarding redirect fails, router will auto-redirect to
+      // dashboard once isAuthenticatedProvider updates.
     } catch (e) {
       if (mounted) {
         SnackbarService.showError(
           context,
-          'Account creation failed. Please try again.',
+          e.toString(),
         );
       }
     } finally {

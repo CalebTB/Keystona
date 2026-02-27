@@ -77,6 +77,9 @@ abstract final class AppRoutes {
     login,
     signup,
     forgotPassword,
+    onboarding,
+    onboardingProperty,
+    onboardingTrial,
   };
 
   /// Returns true when [path] does not require an authenticated session.
