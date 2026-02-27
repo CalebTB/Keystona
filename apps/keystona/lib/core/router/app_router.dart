@@ -5,6 +5,7 @@ import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
+import '../../features/documents/screens/documents_screen.dart';
 import '../../features/onboarding/screens/property_setup_screen.dart';
 import '../../features/onboarding/screens/trial_screen.dart';
 import '../../features/onboarding/screens/welcome_screen.dart';
@@ -243,8 +244,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: AppRoutes.documents,
-                builder: (_, _) =>
-                    const PlaceholderScreen(name: 'Document Vault'),
+                builder: (_, _) => const DocumentsScreen(),
                 routes: [
                   // Static segments must precede parameterised ':documentId'.
                   GoRoute(

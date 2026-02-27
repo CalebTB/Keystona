@@ -53,7 +53,8 @@ Use skills for common workflows:
 
 | Skill | Use For |
 |-------|---------|
-| `feature-agent` | Build complete features from start to finish |
+| `plan-and-build` | **Start here for any issue** — plans with look-ahead at dependent issues, then builds |
+| `feature-agent` | Build complete features from start to finish (used inside plan-and-build) |
 | `flutter-agent` | Flutter/Dart coding with iOS-first adaptive widgets |
 | `supabase-agent` | Supabase queries, RLS policies, Edge Functions |
 | `migration-writer` | Database migrations with RLS policies |
@@ -195,6 +196,12 @@ Comprehensive specifications in `keystona-project-files/`:
 - **AsyncNotifier for DB writes**: Feature data mutations use `AsyncNotifier` + `AsyncValue.guard` — caller inspects state after notifier call completes
 - **Router-driven auth navigation**: After sign-in/sign-up never call `context.go()` — remove it and let `routerProvider` redirect automatically when `isAuthenticatedProvider` updates → `lib/core/router/app_router.dart`
 - **Onboarding routes in publicRoutes**: Onboarding screens must be in `_publicRoutes` so the auth guard doesn't intercept during the auth-stream update window → `lib/core/router/app_router.dart`
+- **Freezed v3 `abstract class` pattern**: Must use `@freezed abstract class Foo with _$Foo` — Freezed v3 generates abstract getters in the mixin so `class` (non-abstract) fails to compile → `lib/features/documents/models/document.dart`
+- **`@riverpod` codegen for all feature providers**: Use `@riverpod` annotation + `class FooNotifier extends _$FooNotifier` — codegen generates `fooProvider` and `fooProvider.notifier`; never write manual `AsyncNotifierProvider` → `lib/features/documents/providers/documents_provider.dart`
+- **Downstream-annotated model fields**: Every model field used only by a future issue gets a `/// [#N] used for {purpose}` doc comment — guides agents building dependent issues without reading multiple files → `lib/features/documents/models/document.dart`
+- **UnimplementedError stubs for downstream provider methods**: `throw UnimplementedError('method() implemented by issue #N')` in provider stubs — agents building dependent issues know exactly which method to fill in and why → `lib/features/documents/providers/documents_provider.dart`
+- **Shimmer skeleton matches card layout exactly**: `DocumentListSkeleton` mirrors `DocumentCard` height (80px) and internal layout (48×48 thumb + 3 text lines) — seamless loading→content transition with no layout jump → `lib/features/documents/widgets/document_list_skeleton.dart`
+- **`.maybeSingle()` for optional single-row queries**: Returns `null` on 0 rows instead of throwing `PGRST116` — always use for queries where 0 rows is a valid state (e.g. user has no property yet); guard with `if (row == null) return []`
 
 ## Decisions
 
@@ -215,6 +222,9 @@ Comprehensive specifications in `keystona-project-files/`:
 - **`completeOnboarding()` as top-level function**: Called from 3 screens with no shared state — top-level async function cleaner than a provider method
 - **`String.fromEnvironment` needs `defaultValue` for dev**: No default = empty string at runtime when `--dart-define-from-file` is omitted → always add `defaultValue` for dev credentials in `config.dart`
 - **Supabase `external_email_enabled` off by default**: New projects ship with email/password auth disabled — enable via Management API or Dashboard before first run
+- **`updateDocument()` not `update()` for provider methods**: `AsyncNotifier` has a built-in `update(T Function(T) fn)` method — feature methods named `update()` silently shadow it causing type errors; use descriptive names like `updateDocument()`, `updateTask()`
+- **`SliverToBoxAdapter` over `SliverPersistentHeader` inside `CupertinoPageScaffold`**: Pinned persistent headers conflict with `CupertinoSliverNavigationBar` geometry — use `SliverToBoxAdapter` for filter bars; sticky behavior can be added later via `NestedScrollView`
+- **`@riverpod` codegen naming convention**: Codegen generates `fooProvider` (not `fooNotifierProvider`) and `fooProvider.notifier` (not `fooProvider.notifier`) — match these generated names exactly when calling `ref.watch()` / `ref.read()`
 
 ## Lessons
 
@@ -233,6 +243,12 @@ Comprehensive specifications in `keystona-project-files/`:
 - **Router race condition on auth navigation**: `context.go('/dashboard')` fires before `isAuthenticatedProvider` stream updates — router sees stale `isAuthenticated = false` and redirects back to login → remove manual `context.go` after auth calls, let router self-redirect
 - **Supabase `external_email_enabled` off by default**: Must `PATCH /v1/projects/{ref}/config/auth` with `{"external_email_enabled": true}` or toggle in Dashboard → Auth → Providers before email/password auth works
 - **CocoaPods specs repo needs update for new Firebase**: `firebase_core` 4.x requires Firebase SDK 12.8.0 — run `pod repo update` if CocoaPods can't find the spec
+- **`SliverPersistentHeader(pinned: true)` crashes inside `CupertinoPageScaffold`**: `layoutExtent > paintExtent` geometry error + cascading `!semantics.parentDataDirty` assertion + null check — root cause is `CupertinoSliverNavigationBar` reporting non-standard sliver geometry; replace with `SliverToBoxAdapter`
+- **Empty migration files create phantom applied state**: `supabase db push` records migration names in `schema_migrations` even when files are empty — tables are never created; always verify with `execute_sql SELECT table_name FROM information_schema.tables` after applying
+- **`handle_new_user` trigger only fires on new signups**: Users who signed up before the `profiles` table existed have no profile row; backfill with `INSERT INTO profiles SELECT id, email, ... FROM auth.users WHERE id NOT IN (SELECT id FROM profiles) ON CONFLICT DO NOTHING` after applying migrations
+- **Supabase `.single()` throws `PGRST116` on 0 rows**: Error cascades as an unhandled exception → error state in UI; use `.maybeSingle()` and guard with `if (row == null) return []` for any query where the user may not have data yet (pre-onboarding)
+- **`showCupertinoModalPopup` requires `rootNavigator: true` to dismiss**: Modal is pushed onto root navigator; `Navigator.of(context).pop()` resolves to GoRouter's inner navigator, empties its stack and crashes with "no pages left to show" → always dismiss with `Navigator.of(context, rootNavigator: true).pop()`
+- **Freezed v3 requires `abstract class`**: `@freezed class Foo with _$Foo` fails — Freezed v3 generates abstract property getters in `_$Foo` that the concrete class can't satisfy; always use `@freezed abstract class Foo with _$Foo`
 
 ## Philosophy
 
