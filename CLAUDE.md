@@ -169,24 +169,28 @@ Comprehensive specifications in `keystona-project-files/`:
 
 ## Patterns
 
-<!-- Add patterns discovered during development here -->
 <!-- Format:
 - **[Pattern Name]**: [Brief description] → See `[file path]`
 -->
+- **Semantic Color Palette**: All colors in `AppColors` as `abstract final class` constants — no hex values in widgets or theme → `lib/core/theme/app_colors.dart`
+- **Pre-built TextStyles as getters**: `AppTextStyles` uses `static TextStyle get` (not `const`) because `GoogleFonts.*` constructs at runtime → `lib/core/theme/app_text_styles.dart`
+- **4px Spacing Grid**: All spacing, radii, padding via `AppSizes`, `AppRadius`, `AppPadding` — never hardcoded → `lib/core/theme/app_sizes.dart`
+- **Theme references design tokens only**: `app_theme.dart` contains no raw Colors, TextStyles, or numbers — always `AppColors.*`, `AppTextStyles.*`, `AppSizes.*`
 
 ## Decisions
 
-<!-- Add architecture/technology decisions here -->
 <!-- Format:
 - **[Decision]**: Chose [X] over [Y] because [reason]
 -->
+- **`abstract final class` for design tokens**: Chose over plain `class` because it prevents instantiation and signals pure namespace intent
+- **`get` over `const` for TextStyles**: `GoogleFonts.*` returns runtime instances so TextStyle constants must be getters, not `const` fields
 
 ## Lessons
 
-<!-- Add bugs, failures, and prevention strategies here -->
 <!-- Format:
 - **[Issue]**: [What happened] → [How to prevent]
 -->
+- **`intl` version conflict on pub get**: `form_builder_validators ^10.x` pins `intl ^0.19.0` conflicting with Flutter SDK's `intl 0.20.2` → Run `flutter pub upgrade --major-versions` to resolve all deps to latest compatible versions
 
 ## Philosophy
 
