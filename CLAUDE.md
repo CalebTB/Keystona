@@ -176,6 +176,10 @@ Comprehensive specifications in `keystona-project-files/`:
 - **Pre-built TextStyles as getters**: `AppTextStyles` uses `static TextStyle get` (not `const`) because `GoogleFonts.*` constructs at runtime → `lib/core/theme/app_text_styles.dart`
 - **4px Spacing Grid**: All spacing, radii, padding via `AppSizes`, `AppRadius`, `AppPadding` — never hardcoded → `lib/core/theme/app_sizes.dart`
 - **Theme references design tokens only**: `app_theme.dart` contains no raw Colors, TextStyles, or numbers — always `AppColors.*`, `AppTextStyles.*`, `AppSizes.*`
+- **Barrel Export**: `lib/core/widgets/widgets.dart` re-exports all widgets — features do one import instead of many → `lib/core/widgets/widgets.dart`
+- **Static Service Pattern**: Pure logic classes use `abstract final class` with static methods — no instantiation, no state (SnackbarService, PhotoPicker, AppDateUtils, CurrencyFormatter, Validators)
+- **Services throw, UI catches**: AuthService/StorageService throw on failure with no UI concerns — callers catch and route to SnackbarService
+- **Riverpod providers co-located**: All service providers in `lib/services/providers/service_providers.dart`, not scattered across features
 
 ## Decisions
 
@@ -184,6 +188,8 @@ Comprehensive specifications in `keystona-project-files/`:
 -->
 - **`abstract final class` for design tokens**: Chose over plain `class` because it prevents instantiation and signals pure namespace intent
 - **`get` over `const` for TextStyles**: `GoogleFonts.*` returns runtime instances so TextStyle constants must be getters, not `const` fields
+- **OfflineBanner self-contained**: Chose `ConsumerWidget` watching `isOnlineProvider` internally over requiring parent to pass state — simplifies every screen
+- **`hideCurrentSnackBar()` before showing**: Prevents snackbar stacking when errors fire rapidly
 
 ## Lessons
 
@@ -191,6 +197,10 @@ Comprehensive specifications in `keystona-project-files/`:
 - **[Issue]**: [What happened] → [How to prevent]
 -->
 - **`intl` version conflict on pub get**: `form_builder_validators ^10.x` pins `intl ^0.19.0` conflicting with Flutter SDK's `intl 0.20.2` → Run `flutter pub upgrade --major-versions` to resolve all deps to latest compatible versions
+- **`TODO(...)` triggers dart lint**: The `todo` lint rule flags `TODO(name):` comments → Use plain `// note:` style for deferred work
+- **Riverpod 3.x removed `.valueOrNull`**: Use `.value` directly on `AsyncValue` — `.valueOrNull` no longer exists
+- **`FileOptions` needs explicit import**: Requires `import 'package:supabase_flutter/supabase_flutter.dart'` — not resolved through transitive imports
+- **Email regex in single-quoted strings**: Regex containing `'` inside a single-quoted Dart string causes parse errors → Use double-quoted or raw double-quoted strings (`r"..."`)
 
 ## Philosophy
 
