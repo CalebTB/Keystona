@@ -138,20 +138,82 @@ class DocumentsNotifier extends _$DocumentsNotifier {
     return docs.first;
   }
 
-  /// Fetches a single document by ID. Implemented by issue #22.
-  Future<Document> getById(String id) {
-    throw UnimplementedError('getById() implemented by issue #22');
+  // ── Implemented by issue #22 ────────────────────────────────────────────────
+
+  /// Fetches a single document by ID with full joins (category + type).
+  ///
+  /// Throws a [StateError] when the document does not exist or has been
+  /// soft-deleted.
+  Future<Document> getById(String id) async {
+    final user = SupabaseService.client.auth.currentUser;
+    if (user == null) throw StateError('Not authenticated');
+
+    final row = await SupabaseService.client
+        .from('documents')
+        .select(
+          'id, name, category_id, document_type_id, file_path, '
+          'thumbnail_path, file_size_bytes, mime_type, page_count, '
+          'ocr_text, ocr_status, metadata, expiration_date, notes, '
+          'linked_system_id, linked_appliance_id, created_at, updated_at, '
+          'deleted_at, '
+          'category:document_categories('
+          '  id, name, icon, color, is_system, sort_order, created_at, user_id'
+          '), '
+          'type:document_types(id, category_id, name, description, sort_order)',
+        )
+        .eq('id', id)
+        .isFilter('deleted_at', null)
+        .single();
+
+    // Inject user_id and property_id from the auth context. The property_id
+    // is not fetched here to avoid a second query; the join on documents
+    // (which are always scoped to a property by RLS) guarantees ownership.
+    return Document.fromJson({
+      ...row,
+      'user_id': user.id,
+      'property_id': row['property_id'] ?? '',
+      'metadata': row['metadata'] ?? <String, dynamic>{},
+    });
   }
 
-  /// Updates document metadata fields. Implemented by issue #22.
+  /// Updates the mutable metadata fields of a document.
+  ///
+  /// Only pass the fields that have changed. The list is automatically
+  /// invalidated so callers see the updated document on the next frame.
   ///
   /// Named [updateDocument] to avoid collision with [AsyncNotifier.update].
-  Future<void> updateDocument(String id, Map<String, dynamic> changes) {
-    throw UnimplementedError('updateDocument() implemented by issue #22');
+  Future<void> updateDocument(String id, Map<String, dynamic> changes) async {
+    await SupabaseService.client
+        .from('documents')
+        .update(changes)
+        .eq('id', id);
+
+    ref.invalidateSelf();
   }
 
-  /// Soft-deletes a document (sets deleted_at). Implemented by issue #22.
-  Future<void> softDelete(String id) {
-    throw UnimplementedError('softDelete() implemented by issue #22');
+  /// Soft-deletes a document by setting [deleted_at] to the current time.
+  ///
+  /// The document is immediately excluded from all list queries. The list
+  /// provider is invalidated so the change is reflected without a manual
+  /// refresh.
+  Future<void> softDelete(String id) async {
+    await SupabaseService.client
+        .from('documents')
+        .update({'deleted_at': DateTime.now().toIso8601String()})
+        .eq('id', id);
+
+    ref.invalidateSelf();
+  }
+
+  /// Restores a soft-deleted document by clearing [deleted_at].
+  ///
+  /// Used by the undo-delete flow on the detail screen.
+  Future<void> restore(String id) async {
+    await SupabaseService.client
+        .from('documents')
+        .update({'deleted_at': null})
+        .eq('id', id);
+
+    ref.invalidateSelf();
   }
 }

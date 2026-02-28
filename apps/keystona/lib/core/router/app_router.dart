@@ -5,6 +5,7 @@ import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
+import '../../features/documents/screens/document_detail_screen.dart';
 import '../../features/documents/screens/document_upload_screen.dart';
 import '../../features/documents/screens/documents_screen.dart';
 import '../../features/onboarding/screens/property_setup_screen.dart';
@@ -264,8 +265,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: ':documentId',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Document Detail'),
+                    builder: (_, state) => DocumentDetailScreen(
+                      documentId: state.pathParameters['documentId']!,
+                    ),
                   ),
                 ],
               ),
