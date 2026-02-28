@@ -124,9 +124,18 @@ class DocumentsNotifier extends _$DocumentsNotifier {
     throw UnimplementedError('setSearchQuery() implemented by issue #23');
   }
 
-  /// Uploads and creates a new document. Implemented by issue #21.
-  Future<Document> add(Map<String, dynamic> data) {
-    throw UnimplementedError('add() implemented by issue #21');
+  /// Refreshes the list to include a newly uploaded document.
+  ///
+  /// [data] is unused — callers should call [refresh] directly or let the
+  /// [DocumentUploadNotifier] call `ref.invalidate(documentsNotifierProvider)`
+  /// after a successful upload.
+  Future<Document> add(Map<String, dynamic> data) async {
+    ref.invalidateSelf();
+    await future;
+    // Return the first document in the refreshed list (most recent upload).
+    final docs = state.value ?? [];
+    if (docs.isEmpty) throw StateError('No documents after add');
+    return docs.first;
   }
 
   // ── Implemented by issue #22 ────────────────────────────────────────────────

@@ -6,6 +6,7 @@ import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
 import '../../features/documents/screens/document_detail_screen.dart';
+import '../../features/documents/screens/document_upload_screen.dart';
 import '../../features/documents/screens/documents_screen.dart';
 import '../../features/onboarding/screens/property_setup_screen.dart';
 import '../../features/onboarding/screens/trial_screen.dart';
@@ -250,8 +251,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   // Static segments must precede parameterised ':documentId'.
                   GoRoute(
                     path: 'upload',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Upload Document'),
+                    builder: (_, _) => const DocumentUploadScreen(),
                   ),
                   GoRoute(
                     path: 'search',
