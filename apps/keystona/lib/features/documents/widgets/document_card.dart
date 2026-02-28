@@ -10,6 +10,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../services/supabase_service.dart';
 import '../models/document.dart';
 import '../models/document_category.dart';
+import 'expiration_badge.dart';
 
 /// A list-item card representing a single document in the Document Vault.
 ///
@@ -53,7 +54,7 @@ class DocumentCard extends StatelessWidget {
             ),
             if (document.expirationDate != null) ...[
               const SizedBox(width: AppSizes.sm),
-              _ExpirationBadge(expirationDate: document.expirationDate!),
+              ExpirationBadge(expirationDate: document.expirationDate!),
             ],
           ],
         ),
@@ -242,54 +243,3 @@ class _CategoryBadge extends StatelessWidget {
   }
 }
 
-// ── Expiration badge ──────────────────────────────────────────────────────────
-
-class _ExpirationBadge extends StatelessWidget {
-  const _ExpirationBadge({required this.expirationDate});
-
-  final DateTime expirationDate;
-
-  @override
-  Widget build(BuildContext context) {
-    final daysRemaining =
-        expirationDate.difference(DateTime.now()).inDays;
-
-    final Color bgColor;
-    final Color textColor;
-    final String label;
-
-    if (daysRemaining < 0) {
-      // Already expired.
-      bgColor = AppColors.errorLight;
-      textColor = AppColors.error;
-      label = 'Expired';
-    } else if (daysRemaining < 30) {
-      bgColor = AppColors.errorLight;
-      textColor = AppColors.error;
-      label = '${daysRemaining}d';
-    } else if (daysRemaining <= 90) {
-      bgColor = AppColors.warningLight;
-      textColor = AppColors.warning;
-      label = '${daysRemaining}d';
-    } else {
-      bgColor = AppColors.successLight;
-      textColor = AppColors.success;
-      label = '${daysRemaining}d';
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.sm,
-        vertical: AppSizes.xs,
-      ),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-      ),
-      child: Text(
-        label,
-        style: AppTextStyles.labelSmall.copyWith(color: textColor),
-      ),
-    );
-  }
-}
