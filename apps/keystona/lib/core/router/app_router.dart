@@ -5,6 +5,7 @@ import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
+import '../../features/documents/screens/document_categories_screen.dart';
 import '../../features/documents/screens/document_detail_screen.dart';
 import '../../features/documents/screens/document_upload_screen.dart';
 import '../../features/documents/screens/documents_screen.dart';
@@ -51,6 +52,7 @@ abstract final class AppRoutes {
   static const documentsUpload = '/documents/upload';
   static const documentsSearch = '/documents/search';
   static const documentsExpiring = '/documents/expiring';
+  static const documentsCategories = '/documents/categories';
   static const documentDetail = '/documents/:documentId';
 
   // Tab 2 — Tasks
@@ -262,6 +264,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: 'expiring',
                     builder: (_, _) =>
                         const PlaceholderScreen(name: 'Expiring Documents'),
+                  ),
+                  GoRoute(
+                    path: 'categories',
+                    builder: (_, _) => const DocumentCategoriesScreen(),
                   ),
                   GoRoute(
                     path: ':documentId',

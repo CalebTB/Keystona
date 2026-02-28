@@ -138,7 +138,11 @@ class _CategoryTile extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             InkWell(
-              onTap: () => onSelect(category),
+              // Custom categories have no document types — tap goes straight
+              // to the next step without expanding.
+              onTap: () => category.isSystem
+                  ? onSelect(category)
+                  : onSkipType(category),
               borderRadius: AppRadius.md,
               child: Padding(
                 padding: AppPadding.card,
@@ -164,17 +168,19 @@ class _CategoryTile extends ConsumerWidget {
                         style: AppTextStyles.bodyMediumSemibold,
                       ),
                     ),
-                    Icon(
-                      isExpanded
-                          ? Icons.keyboard_arrow_up
-                          : Icons.keyboard_arrow_down,
-                      color: AppColors.textSecondary,
-                    ),
+                    // Only system categories have document types to expand into.
+                    if (category.isSystem)
+                      Icon(
+                        isExpanded
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
+                        color: AppColors.textSecondary,
+                      ),
                   ],
                 ),
               ),
             ),
-            if (isExpanded) ...[
+            if (isExpanded && category.isSystem) ...[
               const Divider(height: 1, indent: AppSizes.md, endIndent: AppSizes.md),
               _TypeList(
                 category: category,

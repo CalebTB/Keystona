@@ -50,6 +50,27 @@ class _IOSDocumentsLayout extends ConsumerStatefulWidget {
 class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
   String? _selectedCategoryId;
 
+  Future<void> _showIOSOverflow(BuildContext context) async {
+    await showCupertinoModalPopup<void>(
+      context: context,
+      builder: (_) => CupertinoActionSheet(
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.of(context, rootNavigator: true).pop();
+              context.push(AppRoutes.documentsCategories);
+            },
+            child: const Text('Manage Categories'),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+          child: const Text('Cancel'),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final documentsState = ref.watch(documentsProvider);
@@ -70,6 +91,11 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
                   isIOS: true,
                   onSortSelected: (order) =>
                       ref.read(documentsProvider.notifier).setSortOrder(order),
+                ),
+                CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: () => _showIOSOverflow(context),
+                  child: const Icon(CupertinoIcons.ellipsis),
                 ),
                 CupertinoButton(
                   padding: EdgeInsets.zero,
@@ -202,6 +228,24 @@ class _AndroidDocumentsLayoutState
                   isIOS: false,
                   onSortSelected: (order) =>
                       ref.read(documentsProvider.notifier).setSortOrder(order),
+                ),
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert),
+                  color: AppColors.surface,
+                  onSelected: (value) {
+                    if (value == 'categories') {
+                      context.push(AppRoutes.documentsCategories);
+                    }
+                  },
+                  itemBuilder: (_) => [
+                    PopupMenuItem<String>(
+                      value: 'categories',
+                      child: Text(
+                        'Manage Categories',
+                        style: AppTextStyles.bodyMedium,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
