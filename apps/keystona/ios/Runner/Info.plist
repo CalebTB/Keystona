@@ -41,6 +41,12 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Keystona needs access to your photo library to add images as documents.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Keystona needs camera access to photograph documents.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Keystona needs microphone access when using the camera.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
