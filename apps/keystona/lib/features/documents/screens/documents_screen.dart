@@ -14,6 +14,9 @@ import '../providers/documents_provider.dart';
 import '../widgets/document_card.dart';
 import '../widgets/document_empty_state.dart';
 import '../widgets/document_list_skeleton.dart';
+import '../widgets/document_search_bar.dart';
+import '../widgets/document_search_empty_state.dart';
+import '../widgets/document_search_result_card.dart';
 
 /// The Document Vault list screen — Tab 1 of the main shell.
 ///
@@ -22,8 +25,6 @@ import '../widgets/document_list_skeleton.dart';
 ///   [CupertinoSliverRefreshControl] for pull-to-refresh, sticky filter chips.
 /// - Android: [Scaffold] with a floating [SliverAppBar], [RefreshIndicator],
 ///   and a [FloatingActionButton] for add.
-///
-/// TODO(#23): implement search bar — slot marked in [_FilterRow] below.
 class DocumentsScreen extends ConsumerWidget {
   const DocumentsScreen({super.key});
 
@@ -53,6 +54,8 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
   Widget build(BuildContext context) {
     final documentsState = ref.watch(documentsProvider);
     final categoriesState = ref.watch(documentCategoriesProvider);
+    final notifier = ref.read(documentsProvider.notifier);
+    final isSearchActive = notifier.isSearchActive;
 
     return CupertinoPageScaffold(
       child: CustomScrollView(
@@ -82,10 +85,16 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
             onRefresh: () => ref.read(documentsProvider.notifier).refresh(),
           ),
 
-          // TODO(#23): implement search bar — insert SliverToBoxAdapter with
-          // a CupertinoSearchTextField here, debounced at 300ms.
+          // Search bar — debounced 300ms, PRO badge for free users.
+          SliverToBoxAdapter(
+            child: DocumentSearchBar(
+              onChanged: (query) {
+                ref.read(documentsProvider.notifier).setSearchQuery(query);
+              },
+            ),
+          ),
 
-          // Filter chips row.
+          // Filter chips row — visible but inactive while search is active.
           SliverToBoxAdapter(
             child: _FilterRow(
               categoriesState: categoriesState,
@@ -109,22 +118,35 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
                     ref.read(documentsProvider.notifier).refresh(),
               ),
             ),
-            data: (docs) => docs.isEmpty
-                ? SliverFillRemaining(
-                    child: DocumentEmptyState(
-                      onAdd: () => context.push(AppRoutes.documentsUpload),
-                    ),
-                  )
-                : SliverPadding(
-                    padding: AppPadding.screen,
-                    sliver: SliverList.separated(
-                      itemCount: docs.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: AppSizes.sm),
-                      itemBuilder: (context, index) =>
-                          DocumentCard(document: docs[index]),
-                    ),
-                  ),
+            data: (docs) {
+              if (docs.isEmpty) {
+                return SliverFillRemaining(
+                  child: isSearchActive
+                      ? const DocumentSearchEmptyState()
+                      : DocumentEmptyState(
+                          onAdd: () => context.push(AppRoutes.documentsUpload),
+                        ),
+                );
+              }
+              return SliverPadding(
+                padding: AppPadding.screen,
+                sliver: SliverList.separated(
+                  itemCount: docs.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: AppSizes.sm),
+                  itemBuilder: (context, index) {
+                    final doc = docs[index];
+                    if (isSearchActive) {
+                      return DocumentSearchResultCard(
+                        document: doc,
+                        snippet: notifier.snippetFor(doc.id),
+                      );
+                    }
+                    return DocumentCard(document: doc);
+                  },
+                ),
+              );
+            },
           ),
 
           // Bottom safe-area breathing room.
@@ -153,6 +175,8 @@ class _AndroidDocumentsLayoutState
   Widget build(BuildContext context) {
     final documentsState = ref.watch(documentsProvider);
     final categoriesState = ref.watch(documentCategoriesProvider);
+    final notifier = ref.read(documentsProvider.notifier);
+    final isSearchActive = notifier.isSearchActive;
 
     return Scaffold(
       backgroundColor: AppColors.warmOffWhite,
@@ -182,10 +206,16 @@ class _AndroidDocumentsLayoutState
               ],
             ),
 
-            // TODO(#23): implement search bar — insert SliverToBoxAdapter
-            // with a TextField debounced at 300ms here.
+            // Search bar — debounced 300ms, PRO badge for free users.
+            SliverToBoxAdapter(
+              child: DocumentSearchBar(
+                onChanged: (query) {
+                  ref.read(documentsProvider.notifier).setSearchQuery(query);
+                },
+              ),
+            ),
 
-            // Filter chips.
+            // Filter chips — visible but inactive while search is active.
             SliverToBoxAdapter(
               child: _FilterRow(
                 categoriesState: categoriesState,
@@ -209,22 +239,35 @@ class _AndroidDocumentsLayoutState
                       ref.read(documentsProvider.notifier).refresh(),
                 ),
               ),
-              data: (docs) => docs.isEmpty
-                  ? SliverFillRemaining(
-                      child: DocumentEmptyState(
-                        onAdd: () => context.push(AppRoutes.documentsUpload),
-                      ),
-                    )
-                  : SliverPadding(
-                      padding: AppPadding.screen,
-                      sliver: SliverList.separated(
-                        itemCount: docs.length,
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(height: AppSizes.sm),
-                        itemBuilder: (context, index) =>
-                            DocumentCard(document: docs[index]),
-                      ),
-                    ),
+              data: (docs) {
+                if (docs.isEmpty) {
+                  return SliverFillRemaining(
+                    child: isSearchActive
+                        ? const DocumentSearchEmptyState()
+                        : DocumentEmptyState(
+                            onAdd: () => context.push(AppRoutes.documentsUpload),
+                          ),
+                  );
+                }
+                return SliverPadding(
+                  padding: AppPadding.screen,
+                  sliver: SliverList.separated(
+                    itemCount: docs.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: AppSizes.sm),
+                    itemBuilder: (context, index) {
+                      final doc = docs[index];
+                      if (isSearchActive) {
+                        return DocumentSearchResultCard(
+                          document: doc,
+                          snippet: notifier.snippetFor(doc.id),
+                        );
+                      }
+                      return DocumentCard(document: doc);
+                    },
+                  ),
+                );
+              },
             ),
 
             const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
@@ -241,8 +284,7 @@ class _AndroidDocumentsLayoutState
 ///
 /// The first chip is always "All" which clears the active filter.
 /// Remaining chips come from [documentCategoriesProvider].
-///
-/// TODO(#23): Add search bar above this row when implementing issue #23.
+/// The filter row remains visible during search but is inactive.
 class _FilterRow extends StatelessWidget {
   const _FilterRow({
     required this.categoriesState,

@@ -34,3 +34,9 @@ final authServiceProvider = Provider<AuthService>(
 final storageServiceProvider = Provider<StorageService>(
   (ref) => StorageService(),
 );
+
+/// Whether the current user has an active Premium subscription.
+///
+/// Stub — always returns false until RevenueCat is wired in Phase 8.
+/// Replace the body with a RevenueCat CustomerInfo stream at that point.
+final isPremiumProvider = Provider<bool>((ref) => false);

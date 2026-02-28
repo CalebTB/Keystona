@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../services/providers/service_providers.dart';
 import '../../../services/supabase_service.dart';
 import '../models/document.dart';
 
@@ -23,7 +24,6 @@ enum DocumentSortOrder {
 /// [setSearchQuery]. Sort order is changed via [setSortOrder].
 ///
 /// Extension points for downstream issues:
-/// - [setSearchQuery] — implemented by issue #23 (full-text + OCR search)
 /// - [add]           — implemented by issue #21 (upload flow)
 /// - [getById]       — implemented by issue #22 (detail screen)
 /// - [updateDocument] — implemented by issue #22 (edit metadata)
@@ -32,6 +32,11 @@ enum DocumentSortOrder {
 class DocumentsNotifier extends _$DocumentsNotifier {
   String? _categoryId;
   DocumentSortOrder _sortOrder = DocumentSortOrder.dateAddedDesc;
+  String? _searchQuery;
+
+  /// OCR search snippets keyed by document ID. Only populated for premium
+  /// users during an active search. Cleared when search is reset.
+  final Map<String, String> _snippets = {};
 
   @override
   Future<List<Document>> build() async {
@@ -50,6 +55,11 @@ class DocumentsNotifier extends _$DocumentsNotifier {
 
     if (profileRow == null) return [];
     final propertyId = profileRow['id'] as String;
+
+    // Delegate to search when a query is active.
+    if (_searchQuery != null && _searchQuery!.isNotEmpty) {
+      return _performSearch(propertyId, user.id, _searchQuery!);
+    }
 
     // Build the base filter chain. Always filter by property first, then
     // deleted_at. The nested category select avoids an N+1 query.
@@ -117,25 +127,100 @@ class DocumentsNotifier extends _$DocumentsNotifier {
     await future;
   }
 
-  // ── Stubs for downstream issues ─────────────────────────────────────────────
+  // ── Search ──────────────────────────────────────────────────────────────────
 
-  /// Full-text and OCR search across documents. Implemented by issue #23.
+  /// True when a non-empty search query is active.
+  bool get isSearchActive =>
+      _searchQuery != null && _searchQuery!.isNotEmpty;
+
+  /// Returns the OCR snippet for [docId] if one exists (premium search only).
+  String? snippetFor(String docId) => _snippets[docId];
+
+  /// Sets the active search query and re-fetches.
+  ///
+  /// Pass null or empty string to clear the search and restore the normal list.
   void setSearchQuery(String? query) {
-    throw UnimplementedError('setSearchQuery() implemented by issue #23');
+    final trimmed = query?.trim();
+    _searchQuery = (trimmed == null || trimmed.isEmpty) ? null : trimmed;
+    _snippets.clear();
+    ref.invalidateSelf();
   }
 
   /// Refreshes the list to include a newly uploaded document.
-  ///
-  /// [data] is unused — callers should call [refresh] directly or let the
-  /// [DocumentUploadNotifier] call `ref.invalidate(documentsNotifierProvider)`
-  /// after a successful upload.
   Future<Document> add(Map<String, dynamic> data) async {
     ref.invalidateSelf();
     await future;
-    // Return the first document in the refreshed list (most recent upload).
     final docs = state.value ?? [];
     if (docs.isEmpty) throw StateError('No documents after add');
     return docs.first;
+  }
+
+  // ── Private helpers ──────────────────────────────────────────────────────────
+
+  Future<List<Document>> _performSearch(
+    String propertyId,
+    String userId,
+    String query,
+  ) async {
+    _snippets.clear();
+    final isPremium = ref.read(isPremiumProvider);
+
+    if (isPremium) {
+      // Premium: ranked full-text OCR search via RPC. Returns snippet per row.
+      final rows = await SupabaseService.client.rpc<List<dynamic>>(
+        'search_documents',
+        params: {
+          'p_property_id': propertyId,
+          'p_query': query,
+          'p_limit': 20,
+        },
+      );
+
+      final docs = <Document>[];
+      for (final row in rows.cast<Map<String, dynamic>>()) {
+        final snippet = row['snippet'] as String?;
+        final docId = row['id'] as String;
+        if (snippet != null && snippet.isNotEmpty) {
+          _snippets[docId] = snippet;
+        }
+        docs.add(Document.fromJson({
+          ...row,
+          'user_id': userId,
+          'property_id': propertyId,
+          'metadata': row['metadata'] ?? <String, dynamic>{},
+          'deleted_at': null,
+        }));
+      }
+      return docs;
+    } else {
+      // Free tier: trigram name search using ILIKE — hits idx_documents_search.
+      final response = await SupabaseService.client
+          .from('documents')
+          .select(
+            'id, name, category_id, document_type_id, created_at, updated_at, '
+            'expiration_date, thumbnail_path, file_path, file_size_bytes, '
+            'mime_type, page_count, ocr_status, notes, linked_system_id, '
+            'linked_appliance_id, '
+            'category:document_categories('
+            '  id, name, icon, color, is_system, sort_order, created_at, user_id'
+            ')',
+          )
+          .eq('property_id', propertyId)
+          .isFilter('deleted_at', null)
+          .ilike('name', '%$query%')
+          .order('created_at', ascending: false)
+          .limit(25);
+
+      return (response as List<dynamic>)
+          .cast<Map<String, dynamic>>()
+          .map((json) => Document.fromJson({
+                ...json,
+                'user_id': userId,
+                'property_id': propertyId,
+                'metadata': json['metadata'] ?? <String, dynamic>{},
+              }))
+          .toList();
+    }
   }
 
   // ── Implemented by issue #22 ────────────────────────────────────────────────
