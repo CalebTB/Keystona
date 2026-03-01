@@ -9,8 +9,10 @@ import '../../features/documents/screens/document_categories_screen.dart';
 import '../../features/documents/screens/document_detail_screen.dart';
 import '../../features/documents/screens/document_upload_screen.dart';
 import '../../features/documents/screens/documents_screen.dart';
+import '../../features/maintenance/models/maintenance_task.dart';
 import '../../features/maintenance/screens/maintenance_screen.dart';
 import '../../features/maintenance/screens/task_detail_screen.dart';
+import '../../features/maintenance/screens/task_form_screen.dart';
 import '../../features/onboarding/screens/property_setup_screen.dart';
 import '../../features/onboarding/screens/trial_screen.dart';
 import '../../features/onboarding/screens/welcome_screen.dart';
@@ -59,6 +61,8 @@ abstract final class AppRoutes {
 
   // Tab 2 — Tasks
   static const maintenance = '/maintenance';
+  static const maintenanceCreate = '/maintenance/create';
+  static const maintenanceEditTask = '/maintenance/edit/:taskId';
   static const maintenanceTaskDetail = '/maintenance/:taskId';
   static const maintenanceCompleteTask = '/maintenance/complete/:taskId';
 
@@ -289,7 +293,18 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: AppRoutes.maintenance,
                 builder: (_, _) => const MaintenanceScreen(),
                 routes: [
-                  // Static 'complete/:taskId' must come before ':taskId'.
+                  // Static segments must come before parameterised ':taskId'.
+                  GoRoute(
+                    path: 'create',
+                    builder: (_, _) => const TaskFormScreen(),
+                  ),
+                  GoRoute(
+                    path: 'edit/:taskId',
+                    builder: (_, state) {
+                      final task = state.extra as MaintenanceTask;
+                      return TaskFormScreen(existingTask: task);
+                    },
+                  ),
                   GoRoute(
                     path: 'complete/:taskId',
                     builder: (_, _) =>

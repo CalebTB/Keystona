@@ -15,8 +15,6 @@ part 'maintenance_tasks_provider.g.dart';
 /// [filteredTasksProvider].
 ///
 /// Extension points for downstream issues:
-/// - [addTask]      — stub, implemented by issue #33 (Add Task)
-/// - [updateTask]   — stub, implemented by issue #33 (Edit Task)
 /// - [completeTask] — stub, implemented by issue #32 (Complete Task)
 /// - [skipTask]     — stub, implemented by issue #32 (Skip Task)
 /// - [softDelete]   — stub, implemented by issue #33 (Delete Task)
@@ -98,14 +96,28 @@ class MaintenanceTasksNotifier extends _$MaintenanceTasksNotifier {
     state = await AsyncValue.guard(_fetchTasks);
   }
 
-  /// [#33] Creates a new task for the user's property.
+  /// Creates a new custom task for the user's property.
+  ///
+  /// [fields] must include all required columns: `name`, `category`,
+  /// `due_date`, `task_origin`, `property_id`, `user_id`.
+  /// Optional columns: `description`, `recurrence`, `priority`,
+  /// `difficulty`, `diy_or_pro`, `estimated_minutes`, `tools_needed`,
+  /// `supplies_needed`, `linked_system_id`, `linked_appliance_id`.
   Future<void> addTask(Map<String, dynamic> fields) async {
-    throw UnimplementedError('addTask() implemented by issue #33');
+    await SupabaseService.client.from('maintenance_tasks').insert(fields);
+    await refresh();
   }
 
-  /// [#33] Updates mutable fields on an existing task.
+  /// Updates mutable fields on an existing task.
+  ///
+  /// Only pass the fields that have changed. The `updated_at` trigger
+  /// on the DB handles the timestamp automatically.
   Future<void> updateTask(String taskId, Map<String, dynamic> fields) async {
-    throw UnimplementedError('updateTask() implemented by issue #33');
+    await SupabaseService.client
+        .from('maintenance_tasks')
+        .update(fields)
+        .eq('id', taskId);
+    await refresh();
   }
 
   /// [#33] Soft-deletes a task (sets deleted_at).
@@ -133,14 +145,16 @@ class MaintenanceTasksNotifier extends _$MaintenanceTasksNotifier {
     final propertyId = propertyRow['id'] as String;
 
     // Fetch tasks with nested system name to avoid N+1.
-    // Only select columns needed by the list screen + downstream issues.
+    // Includes tools_needed and supplies_needed for edit pre-population (#34)
+    // and detail display (#32).
     final rows = await SupabaseService.client
         .from('maintenance_tasks')
         .select(
           'id, property_id, user_id, template_id, task_origin, name, '
           'description, instructions, category, due_date, recurrence, season, '
           'climate_adjusted, status, difficulty, diy_or_pro, priority, '
-          'estimated_minutes, linked_system_id, linked_appliance_id, '
+          'estimated_minutes, tools_needed, supplies_needed, '
+          'linked_system_id, linked_appliance_id, '
           'created_at, updated_at, '
           'systems(id, name)',
         )
