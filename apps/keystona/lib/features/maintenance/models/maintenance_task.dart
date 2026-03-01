@@ -168,6 +168,16 @@ abstract class MaintenanceTask with _$MaintenanceTask {
     /// Estimated time in minutes. [#31] card, [#32] detail screen.
     int? estimatedMinutes,
 
+    // ── Task details (extended) ───────────────────────────────────────────────
+
+    /// Tools required to complete the task. [#32] detail screen, [#34] edit.
+    /// From DB column `tools_needed` (JSONB array). Defaults to empty list.
+    @Default(<String>[]) List<String> toolsNeeded,
+
+    /// Supplies / materials needed. [#32] detail screen, [#34] edit.
+    /// From DB column `supplies_needed` (JSONB array). Defaults to empty list.
+    @Default(<String>[]) List<String> suppliesNeeded,
+
     // ── Linked entities ───────────────────────────────────────────────────────
 
     /// Foreign key to linked system. [#31] card chip, [#32] tappable link.
@@ -175,6 +185,11 @@ abstract class MaintenanceTask with _$MaintenanceTask {
 
     /// Foreign key to linked appliance. [#32] tappable link.
     String? linkedApplianceId,
+
+    // ── Skip tracking ─────────────────────────────────────────────────────────
+
+    /// Reason user provided when skipping. [#32] shown on detail screen.
+    String? skipReason,
 
     // ── Audit ─────────────────────────────────────────────────────────────────
 
@@ -188,6 +203,9 @@ abstract class MaintenanceTask with _$MaintenanceTask {
 
     /// Name of the linked system from nested select. [#31] card chip.
     String? linkedSystemName,
+
+    /// Name of the linked appliance from nested select. [#32] detail chip.
+    String? linkedApplianceName,
   }) = _MaintenanceTask;
 
   factory MaintenanceTask.fromJson(Map<String, dynamic> json) =>
