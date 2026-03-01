@@ -44,25 +44,35 @@ class _IOSMaintenanceLayout extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return CupertinoPageScaffold(
-      child: CustomScrollView(
-        slivers: [
-          CupertinoSliverNavigationBar(
-            largeTitle: const Text('Tasks'),
-            trailing: _SortButton(
-              isIOS: true,
-              onSortSelected: (order) =>
-                  ref.read(taskFilterProvider.notifier).setSortOrder(order),
-            ),
+      child: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
+              CupertinoSliverNavigationBar(
+                largeTitle: const Text('Tasks'),
+                trailing: _SortButton(
+                  isIOS: true,
+                  onSortSelected: (order) =>
+                      ref.read(taskFilterProvider.notifier).setSortOrder(order),
+                ),
+              ),
+              CupertinoSliverRefreshControl(
+                onRefresh: () =>
+                    ref.read(maintenanceTasksProvider.notifier).refresh(),
+              ),
+              // Filter chip row.
+              const SliverToBoxAdapter(child: _FilterRow()),
+              // Task list body.
+              const _TaskListSliver(),
+              // Bottom padding so FAB doesn't overlap last card.
+              const SliverToBoxAdapter(child: SizedBox(height: 88)),
+            ],
           ),
-          CupertinoSliverRefreshControl(
-            onRefresh: () =>
-                ref.read(maintenanceTasksProvider.notifier).refresh(),
+          const Positioned(
+            right: AppSizes.lg,
+            bottom: AppSizes.xl,
+            child: _AddTaskFAB(),
           ),
-          // Filter chip row.
-          const SliverToBoxAdapter(child: _FilterRow()),
-          // Task list body.
-          const _TaskListSliver(),
-          const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
         ],
       ),
     );
@@ -78,6 +88,7 @@ class _AndroidMaintenanceLayout extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: AppColors.warmOffWhite,
+      floatingActionButton: const _AddTaskFAB(),
       body: RefreshIndicator(
         color: AppColors.deepNavy,
         onRefresh: () =>
@@ -425,6 +436,26 @@ class _SortButton extends StatelessWidget {
           child: const Text('Cancel'),
         ),
       ),
+    );
+  }
+}
+
+// ── Add Task FAB ──────────────────────────────────────────────────────────────
+
+/// Floating action button that opens the task creation form.
+///
+/// Rendered on both iOS (inside Stack overlay) and Android (Scaffold FAB).
+class _AddTaskFAB extends StatelessWidget {
+  const _AddTaskFAB();
+
+  @override
+  Widget build(BuildContext context) {
+    return FloatingActionButton(
+      onPressed: () => context.push(AppRoutes.maintenanceCreate),
+      backgroundColor: AppColors.deepNavy,
+      foregroundColor: AppColors.textInverse,
+      elevation: 3,
+      child: const Icon(Icons.add),
     );
   }
 }

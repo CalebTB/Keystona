@@ -168,6 +168,12 @@ abstract class MaintenanceTask with _$MaintenanceTask {
     /// Estimated time in minutes. [#31] card, [#32] detail screen.
     int? estimatedMinutes,
 
+    /// List of tools needed for this task. [#32] detail screen, [#34] form.
+    @Default([]) List<String> toolsNeeded,
+
+    /// List of supplies needed for this task. [#32] detail screen, [#34] form.
+    @Default([]) List<String> suppliesNeeded,
+
     // ── Linked entities ───────────────────────────────────────────────────────
 
     /// Foreign key to linked system. [#31] card chip, [#32] tappable link.
