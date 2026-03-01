@@ -10,6 +10,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../services/supabase_service.dart';
 import '../models/document.dart';
 import '../models/document_category.dart';
+import '../widgets/category_form_sheet.dart';
 import 'expiration_badge.dart';
 
 /// A list-item card representing a single document in the Document Vault.
@@ -130,38 +131,14 @@ class _CategoryIconThumbnail extends StatelessWidget {
         borderRadius: AppRadius.sm,
       ),
       child: Icon(
-        _categoryIcon(category?.icon),
+        CategoryIcons.forKey(category?.icon ?? ''),
         color: bgColor,
         size: AppSizes.iconMd,
       ),
     );
   }
 
-  /// Maps a category icon string to a Material icon. Defaults to folder.
-  IconData _categoryIcon(String? icon) {
-    switch (icon) {
-      case 'insurance':
-        return Icons.shield_outlined;
-      case 'warranty':
-        return Icons.workspace_premium_outlined;
-      case 'deed':
-        return Icons.home_work_outlined;
-      case 'tax':
-        return Icons.receipt_long_outlined;
-      case 'permit':
-        return Icons.approval_outlined;
-      case 'manual':
-        return Icons.menu_book_outlined;
-      case 'invoice':
-        return Icons.receipt_outlined;
-      case 'contract':
-        return Icons.handshake_outlined;
-      default:
-        return Icons.folder_outlined;
-    }
-  }
-
-  /// Parses a hex color string like '#1565C0' to a [Color].
+/// Parses a hex color string like '#1565C0' to a [Color].
   /// Falls back to [AppColors.deepNavy] when parsing fails.
   Color _parseCategoryColor(String? hex) {
     if (hex == null || hex.isEmpty) return AppColors.deepNavy;

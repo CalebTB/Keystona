@@ -9,6 +9,7 @@ import '../models/document_type.dart';
 import '../providers/document_categories_provider.dart';
 import '../providers/document_types_provider.dart';
 import '../providers/document_upload_provider.dart';
+import '../widgets/category_form_sheet.dart';
 
 /// Step 1 of the upload wizard — category and optional document type selection.
 ///
@@ -156,7 +157,7 @@ class _CategoryTile extends ConsumerWidget {
                         borderRadius: AppRadius.sm,
                       ),
                       child: Icon(
-                        _categoryIcon(category.icon),
+                        CategoryIcons.forKey(category.icon),
                         color: color,
                         size: AppSizes.iconMd,
                       ),
@@ -199,29 +200,6 @@ class _CategoryTile extends ConsumerWidget {
     if (sanitised.length != 6) return AppColors.deepNavy;
     final value = int.tryParse('FF$sanitised', radix: 16);
     return value != null ? Color(value) : AppColors.deepNavy;
-  }
-
-  IconData _categoryIcon(String icon) {
-    switch (icon) {
-      case 'insurance':
-        return Icons.shield_outlined;
-      case 'warranty':
-        return Icons.workspace_premium_outlined;
-      case 'deed':
-        return Icons.home_work_outlined;
-      case 'tax':
-        return Icons.receipt_long_outlined;
-      case 'permit':
-        return Icons.approval_outlined;
-      case 'manual':
-        return Icons.menu_book_outlined;
-      case 'invoice':
-        return Icons.receipt_outlined;
-      case 'contract':
-        return Icons.handshake_outlined;
-      default:
-        return Icons.folder_outlined;
-    }
   }
 }
 

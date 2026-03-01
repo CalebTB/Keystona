@@ -71,6 +71,10 @@ class _DocumentUploadScreenState
     final canPop = state.step == DocumentUploadStep.category ||
         state.step == DocumentUploadStep.metadata;
 
+    // Back arrow only on the metadata step (navigates back to category selection).
+    // Category step uses Cancel only — there's no prior Flutter page to return to.
+    final showBack = state.step == DocumentUploadStep.metadata;
+
     return PopScope(
       canPop: canPop,
       onPopInvokedWithResult: (didPop, _) {
@@ -82,12 +86,12 @@ class _DocumentUploadScreenState
       child: Platform.isIOS ? _IOSScaffold(
         title: title,
         step: state.step,
-        onBack: canPop ? _handleBack : null,
+        onBack: showBack ? _handleBack : null,
         child: _stepContent(state),
       ) : _MaterialScaffold(
         title: title,
         step: state.step,
-        onBack: canPop ? _handleBack : null,
+        onBack: showBack ? _handleBack : null,
         child: _stepContent(state),
       ),
     );
@@ -171,8 +175,7 @@ class _IOSScaffold extends StatelessWidget {
             ? const SizedBox.shrink()
             : CupertinoButton(
                 padding: EdgeInsets.zero,
-                onPressed: () => Navigator.of(context, rootNavigator: true)
-                    .maybePop(),
+                onPressed: () => context.pop(),
                 child: const Text('Cancel'),
               ),
       ),

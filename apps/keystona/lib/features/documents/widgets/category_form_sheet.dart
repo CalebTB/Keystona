@@ -36,6 +36,8 @@ abstract final class CategoryIcons {
     'calendar': Icons.calendar_today_outlined,
     'tag': Icons.label_outline,
     'archive': Icons.inventory_2_outlined,
+    'clipboard': Icons.assignment_outlined,
+    'scroll': Icons.description_outlined,
   };
 
   /// Returns the [IconData] for [key], falling back to [Icons.folder_outlined].

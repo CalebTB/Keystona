@@ -272,36 +272,39 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
             .value ??
         widget.document;
 
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(
-          child: _DocumentPreview(document: doc),
-        ),
-        SliverPadding(
-          padding: AppPadding.screen,
-          sliver: SliverList(
-            delegate: SliverChildListDelegate([
-              const SizedBox(height: AppSizes.lg),
-              _ActionRow(
-                onShare: _onShare,
-                onDownload: _onDownload,
-                onDelete: _deletePending ? null : _onDelete,
-              ),
-              const SizedBox(height: AppSizes.lg),
-              const Divider(height: 1, color: AppColors.divider),
-              const SizedBox(height: AppSizes.md),
-              _MetadataSection(document: doc),
-              if (doc.linkedSystemId != null || doc.linkedApplianceId != null) ...[
-                const SizedBox(height: AppSizes.md),
+    return SafeArea(
+      bottom: false,
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: _DocumentPreview(document: doc),
+          ),
+          SliverPadding(
+            padding: AppPadding.screen,
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                const SizedBox(height: AppSizes.lg),
+                _ActionRow(
+                  onShare: _onShare,
+                  onDownload: _onDownload,
+                  onDelete: _deletePending ? null : _onDelete,
+                ),
+                const SizedBox(height: AppSizes.lg),
                 const Divider(height: 1, color: AppColors.divider),
                 const SizedBox(height: AppSizes.md),
-                _LinkedChip(document: doc),
-              ],
-              const SizedBox(height: AppSizes.xl),
-            ]),
+                _MetadataSection(document: doc),
+                if (doc.linkedSystemId != null || doc.linkedApplianceId != null) ...[
+                  const SizedBox(height: AppSizes.md),
+                  const Divider(height: 1, color: AppColors.divider),
+                  const SizedBox(height: AppSizes.md),
+                  _LinkedChip(document: doc),
+                ],
+                const SizedBox(height: AppSizes.xl),
+              ]),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
