@@ -255,6 +255,8 @@ Comprehensive specifications in `keystona-project-files/`:
 - **`String.fromEnvironment` needs `defaultValue` for dev**: No default = empty string at runtime when `--dart-define-from-file` is omitted → always add `defaultValue` for dev credentials in `config.dart`
 - **Supabase `external_email_enabled` off by default**: New projects ship with email/password auth disabled — enable via Management API or Dashboard before first run
 - **`updateDocument()` not `update()` for provider methods**: `AsyncNotifier` has a built-in `update(T Function(T) fn)` method — feature methods named `update()` silently shadow it causing type errors; use descriptive names like `updateDocument()`, `updateTask()`
+- **Two-client Edge Function pattern**: Create one admin client (`SUPABASE_SERVICE_ROLE_KEY`) for DB reads/writes, but use `supabase.auth.getUser(token)` on that client to verify JWT first — never trust client-supplied `user_id`; always derive identity from the verified token
+- **Seasonal due date for template tasks**: Compute due date as `{target_month}-01` of current or next year — use template's `default_month` if set, else season midpoint (spring=4, summer=7, fall=10, winter=12); roll to next year only if `target_month < currentMonth`
 - **`SliverToBoxAdapter` over `SliverPersistentHeader` inside `CupertinoPageScaffold`**: Pinned persistent headers conflict with `CupertinoSliverNavigationBar` geometry — use `SliverToBoxAdapter` for filter bars; sticky behavior can be added later via `NestedScrollView`
 - **Back arrow only on wizard steps with a prior wizard page**: First step of a multi-step flow has no meaningful prior page — show Cancel only; back arrow only on steps 2+ where it navigates within the flow
 - **`@riverpod` codegen naming convention**: Codegen generates `fooProvider` (not `fooNotifierProvider`) and `fooProvider.notifier` (not `fooProvider.notifier`) — match these generated names exactly when calling `ref.watch()` / `ref.read()`
@@ -265,6 +267,8 @@ Comprehensive specifications in `keystona-project-files/`:
 - **Composite detail model over fat primary model**: Chose separate `TaskDetail(task, completions)` over adding `completions` to `MaintenanceTask` — keeps the list model lean (no list-screen N+1), detail model assembled only when the detail screen opens
 - **`PickerOption` record typedef over a model class**: Chose `typedef PickerOption = ({String id, String name})` over a named class for picker pairs — zero overhead, self-documenting, no file needed; sufficient when the data never leaves the form
 - **Newline textarea over chip-add-remove for list fields**: Chose multiline textarea for tools/supplies over a chip UI — simpler implementation, works for short lists, avoids managing an `ObservableList` in state; join on init, split on save
+- **TypeScript climate-zone filter over SQL array filter**: Fetched all templates then filtered in-process rather than using Supabase SDK `.or()` on a SMALLINT[] column — the `NULL = all zones` semantic is cleaner to express in TypeScript than in the SDK's filter API
+- **`Deno.serve()` over `serve()` import in Edge Functions**: Modern Deno API doesn't require importing from `deno.land/std` — no version pinning needed in deno.json, cleaner boilerplate
 
 ## Lessons
 
@@ -309,6 +313,10 @@ Comprehensive specifications in `keystona-project-files/`:
 - **DATE vs TIMESTAMP Supabase columns**: Sending a full ISO timestamp to a Postgres DATE column is silently truncated or rejected depending on the client — always check column type before inserting date values; use `split('T')[0]` for DATE, full ISO string for TIMESTAMP
 - **`String? _propertyId` must be nullable in form `initState`**: Property ID is fetched async in `initState` and stored as a field — accessing it before the fetch completes returns null; always guard provider watches with `if (_propertyId != null)` or use `AsyncData([])` as the fallback → `lib/features/maintenance/screens/task_form_screen.dart`
 - **Parallel worktrees touching shared files need conflict resolution + build_runner**: Both #32 and #34 modified `maintenance_task.dart`, `maintenance_tasks_provider.dart`, and `app_router.dart` — conflict resolution must be done carefully (keep all additive changes from both sides), then `build_runner` must be re-run before the quality gate passes
+- **MCP-deployed work produces no local git diff**: Supabase migrations and Edge Functions deployed via MCP tools (`apply_migration`, `deploy_edge_function`) are applied directly to the cloud — the working tree stays clean; commit local SQL/TS files separately if repo tracking is needed
+- **`task_difficulty` enum uses `'involved'` not `'professional'`**: The `diy_or_pro` column uses `'professional'`; the `difficulty` column uses `'involved'` for the hardest self-serviceable difficulty — two different enums; mixing them causes a silent insert error
+- **Verify template count with SQL after seeding**: Always run `SELECT COUNT(*) FROM {table}` after applying a seed migration — confirms all rows landed (easy to miss truncation from multi-statement inserts)
+- **Edge Function `verify_jwt: true` is a gateway-level guard**: Setting `verify_jwt: true` on deploy causes the Supabase gateway to reject requests with no/invalid JWT before function code runs — the function's own `auth.getUser()` check is defense-in-depth, not the primary gate
 
 ## Philosophy
 
