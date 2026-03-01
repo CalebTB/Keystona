@@ -9,6 +9,7 @@ import '../../features/documents/screens/document_categories_screen.dart';
 import '../../features/documents/screens/document_detail_screen.dart';
 import '../../features/documents/screens/document_upload_screen.dart';
 import '../../features/documents/screens/documents_screen.dart';
+import '../../features/maintenance/screens/maintenance_screen.dart';
 import '../../features/onboarding/screens/property_setup_screen.dart';
 import '../../features/onboarding/screens/trial_screen.dart';
 import '../../features/onboarding/screens/welcome_screen.dart';
@@ -285,8 +286,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: AppRoutes.maintenance,
-                builder: (_, _) =>
-                    const PlaceholderScreen(name: 'Maintenance'),
+                builder: (_, _) => const MaintenanceScreen(),
                 routes: [
                   // Static 'complete/:taskId' must come before ':taskId'.
                   GoRoute(
