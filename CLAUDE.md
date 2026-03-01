@@ -244,12 +244,16 @@ Comprehensive specifications in `keystona-project-files/`:
 - **`String.fromEnvironment` needs `defaultValue` for dev**: No default = empty string at runtime when `--dart-define-from-file` is omitted → always add `defaultValue` for dev credentials in `config.dart`
 - **Supabase `external_email_enabled` off by default**: New projects ship with email/password auth disabled — enable via Management API or Dashboard before first run
 - **`updateDocument()` not `update()` for provider methods**: `AsyncNotifier` has a built-in `update(T Function(T) fn)` method — feature methods named `update()` silently shadow it causing type errors; use descriptive names like `updateDocument()`, `updateTask()`
+- **Two-client Edge Function pattern**: Create one admin client (`SUPABASE_SERVICE_ROLE_KEY`) for DB reads/writes, but use `supabase.auth.getUser(token)` on that client to verify JWT first — never trust client-supplied `user_id`; always derive identity from the verified token
+- **Seasonal due date for template tasks**: Compute due date as `{target_month}-01` of current or next year — use template's `default_month` if set, else season midpoint (spring=4, summer=7, fall=10, winter=12); roll to next year only if `target_month < currentMonth`
 - **`SliverToBoxAdapter` over `SliverPersistentHeader` inside `CupertinoPageScaffold`**: Pinned persistent headers conflict with `CupertinoSliverNavigationBar` geometry — use `SliverToBoxAdapter` for filter bars; sticky behavior can be added later via `NestedScrollView`
 - **Back arrow only on wizard steps with a prior wizard page**: First step of a multi-step flow has no meaningful prior page — show Cancel only; back arrow only on steps 2+ where it navigates within the flow
 - **`@riverpod` codegen naming convention**: Codegen generates `fooProvider` (not `fooNotifierProvider`) and `fooProvider.notifier` (not `fooProvider.notifier`) — match these generated names exactly when calling `ref.watch()` / `ref.read()`
 - **Freemium tier branching inside `_performSearch`**: `ref.read(isPremiumProvider)` inside the private search helper selects the RPC (premium) vs ILIKE (free) path — a single `setSearchQuery()` entry point delegates to the right backend transparently → `lib/features/documents/providers/documents_provider.dart`
 - **Shared `_FormBody` between iOS and Android sheet variants**: Platform-specific sheet wrappers (`_IOSSheet`, `_AndroidSheet`) both render the same `_FormBody` private widget — platform differences (header style, save button position) isolated to the wrapper, not the form fields → `lib/features/documents/widgets/category_form_sheet.dart`
 - **Single icon catalog via `CategoryIcons.forKey()`**: All icon-string → `IconData` lookups go through one map; no widget owns a local switch — add new keys to `CategoryIcons.all` and call `forKey()` everywhere → `lib/features/documents/widgets/category_form_sheet.dart`
+- **TypeScript climate-zone filter over SQL array filter**: Fetched all templates then filtered in-process rather than using Supabase SDK `.or()` on a SMALLINT[] column — the `NULL = all zones` semantic is cleaner to express in TypeScript than in the SDK's filter API
+- **`Deno.serve()` over `serve()` import in Edge Functions**: Modern Deno API doesn't require importing from `deno.land/std` — no version pinning needed in deno.json, cleaner boilerplate
 
 ## Lessons
 
@@ -287,6 +291,10 @@ Comprehensive specifications in `keystona-project-files/`:
 - **`Navigator.of(context, rootNavigator: true)` bypasses GoRouter on regular routes**: Only valid inside `showCupertinoModalPopup` — on GoRouter page routes it resolves to the root navigator which has nothing to pop and silently does nothing; always use `context.pop()` for GoRouter navigation → `lib/features/documents/screens/document_upload_screen.dart`
 - **`CupertinoPageScaffold` nav bar overlaps its child at y=0**: The `child` starts at the top of the screen, not below the nav bar — wrap content in `SafeArea(bottom: false)` to push it below the nav bar; without this, the first widget in a `CustomScrollView` renders behind the nav bar → `lib/features/documents/screens/document_detail_screen.dart`
 - **Duplicate icon switches silently diverge from DB values**: Multiple files each owning a local icon switch with semantic keys (`'insurance'`) that don't match DB values (`'shield'`) causes silent folder-icon fallback everywhere — consolidate to one catalog (`CategoryIcons.forKey()`) and verify keys against DB before shipping
+- **MCP-deployed work produces no local git diff**: Supabase migrations and Edge Functions deployed via MCP tools (`apply_migration`, `deploy_edge_function`) are applied directly to the cloud — the working tree stays clean; commit local SQL/TS files separately if repo tracking is needed
+- **`task_difficulty` enum uses `'involved'` not `'professional'`**: The `diy_or_pro` column uses `'professional'`; the `difficulty` column uses `'involved'` for the hardest self-serviceable difficulty — two different enums; mixing them causes a silent insert error
+- **Verify template count with SQL after seeding**: Always run `SELECT COUNT(*) FROM {table}` after applying a seed migration — confirms all rows landed (easy to miss truncation from multi-statement inserts)
+- **Edge Function `verify_jwt: true` is a gateway-level guard**: Setting `verify_jwt: true` on deploy causes the Supabase gateway to reject requests with no/invalid JWT before function code runs — the function's own `auth.getUser()` check is defense-in-depth, not the primary gate
 
 ## Philosophy
 
