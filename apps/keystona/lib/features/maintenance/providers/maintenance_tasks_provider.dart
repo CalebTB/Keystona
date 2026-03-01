@@ -33,17 +33,69 @@ class MaintenanceTasksNotifier extends _$MaintenanceTasksNotifier {
     state = await AsyncValue.guard(_fetchTasks);
   }
 
-  /// [#32] Marks a task as completed and records a [TaskCompletion] row.
+  /// [#32] Marks a task as completed and inserts a quick [TaskCompletion] row.
   ///
-  /// The completion modal flow (photos, notes, cost) is handled by the
-  /// complete-task screen. This method only updates the task status.
+  /// Used by the Task Detail screen for one-tap quick complete. The detailed
+  /// completion flow (photos, notes, cost) is handled by issue #33.
   Future<void> completeTask(String taskId) async {
-    throw UnimplementedError('completeTask() implemented by issue #32');
+    final user = SupabaseService.client.auth.currentUser;
+    if (user == null) return;
+
+    final tasks = state.value ?? [];
+    final matching = tasks.where((t) => t.id == taskId);
+    if (matching.isEmpty) return;
+    final task = matching.first;
+
+    final today = DateTime.now().toIso8601String().split('T')[0];
+
+    await SupabaseService.client.from('task_completions').insert({
+      'task_id': taskId,
+      'user_id': user.id,
+      'property_id': task.propertyId,
+      'completed_date': today,
+      'completed_by': 'diy',
+    });
+
+    await SupabaseService.client
+        .from('maintenance_tasks')
+        .update({'status': 'completed'})
+        .eq('id', taskId);
+
+    if (task.recurrence != RecurrenceType.none) {
+      await SupabaseService.client.functions.invoke(
+        'schedule-next-task',
+        body: {'task_id': taskId},
+      );
+    }
+
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(_fetchTasks);
   }
 
-  /// [#32] Skips a task with an optional reason.
+  /// [#32] Skips a task with an optional [reason].
   Future<void> skipTask(String taskId, {String? reason}) async {
-    throw UnimplementedError('skipTask() implemented by issue #32');
+    final tasks = state.value ?? [];
+    final matching = tasks.where((t) => t.id == taskId);
+    if (matching.isEmpty) return;
+    final task = matching.first;
+
+    await SupabaseService.client
+        .from('maintenance_tasks')
+        .update({
+          'status': 'skipped',
+          if (reason != null && reason.isNotEmpty) 'skip_reason': reason,
+        })
+        .eq('id', taskId);
+
+    if (task.recurrence != RecurrenceType.none) {
+      await SupabaseService.client.functions.invoke(
+        'schedule-next-task',
+        body: {'task_id': taskId},
+      );
+    }
+
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(_fetchTasks);
   }
 
   /// [#33] Creates a new task for the user's property.

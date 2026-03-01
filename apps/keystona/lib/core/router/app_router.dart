@@ -10,6 +10,7 @@ import '../../features/documents/screens/document_detail_screen.dart';
 import '../../features/documents/screens/document_upload_screen.dart';
 import '../../features/documents/screens/documents_screen.dart';
 import '../../features/maintenance/screens/maintenance_screen.dart';
+import '../../features/maintenance/screens/task_detail_screen.dart';
 import '../../features/onboarding/screens/property_setup_screen.dart';
 import '../../features/onboarding/screens/trial_screen.dart';
 import '../../features/onboarding/screens/welcome_screen.dart';
@@ -296,8 +297,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: ':taskId',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Task Detail'),
+                    builder: (_, state) => TaskDetailScreen(
+                      taskId: state.pathParameters['taskId']!,
+                    ),
                   ),
                 ],
               ),
