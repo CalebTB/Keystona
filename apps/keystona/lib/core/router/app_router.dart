@@ -15,6 +15,7 @@ import '../../features/maintenance/screens/task_completion_form_screen.dart';
 import '../../features/maintenance/screens/task_detail_screen.dart';
 import '../../features/maintenance/screens/task_form_screen.dart';
 import '../../features/emergency/screens/emergency_hub_screen.dart';
+import '../../features/emergency/screens/shutoff_detail_screen.dart';
 import '../../features/home_profile/models/appliance.dart';
 import '../../features/home_profile/models/system.dart';
 import '../../features/home_profile/screens/appliance_detail_screen.dart';
@@ -249,8 +250,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'shutoffs/:type',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Shutoff Detail'),
+                    builder: (_, state) => ShutoffDetailScreen(
+                      utilityType: state.pathParameters['type']!,
+                    ),
                   ),
                   GoRoute(
                     path: 'contacts',

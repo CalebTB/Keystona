@@ -29,14 +29,95 @@ class EmergencyHubNotifier extends _$EmergencyHubNotifier {
 
   // ── Stubs for downstream issues ───────────────────────────────────────────
 
-  /// [#45] Returns the shutoff record for [utilityType] ('water'/'gas'/'electrical'),
-  /// or null if not yet set up.
-  Future<UtilityShutoff?> getShutoff(String utilityType) =>
-      throw UnimplementedError('getShutoff() — implemented by #45 Utility Shutoff Setup');
+  /// Returns the shutoff record for [utilityType] ('water'/'gas'/'electrical'),
+  /// or null if not yet set up for this property.
+  Future<UtilityShutoff?> getShutoff(String utilityType) async {
+    final user = SupabaseService.client.auth.currentUser;
+    if (user == null) throw Exception('Not authenticated');
 
-  /// [#45] Creates or updates the shutoff record for a given utility type.
-  Future<void> saveShutoff(Map<String, dynamic> data) =>
-      throw UnimplementedError('saveShutoff() — implemented by #45 Utility Shutoff Setup');
+    final propertyRow = await SupabaseService.client
+        .from('properties')
+        .select('id')
+        .eq('user_id', user.id)
+        .isFilter('deleted_at', null)
+        .order('created_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+
+    if (propertyRow == null) return null;
+    final propertyId = propertyRow['id'] as String;
+
+    final row = await SupabaseService.client
+        .from('utility_shutoffs')
+        .select(
+          'id, property_id, user_id, utility_type, location_description, '
+          'is_complete, valve_type, turn_direction, gas_company_phone, '
+          'main_breaker_location, main_breaker_amperage, circuit_directory, '
+          'tools_required, special_instructions, created_at, updated_at',
+        )
+        .eq('property_id', propertyId)
+        .eq('utility_type', utilityType)
+        .maybeSingle();
+
+    if (row == null) return null;
+    return UtilityShutoff.fromJson(row);
+  }
+
+  /// Creates or updates the shutoff record for the utility type in [data].
+  ///
+  /// Performs a manual existence check (no UNIQUE constraint on the table)
+  /// then either INSERTs a new row or UPDATEs the existing one. After a
+  /// successful write, invalidates self so the hub cards reflect the new
+  /// completion status immediately.
+  Future<void> saveShutoff(Map<String, dynamic> data) async {
+    final user = SupabaseService.client.auth.currentUser;
+    if (user == null) throw Exception('Not authenticated');
+
+    final propertyRow = await SupabaseService.client
+        .from('properties')
+        .select('id')
+        .eq('user_id', user.id)
+        .isFilter('deleted_at', null)
+        .order('created_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+
+    if (propertyRow == null) throw Exception('No property found');
+    final propertyId = propertyRow['id'] as String;
+    final utilityType = data['utility_type'] as String;
+
+    // Check if a row already exists for this property + utility type.
+    final existing = await SupabaseService.client
+        .from('utility_shutoffs')
+        .select('id')
+        .eq('property_id', propertyId)
+        .eq('utility_type', utilityType)
+        .maybeSingle();
+
+    final payload = {
+      ...data,
+      'property_id': propertyId,
+      'user_id': user.id,
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+
+    if (existing == null) {
+      // INSERT — new row.
+      payload['created_at'] = DateTime.now().toIso8601String();
+      await SupabaseService.client.from('utility_shutoffs').insert(payload);
+    } else {
+      // UPDATE — existing row.
+      final existingId = existing['id'] as String;
+      await SupabaseService.client
+          .from('utility_shutoffs')
+          .update(payload)
+          .eq('id', existingId);
+    }
+
+    // Refresh hub overview so ShutoffCard badges update immediately.
+    ref.invalidateSelf();
+    await future;
+  }
 
   /// [#46] Adds a new emergency contact and refreshes the hub.
   Future<String> addContact(Map<String, dynamic> data) =>
