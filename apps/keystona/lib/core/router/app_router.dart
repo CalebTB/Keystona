@@ -14,6 +14,7 @@ import '../../features/maintenance/screens/maintenance_screen.dart';
 import '../../features/maintenance/screens/task_completion_form_screen.dart';
 import '../../features/maintenance/screens/task_detail_screen.dart';
 import '../../features/maintenance/screens/task_form_screen.dart';
+import '../../features/home_profile/screens/home_profile_screen.dart';
 import '../../features/onboarding/screens/property_setup_screen.dart';
 import '../../features/onboarding/screens/trial_screen.dart';
 import '../../features/onboarding/screens/welcome_screen.dart';
@@ -38,7 +39,6 @@ abstract final class AppRoutes {
   static const onboardingTrial = '/onboarding/trial';
 
   // Tab 0 — Home
-  static const dashboard = '/dashboard';
   static const home = '/home';
   static const homeSystems = '/home/systems';
   static const homeSystemsAdd = '/home/systems/add';
@@ -46,6 +46,8 @@ abstract final class AppRoutes {
   static const homeAppliances = '/home/appliances';
   static const homeAppliancesAdd = '/home/appliances/add';
   static const homeApplianceDetail = '/home/appliances/:applianceId';
+  static const homeEdit = '/home/edit';
+  static const homeLifespan = '/home/lifespan';
   static const emergency = '/emergency';
   static const emergencyShutoffDetail = '/emergency/shutoffs/:type';
   static const emergencyContacts = '/emergency/contacts';
@@ -108,7 +110,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   final isAuthenticated = ref.watch(isAuthenticatedProvider);
 
   return GoRouter(
-    initialLocation: AppRoutes.dashboard,
+    initialLocation: AppRoutes.home,
     debugLogDiagnostics: false,
 
     redirect: (_, state) {
@@ -120,9 +122,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         return AppRoutes.login;
       }
 
-      // Authenticated user on an auth route → send to dashboard.
+      // Authenticated user on an auth route → send to home.
       if (isAuthenticated && goingToPublic) {
-        return AppRoutes.dashboard;
+        return AppRoutes.home;
       }
 
       return null;
@@ -132,7 +134,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ── Root redirect ────────────────────────────────────────────────────
       GoRoute(
         path: '/',
-        redirect: (_, _) => AppRoutes.dashboard,
+        redirect: (_, _) => AppRoutes.home,
       ),
 
       // ── Auth routes (no shell) ───────────────────────────────────────────
@@ -172,13 +174,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRoutes.dashboard,
-                builder: (_, _) => const PlaceholderScreen(name: 'Home'),
-              ),
-              GoRoute(
                 path: AppRoutes.home,
-                builder: (_, _) =>
-                    const PlaceholderScreen(name: 'Home Profile'),
+                builder: (_, _) => const HomeProfileScreen(),
                 routes: [
                   GoRoute(
                     path: 'systems',
@@ -215,6 +212,17 @@ final routerProvider = Provider<GoRouter>((ref) {
                             const PlaceholderScreen(name: 'Appliance Detail'),
                       ),
                     ],
+                  ),
+                  // [#41] Stub routes for downstream issues.
+                  GoRoute(
+                    path: 'edit',
+                    builder: (_, _) =>
+                        const PlaceholderScreen(name: 'Edit Property'),
+                  ),
+                  GoRoute(
+                    path: 'lifespan',
+                    builder: (_, _) =>
+                        const PlaceholderScreen(name: 'Lifespan Tracker'),
                   ),
                 ],
               ),

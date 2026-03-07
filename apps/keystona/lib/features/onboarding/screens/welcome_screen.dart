@@ -13,7 +13,7 @@ import '../providers/onboarding_provider.dart';
 ///
 /// Routes:
 ///   "Get Started" → [AppRoutes.onboardingProperty]
-///   "Skip setup"  → marks onboarding complete then → [AppRoutes.dashboard]
+///   "Skip setup"  → marks onboarding complete then → [AppRoutes.home]
 class WelcomeScreen extends ConsumerWidget {
   const WelcomeScreen({super.key});
 
@@ -74,7 +74,7 @@ class WelcomeScreen extends ConsumerWidget {
     try {
       await completeOnboarding();
       if (context.mounted) {
-        context.go(AppRoutes.dashboard);
+        context.go(AppRoutes.home);
       }
     } catch (_) {
       // Onboarding completion is best-effort — navigate anyway.
@@ -83,7 +83,7 @@ class WelcomeScreen extends ConsumerWidget {
           context,
           'Could not save setup status. You can always set up later.',
         );
-        context.go(AppRoutes.dashboard);
+        context.go(AppRoutes.home);
       }
     }
   }

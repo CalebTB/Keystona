@@ -90,7 +90,7 @@ class TrialScreen extends StatelessWidget {
       }
     } finally {
       if (context.mounted) {
-        context.go(AppRoutes.dashboard);
+        context.go(AppRoutes.home);
       }
     }
   }
