@@ -15,7 +15,11 @@ import '../../features/maintenance/screens/task_completion_form_screen.dart';
 import '../../features/maintenance/screens/task_detail_screen.dart';
 import '../../features/maintenance/screens/task_form_screen.dart';
 import '../../features/emergency/screens/emergency_hub_screen.dart';
+import '../../features/home_profile/models/system.dart';
 import '../../features/home_profile/screens/home_profile_screen.dart';
+import '../../features/home_profile/screens/system_detail_screen.dart';
+import '../../features/home_profile/screens/system_form_screen.dart';
+import '../../features/home_profile/screens/systems_screen.dart';
 import '../../features/onboarding/screens/property_setup_screen.dart';
 import '../../features/onboarding/screens/trial_screen.dart';
 import '../../features/onboarding/screens/welcome_screen.dart';
@@ -180,19 +184,23 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'systems',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Systems'),
+                    builder: (_, _) => const SystemsScreen(),
                     routes: [
                       // Static 'add' must come before parameterised ':systemId'.
                       GoRoute(
                         path: 'add',
-                        builder: (_, _) =>
-                            const PlaceholderScreen(name: 'Add System'),
+                        builder: (_, state) {
+                          final existingSystem = state.extra as HomeSystem?;
+                          return SystemFormScreen(
+                            existingSystem: existingSystem,
+                          );
+                        },
                       ),
                       GoRoute(
                         path: ':systemId',
-                        builder: (_, _) =>
-                            const PlaceholderScreen(name: 'System Detail'),
+                        builder: (_, state) => SystemDetailScreen(
+                          systemId: state.pathParameters['systemId']!,
+                        ),
                       ),
                     ],
                   ),
