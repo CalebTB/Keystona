@@ -15,7 +15,11 @@ import '../../features/maintenance/screens/task_completion_form_screen.dart';
 import '../../features/maintenance/screens/task_detail_screen.dart';
 import '../../features/maintenance/screens/task_form_screen.dart';
 import '../../features/emergency/screens/emergency_hub_screen.dart';
+import '../../features/home_profile/models/appliance.dart';
 import '../../features/home_profile/models/system.dart';
+import '../../features/home_profile/screens/appliance_detail_screen.dart';
+import '../../features/home_profile/screens/appliance_form_screen.dart';
+import '../../features/home_profile/screens/appliances_screen.dart';
 import '../../features/home_profile/screens/home_profile_screen.dart';
 import '../../features/home_profile/screens/system_detail_screen.dart';
 import '../../features/home_profile/screens/system_form_screen.dart';
@@ -206,19 +210,23 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'appliances',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Appliances'),
+                    builder: (context, _) => const AppliancesScreen(),
                     routes: [
                       // Static 'add' must come before parameterised ':applianceId'.
                       GoRoute(
                         path: 'add',
-                        builder: (_, _) =>
-                            const PlaceholderScreen(name: 'Add Appliance'),
+                        builder: (_, state) {
+                          final existing = state.extra as Appliance?;
+                          return ApplianceFormScreen(
+                              existingAppliance: existing);
+                        },
                       ),
                       GoRoute(
                         path: ':applianceId',
-                        builder: (_, _) =>
-                            const PlaceholderScreen(name: 'Appliance Detail'),
+                        builder: (_, state) => ApplianceDetailScreen(
+                          applianceId:
+                              state.pathParameters['applianceId']!,
+                        ),
                       ),
                     ],
                   ),
