@@ -120,21 +120,108 @@ class EmergencyHubNotifier extends _$EmergencyHubNotifier {
   }
 
   /// [#46] Adds a new emergency contact and refreshes the hub.
-  Future<String> addContact(Map<String, dynamic> data) =>
-      throw UnimplementedError('addContact() — implemented by #46 Emergency Contacts');
+  ///
+  /// Resolves property_id internally. Returns the new contact's ID.
+  Future<String> addContact(Map<String, dynamic> data) async {
+    final user = SupabaseService.client.auth.currentUser;
+    if (user == null) throw Exception('Not authenticated');
+
+    final propertyRow = await SupabaseService.client
+        .from('properties')
+        .select('id')
+        .eq('user_id', user.id)
+        .isFilter('deleted_at', null)
+        .order('created_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+
+    if (propertyRow == null) throw Exception('No property found');
+
+    final payload = {
+      ...data,
+      'user_id': user.id,
+      'property_id': propertyRow['id'] as String,
+    };
+
+    final response = await SupabaseService.client
+        .from('emergency_contacts')
+        .insert(payload)
+        .select('id')
+        .single();
+
+    final newId = response['id'] as String;
+
+    ref.invalidateSelf();
+    await future;
+
+    return newId;
+  }
 
   /// [#46] Updates an existing contact by [id].
-  Future<void> updateContact(String id, Map<String, dynamic> data) =>
-      throw UnimplementedError('updateContact() — implemented by #46 Emergency Contacts');
+  Future<void> updateContact(String id, Map<String, dynamic> data) async {
+    final user = SupabaseService.client.auth.currentUser;
+    if (user == null) throw Exception('Not authenticated');
 
-  /// [#46] Soft-deletes a contact by [id].
-  Future<void> deleteContact(String id) =>
-      throw UnimplementedError('deleteContact() — implemented by #46 Emergency Contacts');
+    await SupabaseService.client
+        .from('emergency_contacts')
+        .update(data)
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+    ref.invalidateSelf();
+    await future;
+  }
+
+  /// [#46] Hard-deletes a contact by [id].
+  ///
+  /// emergency_contacts has no deleted_at column — this is a permanent delete.
+  Future<void> deleteContact(String id) async {
+    final user = SupabaseService.client.auth.currentUser;
+    if (user == null) throw Exception('Not authenticated');
+
+    await SupabaseService.client
+        .from('emergency_contacts')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+    ref.invalidateSelf();
+    await future;
+  }
 
   /// [#46, #5.5] Returns all contacts suitable for a picker (projects contractor
-  /// picker + emergency quick-dial). Returns sorted by favorite, then name.
-  Future<List<EmergencyContact>> getContactsForPicker() =>
-      throw UnimplementedError('getContactsForPicker() — implemented by #46 Emergency Contacts');
+  /// picker + emergency quick-dial). Returns sorted by favorite DESC, then name ASC.
+  Future<List<EmergencyContact>> getContactsForPicker() async {
+    final user = SupabaseService.client.auth.currentUser;
+    if (user == null) throw Exception('Not authenticated');
+
+    final propertyRow = await SupabaseService.client
+        .from('properties')
+        .select('id')
+        .eq('user_id', user.id)
+        .isFilter('deleted_at', null)
+        .order('created_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+
+    if (propertyRow == null) return [];
+
+    final rows = await SupabaseService.client
+        .from('emergency_contacts')
+        .select(
+          'id, property_id, user_id, name, company_name, category, '
+          'phone_primary, phone_secondary, email, available_hours, '
+          'is_24x7, is_favorite, notes, times_used, created_at, updated_at',
+        )
+        .eq('property_id', propertyRow['id'] as String)
+        .order('is_favorite', ascending: false)
+        .order('name');
+
+    return (rows as List<dynamic>)
+        .cast<Map<String, dynamic>>()
+        .map(EmergencyContact.fromJson)
+        .toList();
+  }
 
   /// [#47] Adds a new insurance policy and refreshes the hub.
   Future<void> addInsurance(Map<String, dynamic> data) =>

@@ -21,9 +21,9 @@ abstract class EmergencyContact with _$EmergencyContact {
     /// [#46, #5.5] Company / business name.
     String? companyName,
 
-    /// Category enum string — one of:
-    /// plumber, electrician, hvac, roofer, structural_engineer,
-    /// general_contractor, fire_dept, police, gas_company, water_company, other
+    /// Category enum string — one of the [ContactCategories.all] values.
+    /// DB enum: plumber, electrician, hvac_tech, general_contractor, roofer,
+    /// pest_control, locksmith, insurance_agent, neighbor, other
     required String category,
 
     required String phonePrimary,
@@ -55,18 +55,47 @@ abstract class EmergencyContact with _$EmergencyContact {
 }
 
 /// Display label for [EmergencyContact.category].
+///
+/// Uses the exact DB enum values:
+/// plumber, electrician, hvac_tech, general_contractor, roofer,
+/// pest_control, locksmith, insurance_agent, neighbor, other
 extension ContactCategoryLabel on String {
   String get categoryLabel => switch (this) {
         'plumber' => 'Plumber',
         'electrician' => 'Electrician',
-        'hvac' => 'HVAC',
-        'roofer' => 'Roofer',
-        'structural_engineer' => 'Structural Engineer',
+        'hvac_tech' => 'HVAC Technician',
         'general_contractor' => 'General Contractor',
-        'fire_dept' => 'Fire Dept',
-        'police' => 'Police',
-        'gas_company' => 'Gas Company',
-        'water_company' => 'Water Company',
+        'roofer' => 'Roofer',
+        'pest_control' => 'Pest Control',
+        'locksmith' => 'Locksmith',
+        'insurance_agent' => 'Insurance Agent',
+        'neighbor' => 'Neighbor',
         _ => 'Other',
       };
+}
+
+/// All contact category options as value + label records.
+///
+/// Values match the DB enum exactly. Use [ContactCategories.all] to
+/// populate pickers, and [ContactCategories.labelFor] to display a label.
+abstract final class ContactCategories {
+  static const all = [
+    (value: 'plumber', label: 'Plumber'),
+    (value: 'electrician', label: 'Electrician'),
+    (value: 'hvac_tech', label: 'HVAC Technician'),
+    (value: 'general_contractor', label: 'General Contractor'),
+    (value: 'roofer', label: 'Roofer'),
+    (value: 'pest_control', label: 'Pest Control'),
+    (value: 'locksmith', label: 'Locksmith'),
+    (value: 'insurance_agent', label: 'Insurance Agent'),
+    (value: 'neighbor', label: 'Neighbor'),
+    (value: 'other', label: 'Other'),
+  ];
+
+  static String labelFor(String value) => all
+      .firstWhere(
+        (c) => c.value == value,
+        orElse: () => (value: value, label: value),
+      )
+      .label;
 }

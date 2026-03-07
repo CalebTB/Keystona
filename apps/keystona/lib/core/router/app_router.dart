@@ -14,6 +14,9 @@ import '../../features/maintenance/screens/maintenance_screen.dart';
 import '../../features/maintenance/screens/task_completion_form_screen.dart';
 import '../../features/maintenance/screens/task_detail_screen.dart';
 import '../../features/maintenance/screens/task_form_screen.dart';
+import '../../features/emergency/models/emergency_contact.dart';
+import '../../features/emergency/screens/contact_form_screen.dart';
+import '../../features/emergency/screens/contacts_list_screen.dart';
 import '../../features/emergency/screens/emergency_hub_screen.dart';
 import '../../features/emergency/screens/shutoff_detail_screen.dart';
 import '../../features/home_profile/models/appliance.dart';
@@ -256,13 +259,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'contacts',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Emergency Contacts'),
+                    builder: (_, _) => const ContactsListScreen(),
                     routes: [
                       GoRoute(
                         path: 'add',
-                        builder: (_, _) =>
-                            const PlaceholderScreen(name: 'Add Contact'),
+                        builder: (_, state) => ContactFormScreen(
+                          existingContact:
+                              state.extra as EmergencyContact?,
+                        ),
                       ),
                     ],
                   ),
