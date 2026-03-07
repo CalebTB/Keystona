@@ -15,9 +15,12 @@ import '../../features/maintenance/screens/task_completion_form_screen.dart';
 import '../../features/maintenance/screens/task_detail_screen.dart';
 import '../../features/maintenance/screens/task_form_screen.dart';
 import '../../features/emergency/models/emergency_contact.dart';
+import '../../features/emergency/models/insurance_policy.dart';
 import '../../features/emergency/screens/contact_form_screen.dart';
 import '../../features/emergency/screens/contacts_list_screen.dart';
 import '../../features/emergency/screens/emergency_hub_screen.dart';
+import '../../features/emergency/screens/insurance_form_screen.dart';
+import '../../features/emergency/screens/insurance_list_screen.dart';
 import '../../features/emergency/screens/shutoff_detail_screen.dart';
 import '../../features/home_profile/models/appliance.dart';
 import '../../features/home_profile/models/system.dart';
@@ -66,6 +69,8 @@ abstract final class AppRoutes {
   static const emergencyContacts = '/emergency/contacts';
   static const emergencyContactsAdd = '/emergency/contacts/add';
   static const emergencyInsurance = '/emergency/insurance';
+  static const emergencyInsuranceAdd = '/emergency/insurance/add';
+  static const emergencyInsuranceEdit = '/emergency/insurance/edit/:policyId';
 
   // Tab 1 — Docs
   static const documents = '/documents';
@@ -272,8 +277,21 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'insurance',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Insurance Info'),
+                    builder: (_, _) => const InsuranceListScreen(),
+                    routes: [
+                      // Static 'add' before parameterised 'edit/:policyId'.
+                      GoRoute(
+                        path: 'add',
+                        builder: (_, _) => const InsuranceFormScreen(),
+                      ),
+                      GoRoute(
+                        path: 'edit/:policyId',
+                        builder: (_, state) {
+                          final policy = state.extra as InsurancePolicy;
+                          return InsuranceFormScreen(existingPolicy: policy);
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),

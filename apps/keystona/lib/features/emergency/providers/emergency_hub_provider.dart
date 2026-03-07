@@ -224,12 +224,52 @@ class EmergencyHubNotifier extends _$EmergencyHubNotifier {
   }
 
   /// [#47] Adds a new insurance policy and refreshes the hub.
-  Future<void> addInsurance(Map<String, dynamic> data) =>
-      throw UnimplementedError('addInsurance() — implemented by #47 Insurance Quick Reference');
+  Future<void> addInsurance(Map<String, dynamic> data) async {
+    final user = SupabaseService.client.auth.currentUser;
+    if (user == null) throw Exception('Not authenticated');
+    final propertyRow = await SupabaseService.client
+        .from('properties')
+        .select('id')
+        .eq('user_id', user.id)
+        .isFilter('deleted_at', null)
+        .order('created_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+    if (propertyRow == null) throw Exception('No property found');
+    await SupabaseService.client.from('insurance_info').insert({
+      ...data,
+      'property_id': propertyRow['id'],
+      'user_id': user.id,
+    });
+    ref.invalidateSelf();
+    await future;
+  }
 
   /// [#47] Updates an existing insurance policy by [id].
-  Future<void> updateInsurance(String id, Map<String, dynamic> data) =>
-      throw UnimplementedError('updateInsurance() — implemented by #47 Insurance Quick Reference');
+  Future<void> updateInsurance(String id, Map<String, dynamic> data) async {
+    final user = SupabaseService.client.auth.currentUser;
+    if (user == null) throw Exception('Not authenticated');
+    await SupabaseService.client
+        .from('insurance_info')
+        .update(data)
+        .eq('id', id)
+        .eq('user_id', user.id);
+    ref.invalidateSelf();
+    await future;
+  }
+
+  /// [#47] Soft-deletes an insurance policy by [id].
+  Future<void> deleteInsurance(String id) async {
+    final user = SupabaseService.client.auth.currentUser;
+    if (user == null) throw Exception('Not authenticated');
+    await SupabaseService.client
+        .from('insurance_info')
+        .update({'deleted_at': DateTime.now().toUtc().toIso8601String()})
+        .eq('id', id)
+        .eq('user_id', user.id);
+    ref.invalidateSelf();
+    await future;
+  }
 
   // ── Private fetch ─────────────────────────────────────────────────────────
 
