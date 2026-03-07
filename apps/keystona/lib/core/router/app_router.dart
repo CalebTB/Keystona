@@ -14,6 +14,7 @@ import '../../features/maintenance/screens/maintenance_screen.dart';
 import '../../features/maintenance/screens/task_completion_form_screen.dart';
 import '../../features/maintenance/screens/task_detail_screen.dart';
 import '../../features/maintenance/screens/task_form_screen.dart';
+import '../../features/emergency/screens/emergency_hub_screen.dart';
 import '../../features/home_profile/screens/home_profile_screen.dart';
 import '../../features/onboarding/screens/property_setup_screen.dart';
 import '../../features/onboarding/screens/trial_screen.dart';
@@ -228,8 +229,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: AppRoutes.emergency,
-                builder: (_, _) =>
-                    const PlaceholderScreen(name: 'Emergency Hub'),
+                builder: (_, _) => const EmergencyHubScreen(),
                 routes: [
                   GoRoute(
                     path: 'shutoffs/:type',

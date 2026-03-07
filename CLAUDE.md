@@ -340,6 +340,7 @@ Comprehensive specifications in `keystona-project-files/`:
 - **`GoRouter initialLocation` must match an existing route**: Removing a route without updating `initialLocation` causes "GoException: no routes for location" on cold start — always update `initialLocation`, root redirect (`/`), auth redirect, and all `context.go()` call sites together when retiring a route
 - **`StatefulShellBranch` first route = tab default**: The first `GoRoute` in a `StatefulShellBranch.routes` list is the branch's initial location — adding a placeholder as the first route means tapping the tab never shows the real screen; always put the primary screen first
 - **Supabase `systems` table requires `category` enum column**: `system_type` is free text; `category` is a NOT NULL `system_category` enum — seeding without `category` fails silently on the error path; always check `is_nullable = 'NO'` columns before seeding
+- **`AnimationController.repeat()` must be deferred on pushed routes**: Calling `..repeat()` directly in `initState` works fine on tab-root screens but crashes with `debugFrameWasSentToEngine` (+ cascading `!semantics.parentDataDirty`) when the widget is mounted on a pushed route — use `WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _ctrl.repeat(reverse: true); })` instead; safe in all contexts
 
 ## Philosophy
 

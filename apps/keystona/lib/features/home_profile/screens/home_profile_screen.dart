@@ -149,6 +149,10 @@ class _ContentSliver extends ConsumerWidget {
               count: null,
               onTap: () => context.push(AppRoutes.homeLifespan),
             ),
+            const SizedBox(height: AppSizes.md),
+            _EmergencyHubButton(
+              onTap: () => context.push(AppRoutes.emergency),
+            ),
           ],
         ),
       ),
@@ -441,6 +445,63 @@ class _SectionRow extends StatelessWidget {
                 ],
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Emergency Hub quick-action button ─────────────────────────────────────────
+
+class _EmergencyHubButton extends StatelessWidget {
+  const _EmergencyHubButton({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF1F0),
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          border: Border.all(color: const Color(0xFFFFBBB8)),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.md,
+          vertical: AppSizes.sm,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF4D4D).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+              ),
+              child: const Icon(
+                Icons.warning_amber_rounded,
+                size: 20,
+                color: Color(0xFFCC2200),
+              ),
+            ),
+            const SizedBox(width: AppSizes.md),
+            Expanded(
+              child: Text(
+                'Emergency Hub',
+                style: AppTextStyles.labelLarge.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFFCC2200),
+                ),
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: Color(0xFFCC2200),
+            ),
           ],
         ),
       ),

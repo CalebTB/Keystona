@@ -26,8 +26,11 @@ class _HomeProfileSkeletonState extends State<HomeProfileSkeleton>
     _ctrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
+    );
     _opacity = Tween<double>(begin: 0.3, end: 0.7).animate(_ctrl);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _ctrl.repeat(reverse: true);
+    });
   }
 
   @override
@@ -149,9 +152,10 @@ class _Bar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (_, constraints) => Container(
-        width: constraints.maxWidth * widthFactor,
+    return FractionallySizedBox(
+      alignment: Alignment.centerLeft,
+      widthFactor: widthFactor,
+      child: Container(
         height: 10,
         decoration: BoxDecoration(
           color: AppColors.gray200,
