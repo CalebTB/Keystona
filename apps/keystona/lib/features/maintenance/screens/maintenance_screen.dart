@@ -12,6 +12,7 @@ import '../../../core/widgets/error_view.dart';
 import '../models/maintenance_task.dart';
 import '../providers/maintenance_tasks_provider.dart';
 import '../providers/task_filter_provider.dart';
+import '../widgets/health_score_widget.dart';
 import '../widgets/task_card.dart';
 import '../widgets/task_empty_state.dart';
 import '../widgets/task_list_skeleton.dart';
@@ -61,6 +62,8 @@ class _IOSMaintenanceLayout extends ConsumerWidget {
                 onRefresh: () =>
                     ref.read(maintenanceTasksProvider.notifier).refresh(),
               ),
+              // Health score card.
+              const SliverToBoxAdapter(child: HealthScoreWidget()),
               // Filter chip row.
               const SliverToBoxAdapter(child: _FilterRow()),
               // Task list body.
@@ -112,6 +115,8 @@ class _AndroidMaintenanceLayout extends ConsumerWidget {
                 ),
               ],
             ),
+            // Health score card.
+            const SliverToBoxAdapter(child: HealthScoreWidget()),
             const SliverToBoxAdapter(child: _FilterRow()),
             const _TaskListSliver(),
             const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),

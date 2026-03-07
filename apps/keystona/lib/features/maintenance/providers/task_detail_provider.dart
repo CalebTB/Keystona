@@ -6,6 +6,7 @@ import '../../../services/supabase_service.dart';
 import '../models/maintenance_task.dart';
 import '../models/task_completion.dart';
 import '../models/task_detail.dart';
+import 'home_health_score_provider.dart';
 import 'maintenance_tasks_provider.dart';
 
 part 'task_detail_provider.g.dart';
@@ -67,8 +68,9 @@ class TaskDetailNotifier extends _$TaskDetailNotifier {
       );
     }
 
-    // Sync the list screen and re-fetch detail.
+    // Sync the list screen, score, and re-fetch detail.
     ref.invalidate(maintenanceTasksProvider);
+    ref.invalidate(homeHealthScoreProvider);
     ref.invalidateSelf();
     await future;
 
@@ -101,6 +103,7 @@ class TaskDetailNotifier extends _$TaskDetailNotifier {
         .eq('id', detail.task.id);
 
     ref.invalidate(maintenanceTasksProvider);
+    ref.invalidate(homeHealthScoreProvider);
     ref.invalidateSelf();
     await future;
   }
@@ -127,6 +130,7 @@ class TaskDetailNotifier extends _$TaskDetailNotifier {
     }
 
     ref.invalidate(maintenanceTasksProvider);
+    ref.invalidate(homeHealthScoreProvider);
     ref.invalidateSelf();
     await future;
   }
@@ -212,8 +216,9 @@ class TaskDetailNotifier extends _$TaskDetailNotifier {
       }
     }
 
-    // 5. Sync the list screen and re-fetch detail.
+    // 5. Sync the list screen, score, and re-fetch detail.
     ref.invalidate(maintenanceTasksProvider);
+    ref.invalidate(homeHealthScoreProvider);
     ref.invalidateSelf();
     await future;
 
