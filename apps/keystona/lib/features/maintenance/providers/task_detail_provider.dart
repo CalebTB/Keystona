@@ -1,4 +1,6 @@
+import 'package:image_picker/image_picker.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../services/supabase_service.dart';
 import '../models/maintenance_task.dart';
@@ -129,12 +131,103 @@ class TaskDetailNotifier extends _$TaskDetailNotifier {
     await future;
   }
 
-  /// [#33] Opens the detailed completion form (photo, cost, contractor, notes).
+  /// Inserts a detailed [TaskCompletion] with optional photos and receipt links.
   ///
-  /// Agent building #33: implement this method. The [TaskCompletion] model is
-  /// already defined — insert via `task_completions` with all form fields.
-  Future<void> completeTaskDetailed(Map<String, dynamic> formData) async {
-    throw UnimplementedError('completeTaskDetailed() implemented by issue #33');
+  /// [formData] must contain `completed_date`, `completed_by`, and any optional
+  /// contractor / cost / time / notes / linked_document_ids fields.
+  ///
+  /// [photos] are uploaded to `completion-photos/{userId}/{propertyId}/{id}/`
+  /// before inserting [completion_photos] rows.
+  ///
+  /// Returns the created completion ID so the caller can wire an undo snackbar.
+  Future<String> completeTaskDetailed(
+    Map<String, dynamic> formData,
+    List<XFile> photos,
+  ) async {
+    final detail = state.value;
+    if (detail == null) throw StateError('Task not loaded');
+
+    final user = SupabaseService.client.auth.currentUser;
+    if (user == null) throw StateError('Not authenticated');
+
+    // 1. Insert completion row.
+    final row = await SupabaseService.client
+        .from('task_completions')
+        .insert({
+          'task_id': detail.task.id,
+          'user_id': user.id,
+          'property_id': detail.task.propertyId,
+          ...formData,
+        })
+        .select('id')
+        .single();
+
+    final completionId = row['id'] as String;
+
+    // 2. Upload photos and insert completion_photos rows.
+    if (photos.isNotEmpty) {
+      final photoRows = <Map<String, dynamic>>[];
+      for (final photo in photos) {
+        final bytes = await photo.readAsBytes();
+        final ext = photo.name.split('.').last.toLowerCase();
+        final fileName =
+            '${DateTime.now().millisecondsSinceEpoch}_${photo.name}';
+        final path =
+            '${user.id}/${detail.task.propertyId}/$completionId/$fileName';
+
+        await SupabaseService.client.storage
+            .from('completion-photos')
+            .uploadBinary(
+              path,
+              bytes,
+              fileOptions: FileOptions(contentType: _mimeType(ext)),
+            );
+
+        photoRows.add({
+          'completion_id': completionId,
+          'user_id': user.id,
+          'file_path': path,
+        });
+      }
+      await SupabaseService.client
+          .from('completion_photos')
+          .insert(photoRows);
+    }
+
+    // 3. Update task status to completed.
+    await SupabaseService.client
+        .from('maintenance_tasks')
+        .update({'status': 'completed'})
+        .eq('id', detail.task.id);
+
+    // 4. Schedule next occurrence if recurring. Non-fatal if it fails.
+    if (detail.task.recurrence != RecurrenceType.none) {
+      try {
+        await SupabaseService.client.functions.invoke(
+          'schedule-next-task',
+          body: {'task_id': detail.task.id},
+        );
+      } catch (_) {
+        // Task is marked complete even if scheduling fails.
+      }
+    }
+
+    // 5. Sync the list screen and re-fetch detail.
+    ref.invalidate(maintenanceTasksProvider);
+    ref.invalidateSelf();
+    await future;
+
+    return completionId;
+  }
+
+  static String _mimeType(String ext) {
+    return switch (ext) {
+      'jpg' || 'jpeg' => 'image/jpeg',
+      'png' => 'image/png',
+      'heic' => 'image/heic',
+      'webp' => 'image/webp',
+      _ => 'image/jpeg',
+    };
   }
 
   // ── Private fetch ──────────────────────────────────────────────────────────

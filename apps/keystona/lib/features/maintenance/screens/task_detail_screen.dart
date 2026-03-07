@@ -814,18 +814,12 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
 
           Row(
             children: [
-              // Detailed Complete — stub for #33.
+              // Detailed Complete — opens the full completion form.
               Expanded(
                 child: _OutlinedActionButton(
                   label: 'Detailed Complete',
                   isDisabled: widget.isDone,
-                  onPressed: widget.isDone
-                      ? null
-                      : () {
-                          // TODO(#33): navigate to detailed completion form.
-                          // context.push(AppRoutes.maintenanceCompleteTask
-                          //     .replaceFirst(':taskId', widget.taskId));
-                        },
+                  onPressed: widget.isDone ? null : _handleDetailedComplete,
                 ),
               ),
               const SizedBox(width: AppSizes.sm),
@@ -888,6 +882,36 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
               ref
                   .read(taskDetailProvider(widget.taskId).notifier)
                   .undoQuickComplete(capturedId);
+            },
+          ),
+        ),
+      );
+  }
+
+  Future<void> _handleDetailedComplete() async {
+    final completionId = await context.push<String>(
+      AppRoutes.maintenanceCompleteTask.replaceFirst(
+        ':taskId',
+        widget.taskId,
+      ),
+    );
+
+    if (completionId == null || !mounted) return;
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: const Text('Task completed!'),
+          duration: const Duration(seconds: 5),
+          behavior: SnackBarBehavior.floating,
+          action: SnackBarAction(
+            label: 'Undo',
+            textColor: AppColors.goldAccent,
+            onPressed: () {
+              ref
+                  .read(taskDetailProvider(widget.taskId).notifier)
+                  .undoQuickComplete(completionId);
             },
           ),
         ),

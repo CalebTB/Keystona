@@ -11,6 +11,7 @@ import '../../features/documents/screens/document_upload_screen.dart';
 import '../../features/documents/screens/documents_screen.dart';
 import '../../features/maintenance/models/maintenance_task.dart';
 import '../../features/maintenance/screens/maintenance_screen.dart';
+import '../../features/maintenance/screens/task_completion_form_screen.dart';
 import '../../features/maintenance/screens/task_detail_screen.dart';
 import '../../features/maintenance/screens/task_form_screen.dart';
 import '../../features/onboarding/screens/property_setup_screen.dart';
@@ -307,8 +308,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'complete/:taskId',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Complete Task'),
+                    builder: (_, state) => TaskCompletionFormScreen(
+                      taskId: state.pathParameters['taskId']!,
+                    ),
                   ),
                   GoRoute(
                     path: ':taskId',
