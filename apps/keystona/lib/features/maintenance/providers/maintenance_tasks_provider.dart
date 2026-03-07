@@ -125,6 +125,124 @@ class MaintenanceTasksNotifier extends _$MaintenanceTasksNotifier {
     throw UnimplementedError('softDelete() implemented by issue #33');
   }
 
+  /// Generates maintenance tasks from templates directly via DB queries.
+  ///
+  /// Mirrors the logic of the `generate-maintenance-tasks` Edge Function but
+  /// runs client-side using the authenticated Supabase client — no JWT
+  /// gateway required. Idempotent: no-ops if template tasks already exist.
+  Future<void> generateFromTemplates() async {
+    final user = SupabaseService.client.auth.currentUser;
+    if (user == null) return;
+
+    // Fetch property.
+    final propertyRow = await SupabaseService.client
+        .from('properties')
+        .select('id, climate_zone')
+        .eq('user_id', user.id)
+        .isFilter('deleted_at', null)
+        .order('created_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+    if (propertyRow == null) return;
+
+    final propertyId = propertyRow['id'] as String;
+    final climateZone = propertyRow['climate_zone'] as int?;
+
+    // Idempotency: skip if template tasks already exist.
+    final existing = await SupabaseService.client
+        .from('maintenance_tasks')
+        .select('id')
+        .eq('property_id', propertyId)
+        .not('template_id', 'is', null)
+        .isFilter('deleted_at', null);
+    if (existing.isNotEmpty) return;
+
+    // Fetch active templates.
+    final templates = await SupabaseService.client
+        .from('maintenance_task_templates')
+        .select(
+          'id, name, description, instructions, category, season, recurrence, '
+          'default_month, difficulty, diy_or_pro, priority, estimated_minutes, '
+          'tools_needed, supplies_needed, climate_zones',
+        )
+        .eq('is_active', true);
+
+    // Filter by climate zone (null zones = applies to all).
+    final filtered = climateZone != null
+        ? templates.where((t) {
+            final zones = t['climate_zones'] as List?;
+            return zones == null || zones.contains(climateZone);
+          }).toList()
+        : templates;
+
+    if (filtered.isEmpty) return;
+
+    // Build task rows with computed due dates.
+    final now = DateTime.now().toUtc();
+    final taskRows = filtered.map<Map<String, dynamic>>((t) {
+      return {
+        'property_id': propertyId,
+        'user_id': user.id,
+        'template_id': t['id'],
+        'task_origin': 'system_generated',
+        'name': t['name'],
+        'description': t['description'],
+        'instructions': t['instructions'],
+        'category': t['category'],
+        'linked_system_id': null,
+        'linked_appliance_id': null,
+        'due_date': _computeDueDate(t, now),
+        'recurrence': t['recurrence'],
+        'season': t['season'],
+        'climate_adjusted': climateZone != null,
+        'status': 'scheduled',
+        'difficulty': t['difficulty'],
+        'diy_or_pro': t['diy_or_pro'],
+        'priority': t['priority'],
+        'estimated_minutes': t['estimated_minutes'],
+        'tools_needed': t['tools_needed'] ?? <dynamic>[],
+        'supplies_needed': t['supplies_needed'] ?? <dynamic>[],
+        'reminder_days_before': 7,
+        'notifications_enabled': true,
+      };
+    }).toList();
+
+    await SupabaseService.client.from('maintenance_tasks').insert(taskRows);
+    await refresh();
+  }
+
+  /// Computes the initial due date for a template task, matching the
+  /// TypeScript logic in the `generate-maintenance-tasks` Edge Function.
+  String _computeDueDate(Map<String, dynamic> template, DateTime now) {
+    final currentMonth = now.month;
+    final currentYear = now.year;
+    final recurrence = template['recurrence'] as String? ?? 'none';
+    final season = template['season'] as String?;
+    final defaultMonth = template['default_month'] as int?;
+
+    // Monthly with no season → due the 1st of next month.
+    if (recurrence == 'monthly' && season == null) {
+      final next = DateTime.utc(currentYear, currentMonth + 1, 1);
+      return '${next.year}-${next.month.toString().padLeft(2, '0')}-01';
+    }
+
+    const seasonMonths = {
+      'spring': 4,
+      'summer': 7,
+      'fall': 10,
+      'winter': 12,
+    };
+
+    final targetMonth = defaultMonth ??
+        (season != null ? seasonMonths[season] : null) ??
+        currentMonth;
+
+    final targetYear =
+        targetMonth < currentMonth ? currentYear + 1 : currentYear;
+
+    return '$targetYear-${targetMonth.toString().padLeft(2, '0')}-01';
+  }
+
   // ── Private fetch ─────────────────────────────────────────────────────────
 
   Future<List<MaintenanceTask>> _fetchTasks() async {

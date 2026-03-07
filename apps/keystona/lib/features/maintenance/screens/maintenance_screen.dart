@@ -54,6 +54,7 @@ class _IOSMaintenanceLayout extends ConsumerWidget {
                   isIOS: true,
                   onSortSelected: (order) =>
                       ref.read(taskFilterProvider.notifier).setSortOrder(order),
+                  onGenerateTasks: () => _generateTasks(ref),
                 ),
               ),
               CupertinoSliverRefreshControl(
@@ -107,6 +108,7 @@ class _AndroidMaintenanceLayout extends ConsumerWidget {
                   onSortSelected: (order) => ref
                       .read(taskFilterProvider.notifier)
                       .setSortOrder(order),
+                  onGenerateTasks: () => _generateTasks(ref),
                 ),
               ],
             ),
@@ -373,16 +375,26 @@ class _FilterChip extends StatelessWidget {
   }
 }
 
+// ── Generate tasks helper ─────────────────────────────────────────────────────
+
+/// Generates tasks from templates via the provider (client-side, no Edge
+/// Function JWT required — mirrors the generate-maintenance-tasks function).
+Future<void> _generateTasks(WidgetRef ref) async {
+  await ref.read(maintenanceTasksProvider.notifier).generateFromTemplates();
+}
+
 // ── Sort button ───────────────────────────────────────────────────────────────
 
 class _SortButton extends StatelessWidget {
   const _SortButton({
     required this.isIOS,
     required this.onSortSelected,
+    required this.onGenerateTasks,
   });
 
   final bool isIOS;
   final void Function(TaskSortOrder order) onSortSelected;
+  final VoidCallback onGenerateTasks;
 
   static const _options = [
     (label: 'Due Date', order: TaskSortOrder.dueDateAsc),
@@ -400,18 +412,35 @@ class _SortButton extends StatelessWidget {
       );
     }
 
-    return PopupMenuButton<TaskSortOrder>(
+    return PopupMenuButton<Object>(
       icon: const Icon(Icons.sort),
       color: AppColors.surface,
-      onSelected: onSortSelected,
-      itemBuilder: (_) => _options
-          .map(
-            (opt) => PopupMenuItem<TaskSortOrder>(
-              value: opt.order,
-              child: Text(opt.label, style: AppTextStyles.bodyMedium),
-            ),
-          )
-          .toList(),
+      onSelected: (value) {
+        if (value is TaskSortOrder) {
+          onSortSelected(value);
+        } else if (value == 'generate') {
+          onGenerateTasks();
+        }
+      },
+      itemBuilder: (_) => [
+        ..._options.map(
+          (opt) => PopupMenuItem<Object>(
+            value: opt.order,
+            child: Text(opt.label, style: AppTextStyles.bodyMedium),
+          ),
+        ),
+        const PopupMenuDivider(),
+        PopupMenuItem<Object>(
+          value: 'generate',
+          child: Row(
+            children: [
+              const Icon(Icons.auto_awesome_outlined, size: 18),
+              const SizedBox(width: AppSizes.sm),
+              Text('Generate Tasks', style: AppTextStyles.bodyMedium),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -420,17 +449,24 @@ class _SortButton extends StatelessWidget {
       context: context,
       builder: (_) => CupertinoActionSheet(
         title: const Text('Sort By'),
-        actions: _options
-            .map(
-              (opt) => CupertinoActionSheetAction(
-                onPressed: () {
-                  Navigator.of(context, rootNavigator: true).pop();
-                  onSortSelected(opt.order);
-                },
-                child: Text(opt.label),
-              ),
-            )
-            .toList(),
+        actions: [
+          ..._options.map(
+            (opt) => CupertinoActionSheetAction(
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).pop();
+                onSortSelected(opt.order);
+              },
+              child: Text(opt.label),
+            ),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.of(context, rootNavigator: true).pop();
+              onGenerateTasks();
+            },
+            child: const Text('Generate Tasks'),
+          ),
+        ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
           child: const Text('Cancel'),

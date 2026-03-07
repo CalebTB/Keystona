@@ -317,6 +317,8 @@ Comprehensive specifications in `keystona-project-files/`:
 - **`task_difficulty` enum uses `'involved'` not `'professional'`**: The `diy_or_pro` column uses `'professional'`; the `difficulty` column uses `'involved'` for the hardest self-serviceable difficulty — two different enums; mixing them causes a silent insert error
 - **Verify template count with SQL after seeding**: Always run `SELECT COUNT(*) FROM {table}` after applying a seed migration — confirms all rows landed (easy to miss truncation from multi-statement inserts)
 - **Edge Function `verify_jwt: true` is a gateway-level guard**: Setting `verify_jwt: true` on deploy causes the Supabase gateway to reject requests with no/invalid JWT before function code runs — the function's own `auth.getUser()` check is defense-in-depth, not the primary gate
+- **`functions.invoke()` requires explicit `Authorization` header in supabase_flutter v2**: The SDK does not reliably auto-attach the user's JWT — always pass `headers: {'Authorization': 'Bearer ${session.accessToken}'}` explicitly; guard with `final session = client.auth.currentSession; if (session == null) return;` first → `lib/features/maintenance/screens/maintenance_screen.dart`
+- **Edge Function `verify_jwt: true` gateway may reject valid Flutter JWTs**: If the JWT is consistently rejected even after `refreshSession()`, the gateway JWT secret may not match the project config — bypass by implementing the same logic as a provider method using the standard DB client, which handles auth automatically; Edge Function can be re-enabled for production once the project JWT config is confirmed → `lib/features/maintenance/providers/maintenance_tasks_provider.dart`
 
 ## Philosophy
 
