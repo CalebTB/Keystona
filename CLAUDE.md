@@ -242,6 +242,9 @@ Comprehensive specifications in `keystona-project-files/`:
 - **iOS FAB via `Stack` + `Positioned` on `CupertinoPageScaffold`**: `CupertinoPageScaffold` has no `floatingActionButton` slot — wrap its body in a `Stack`, add `Positioned(bottom: 16, right: 16, child: FAB)` for iOS; Android uses `Scaffold.floatingActionButton` normally → `lib/features/maintenance/screens/maintenance_screen.dart`
 - **`bool get _isEditing => widget.existingTask != null`**: Simple getter in `ConsumerState` to branch create vs edit mode — drives nav bar title, save method (`addTask` vs `updateTask`), and controller pre-population in `initState` → `lib/features/maintenance/screens/task_form_screen.dart`
 - **Property ID fetched once in `initState`, stored as nullable field**: Async property lookup runs in `initState`, result stored as `String? _propertyId` — pickers watch `AsyncData([])` when null and switch to real data once the ID resolves; never blocks the first frame → `lib/features/maintenance/screens/task_form_screen.dart`
+- **`NoPropertyException` sentinel via typedef**: Private `_NoPropertyException` exported as `typedef NoPropertyException = _NoPropertyException` — screen catches it to show empty state instead of generic error without exposing private symbol across files → `lib/features/home_profile/providers/home_profile_provider.dart`
+- **Parallel Supabase queries with `Future.wait`**: Systems + appliances counts fetched concurrently after property row lands — single await for both results; eliminates sequential round-trip latency on overview screens → `lib/features/home_profile/providers/home_profile_provider.dart`
+- **Nearing-EOL count in Dart over RPC**: Lightweight system rows (5 columns) fetched and classified in Dart using `(ageYears / avgLifespan) >= 0.75` — avoids an extra RPC, uses same formula as #48 lifespan screen so counts always agree → `lib/features/home_profile/providers/home_profile_provider.dart`
 
 ## Decisions
 
@@ -281,6 +284,7 @@ Comprehensive specifications in `keystona-project-files/`:
 - **Error state silently hides score widget**: Chose `SizedBox.shrink()` on score widget error over an error card — score is a non-critical enhancement; a broken RPC call shouldn't disrupt the task list below it
 - **`SECURITY DEFINER` RPC with immediate ownership check**: RPC runs with elevated privileges but verifies `properties.user_id = auth.uid()` before any data read — client-supplied `p_property_id` validated against authenticated session, not trusted directly
 - **`due_date < CURRENT_DATE AND NOT IN (completed, skipped)` over `status = 'overdue'` in RPCs**: Task status column lags behind reality (updated by background job) — using the date directly is always accurate and matches what Flutter displays; prefer date-based predicates in aggregate RPCs over status-based ones for time-sensitive classifications
+- **`/home` as tab root, not `/dashboard`**: Chose to remove the `/dashboard` placeholder and make `/home` the branch's first route and `initialLocation` — a separate `/dashboard` constant is unnecessary coupling; the Home tab IS the home screen
 
 ## Lessons
 
@@ -333,6 +337,9 @@ Comprehensive specifications in `keystona-project-files/`:
 - **Edge Function `verify_jwt: true` gateway may reject valid Flutter JWTs**: If the JWT is consistently rejected even after `refreshSession()`, the gateway JWT secret may not match the project config — bypass by implementing the same logic as a provider method using the standard DB client, which handles auth automatically; Edge Function can be re-enabled for production once the project JWT config is confirmed → `lib/features/maintenance/providers/maintenance_tasks_provider.dart`
 - **`(_, __)` triggers `unnecessary_underscores` lint in Dart 3**: Multiple wildcard underscores in callbacks (`(_, __)`) are flagged by the analyzer — use `(_, _)` instead; Dart 3 allows repeated `_` wildcards for multi-arg discards
 - **RPC aggregate queries must mirror Flutter client classification logic**: If Flutter classifies a task as overdue by `due_date < today`, the SQL must use the same predicate — `status = 'overdue'` alone misses tasks whose status column hasn't been flipped by the background updater yet; always cross-check SQL aggregation logic against the Flutter display code that determines what the user sees
+- **`GoRouter initialLocation` must match an existing route**: Removing a route without updating `initialLocation` causes "GoException: no routes for location" on cold start — always update `initialLocation`, root redirect (`/`), auth redirect, and all `context.go()` call sites together when retiring a route
+- **`StatefulShellBranch` first route = tab default**: The first `GoRoute` in a `StatefulShellBranch.routes` list is the branch's initial location — adding a placeholder as the first route means tapping the tab never shows the real screen; always put the primary screen first
+- **Supabase `systems` table requires `category` enum column**: `system_type` is free text; `category` is a NOT NULL `system_category` enum — seeding without `category` fails silently on the error path; always check `is_nullable = 'NO'` columns before seeding
 
 ## Philosophy
 
