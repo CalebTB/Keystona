@@ -30,6 +30,7 @@ import '../../features/home_profile/screens/appliances_screen.dart';
 import '../../features/home_profile/screens/home_profile_screen.dart';
 import '../../features/home_profile/screens/lifespan_screen.dart';
 import '../../features/home_profile/screens/system_detail_screen.dart';
+import '../../features/projects/screens/projects_screen.dart';
 import '../../features/home_profile/screens/system_form_screen.dart';
 import '../../features/home_profile/screens/systems_screen.dart';
 import '../../features/onboarding/screens/property_setup_screen.dart';
@@ -376,7 +377,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: AppRoutes.projects,
-                builder: (_, _) => const PlaceholderScreen(name: 'Projects'),
+                builder: (_, _) => const ProjectsScreen(),
                 routes: [
                   // Static 'create' must come before parameterised ':projectId'.
                   GoRoute(
