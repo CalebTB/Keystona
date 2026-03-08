@@ -28,6 +28,7 @@ import '../../features/home_profile/screens/appliance_detail_screen.dart';
 import '../../features/home_profile/screens/appliance_form_screen.dart';
 import '../../features/home_profile/screens/appliances_screen.dart';
 import '../../features/home_profile/screens/home_profile_screen.dart';
+import '../../features/home_profile/screens/lifespan_screen.dart';
 import '../../features/home_profile/screens/system_detail_screen.dart';
 import '../../features/home_profile/screens/system_form_screen.dart';
 import '../../features/home_profile/screens/systems_screen.dart';
@@ -247,8 +248,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'lifespan',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Lifespan Tracker'),
+                    builder: (_, _) => const LifespanScreen(),
                   ),
                 ],
               ),
