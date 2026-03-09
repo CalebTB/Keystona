@@ -80,5 +80,12 @@ dev_dependencies:
   json_serializable: ^6.8.0
   mockito: ^5.4.0
 
+dependency_overrides:
+  # Workaround: path_provider_foundation 2.6.0 uses objective_c FFI which
+  # can't find objective_c.framework in the iOS 26.2 simulator runtime.
+  # 2.4.3 uses MethodChannel instead of FFI and avoids the crash.
+  # Remove once path_provider_foundation ships a fix for iOS 26 simulators.
+  path_provider_foundation: 2.4.3
+
 flutter:
   uses-material-design: true
