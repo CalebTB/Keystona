@@ -31,9 +31,12 @@ import '../../features/home_profile/screens/home_profile_screen.dart';
 import '../../features/home_profile/screens/lifespan_screen.dart';
 import '../../features/home_profile/screens/system_detail_screen.dart';
 import '../../features/projects/models/project.dart';
+import '../../features/projects/models/project_budget_item.dart';
 import '../../features/projects/models/project_phase.dart';
+import '../../features/projects/screens/budget_item_form_screen.dart';
 import '../../features/projects/screens/phase_form_screen.dart';
 import '../../features/projects/screens/phases_screen.dart';
+import '../../features/projects/screens/project_budget_screen.dart';
 import '../../features/projects/screens/project_detail_screen.dart';
 import '../../features/projects/screens/project_form_screen.dart';
 import '../../features/projects/screens/projects_screen.dart';
@@ -104,6 +107,9 @@ abstract final class AppRoutes {
   static const projectPhaseCreate = '/projects/:projectId/phases/create';
   static const projectPhaseEdit = '/projects/:projectId/phases/:phaseId/edit';
   static const projectBudget = '/projects/:projectId/budget';
+  static const projectBudgetCreate = '/projects/:projectId/budget/create';
+  static const projectBudgetEdit =
+      '/projects/:projectId/budget/:itemId/edit';
   static const projectPhotos = '/projects/:projectId/photos';
   static const projectNotes = '/projects/:projectId/notes';
   static const projectContractors = '/projects/:projectId/contractors';
@@ -437,8 +443,25 @@ final routerProvider = Provider<GoRouter>((ref) {
                       ),
                       GoRoute(
                         path: 'budget',
-                        builder: (_, _) =>
-                            const PlaceholderScreen(name: 'Project Budget'),
+                        builder: (_, state) => ProjectBudgetScreen(
+                          projectId: state.pathParameters['projectId']!,
+                        ),
+                        routes: [
+                          GoRoute(
+                            path: 'create',
+                            builder: (_, state) => BudgetItemFormScreen(
+                              projectId: state.pathParameters['projectId']!,
+                            ),
+                          ),
+                          GoRoute(
+                            path: ':itemId/edit',
+                            builder: (_, state) => BudgetItemFormScreen(
+                              projectId: state.pathParameters['projectId']!,
+                              existingItem:
+                                  state.extra as ProjectBudgetItem?,
+                            ),
+                          ),
+                        ],
                       ),
                       GoRoute(
                         path: 'photos',

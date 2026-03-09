@@ -27,12 +27,27 @@ class ProjectDetailNotifier extends _$ProjectDetailNotifier {
   }
 
   Future<Project> _fetch() async {
-    final row = await SupabaseService.client
+    final client = SupabaseService.client;
+
+    final row = await client
         .from('projects')
         .select(_kProjectColumns)
         .eq('id', projectId)
         .isFilter('deleted_at', null)
         .single();
-    return Project.fromJson(row);
+
+    final budgetRows = await client
+        .from('project_budget_items')
+        .select('actual_cost')
+        .eq('project_id', projectId)
+        .isFilter('deleted_at', null);
+
+    final actualSpent = (budgetRows as List<dynamic>).fold<double>(
+      0,
+      (sum, r) =>
+          sum + ((r['actual_cost'] as num?)?.toDouble() ?? 0),
+    );
+
+    return Project.fromJson(row).copyWith(actualSpent: actualSpent);
   }
 }
