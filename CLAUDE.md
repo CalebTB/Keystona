@@ -244,6 +244,9 @@ Comprehensive specifications in `keystona-project-files/`:
 - **Pattern B Showcase empty state with ghosted example cards**: Two example cards at `Opacity(opacity: 0.5)` — non-interactive; CTA below; use when examples are more compelling than a plain illustration → `lib/features/projects/widgets/project_empty_state.dart`
 - **`String? _activeFilter` with toggle-to-clear filter chips**: `null` = show all; tapping active chip calls `onFilterChanged(null)`, inactive calls `onFilterChanged(s.value)` — driven from `ConsumerStatefulWidget` state → `lib/features/projects/screens/projects_screen.dart`
 - **Budget progress bar with overflow color**: `value: (spent / estimated).clamp(0.0, 1.0)`; color switches to `AppColors.error` at `pct >= 1.0` on both bar and label — over-budget alert without separate state → `lib/features/projects/widgets/project_card.dart`
+- **`ProjectStatusTransitions` allowlist class**: `static const Map<String, List<String>> allowed` maps current status → permitted next statuses; UI only offers valid transitions; `nextFor()` method handles unknown current status gracefully → `lib/features/projects/models/project.dart`
+- **Cover photo upload after create (two-step)**: In create mode, insert row first to get project ID, then upload photo using ID as path segment; update row with `cover_photo_path`; avoids needing a pre-generated ID and keeps photo path scoped to the project → `lib/features/projects/screens/project_form_screen.dart`
+- **`null`-aware map entry operator `?`**: Dart 3 syntax `'key': ?value` omits the map entry when value is null — replaces `if (value != null) 'key': value` in map literals; cleaner for optional Supabase insert/update fields
 
 ## Decisions
 
@@ -284,6 +287,8 @@ Comprehensive specifications in `keystona-project-files/`:
 - **Non-fatal Edge Function call after insert**: Wrap secondary Edge Function calls in `try {} catch (_) {}` — primary DB write must never block on downstream function failures
 - **`BoxConstraints(minHeight:)` for bordered cards**: `Border.all(width: 1)` draws inward consuming 2px — use `minHeight` constraint instead of fixed `height` so the card expands rather than clips
 - **`abstract final class` picker catalog with `(value:, label:)` records**: `static const all = [(value: 'x', label: 'X'), ...]` drives pickers from one list; `labelFor(value)` for display — documents all DB enum values in one place → `lib/features/emergency/models/emergency_contact.dart`
+- **Status picker gated to `ProjectStatusTransitions.nextFor()`**: Edit form only shows valid next statuses; if transitions list is empty (e.g. completed), `onTap` returns early without showing a picker → `lib/features/projects/screens/project_form_screen.dart`
+- **`work_type` as TEXT + CHECK constraint over Postgres enum**: Avoids `ALTER TYPE` for future value additions — use TEXT CHECK for small, stable sets that may grow; Postgres enum preferred only when DB-level type guarantees are required
 
 ## Lessons
 
@@ -338,6 +343,7 @@ Comprehensive specifications in `keystona-project-files/`:
 - **`ref.invalidateSelf(); await future` propagates refetch failures as write failures**: If the post-insert refetch queries multiple tables and any fail, the exception propagates back to the caller — verify the overview fetch succeeds independently before debugging the insert itself
 - **`FractionallySizedBox` bare in a `Row` crashes with infinite width**: `Row` gives unconstrained width to direct children — wrap in `Expanded` (proportional sizing) or use `Container(width: N)` (fixed skeleton bars)
 - **iOS `Stack + Positioned` FAB must be gated when empty state has its own CTA**: Gate with `if (contentCount > 0)` so FAB only appears with real content — prevents two competing tap targets → `lib/features/projects/screens/projects_screen.dart`
+- **`AppColors.textTertiary` doesn't exist — use `AppColors.gray400`**: The color palette has no `textTertiary` alias; for subdued icon and hint colors use `AppColors.gray400` (same value as `textDisabled`) → verify against `app_colors.dart` before using any color name not seen elsewhere in the codebase
 
 ## Philosophy
 
