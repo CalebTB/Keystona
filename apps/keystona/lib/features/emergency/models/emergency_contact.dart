@@ -1,3 +1,4 @@
+// ignore_for_file: invalid_annotation_target
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'emergency_contact.freezed.dart';
@@ -37,7 +38,7 @@ abstract class EmergencyContact with _$EmergencyContact {
     /// [#46] Human-readable hours (e.g. 'M–F 8am–5pm').
     String? availableHours,
 
-    required bool is24x7,
+    @JsonKey(name: 'is_24x7') required bool is24x7,
     required bool isFavorite,
 
     /// [#46] Free-form notes about this contact.
