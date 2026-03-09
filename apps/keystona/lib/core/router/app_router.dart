@@ -31,6 +31,10 @@ import '../../features/home_profile/screens/home_profile_screen.dart';
 import '../../features/home_profile/screens/lifespan_screen.dart';
 import '../../features/home_profile/screens/system_detail_screen.dart';
 import '../../features/projects/models/project.dart';
+import '../../features/projects/models/project_phase.dart';
+import '../../features/projects/screens/phase_form_screen.dart';
+import '../../features/projects/screens/phases_screen.dart';
+import '../../features/projects/screens/project_detail_screen.dart';
 import '../../features/projects/screens/project_form_screen.dart';
 import '../../features/projects/screens/projects_screen.dart';
 import '../../features/home_profile/screens/system_form_screen.dart';
@@ -96,9 +100,14 @@ abstract final class AppRoutes {
   static const projectsCreate = '/projects/create';
   static const projectDetail = '/projects/:projectId';
   static const projectsEdit = '/projects/:projectId/edit';
+  static const projectPhases = '/projects/:projectId/phases';
+  static const projectPhaseCreate = '/projects/:projectId/phases/create';
+  static const projectPhaseEdit = '/projects/:projectId/phases/:phaseId/edit';
   static const projectBudget = '/projects/:projectId/budget';
   static const projectPhotos = '/projects/:projectId/photos';
   static const projectNotes = '/projects/:projectId/notes';
+  static const projectContractors = '/projects/:projectId/contractors';
+  static const projectDocuments = '/projects/:projectId/documents';
 
   // Tab 4 — Settings
   static const settings = '/settings';
@@ -389,8 +398,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: ':projectId',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Project Detail'),
+                    builder: (_, state) => ProjectDetailScreen(
+                      projectId: state.pathParameters['projectId']!,
+                    ),
                     routes: [
                       // Static 'edit' before downstream param routes.
                       GoRoute(
@@ -398,6 +408,32 @@ final routerProvider = Provider<GoRouter>((ref) {
                         builder: (_, state) => ProjectFormScreen(
                           existingProject: state.extra as Project?,
                         ),
+                      ),
+                      // #5.3 — Phases
+                      GoRoute(
+                        path: 'phases',
+                        builder: (_, state) => PhasesScreen(
+                          projectId: state.pathParameters['projectId']!,
+                        ),
+                        routes: [
+                          // Static 'create' before parameterised ':phaseId'.
+                          GoRoute(
+                            path: 'create',
+                            builder: (_, state) => PhaseFormScreen(
+                              projectId:
+                                  state.pathParameters['projectId']!,
+                            ),
+                          ),
+                          GoRoute(
+                            path: ':phaseId/edit',
+                            builder: (_, state) => PhaseFormScreen(
+                              projectId:
+                                  state.pathParameters['projectId']!,
+                              existingPhase:
+                                  state.extra as ProjectPhase?,
+                            ),
+                          ),
+                        ],
                       ),
                       GoRoute(
                         path: 'budget',
@@ -413,6 +449,16 @@ final routerProvider = Provider<GoRouter>((ref) {
                         path: 'notes',
                         builder: (_, _) =>
                             const PlaceholderScreen(name: 'Project Notes'),
+                      ),
+                      GoRoute(
+                        path: 'contractors',
+                        builder: (_, _) =>
+                            const PlaceholderScreen(name: 'Project Contractors'),
+                      ),
+                      GoRoute(
+                        path: 'documents',
+                        builder: (_, _) =>
+                            const PlaceholderScreen(name: 'Project Documents'),
                       ),
                     ],
                   ),

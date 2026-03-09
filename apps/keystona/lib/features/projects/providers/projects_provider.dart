@@ -79,11 +79,16 @@ class ProjectsNotifier extends _$ProjectsNotifier {
 
   // ── Stubs for downstream issues ──────────────────────────────────────────
 
-  /// [#5.3] Returns phase template options for a project type.
+  /// Returns phase templates for [projectType] from the DB.
+  /// Used by ProjectPhasesNotifier.loadTemplatesAndCreate.
   Future<List<Map<String, dynamic>>> loadPhaseTemplates(
       String projectType) async {
-    throw UnimplementedError(
-        'loadPhaseTemplates() — implemented by issue #5.3');
+    final rows = await SupabaseService.client
+        .from('project_phase_templates')
+        .select('id, name, description, sort_order, default_status')
+        .eq('project_type', projectType)
+        .order('sort_order', ascending: true);
+    return (rows as List<dynamic>).cast<Map<String, dynamic>>();
   }
 
   // ── Private fetch ─────────────────────────────────────────────────────────
