@@ -30,6 +30,8 @@ import '../../features/home_profile/screens/appliances_screen.dart';
 import '../../features/home_profile/screens/home_profile_screen.dart';
 import '../../features/home_profile/screens/lifespan_screen.dart';
 import '../../features/home_profile/screens/system_detail_screen.dart';
+import '../../features/projects/models/project.dart';
+import '../../features/projects/screens/project_form_screen.dart';
 import '../../features/projects/screens/projects_screen.dart';
 import '../../features/home_profile/screens/system_form_screen.dart';
 import '../../features/home_profile/screens/systems_screen.dart';
@@ -93,6 +95,7 @@ abstract final class AppRoutes {
   static const projects = '/projects';
   static const projectsCreate = '/projects/create';
   static const projectDetail = '/projects/:projectId';
+  static const projectsEdit = '/projects/:projectId/edit';
   static const projectBudget = '/projects/:projectId/budget';
   static const projectPhotos = '/projects/:projectId/photos';
   static const projectNotes = '/projects/:projectId/notes';
@@ -382,14 +385,20 @@ final routerProvider = Provider<GoRouter>((ref) {
                   // Static 'create' must come before parameterised ':projectId'.
                   GoRoute(
                     path: 'create',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Create Project'),
+                    builder: (_, _) => const ProjectFormScreen(),
                   ),
                   GoRoute(
                     path: ':projectId',
                     builder: (_, _) =>
                         const PlaceholderScreen(name: 'Project Detail'),
                     routes: [
+                      // Static 'edit' before downstream param routes.
+                      GoRoute(
+                        path: 'edit',
+                        builder: (_, state) => ProjectFormScreen(
+                          existingProject: state.extra as Project?,
+                        ),
+                      ),
                       GoRoute(
                         path: 'budget',
                         builder: (_, _) =>

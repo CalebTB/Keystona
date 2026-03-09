@@ -23,6 +23,9 @@ abstract class Project with _$Project {
     @JsonKey(name: 'project_type') required String projectType,
     required String status,
 
+    /// 'diy' | 'contractor' | 'mixed'
+    @JsonKey(name: 'work_type') @Default('diy') String workType,
+
     // ── Budget ─────────────────────────────────────────────────────────────
 
     double? estimatedBudget,
@@ -71,19 +74,32 @@ extension ProjectStatusLabel on String {
       };
 }
 
+/// Display label for [Project.workType].
+extension ProjectWorkTypeLabel on String {
+  String get workTypeLabel => switch (this) {
+        'diy'        => 'DIY',
+        'contractor' => 'Contractor',
+        'mixed'      => 'Mixed',
+        _            => 'DIY',
+      };
+}
+
 /// Display label for [Project.projectType].
 extension ProjectTypeLabel on String {
   String get projectTypeLabel => switch (this) {
-        'kitchen_remodel'  => 'Kitchen Remodel',
-        'bathroom_remodel' => 'Bathroom Remodel',
-        'deck_build'       => 'Deck Build',
-        'addition'         => 'Addition',
-        'roofing'          => 'Roofing',
-        'flooring'         => 'Flooring',
-        'painting'         => 'Painting',
-        'landscaping'      => 'Landscaping',
-        'hvac_replacement' => 'HVAC Replacement',
-        _                  => 'Other',
+        'kitchen_remodel'    => 'Kitchen Remodel',
+        'bathroom_remodel'   => 'Bathroom Remodel',
+        'deck_build'         => 'Deck Build',
+        'addition'           => 'Addition',
+        'roofing'            => 'Roofing',
+        'flooring'           => 'Flooring',
+        'painting'           => 'Painting',
+        'landscaping'        => 'Landscaping',
+        'hvac_replacement'   => 'HVAC Replacement',
+        'plumbing'           => 'Plumbing',
+        'electrical'         => 'Electrical',
+        'general_renovation' => 'General Renovation',
+        _                    => 'Other',
       };
 }
 
@@ -101,15 +117,46 @@ abstract final class ProjectStatuses {
 /// All project type options.
 abstract final class ProjectTypes {
   static const all = [
-    (value: 'kitchen_remodel',  label: 'Kitchen Remodel'),
-    (value: 'bathroom_remodel', label: 'Bathroom Remodel'),
-    (value: 'deck_build',       label: 'Deck Build'),
-    (value: 'addition',         label: 'Addition'),
-    (value: 'roofing',          label: 'Roofing'),
-    (value: 'flooring',         label: 'Flooring'),
-    (value: 'painting',         label: 'Painting'),
-    (value: 'landscaping',      label: 'Landscaping'),
-    (value: 'hvac_replacement',  label: 'HVAC Replacement'),
-    (value: 'other',            label: 'Other'),
+    (value: 'kitchen_remodel',    label: 'Kitchen Remodel'),
+    (value: 'bathroom_remodel',   label: 'Bathroom Remodel'),
+    (value: 'deck_build',         label: 'Deck Build'),
+    (value: 'addition',           label: 'Addition'),
+    (value: 'roofing',            label: 'Roofing'),
+    (value: 'flooring',           label: 'Flooring'),
+    (value: 'painting',           label: 'Painting'),
+    (value: 'landscaping',        label: 'Landscaping'),
+    (value: 'hvac_replacement',   label: 'HVAC Replacement'),
+    (value: 'plumbing',           label: 'Plumbing'),
+    (value: 'electrical',         label: 'Electrical'),
+    (value: 'general_renovation', label: 'General Renovation'),
+    (value: 'other',              label: 'Other'),
   ];
+}
+
+/// All work type options.
+abstract final class ProjectWorkTypes {
+  static const all = [
+    (value: 'diy',        label: 'DIY'),
+    (value: 'contractor', label: 'Contractor'),
+    (value: 'mixed',      label: 'Mixed'),
+  ];
+}
+
+/// Valid status transitions for a project.
+///
+/// Only transitions listed here should be offered in the UI.
+/// Key = current status; value = list of allowed next statuses.
+abstract final class ProjectStatusTransitions {
+  static const Map<String, List<String>> allowed = {
+    'planning':    ['in_progress', 'on_hold', 'cancelled'],
+    'in_progress': ['on_hold', 'completed', 'cancelled'],
+    'on_hold':     ['in_progress', 'cancelled'],
+    'completed':   [],
+    'cancelled':   ['planning'],
+  };
+
+  /// Returns allowed next statuses for [currentStatus], or all statuses if
+  /// the current status is unrecognized.
+  static List<String> nextFor(String currentStatus) =>
+      allowed[currentStatus] ?? ProjectStatuses.all.map((s) => s.value).toList();
 }

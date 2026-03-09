@@ -113,8 +113,6 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
   }
 
   void _onCreateTap() {
-    // [#5.2] Navigate to project creation form.
-    // For now, show a placeholder until #5.2 is built.
     context.push(AppRoutes.projectsCreate);
   }
 }
