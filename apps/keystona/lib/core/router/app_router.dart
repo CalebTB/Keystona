@@ -32,14 +32,17 @@ import '../../features/home_profile/screens/lifespan_screen.dart';
 import '../../features/home_profile/screens/system_detail_screen.dart';
 import '../../features/projects/models/project.dart';
 import '../../features/projects/models/project_budget_item.dart';
+import '../../features/projects/models/project_journal_note.dart';
 import '../../features/projects/models/project_phase.dart';
 import '../../features/projects/screens/budget_item_form_screen.dart';
+import '../../features/projects/screens/note_form_screen.dart';
 import '../../features/projects/screens/phase_form_screen.dart';
 import '../../features/projects/screens/phases_screen.dart';
 import '../../features/projects/screens/project_budget_screen.dart';
 import '../../features/projects/screens/project_contractors_screen.dart';
 import '../../features/projects/screens/project_detail_screen.dart';
 import '../../features/projects/screens/project_form_screen.dart';
+import '../../features/projects/screens/project_journal_screen.dart';
 import '../../features/projects/screens/project_photos_screen.dart';
 import '../../features/projects/screens/projects_screen.dart';
 import '../../features/home_profile/screens/system_form_screen.dart';
@@ -114,6 +117,8 @@ abstract final class AppRoutes {
       '/projects/:projectId/budget/:itemId/edit';
   static const projectPhotos = '/projects/:projectId/photos';
   static const projectNotes = '/projects/:projectId/notes';
+  static const projectNotesCreate = '/projects/:projectId/notes/create';
+  static const projectNotesEdit = '/projects/:projectId/notes/:noteId/edit';
   static const projectContractors = '/projects/:projectId/contractors';
   static const projectDocuments = '/projects/:projectId/documents';
 
@@ -473,8 +478,25 @@ final routerProvider = Provider<GoRouter>((ref) {
                       ),
                       GoRoute(
                         path: 'notes',
-                        builder: (_, _) =>
-                            const PlaceholderScreen(name: 'Project Notes'),
+                        builder: (_, state) => ProjectJournalScreen(
+                          projectId: state.pathParameters['projectId']!,
+                        ),
+                        routes: [
+                          GoRoute(
+                            path: 'create',
+                            builder: (_, state) => NoteFormScreen(
+                              projectId: state.pathParameters['projectId']!,
+                            ),
+                          ),
+                          GoRoute(
+                            path: ':noteId/edit',
+                            builder: (_, state) => NoteFormScreen(
+                              projectId: state.pathParameters['projectId']!,
+                              existingNote:
+                                  state.extra as ProjectJournalNote?,
+                            ),
+                          ),
+                        ],
                       ),
                       GoRoute(
                         path: 'contractors',
