@@ -41,6 +41,7 @@ import '../../features/projects/screens/phases_screen.dart';
 import '../../features/projects/screens/project_budget_screen.dart';
 import '../../features/projects/screens/project_contractors_screen.dart';
 import '../../features/projects/screens/project_detail_screen.dart';
+import '../../features/projects/screens/project_documents_screen.dart';
 import '../../features/projects/screens/project_form_screen.dart';
 import '../../features/projects/screens/project_journal_screen.dart';
 import '../../features/projects/screens/project_photos_screen.dart';
@@ -506,8 +507,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                       ),
                       GoRoute(
                         path: 'documents',
-                        builder: (_, _) =>
-                            const PlaceholderScreen(name: 'Project Documents'),
+                        builder: (_, state) => ProjectDocumentsScreen(
+                          projectId: state.pathParameters['projectId']!,
+                        ),
                       ),
                     ],
                   ),
