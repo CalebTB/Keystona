@@ -12,8 +12,9 @@ final authStateProvider = StreamProvider<AuthState>((ref) {
 
 /// Synchronous boolean derived from [AuthService.isAuthenticated].
 ///
-/// Use this in GoRouter redirect callbacks and any widget that needs a simple
-/// authenticated/not-authenticated flag without subscribing to the full stream.
+/// Watches [authStateProvider] so this provider — and the router — invalidate
+/// on every auth event (sign-in, sign-out, token refresh).
 final isAuthenticatedProvider = Provider<bool>((ref) {
-  return ref.watch(authServiceProvider).isAuthenticated;
+  ref.watch(authStateProvider);
+  return ref.read(authServiceProvider).isAuthenticated;
 });

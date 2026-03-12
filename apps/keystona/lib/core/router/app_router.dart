@@ -132,7 +132,7 @@ abstract final class AppRoutes {
   static const settingsExport = '/settings/export';
   static const settingsDeleteAccount = '/settings/delete-account';
 
-  /// Public routes that do not require an authenticated session.
+  /// Routes that do not require an authenticated session.
   static const Set<String> _publicRoutes = {
     login,
     signup,
@@ -142,8 +142,18 @@ abstract final class AppRoutes {
     onboardingTrial,
   };
 
+  /// Auth-only routes — authenticated users are redirected away from these.
+  static const Set<String> _authOnlyRoutes = {
+    login,
+    signup,
+    forgotPassword,
+  };
+
   /// Returns true when [path] does not require an authenticated session.
   static bool isPublic(String path) => _publicRoutes.contains(path);
+
+  /// Returns true when an authenticated user should be redirected away.
+  static bool isAuthOnly(String path) => _authOnlyRoutes.contains(path);
 }
 
 // ─── Router provider ───────────────────────────────────────────────────────
@@ -168,8 +178,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         return AppRoutes.login;
       }
 
-      // Authenticated user on an auth route → send to home.
-      if (isAuthenticated && goingToPublic) {
+      // Authenticated user on a login/signup route → send to home.
+      if (isAuthenticated && AppRoutes.isAuthOnly(path)) {
         return AppRoutes.home;
       }
 

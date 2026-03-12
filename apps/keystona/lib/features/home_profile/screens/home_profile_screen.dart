@@ -8,6 +8,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/error_view.dart';
+import '../../../services/providers/service_providers.dart';
 import '../models/property.dart';
 import '../providers/home_profile_provider.dart';
 import '../widgets/home_profile_empty_state.dart';
@@ -45,7 +46,14 @@ class _IOSLayout extends ConsumerWidget {
     return CupertinoPageScaffold(
       child: CustomScrollView(
         slivers: [
-          const CupertinoSliverNavigationBar(largeTitle: Text('Home Profile')),
+          CupertinoSliverNavigationBar(
+            largeTitle: const Text('Home Profile'),
+            trailing: CupertinoButton(
+              padding: EdgeInsets.zero,
+              onPressed: () => ref.read(authServiceProvider).signOut(),
+              child: const Text('Sign Out', style: TextStyle(color: CupertinoColors.destructiveRed)),
+            ),
+          ),
           CupertinoSliverRefreshControl(
             onRefresh: () =>
                 ref.read(homeProfileProvider.notifier).refresh(),

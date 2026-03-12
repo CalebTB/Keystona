@@ -23,7 +23,7 @@ class AuthService {
 
   /// Creates a new account with email/password and saves display name metadata.
   ///
-  /// Also inserts a row into `users_metadata` with the provided [fullName].
+  /// Also upserts a row into `profiles` with the provided [fullName].
   /// Throws [AuthException] on failure.
   Future<AuthResponse> signUp({
     required String email,
@@ -37,9 +37,10 @@ class AuthService {
 
     final userId = response.user?.id;
     if (userId != null) {
-      await _client.from('users_metadata').upsert({
+      await _client.from('profiles').upsert({
         'id': userId,
-        'full_name': fullName,
+        'display_name': fullName,
+        'email': email,
       });
     }
 

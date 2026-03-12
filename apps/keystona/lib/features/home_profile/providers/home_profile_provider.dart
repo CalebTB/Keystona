@@ -14,7 +14,10 @@ part 'home_profile_provider.g.dart';
 @riverpod
 class HomeProfileNotifier extends _$HomeProfileNotifier {
   @override
-  Future<HomeProfileOverview> build() => _fetchOverview();
+  Future<HomeProfileOverview> build() {
+    ref.keepAlive(); // don't re-fetch on every tab switch
+    return _fetchOverview();
+  }
 
   /// Refetches from Supabase — used by pull-to-refresh.
   Future<void> refresh() async {

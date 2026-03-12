@@ -40,6 +40,6 @@ final propertyProvider =
 Future<void> completeOnboarding() async {
   final uid = SupabaseService.client.auth.currentUser!.id;
   await SupabaseService.client
-      .from('users_metadata')
+      .from('profiles')
       .update({'onboarding_completed': true}).eq('id', uid);
 }
