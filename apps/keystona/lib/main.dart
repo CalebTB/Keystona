@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config.dart';
@@ -13,6 +14,10 @@ Future<void> main() async {
     url: AppConfig.supabaseUrl,
     anonKey: AppConfig.supabaseAnonKey,
   );
+
+  await Purchases.setLogLevel(LogLevel.debug);
+  final purchasesConfig = PurchasesConfiguration(AppConfig.revenuecatAppleKey);
+  await Purchases.configure(purchasesConfig);
 
   runApp(
     const ProviderScope(

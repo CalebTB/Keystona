@@ -51,6 +51,8 @@ import '../../features/home_profile/screens/systems_screen.dart';
 import '../../features/onboarding/screens/property_setup_screen.dart';
 import '../../features/onboarding/screens/trial_screen.dart';
 import '../../features/onboarding/screens/welcome_screen.dart';
+import '../../features/subscription/screens/paywall_screen.dart';
+import '../../features/subscription/screens/subscription_screen.dart';
 import '../widgets/placeholder_screen.dart';
 import 'app_shell.dart';
 
@@ -128,6 +130,7 @@ abstract final class AppRoutes {
   static const settingsProfile = '/settings/profile';
   static const settingsNotifications = '/settings/notifications';
   static const settingsSubscription = '/settings/subscription';
+  static const settingsPaywall = '/settings/subscription/paywall';
   static const settingsHousehold = '/settings/household';
   static const settingsExport = '/settings/export';
   static const settingsDeleteAccount = '/settings/delete-account';
@@ -547,8 +550,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'subscription',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Subscription'),
+                    builder: (_, _) => const SubscriptionScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'paywall',
+                        builder: (_, _) => const PaywallScreen(),
+                      ),
+                    ],
                   ),
                   GoRoute(
                     path: 'household',

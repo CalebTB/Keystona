@@ -58,6 +58,7 @@ dependencies:
 
   # ─── Payments ──────────────────
   purchases_flutter: ^9.12.3
+  purchases_ui_flutter: ^9.12.3
 
   # ─── Utilities ─────────────────
   intl: any

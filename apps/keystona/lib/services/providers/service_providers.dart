@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../auth_service.dart';
 import '../connectivity_service.dart';
 import '../storage_service.dart';
+import '../../features/subscription/providers/subscription_provider.dart';
 
 /// Provider for the [ConnectivityService] singleton.
 final connectivityServiceProvider = Provider<ConnectivityService>(
@@ -35,8 +36,11 @@ final storageServiceProvider = Provider<StorageService>(
   (ref) => StorageService(),
 );
 
-/// Whether the current user has an active Premium subscription.
+/// Whether the current user has an active Keystona Pro entitlement.
 ///
-/// Stub — always returns false until RevenueCat is wired in Phase 8.
-/// Replace the body with a RevenueCat CustomerInfo stream at that point.
-final isPremiumProvider = Provider<bool>((ref) => false);
+/// Derives from [customerInfoStreamProvider] so any purchase, cancellation,
+/// or restore is reflected immediately without a manual refresh.
+final isPremiumProvider = Provider<bool>((ref) {
+  final info = ref.watch(customerInfoStreamProvider);
+  return info.value?.entitlements.active.containsKey('Keystona Pro') ?? false;
+});
