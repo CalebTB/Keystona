@@ -50,12 +50,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       final offerings = await Purchases.getOfferings();
       final available = offerings.current?.availablePackages ?? [];
 
-      // Sort into canonical order: Monthly → Yearly → Lifetime.
+      // Sort into canonical order: Monthly → Yearly.
       final sorted = <Package>[];
       for (final type in [
         PackageType.monthly,
         PackageType.annual,
-        PackageType.lifetime,
       ]) {
         final match = available.where((p) => p.packageType == type);
         sorted.addAll(match);
@@ -494,13 +493,12 @@ class _PackageCard extends StatelessWidget {
     return switch (package.packageType) {
       PackageType.monthly => 'Monthly',
       PackageType.annual => 'Yearly',
-      PackageType.lifetime => 'Lifetime',
       _ => package.identifier,
     };
   }
 
   String? get _savingsNote {
-    if (_isYearly) return 'Save ~40% vs monthly';
+    if (_isYearly) return 'Save ~17% vs monthly';
     return null;
   }
 
