@@ -8,6 +8,9 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/error_view.dart';
+import '../../../core/widgets/upgrade_sheet.dart';
+import '../../../services/providers/service_providers.dart';
+import '../../subscription/providers/subscription_provider.dart';
 import '../models/document_category.dart';
 import '../providers/document_categories_provider.dart';
 import '../providers/documents_provider.dart';
@@ -49,6 +52,33 @@ class _IOSDocumentsLayout extends ConsumerStatefulWidget {
 
 class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
   String? _selectedCategoryId;
+
+  Future<void> _onAddTapped() async {
+    final isPremium = ref.read(isPremiumProvider);
+    if (!isPremium) {
+      final docs = ref.read(documentsProvider).value ?? [];
+      if (docs.length >= kFreeDocumentLimit) {
+        if (!mounted) return;
+        await UpgradeSheet.show(
+          context,
+          config: const UpgradeSheetConfig(
+            headline: 'Unlock Unlimited Documents',
+            reason: 'Your Document Vault is full with 25 documents on the Free plan.',
+            features: [
+              'Unlimited document storage',
+              'Full-text search across all docs',
+              'Home health score tracking',
+              'Weather-based maintenance alerts',
+            ],
+            triggerKey: 'doc_limit',
+          ),
+        );
+        return;
+      }
+    }
+    if (!mounted) return;
+    context.push(AppRoutes.documentsUpload);
+  }
 
   Future<void> _showIOSOverflow(BuildContext context) async {
     await showCupertinoModalPopup<void>(
@@ -99,7 +129,7 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
                 ),
                 CupertinoButton(
                   padding: EdgeInsets.zero,
-                  onPressed: () => context.push(AppRoutes.documentsUpload),
+                  onPressed: _onAddTapped,
                   child: const Icon(CupertinoIcons.add),
                 ),
               ],
@@ -150,7 +180,7 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
                   child: isSearchActive
                       ? const DocumentSearchEmptyState()
                       : DocumentEmptyState(
-                          onAdd: () => context.push(AppRoutes.documentsUpload),
+                          onAdd: _onAddTapped,
                         ),
                 );
               }
@@ -197,6 +227,33 @@ class _AndroidDocumentsLayoutState
     extends ConsumerState<_AndroidDocumentsLayout> {
   String? _selectedCategoryId;
 
+  Future<void> _onAddTapped() async {
+    final isPremium = ref.read(isPremiumProvider);
+    if (!isPremium) {
+      final docs = ref.read(documentsProvider).value ?? [];
+      if (docs.length >= kFreeDocumentLimit) {
+        if (!mounted) return;
+        await UpgradeSheet.show(
+          context,
+          config: const UpgradeSheetConfig(
+            headline: 'Unlock Unlimited Documents',
+            reason: 'Your Document Vault is full with 25 documents on the Free plan.',
+            features: [
+              'Unlimited document storage',
+              'Full-text search across all docs',
+              'Home health score tracking',
+              'Weather-based maintenance alerts',
+            ],
+            triggerKey: 'doc_limit',
+          ),
+        );
+        return;
+      }
+    }
+    if (!mounted) return;
+    context.push(AppRoutes.documentsUpload);
+  }
+
   @override
   Widget build(BuildContext context) {
     final documentsState = ref.watch(documentsProvider);
@@ -209,7 +266,7 @@ class _AndroidDocumentsLayoutState
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.deepNavy,
         foregroundColor: AppColors.textInverse,
-        onPressed: () => context.push(AppRoutes.documentsUpload),
+        onPressed: _onAddTapped,
         child: const Icon(Icons.add),
       ),
       body: RefreshIndicator(
@@ -289,7 +346,7 @@ class _AndroidDocumentsLayoutState
                     child: isSearchActive
                         ? const DocumentSearchEmptyState()
                         : DocumentEmptyState(
-                            onAdd: () => context.push(AppRoutes.documentsUpload),
+                            onAdd: _onAddTapped,
                           ),
                   );
                 }

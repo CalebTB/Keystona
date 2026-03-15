@@ -7,6 +7,9 @@ import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/upgrade_sheet.dart';
+import '../../../services/providers/service_providers.dart';
+import '../../subscription/providers/subscription_provider.dart';
 import '../models/project.dart';
 import '../providers/projects_provider.dart';
 import '../widgets/project_card.dart';
@@ -112,7 +115,30 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     );
   }
 
-  void _onCreateTap() {
+  Future<void> _onCreateTap() async {
+    final isPremium = ref.read(isPremiumProvider);
+    if (!isPremium) {
+      final projects = ref.read(projectsProvider).value ?? [];
+      if (projects.length >= kFreeProjectLimit) {
+        if (!mounted) return;
+        await UpgradeSheet.show(
+          context,
+          config: const UpgradeSheetConfig(
+            headline: 'Unlock Unlimited Projects',
+            reason: 'Free accounts are limited to 2 active projects.',
+            features: [
+              'Unlimited home improvement projects',
+              'Full budget tracking',
+              'Before & after photo comparisons',
+              'Contractor management',
+            ],
+            triggerKey: 'project_limit',
+          ),
+        );
+        return;
+      }
+    }
+    if (!mounted) return;
     context.push(AppRoutes.projectsCreate);
   }
 }
