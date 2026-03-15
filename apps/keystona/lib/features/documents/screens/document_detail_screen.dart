@@ -19,6 +19,7 @@ import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/supabase_service.dart';
 import '../models/document.dart';
 import '../providers/document_detail_provider.dart';
+import '../providers/document_links_provider.dart';
 import '../widgets/document_detail_skeleton.dart';
 import '../widgets/edit_metadata_sheet.dart';
 import '../widgets/expiration_badge.dart';
@@ -299,6 +300,7 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
                   const SizedBox(height: AppSizes.md),
                   _LinkedChip(document: doc),
                 ],
+                _LinkedItemsSection(documentId: widget.documentId),
                 const SizedBox(height: AppSizes.xl),
               ]),
             ),
@@ -695,6 +697,148 @@ class _MetadataRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Reverse links section ─────────────────────────────────────────────────────
+
+/// Shows all entities across the app that reference this document.
+///
+/// Queries [documentLinksProvider] and hides itself when the result is empty
+/// or still loading — no skeleton or error state is surfaced here since it is
+/// supplemental content below the primary metadata.
+class _LinkedItemsSection extends ConsumerWidget {
+  const _LinkedItemsSection({required this.documentId});
+
+  final String documentId;
+
+  static IconData _iconFor(String type) {
+    return switch (type) {
+      'project' => Icons.folder_outlined,
+      'appliance' => Icons.kitchen_outlined,
+      _ => Icons.settings_outlined,
+    };
+  }
+
+  static String _typeLabel(String type) {
+    return switch (type) {
+      'project' => 'Project',
+      'appliance' => 'Appliance',
+      _ => 'System',
+    };
+  }
+
+  void _navigate(BuildContext context, DocumentLinkEntry entry) {
+    final path = switch (entry.type) {
+      'project' =>
+        AppRoutes.projectDetail.replaceFirst(':projectId', entry.id),
+      'appliance' =>
+        AppRoutes.homeApplianceDetail.replaceFirst(':applianceId', entry.id),
+      _ => AppRoutes.homeSystemDetail.replaceFirst(':systemId', entry.id),
+    };
+    context.push(path);
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final linksState = ref.watch(documentLinksProvider(documentId));
+
+    // Only render when we have at least one link — hide during loading and
+    // on empty results so the section never adds dead whitespace.
+    return linksState.maybeWhen(
+      data: (links) {
+        if (links.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: AppSizes.md),
+            const Divider(height: 1, color: AppColors.divider),
+            const SizedBox(height: AppSizes.md),
+            Text('Used In', style: AppTextStyles.h4),
+            const SizedBox(height: AppSizes.sm),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: links.length,
+              separatorBuilder: (_, _) =>
+                  const Divider(height: 1, color: AppColors.divider),
+              itemBuilder: (context, index) {
+                final entry = links[index];
+                return _LinkedItemRow(
+                  entry: entry,
+                  icon: _iconFor(entry.type),
+                  typeLabel: entry.subtitle ?? _typeLabel(entry.type),
+                  onTap: () => _navigate(context, entry),
+                );
+              },
+            ),
+          ],
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _LinkedItemRow extends StatelessWidget {
+  const _LinkedItemRow({
+    required this.entry,
+    required this.icon,
+    required this.typeLabel,
+    required this.onTap,
+  });
+
+  final DocumentLinkEntry entry;
+  final IconData icon;
+  final String typeLabel;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.deepNavy.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(icon, size: AppSizes.iconSm, color: AppColors.deepNavy),
+            ),
+            const SizedBox(width: AppSizes.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    entry.label,
+                    style: AppTextStyles.bodyMedium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    typeLabel,
+                    style: AppTextStyles.caption
+                        .copyWith(color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              size: AppSizes.iconSm,
+              color: AppColors.gray400,
+            ),
+          ],
+        ),
       ),
     );
   }
