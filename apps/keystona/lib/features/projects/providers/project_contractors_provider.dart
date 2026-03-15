@@ -38,6 +38,21 @@ class ProjectContractorsNotifier extends _$ProjectContractorsNotifier {
         .select('id')
         .single();
 
+    // Keep contractor_ids array in sync on the project row.
+    final projectRow = await SupabaseService.client
+        .from('projects')
+        .select('contractor_ids')
+        .eq('id', projectId)
+        .single();
+    final existing =
+        (projectRow['contractor_ids'] as List).cast<String>();
+    if (!existing.contains(contactId)) {
+      await SupabaseService.client
+          .from('projects')
+          .update({'contractor_ids': [...existing, contactId]})
+          .eq('id', projectId);
+    }
+
     state = const AsyncLoading();
     state = await AsyncValue.guard(_fetch);
 
@@ -94,10 +109,33 @@ class ProjectContractorsNotifier extends _$ProjectContractorsNotifier {
 
   /// Removes a contractor from the project (deletes join row only).
   Future<void> removeContractor(String id) async {
+    // Fetch the contact_id before deleting so we can update contractor_ids.
+    final row = await SupabaseService.client
+        .from('project_contractors')
+        .select('contact_id')
+        .eq('id', id)
+        .single();
+    final contactId = row['contact_id'] as String;
+
     await SupabaseService.client
         .from('project_contractors')
         .delete()
         .eq('id', id);
+
+    // Remove from contractor_ids array on the project row.
+    final projectRow = await SupabaseService.client
+        .from('projects')
+        .select('contractor_ids')
+        .eq('id', projectId)
+        .single();
+    final updated = (projectRow['contractor_ids'] as List)
+        .cast<String>()
+        .where((c) => c != contactId)
+        .toList();
+    await SupabaseService.client
+        .from('projects')
+        .update({'contractor_ids': updated})
+        .eq('id', projectId);
 
     state = const AsyncLoading();
     state = await AsyncValue.guard(_fetch);

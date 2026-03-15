@@ -69,7 +69,6 @@ class HomeProfileNotifier extends _$HomeProfileNotifier {
           .from('appliances')
           .select('id')
           .eq('property_id', property.id)
-          .eq('status', 'active')
           .isFilter('deleted_at', null),
     ]);
 

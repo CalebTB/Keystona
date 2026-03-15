@@ -243,8 +243,10 @@ class _DetailBody extends ConsumerWidget {
                   subtitle: project.contractorIds.isEmpty
                       ? 'No contractors linked'
                       : '${project.contractorIds.length} linked',
-                  onTap: () =>
-                      context.push('/projects/$projectId/contractors'),
+                  onTap: () async {
+                    await context.push('/projects/$projectId/contractors');
+                    ref.invalidate(projectDetailProvider(projectId));
+                  },
                 ),
                 const SizedBox(height: AppSizes.sm),
                 _SectionTile(
