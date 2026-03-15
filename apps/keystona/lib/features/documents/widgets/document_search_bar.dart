@@ -84,6 +84,7 @@ class _DocumentSearchBarState extends ConsumerState<DocumentSearchBar> {
             isPremium: isPremium,
             onChanged: _onTextChanged,
             onClear: _clear,
+            onProBadgeTap: isPremium ? null : () => _showOcrUpgradeSheet(context),
           )
         : _AndroidSearchBar(
             controller: _controller,
@@ -99,14 +100,9 @@ class _DocumentSearchBarState extends ConsumerState<DocumentSearchBar> {
         AppSizes.md,
         AppSizes.xs,
       ),
-      // For free users, absorb taps on the search field and show upgrade sheet.
-      child: !isPremium
-          ? GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => _showOcrUpgradeSheet(context),
-              child: IgnorePointer(child: searchBar),
-            )
-          : searchBar,
+      // Free users can search by name/category. The PRO badge taps open the
+      // upgrade sheet to explain full-text OCR search.
+      child: searchBar,
     );
   }
 }
@@ -119,12 +115,14 @@ class _IOSSearchBar extends StatelessWidget {
     required this.isPremium,
     required this.onChanged,
     required this.onClear,
+    this.onProBadgeTap,
   });
 
   final TextEditingController controller;
   final bool isPremium;
   final void Function(String) onChanged;
   final VoidCallback onClear;
+  final VoidCallback? onProBadgeTap;
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +138,10 @@ class _IOSSearchBar extends StatelessWidget {
         ),
         if (!isPremium) ...[
           const SizedBox(width: AppSizes.sm),
-          const _ProBadge(),
+          GestureDetector(
+            onTap: onProBadgeTap,
+            child: const _ProBadge(),
+          ),
         ],
       ],
     );

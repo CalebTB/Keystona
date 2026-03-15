@@ -32,21 +32,6 @@ class ProjectsNotifier extends _$ProjectsNotifier {
     final user = SupabaseService.client.auth.currentUser;
     if (user == null) throw Exception('Not authenticated');
 
-    final isPremium = ref.read(isPremiumProvider);
-    if (!isPremium) {
-      final propertyId = data['property_id'] as String?;
-      if (propertyId != null) {
-        final countResult = await SupabaseService.client
-            .from('projects')
-            .select('id')
-            .eq('property_id', propertyId)
-            .isFilter('deleted_at', null);
-        if (countResult.length >= kFreeProjectLimit) {
-          throw const ProjectLimitException();
-        }
-      }
-    }
-
     final propertyRow = await SupabaseService.client
         .from('properties')
         .select('id')
@@ -57,12 +42,25 @@ class ProjectsNotifier extends _$ProjectsNotifier {
         .maybeSingle();
 
     if (propertyRow == null) throw Exception('No property found');
+    final resolvedPropertyId = propertyRow['id'] as String;
+
+    final isPremium = ref.read(isPremiumProvider);
+    if (!isPremium) {
+      final countResult = await SupabaseService.client
+          .from('projects')
+          .select('id')
+          .eq('property_id', resolvedPropertyId)
+          .isFilter('deleted_at', null);
+      if (countResult.length >= kFreeProjectLimit) {
+        throw const ProjectLimitException();
+      }
+    }
 
     final inserted = await SupabaseService.client
         .from('projects')
         .insert({
           ...data,
-          'property_id': propertyRow['id'] as String,
+          'property_id': resolvedPropertyId,
           'user_id': user.id,
         })
         .select('id')

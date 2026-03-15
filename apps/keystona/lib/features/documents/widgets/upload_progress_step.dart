@@ -44,9 +44,8 @@ class _UploadProgressStepState extends ConsumerState<UploadProgressStep> {
 
     if (state.errorMessage != null) {
       if (state.errorMessage == 'free_tier') {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!context.mounted) return;
-          UpgradeSheet.show(
+        return _FreeTierErrorView(
+          onUpgrade: () => UpgradeSheet.show(
             context,
             config: const UpgradeSheetConfig(
               headline: 'Unlock Unlimited Documents',
@@ -60,12 +59,7 @@ class _UploadProgressStepState extends ConsumerState<UploadProgressStep> {
               ],
               triggerKey: 'doc_limit',
             ),
-          );
-        });
-        return _ErrorView(
-          message:
-              "You've reached the 25 document limit on the free plan.",
-          onRetry: null,
+          ),
         );
       }
 
@@ -189,6 +183,58 @@ class _SuccessView extends StatelessWidget {
 }
 
 // ── Error view ─────────────────────────────────────────────────────────────────
+
+class _FreeTierErrorView extends StatelessWidget {
+  const _FreeTierErrorView({required this.onUpgrade});
+  final VoidCallback onUpgrade;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSizes.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFF8E7),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.star_rounded,
+                color: AppColors.goldAccent,
+                size: AppSizes.iconLg,
+              ),
+            ),
+            const SizedBox(height: AppSizes.xl),
+            Text('Document limit reached', style: AppTextStyles.h3, textAlign: TextAlign.center),
+            const SizedBox(height: AppSizes.sm),
+            Text(
+              "You've reached 25 documents on the Free plan. Upgrade to Pro for unlimited storage.",
+              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSizes.lg),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: onUpgrade,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.deepNavy,
+                  foregroundColor: AppColors.goldAccent,
+                ),
+                child: const Text('See Premium Plans'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _ErrorView extends StatelessWidget {
   const _ErrorView({required this.message, required this.onRetry});
