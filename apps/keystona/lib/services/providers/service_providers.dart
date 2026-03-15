@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/subscription/providers/subscription_provider.dart';
 import '../auth_service.dart';
 import '../connectivity_service.dart';
 import '../storage_service.dart';
-import '../../features/subscription/providers/subscription_provider.dart';
 
 /// Provider for the [ConnectivityService] singleton.
 final connectivityServiceProvider = Provider<ConnectivityService>(
@@ -38,9 +38,10 @@ final storageServiceProvider = Provider<StorageService>(
 
 /// Whether the current user has an active Keystona Pro entitlement.
 ///
-/// Derives from [customerInfoStreamProvider] so any purchase, cancellation,
-/// or restore is reflected immediately without a manual refresh.
+/// Derived from [trialStatusProvider] which reads [profiles.subscription_tier]
+/// from Supabase — kept in sync by the RevenueCat webhook. Defaults to `false`
+/// while the async fetch is in-flight.
 final isPremiumProvider = Provider<bool>((ref) {
-  final info = ref.watch(customerInfoStreamProvider);
-  return info.value?.entitlements.active.containsKey('Keystona Pro') ?? false;
+  final trial = ref.watch(trialStatusProvider);
+  return trial.value?.subscriptionTier == 'premium';
 });
