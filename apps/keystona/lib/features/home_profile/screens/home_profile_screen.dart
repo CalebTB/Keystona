@@ -8,6 +8,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/error_view.dart';
+import '../../../core/widgets/trial_banner.dart';
 import '../../../services/providers/service_providers.dart';
 import '../models/property.dart';
 import '../providers/home_profile_provider.dart';
@@ -132,6 +133,7 @@ class _ContentSliver extends ConsumerWidget {
         padding: AppPadding.screen,
         sliver: SliverList.list(
           children: [
+            const TrialBanner(),
             _PropertyCard(property: overview.property),
             const SizedBox(height: AppSizes.md),
             _SectionRow(

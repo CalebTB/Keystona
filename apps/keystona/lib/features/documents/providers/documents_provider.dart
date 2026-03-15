@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../features/subscription/providers/subscription_provider.dart';
 import '../../../services/providers/service_providers.dart';
 import '../../../services/supabase_service.dart';
 import '../models/document.dart';
@@ -147,7 +148,25 @@ class DocumentsNotifier extends _$DocumentsNotifier {
   }
 
   /// Refreshes the list to include a newly uploaded document.
+  ///
+  /// For free-tier users, enforces the [kFreeDocumentLimit] before refreshing.
+  /// Throws [DocumentLimitException] when the limit is reached.
   Future<Document> add(Map<String, dynamic> data) async {
+    final isPremium = ref.read(isPremiumProvider);
+    if (!isPremium) {
+      final propertyId = data['property_id'] as String?;
+      if (propertyId != null) {
+        final countResult = await SupabaseService.client
+            .from('documents')
+            .select('id')
+            .eq('property_id', propertyId)
+            .isFilter('deleted_at', null);
+        if (countResult.length >= kFreeDocumentLimit) {
+          throw const DocumentLimitException();
+        }
+      }
+    }
+
     ref.invalidateSelf();
     await future;
     final docs = state.value ?? [];

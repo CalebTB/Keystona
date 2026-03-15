@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/upgrade_sheet.dart';
 import '../../../services/providers/service_providers.dart';
 
 /// Adaptive search bar for the Document Vault.
@@ -56,10 +57,40 @@ class _DocumentSearchBarState extends ConsumerState<DocumentSearchBar> {
     widget.onChanged(null);
   }
 
+  Future<void> _showOcrUpgradeSheet(BuildContext context) async {
+    await UpgradeSheet.show(
+      context,
+      config: const UpgradeSheetConfig(
+        headline: 'Unlock Full-Text Search',
+        reason: 'Free accounts can search by name and category only.',
+        features: [
+          'Search inside every document with OCR',
+          'Find any text across your entire vault',
+          'Instant results with highlighted snippets',
+        ],
+        triggerKey: 'ocr_search',
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isPremium = ref.watch(isPremiumProvider);
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+
+    final searchBar = isIOS
+        ? _IOSSearchBar(
+            controller: _controller,
+            isPremium: isPremium,
+            onChanged: _onTextChanged,
+            onClear: _clear,
+          )
+        : _AndroidSearchBar(
+            controller: _controller,
+            isPremium: isPremium,
+            onChanged: _onTextChanged,
+            onClear: _clear,
+          );
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -68,19 +99,14 @@ class _DocumentSearchBarState extends ConsumerState<DocumentSearchBar> {
         AppSizes.md,
         AppSizes.xs,
       ),
-      child: isIOS
-          ? _IOSSearchBar(
-              controller: _controller,
-              isPremium: isPremium,
-              onChanged: _onTextChanged,
-              onClear: _clear,
+      // For free users, absorb taps on the search field and show upgrade sheet.
+      child: !isPremium
+          ? GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _showOcrUpgradeSheet(context),
+              child: IgnorePointer(child: searchBar),
             )
-          : _AndroidSearchBar(
-              controller: _controller,
-              isPremium: isPremium,
-              onChanged: _onTextChanged,
-              onClear: _clear,
-            ),
+          : searchBar,
     );
   }
 }

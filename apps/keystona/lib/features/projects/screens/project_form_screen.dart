@@ -11,6 +11,8 @@ import '../../../core/theme/app_sizes.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/photo_picker.dart';
 import '../../../core/widgets/snackbar_service.dart';
+import '../../../core/widgets/upgrade_sheet.dart';
+import '../../../features/subscription/providers/subscription_provider.dart';
 import '../../../services/providers/service_providers.dart';
 import '../../../services/supabase_service.dart';
 import '../models/project.dart';
@@ -296,6 +298,23 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
         if (!mounted) return;
         context.pop(id);
       }
+    } on ProjectLimitException {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      await UpgradeSheet.show(
+        context,
+        config: const UpgradeSheetConfig(
+          headline: 'Unlock Unlimited Projects',
+          reason: 'Free accounts are limited to 2 active projects.',
+          features: [
+            'Unlimited home improvement projects',
+            'Full budget tracking',
+            'Before & after photo comparisons',
+            'Contractor management',
+          ],
+          triggerKey: 'project_limit',
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);

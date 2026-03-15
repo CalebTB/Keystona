@@ -1,5 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../features/subscription/providers/subscription_provider.dart';
+import '../../../services/providers/service_providers.dart';
 import '../../../services/supabase_service.dart';
 import '../models/project.dart';
 
@@ -23,9 +25,27 @@ class ProjectsNotifier extends _$ProjectsNotifier {
   // ── CRUD ──────────────────────────────────────────────────────────────────
 
   /// Creates a new project. Returns the new project's ID.
+  ///
+  /// For free-tier users, enforces the [kFreeProjectLimit] before inserting.
+  /// Throws [ProjectLimitException] when the limit is reached.
   Future<String> createProject(Map<String, dynamic> data) async {
     final user = SupabaseService.client.auth.currentUser;
     if (user == null) throw Exception('Not authenticated');
+
+    final isPremium = ref.read(isPremiumProvider);
+    if (!isPremium) {
+      final propertyId = data['property_id'] as String?;
+      if (propertyId != null) {
+        final countResult = await SupabaseService.client
+            .from('projects')
+            .select('id')
+            .eq('property_id', propertyId)
+            .isFilter('deleted_at', null);
+        if (countResult.length >= kFreeProjectLimit) {
+          throw const ProjectLimitException();
+        }
+      }
+    }
 
     final propertyRow = await SupabaseService.client
         .from('properties')

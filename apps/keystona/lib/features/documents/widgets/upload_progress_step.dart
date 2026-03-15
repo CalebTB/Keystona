@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/widgets/upgrade_sheet.dart';
+import '../../../core/widgets/upgrade_sheet.dart' show UpgradeSheet, UpgradeSheetConfig;
 import '../models/document_upload_state.dart';
 import '../providers/document_upload_provider.dart';
 
@@ -45,14 +45,26 @@ class _UploadProgressStepState extends ConsumerState<UploadProgressStep> {
     if (state.errorMessage != null) {
       if (state.errorMessage == 'free_tier') {
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!context.mounted) return;
           UpgradeSheet.show(
             context,
-            feature: 'unlimited document storage',
+            config: const UpgradeSheetConfig(
+              headline: 'Unlock Unlimited Documents',
+              reason:
+                  'Your Document Vault is full with 25 documents on the Free plan.',
+              features: [
+                'Unlimited document storage',
+                'Full-text search across all docs',
+                'Home health score tracking',
+                'Weather-based maintenance alerts',
+              ],
+              triggerKey: 'doc_limit',
+            ),
           );
         });
         return _ErrorView(
           message:
-              'You\'ve reached the 25 document limit on the free plan.',
+              "You've reached the 25 document limit on the free plan.",
           onRetry: null,
         );
       }

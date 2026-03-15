@@ -49,7 +49,17 @@ class DocumentSearchResultCard extends ConsumerWidget {
           _LockedSnippetRow(
             onTap: () => UpgradeSheet.show(
               context,
-              feature: 'full-text document search',
+              config: const UpgradeSheetConfig(
+                headline: 'Unlock Full-Text Search',
+                reason:
+                    'Free accounts can search by name and category only.',
+                features: [
+                  'Search inside every document with OCR',
+                  'Find any text across your entire vault',
+                  'Instant results with highlighted snippets',
+                ],
+                triggerKey: 'ocr_search',
+              ),
             ),
           ),
       ],
