@@ -11,7 +11,6 @@ import '../../../core/theme/app_sizes.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/providers/service_providers.dart';
-import '../providers/subscription_provider.dart';
 
 /// Settings screen for managing the user's Keystona subscription.
 ///
@@ -23,7 +22,7 @@ class SubscriptionScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isPremium = ref.watch(isPremiumProvider);
-    final tier = ref.watch(subscriptionTierProvider);
+    final tier = isPremium ? 'Pro' : 'Free';
 
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
