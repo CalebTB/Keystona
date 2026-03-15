@@ -255,7 +255,8 @@ class _ContentState extends ConsumerState<_Content> {
                 ),
               ],
               if (a.warrantyExpiration != null ||
-                  a.warrantyProvider != null) ...[
+                  a.warrantyProvider != null ||
+                  a.linkedWarrantyDocId != null) ...[
                 const SizedBox(height: AppSizes.md),
                 _Section(
                   title: 'Warranty',
@@ -270,6 +271,8 @@ class _ContentState extends ConsumerState<_Content> {
                         label: 'Provider',
                         value: a.warrantyProvider!,
                       ),
+                    if (a.linkedWarrantyDocId != null)
+                      _LinkedDocRow(documentId: a.linkedWarrantyDocId!),
                   ],
                 ),
               ],
@@ -382,6 +385,57 @@ class _InfoRow extends StatelessWidget {
             child: Text(value, style: AppTextStyles.bodyMediumSemibold),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Tappable row that opens the linked warranty document in the Document Vault.
+class _LinkedDocRow extends StatelessWidget {
+  const _LinkedDocRow({required this.documentId});
+
+  final String documentId;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push(
+        AppRoutes.documentDetail.replaceFirst(':documentId', documentId),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: AppSizes.sm),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 140,
+              child: Text(
+                'Document',
+                style: AppTextStyles.bodyMedium
+                    .copyWith(color: AppColors.textSecondary),
+              ),
+            ),
+            Expanded(
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.description_outlined,
+                    size: 16,
+                    color: AppColors.deepNavy,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'View warranty doc',
+                    style: AppTextStyles.bodyMediumSemibold.copyWith(
+                      color: AppColors.deepNavy,
+                      decoration: TextDecoration.underline,
+                      decorationColor: AppColors.deepNavy,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
