@@ -154,9 +154,11 @@ class _GraceBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const Icon(Icons.warning_amber_rounded, size: 18, color: _foreground),
+          const SizedBox(width: AppSizes.xs),
           Expanded(
             child: Text(
-              '\u26A0 $daysUntilArchive document${daysUntilArchive == 1 ? '' : 's'} '
+              '$daysUntilArchive document${daysUntilArchive == 1 ? '' : 's'} '
               'will be archived in $daysUntilArchive days.',
               style: AppTextStyles.bodyMedium.copyWith(color: _foreground),
             ),
