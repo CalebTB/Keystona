@@ -94,6 +94,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
                     ref.read(maintenanceTasksProvider.notifier).refresh(),
               ),
               _buildCalendarHeader(),
+              _buildTipSliver(),
               _buildDayHeaderSliver(),
               _buildOverdueBannerSliver(),
               _AgendaSliver(
@@ -102,7 +103,6 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
                     .read(maintenanceTasksProvider.notifier)
                     .completeTask(taskId),
               ),
-              _buildTipSliver(),
               _buildUpcomingSliver(),
               const SliverToBoxAdapter(child: SizedBox(height: 110)),
             ],
@@ -138,6 +138,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
               actions: [_HeaderButtons()],
             ),
             _buildCalendarHeader(),
+            _buildTipSliver(),
             _buildDayHeaderSliver(),
             _buildOverdueBannerSliver(),
             _AgendaSliver(
@@ -146,7 +147,6 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
                   .read(maintenanceTasksProvider.notifier)
                   .completeTask(taskId),
             ),
-            _buildTipSliver(),
             _buildUpcomingSliver(),
             const SliverToBoxAdapter(child: SizedBox(height: 110)),
           ],
