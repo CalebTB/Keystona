@@ -405,7 +405,7 @@ class _AndroidSheet extends StatelessWidget {
               child: FilledButton(
                 onPressed: loading ? null : onSubmit,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.deepNavy,
+                  backgroundColor: AppColors.accent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppSizes.radiusSm),
                   ),

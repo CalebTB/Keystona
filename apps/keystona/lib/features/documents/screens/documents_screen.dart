@@ -264,7 +264,7 @@ class _AndroidDocumentsLayoutState
     return Scaffold(
       backgroundColor: AppColors.warmOffWhite,
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.deepNavy,
+        backgroundColor: AppColors.accent,
         foregroundColor: AppColors.textInverse,
         onPressed: _onAddTapped,
         child: const Icon(Icons.add),

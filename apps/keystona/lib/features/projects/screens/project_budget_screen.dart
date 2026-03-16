@@ -360,7 +360,7 @@ class _EmptyState extends StatelessWidget {
             FilledButton(
               onPressed: onAdd,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.deepNavy,
+                backgroundColor: AppColors.accent,
                 padding: AppPadding.button,
               ),
               child: const Text('+ Add Item'),
@@ -393,7 +393,7 @@ class _ErrorState extends StatelessWidget {
             FilledButton(
               onPressed: onRetry,
               style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.deepNavy),
+                  backgroundColor: AppColors.accent),
               child: const Text('Retry'),
             ),
           ],

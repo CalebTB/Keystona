@@ -148,7 +148,7 @@ class _UploadMetadataStepState extends ConsumerState<UploadMetadataStep> {
         FilledButton(
           onPressed: _submit,
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.deepNavy,
+            backgroundColor: AppColors.accent,
             minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSizes.radiusSm),

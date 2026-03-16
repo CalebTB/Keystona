@@ -493,7 +493,7 @@ class _AddTaskFAB extends StatelessWidget {
   Widget build(BuildContext context) {
     return FloatingActionButton(
       onPressed: () => context.push(AppRoutes.maintenanceCreate),
-      backgroundColor: AppColors.deepNavy,
+      backgroundColor: AppColors.accent,
       foregroundColor: AppColors.textInverse,
       elevation: 3,
       child: const Icon(Icons.add),

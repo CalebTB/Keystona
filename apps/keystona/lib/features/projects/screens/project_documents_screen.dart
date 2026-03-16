@@ -73,7 +73,7 @@ class ProjectDocumentsScreen extends ConsumerWidget {
       body: body,
       floatingActionButton: FloatingActionButton(
         onPressed: onLink,
-        backgroundColor: AppColors.deepNavy,
+        backgroundColor: AppColors.accent,
         child: const Icon(Icons.link, color: Colors.white),
       ),
     );
@@ -329,7 +329,7 @@ class _EmptyState extends StatelessWidget {
             FilledButton(
               onPressed: onLink,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.deepNavy,
+                backgroundColor: AppColors.accent,
                 padding: AppPadding.button,
               ),
               child: const Text('+ Link Document'),
@@ -364,7 +364,7 @@ class _ErrorState extends StatelessWidget {
             FilledButton(
               onPressed: onRetry,
               style:
-                  FilledButton.styleFrom(backgroundColor: AppColors.deepNavy),
+                  FilledButton.styleFrom(backgroundColor: AppColors.accent),
               child: const Text('Retry'),
             ),
           ],

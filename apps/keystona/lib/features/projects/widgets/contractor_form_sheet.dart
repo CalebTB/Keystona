@@ -563,7 +563,7 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
         child: FilledButton(
           onPressed: _saving ? null : _save,
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.deepNavy,
+            backgroundColor: AppColors.accent,
             padding: AppPadding.button,
           ),
           child: _saving

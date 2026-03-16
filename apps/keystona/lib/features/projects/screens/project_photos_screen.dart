@@ -273,7 +273,7 @@ class _ProjectPhotosScreenState
             child: CircularProgressIndicator())
         : FloatingActionButton(
             onPressed: _upload,
-            backgroundColor: AppColors.deepNavy,
+            backgroundColor: AppColors.accent,
             child: const Icon(Icons.add_a_photo, color: Colors.white),
           );
 
@@ -372,7 +372,7 @@ class _EmptyState extends StatelessWidget {
             FilledButton(
               onPressed: onAdd,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.deepNavy,
+                backgroundColor: AppColors.accent,
                 padding: AppPadding.button,
               ),
               child: const Text('+ Add Photo'),
@@ -402,7 +402,7 @@ class _ErrorState extends StatelessWidget {
           const SizedBox(height: AppSizes.lg),
           FilledButton(
             onPressed: onRetry,
-            style: FilledButton.styleFrom(backgroundColor: AppColors.deepNavy),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.accent),
             child: const Text('Retry'),
           ),
         ],

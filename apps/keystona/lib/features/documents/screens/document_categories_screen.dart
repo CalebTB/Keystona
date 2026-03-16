@@ -81,7 +81,7 @@ class _AndroidCategoriesLayout extends ConsumerWidget {
         elevation: 0,
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.deepNavy,
+        backgroundColor: AppColors.accent,
         foregroundColor: AppColors.textInverse,
         onPressed: () => showCategoryFormSheet(context),
         child: const Icon(Icons.add),

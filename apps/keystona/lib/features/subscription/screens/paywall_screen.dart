@@ -650,7 +650,7 @@ class _CtaButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: enabled ? onPressed : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.deepNavy,
+          backgroundColor: AppColors.accent,
           disabledBackgroundColor: AppColors.gray300,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSizes.radiusSm),

@@ -104,7 +104,7 @@ class _TaskEmptyStateState extends ConsumerState<TaskEmptyState> {
             const SizedBox(height: AppSizes.xl),
             FilledButton.icon(
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.deepNavy,
+                backgroundColor: AppColors.accent,
                 foregroundColor: AppColors.textInverse,
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSizes.lg,
@@ -118,8 +118,8 @@ class _TaskEmptyStateState extends ConsumerState<TaskEmptyState> {
             const SizedBox(height: AppSizes.md),
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.deepNavy,
-                side: const BorderSide(color: AppColors.deepNavy),
+                foregroundColor: AppColors.accent,
+                side: const BorderSide(color: AppColors.accent),
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSizes.lg,
                   vertical: AppSizes.md,

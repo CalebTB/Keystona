@@ -65,7 +65,7 @@ class ProjectContractorsScreen extends ConsumerWidget {
       body: body,
       floatingActionButton: FloatingActionButton(
         onPressed: onAdd,
-        backgroundColor: AppColors.deepNavy,
+        backgroundColor: AppColors.accent,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -236,7 +236,7 @@ class _EmptyState extends StatelessWidget {
             FilledButton(
               onPressed: onAdd,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.deepNavy,
+                backgroundColor: AppColors.accent,
                 padding: AppPadding.button,
               ),
               child: const Text('+ Add Contractor'),
@@ -271,7 +271,7 @@ class _ErrorState extends StatelessWidget {
             FilledButton(
               onPressed: onRetry,
               style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.deepNavy),
+                  backgroundColor: AppColors.accent),
               child: const Text('Retry'),
             ),
           ],

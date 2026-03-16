@@ -286,7 +286,7 @@ class _EditMetadataSheetState extends ConsumerState<EditMetadataSheet> {
           FilledButton(
             onPressed: _saving ? null : _save,
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.deepNavy,
+              backgroundColor: AppColors.accent,
               disabledBackgroundColor: AppColors.gray300,
               minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
               shape: RoundedRectangleBorder(

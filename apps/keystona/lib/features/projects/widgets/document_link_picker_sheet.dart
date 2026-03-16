@@ -205,7 +205,7 @@ class _DocumentLinkPickerSheetState
                           linkType: _linkType,
                         )),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.deepNavy,
+                  backgroundColor: AppColors.accent,
                   padding: AppPadding.button,
                 ),
                 child: const Text('Link Document'),

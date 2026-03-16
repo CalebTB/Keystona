@@ -970,7 +970,7 @@ class _QuickCompleteButton extends StatelessWidget {
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor:
-              isDisabled ? AppColors.gray300 : AppColors.deepNavy,
+              isDisabled ? AppColors.gray300 : AppColors.accent,
           foregroundColor: AppColors.textInverse,
           shape: RoundedRectangleBorder(borderRadius: AppRadius.md),
           elevation: 0,
@@ -1014,16 +1014,16 @@ class _OutlinedActionButton extends StatelessWidget {
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
           foregroundColor:
-              isDisabled ? AppColors.textDisabled : AppColors.deepNavy,
+              isDisabled ? AppColors.textDisabled : AppColors.accent,
           side: BorderSide(
-            color: isDisabled ? AppColors.border : AppColors.deepNavy,
+            color: isDisabled ? AppColors.border : AppColors.accent,
           ),
           shape: RoundedRectangleBorder(borderRadius: AppRadius.md),
         ),
         child: Text(
           label,
           style: AppTextStyles.bodySmall.copyWith(
-            color: isDisabled ? AppColors.textDisabled : AppColors.deepNavy,
+            color: isDisabled ? AppColors.textDisabled : AppColors.accent,
           ),
           textAlign: TextAlign.center,
           maxLines: 2,

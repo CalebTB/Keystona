@@ -163,7 +163,7 @@ class _SuccessView extends StatelessWidget {
             FilledButton(
               onPressed: onDone,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.deepNavy,
+                backgroundColor: AppColors.accent,
                 minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSizes.radiusSm),
@@ -223,7 +223,7 @@ class _FreeTierErrorView extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: onUpgrade,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.deepNavy,
+                  backgroundColor: AppColors.accent,
                   foregroundColor: AppColors.goldAccent,
                 ),
                 child: const Text('See Premium Plans'),
@@ -277,7 +277,7 @@ class _ErrorView extends StatelessWidget {
               FilledButton(
                 onPressed: onRetry,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.deepNavy,
+                  backgroundColor: AppColors.accent,
                   minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppSizes.radiusSm),

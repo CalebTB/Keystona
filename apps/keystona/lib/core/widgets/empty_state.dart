@@ -65,7 +65,7 @@ class EmptyState extends StatelessWidget {
               OutlinedButton(
                 onPressed: onAction,
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.deepNavy),
+                  side: const BorderSide(color: AppColors.accent),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppSizes.radiusSm),
                   ),
@@ -73,7 +73,7 @@ class EmptyState extends StatelessWidget {
                 child: Text(
                   actionLabel!,
                   style: AppTextStyles.button.copyWith(
-                    color: AppColors.deepNavy,
+                    color: AppColors.accent,
                   ),
                 ),
               ),

@@ -484,8 +484,8 @@ class _FormBody extends StatelessWidget {
               style: AppTextStyles.bodySmall,
             ),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.deepNavy,
-              side: const BorderSide(color: AppColors.deepNavy),
+              foregroundColor: AppColors.accent,
+              side: const BorderSide(color: AppColors.accent),
               shape: RoundedRectangleBorder(borderRadius: AppRadius.md),
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSizes.md,
@@ -520,8 +520,8 @@ class _FormBody extends StatelessWidget {
               style: AppTextStyles.bodySmall,
             ),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.deepNavy,
-              side: const BorderSide(color: AppColors.deepNavy),
+              foregroundColor: AppColors.accent,
+              side: const BorderSide(color: AppColors.accent),
               shape: RoundedRectangleBorder(borderRadius: AppRadius.md),
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSizes.md,
@@ -753,7 +753,7 @@ class _ReceiptPickerSheetState extends ConsumerState<_ReceiptPickerSheet> {
                     FilledButton(
                       onPressed: _confirm,
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.deepNavy,
+                        backgroundColor: AppColors.accent,
                         shape: RoundedRectangleBorder(
                           borderRadius: AppRadius.md,
                         ),

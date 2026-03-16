@@ -102,7 +102,7 @@ class ConfirmDialog extends StatelessWidget {
               onConfirm();
             },
             style: FilledButton.styleFrom(
-              backgroundColor: isDestructive ? AppColors.error : AppColors.deepNavy,
+              backgroundColor: isDestructive ? AppColors.error : AppColors.accent,
               minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppSizes.radiusSm),

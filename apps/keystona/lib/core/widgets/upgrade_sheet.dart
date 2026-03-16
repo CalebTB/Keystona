@@ -188,7 +188,7 @@ class UpgradeSheet extends StatelessWidget {
                 context.push(AppRoutes.settingsPaywall);
               },
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.deepNavy,
+                backgroundColor: AppColors.accent,
                 minimumSize:
                     const Size.fromHeight(AppSizes.buttonHeight),
                 shape: RoundedRectangleBorder(

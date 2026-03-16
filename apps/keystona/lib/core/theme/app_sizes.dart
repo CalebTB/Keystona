@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 
-/// Spacing, sizing, and layout constants for the Keystona design system.
+/// Spacing, sizing, and layout constants for the Keystona Editorial Warm
+/// design system.
 ///
-/// Built on a 4px base grid. All spacing values are multiples of 4.
-/// Import this class — never hardcode numeric size values in widgets.
+/// Built on a 4px base grid. All spacing values are multiples of 4 (or close
+/// to it). Import this class — never hardcode numeric size values in widgets.
 abstract final class AppSizes {
   // ─── Spacing ────────────────────────────────────────────────────────────────
 
   /// 4px — micro gaps, icon-to-label spacing.
   static const double xs = 4;
 
-  /// 8px — tight internal padding, inline gaps.
+  /// 8px — tight internal padding, inline gaps, inter-card gaps.
   static const double sm = 8;
 
-  /// 16px — standard card and screen padding.
+  /// 16px — standard card internal padding.
   static const double md = 16;
 
   /// 24px — section spacing, generous card gaps.
@@ -27,31 +28,40 @@ abstract final class AppSizes {
 
   // ─── Border Radii ───────────────────────────────────────────────────────────
 
-  /// 8px — buttons, chips, input fields, small cards.
-  static const double radiusSm = 8;
+  /// 6px — badges, tags, small chips.
+  static const double radiusXs = 6;
 
-  /// 12px — standard cards, bottom sheets.
+  /// 10px — small elements, inner chips, icon containers.
+  static const double radiusSm = 10;
+
+  /// 12px — buttons, inputs, inner cards.
   static const double radiusMd = 12;
 
-  /// 16px — large cards, modal sheets.
+  /// 14px — standard cards (the primary card radius).
+  static const double radiusCard = 14;
+
+  /// 16px — large cards, hero blocks.
   static const double radiusLg = 16;
 
-  /// 24px — pill badges, large rounded containers.
-  static const double radiusXl = 24;
+  /// 20px — bottom sheet top corners, filter chips.
+  static const double radiusXl = 20;
 
   /// 999px — fully circular / pill shapes.
   static const double radiusFull = 999;
 
   // ─── Standard Paddings ──────────────────────────────────────────────────────
 
-  /// Horizontal and vertical screen edge padding (16px).
-  static const double screenPadding = 16;
+  /// Horizontal screen edge padding — 22px (editorial warm spec).
+  static const double screenPadding = 22;
 
-  /// Internal card content padding (16px).
-  static const double cardPadding = 16;
+  /// Internal card content padding — 14px.
+  static const double cardPadding = 14;
 
-  /// Vertical space between major page sections (24px).
-  static const double sectionSpacing = 24;
+  /// Vertical space between major page sections — 20px.
+  static const double sectionSpacing = 20;
+
+  /// Gap between cards in a list — 6px.
+  static const double cardGap = 6;
 
   // ─── Icon Sizes ─────────────────────────────────────────────────────────────
 
@@ -69,11 +79,11 @@ abstract final class AppSizes {
 
   // ─── Component Heights ──────────────────────────────────────────────────────
 
-  /// 52px — all primary and secondary button heights.
-  static const double buttonHeight = 52;
+  /// 48px — primary and secondary button heights.
+  static const double buttonHeight = 48;
 
-  /// 52px — text input and dropdown field height.
-  static const double inputHeight = 52;
+  /// 50px — text input and dropdown field height.
+  static const double inputHeight = 50;
 
   /// 60px — bottom navigation bar height (excludes safe area).
   static const double bottomNavHeight = 60;
@@ -89,16 +99,19 @@ abstract final class AppSizes {
 ///
 /// Use these instead of calling [BorderRadius.circular] with raw values.
 abstract final class AppRadius {
-  /// 8px circular radius — buttons, inputs, small surfaces.
+  /// 10px circular radius — small elements, inner chips.
   static final BorderRadius sm = BorderRadius.circular(AppSizes.radiusSm);
 
-  /// 12px circular radius — standard cards and sheets.
+  /// 12px circular radius — buttons and inputs.
   static final BorderRadius md = BorderRadius.circular(AppSizes.radiusMd);
 
-  /// 16px circular radius — large cards, modals.
+  /// 14px circular radius — standard cards (primary card radius).
+  static final BorderRadius card = BorderRadius.circular(AppSizes.radiusCard);
+
+  /// 16px circular radius — large cards, hero blocks.
   static final BorderRadius lg = BorderRadius.circular(AppSizes.radiusLg);
 
-  /// 24px circular radius — pill containers, large badges.
+  /// 20px circular radius — bottom sheet corners, filter chips.
   static final BorderRadius xl = BorderRadius.circular(AppSizes.radiusXl);
 }
 
@@ -106,19 +119,20 @@ abstract final class AppRadius {
 ///
 /// Use these instead of constructing [EdgeInsets] inline in widgets.
 abstract final class AppPadding {
-  /// All-sides screen padding (16px).
-  static const EdgeInsets screen = EdgeInsets.all(AppSizes.screenPadding);
+  /// All-sides screen padding (22px).
+  static const EdgeInsets screen =
+      EdgeInsets.all(AppSizes.screenPadding);
 
-  /// Horizontal-only screen padding (16px left/right).
+  /// Horizontal-only screen padding (22px left/right).
   static const EdgeInsets screenHorizontal =
       EdgeInsets.symmetric(horizontal: AppSizes.screenPadding);
 
-  /// All-sides card internal padding (16px).
+  /// All-sides card internal padding (14px).
   static const EdgeInsets card = EdgeInsets.all(AppSizes.cardPadding);
 
-  /// Button content padding — 24px horizontal, 16px vertical.
+  /// Button content padding — 20px horizontal, 14px vertical.
   static const EdgeInsets button = EdgeInsets.symmetric(
-    horizontal: AppSizes.lg,
-    vertical: AppSizes.md,
+    horizontal: AppSizes.lg - 4, // 20px
+    vertical: AppSizes.md - 2,   // 14px
   );
 }

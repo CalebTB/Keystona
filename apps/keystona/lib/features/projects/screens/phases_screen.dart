@@ -63,7 +63,7 @@ class PhasesScreen extends ConsumerWidget {
       body: body,
       floatingActionButton: FloatingActionButton(
         onPressed: onAddTap,
-        backgroundColor: AppColors.deepNavy,
+        backgroundColor: AppColors.accent,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -266,7 +266,7 @@ class _EmptyState extends StatelessWidget {
             FilledButton(
               onPressed: onAddTap,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.deepNavy,
+                backgroundColor: AppColors.accent,
                 padding: AppPadding.button,
               ),
               child: const Text('+ Add Phase'),
@@ -301,7 +301,7 @@ class _ErrorState extends StatelessWidget {
             FilledButton(
               onPressed: onRetry,
               style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.deepNavy),
+                  backgroundColor: AppColors.accent),
               child: const Text('Retry'),
             ),
           ],

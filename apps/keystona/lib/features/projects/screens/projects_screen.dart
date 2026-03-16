@@ -109,7 +109,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
       body: body,
       floatingActionButton: FloatingActionButton(
         onPressed: _onCreateTap,
-        backgroundColor: AppColors.deepNavy,
+        backgroundColor: AppColors.accent,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -388,7 +388,7 @@ class _ErrorState extends StatelessWidget {
             FilledButton(
               onPressed: onRetry,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.deepNavy,
+                backgroundColor: AppColors.accent,
               ),
               child: const Text('Retry'),
             ),

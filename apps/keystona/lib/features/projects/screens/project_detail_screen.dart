@@ -68,7 +68,7 @@ class ProjectDetailScreen extends ConsumerWidget {
               onPressed: () =>
                   ref.invalidate(projectDetailProvider(projectId)),
               style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.deepNavy),
+                  backgroundColor: AppColors.accent),
               child: const Text('Retry'),
             ),
           ],
