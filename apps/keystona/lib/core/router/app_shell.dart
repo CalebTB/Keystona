@@ -55,8 +55,7 @@ class _AppTabBar extends StatelessWidget {
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-        child: Container(
-          height: 56 + bottomPad,
+        child: DecoratedBox(
           decoration: const BoxDecoration(
             color: Color(0xEBF6F2ED), // rgba(246,242,237,0.92)
             border: Border(
@@ -64,6 +63,7 @@ class _AppTabBar extends StatelessWidget {
             ),
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
                 height: 56,
