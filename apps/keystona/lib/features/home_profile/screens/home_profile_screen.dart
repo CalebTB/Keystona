@@ -17,11 +17,6 @@ import '../widgets/home_profile_skeleton.dart';
 
 /// Home Profile overview screen — lives at [AppRoutes.home].
 ///
-/// Shows:
-///   • Property summary card (address, type, year built, sq ft, cover photo)
-///   • Systems section row with count + "X nearing end of life" warning
-///   • Appliances section row with count
-///
 /// Adaptive layout:
 ///   iOS  → CupertinoPageScaffold + CupertinoSliverNavigationBar (large title)
 ///   Android → Scaffold + SliverAppBar
@@ -31,9 +26,7 @@ class HomeProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    return isIOS
-        ? const _IOSLayout()
-        : const _AndroidLayout();
+    return isIOS ? const _IOSLayout() : const _AndroidLayout();
   }
 }
 
@@ -45,14 +38,25 @@ class _IOSLayout extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return CupertinoPageScaffold(
+      backgroundColor: AppColors.warmOffWhite,
       child: CustomScrollView(
         slivers: [
           CupertinoSliverNavigationBar(
-            largeTitle: const Text('Home Profile'),
+            largeTitle: Text(
+              'Home Profile',
+              style: AppTextStyles.displayMedium,
+            ),
+            backgroundColor: AppColors.warmOffWhite,
+            border: null,
             trailing: CupertinoButton(
               padding: EdgeInsets.zero,
               onPressed: () => ref.read(authServiceProvider).signOut(),
-              child: const Text('Sign Out', style: TextStyle(color: CupertinoColors.destructiveRed)),
+              child: Text(
+                'Sign Out',
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: AppColors.accent,
+                ),
+              ),
             ),
           ),
           CupertinoSliverRefreshControl(
@@ -60,7 +64,7 @@ class _IOSLayout extends ConsumerWidget {
                 ref.read(homeProfileProvider.notifier).refresh(),
           ),
           const _ContentSliver(),
-          const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
+          const SliverToBoxAdapter(child: SizedBox(height: 110)),
         ],
       ),
     );
@@ -77,19 +81,29 @@ class _AndroidLayout extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.warmOffWhite,
       body: RefreshIndicator(
-        color: AppColors.deepNavy,
+        color: AppColors.accent,
         onRefresh: () => ref.read(homeProfileProvider.notifier).refresh(),
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
-              title: Text('Home Profile', style: AppTextStyles.h3),
+              title: Text('Home Profile', style: AppTextStyles.displayMedium),
               floating: true,
               backgroundColor: AppColors.warmOffWhite,
               scrolledUnderElevation: 0,
               elevation: 0,
+              actions: [
+                TextButton(
+                  onPressed: () => ref.read(authServiceProvider).signOut(),
+                  child: Text(
+                    'Sign Out',
+                    style: AppTextStyles.labelMedium
+                        .copyWith(color: AppColors.accent),
+                  ),
+                ),
+              ],
             ),
             const _ContentSliver(),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
+            const SliverToBoxAdapter(child: SizedBox(height: 110)),
           ],
         ),
       ),
@@ -112,7 +126,6 @@ class _ContentSliver extends ConsumerWidget {
         child: HomeProfileSkeleton(),
       ),
       error: (error, _) {
-        // Special-case: no property → show empty state instead of error.
         if (error is NoPropertyException) {
           return SliverFillRemaining(
             hasScrollBody: false,
@@ -130,37 +143,53 @@ class _ContentSliver extends ConsumerWidget {
         );
       },
       data: (overview) => SliverPadding(
-        padding: AppPadding.screen,
+        padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
         sliver: SliverList.list(
           children: [
             const TrialBanner(),
+            // Dark hero property card.
             _PropertyCard(property: overview.property),
             const SizedBox(height: AppSizes.md),
-            _SectionRow(
-              icon: Icons.settings_outlined,
+
+            // ── Systems section ──────────────────────────────────────────
+            _SectionHeader(
               label: 'Systems',
               count: overview.systemCount,
               warning: overview.systemsNearingEndOfLife > 0
                   ? '${overview.systemsNearingEndOfLife} nearing end of life'
                   : null,
+            ),
+            const SizedBox(height: 10),
+            _SectionTile(
+              iconBackground: AppColors.slateDim,
+              iconColor: AppColors.slate,
+              icon: Icons.settings_outlined,
+              label: 'Systems',
+              count: overview.systemCount,
               onTap: () => context.push(AppRoutes.homeSystems),
             ),
-            const SizedBox(height: AppSizes.sm),
-            _SectionRow(
+            const SizedBox(height: AppSizes.cardGap),
+            _SectionTile(
+              iconBackground: AppColors.oliveDim,
+              iconColor: AppColors.olive,
               icon: Icons.kitchen_outlined,
               label: 'Appliances',
               count: overview.applianceCount,
               onTap: () => context.push(AppRoutes.homeAppliances),
             ),
-            const SizedBox(height: AppSizes.sm),
-            _SectionRow(
+            const SizedBox(height: AppSizes.cardGap),
+            _SectionTile(
+              iconBackground: AppColors.sandDim,
+              iconColor: AppColors.sand,
               icon: Icons.timeline_outlined,
               label: 'Lifespan Tracker',
               count: null,
               onTap: () => context.push(AppRoutes.homeLifespan),
             ),
             const SizedBox(height: AppSizes.md),
-            _EmergencyHubButton(
+
+            // ── Emergency Hub ────────────────────────────────────────────
+            _EmergencyHubTile(
               onTap: () => context.push(AppRoutes.emergency),
             ),
           ],
@@ -170,19 +199,16 @@ class _ContentSliver extends ConsumerWidget {
   }
 }
 
-// ── Property card ─────────────────────────────────────────────────────────────
+// ── Property card — dark hero block ──────────────────────────────────────────
 
 class _PropertyCard extends StatelessWidget {
   const _PropertyCard({required this.property});
   final Property property;
 
-  String get _address {
-    final parts = [
-      property.addressLine1,
-      if (property.addressLine2 != null) property.addressLine2!,
-    ];
-    return parts.join(', ');
-  }
+  String get _streetLine => [
+        property.addressLine1,
+        if (property.addressLine2 != null) property.addressLine2!,
+      ].join(', ');
 
   String get _cityLine =>
       '${property.city}, ${property.state} ${property.zipCode}';
@@ -191,102 +217,82 @@ class _PropertyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.border),
+        color: AppColors.darkBackground,
+        borderRadius: BorderRadius.circular(AppSizes.radiusLg + 2), // 18px
       ),
+      padding: const EdgeInsets.all(AppSizes.md + 4), // 20px
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header row: photo thumbnail + address.
-          Padding(
-            padding: const EdgeInsets.all(AppSizes.md),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Cover photo or placeholder.
-                _CoverPhoto(photoPath: property.exteriorPhotoPath),
-                const SizedBox(width: AppSizes.md),
-                // Address + type.
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _address,
-                        style: AppTextStyles.labelLarge.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _cityLine,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: AppSizes.xs),
-                      Text(
-                        property.propertyType.propertyTypeLabel,
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
+          // Photo + address row.
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Thumbnail.
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppColors.darkBorder,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.darkBorder),
                 ),
-                // Edit icon.
-                GestureDetector(
-                  onTap: () => context.push(AppRoutes.homeEdit),
-                  child: Icon(
+                child: const Icon(
+                  Icons.home_outlined,
+                  size: 28,
+                  color: AppColors.darkTextSecondary,
+                ),
+              ),
+              const SizedBox(width: 14),
+              // Address.
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _streetLine,
+                      style: AppTextStyles.headlineMedium.copyWith(
+                        color: AppColors.darkText,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _cityLine,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.darkTextTertiary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Edit button.
+              GestureDetector(
+                onTap: () => context.push(AppRoutes.homeEdit),
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppColors.darkBorder,
+                    borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                  ),
+                  child: const Icon(
                     Icons.edit_outlined,
-                    size: 20,
-                    color: AppColors.textSecondary,
+                    size: 15,
+                    color: AppColors.darkTextSecondary,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          // Stats row: year built / sq ft / bedrooms / bathrooms.
-          if (_hasStats)
-            Container(
-              decoration: BoxDecoration(
-                border: Border(top: BorderSide(color: AppColors.border)),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(AppSizes.radiusMd),
-                  bottomRight: Radius.circular(AppSizes.radiusMd),
-                ),
-                color: AppColors.surfaceVariant,
-              ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.md,
-                vertical: AppSizes.sm,
-              ),
-              child: Row(
-                children: [
-                  if (property.yearBuilt != null) ...[
-                    _StatChip(
-                      label: 'Built ${property.yearBuilt}',
-                      icon: Icons.calendar_today_outlined,
-                    ),
-                    const SizedBox(width: AppSizes.md),
-                  ],
-                  if (property.squareFeet != null) ...[
-                    _StatChip(
-                      label: '${_formatSqFt(property.squareFeet!)} sq ft',
-                      icon: Icons.square_foot_outlined,
-                    ),
-                    const SizedBox(width: AppSizes.md),
-                  ],
-                  if (property.bedrooms != null)
-                    _StatChip(
-                      label:
-                          '${_formatNum(property.bedrooms!)} bd / ${_formatNum(property.bathrooms ?? 0)} ba',
-                      icon: Icons.bed_outlined,
-                    ),
-                ],
-              ),
-            ),
+
+          // Stats row.
+          if (_hasStats) ...[
+            const SizedBox(height: 16),
+            _PropertyStats(property: property),
+          ],
         ],
       ),
     );
@@ -296,57 +302,70 @@ class _PropertyCard extends StatelessWidget {
       property.yearBuilt != null ||
       property.squareFeet != null ||
       property.bedrooms != null;
-
-  String _formatSqFt(int sqft) {
-    if (sqft >= 1000) {
-      return '${(sqft / 1000).toStringAsFixed(sqft % 1000 == 0 ? 0 : 1)}k';
-    }
-    return sqft.toString();
-  }
-
-  String _formatNum(double n) =>
-      n == n.truncateToDouble() ? n.toInt().toString() : n.toString();
 }
 
-class _CoverPhoto extends StatelessWidget {
-  const _CoverPhoto({required this.photoPath});
-  final String? photoPath;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 76,
-      height: 76,
-      decoration: BoxDecoration(
-        color: AppColors.gray200,
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-      ),
-      child: photoPath == null
-          ? Icon(Icons.home, size: 36, color: AppColors.deepNavy.withValues(alpha: 0.4))
-          : ClipRRect(
-              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-              child: const Icon(Icons.home, size: 36), // replaced when photo exists
-            ),
-    );
-  }
-}
-
-class _StatChip extends StatelessWidget {
-  const _StatChip({required this.label, required this.icon});
-  final String label;
-  final IconData icon;
+class _PropertyStats extends StatelessWidget {
+  const _PropertyStats({required this.property});
+  final Property property;
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: AppColors.textSecondary),
-        const SizedBox(width: 3),
+        if (property.yearBuilt != null) ...[
+          _StatCell(value: '${property.yearBuilt}', label: 'Year Built'),
+          const SizedBox(width: 20),
+        ],
+        if (property.squareFeet != null) ...[
+          _StatCell(
+            value: _fmtSqFt(property.squareFeet!),
+            label: 'Sq Ft',
+          ),
+          const SizedBox(width: 20),
+        ],
+        if (property.bedrooms != null)
+          _StatCell(
+            value: '${_fmtNum(property.bedrooms!)}/'
+                '${_fmtNum(property.bathrooms ?? 0)}',
+            label: 'Bed/Bath',
+          ),
+      ],
+    );
+  }
+
+  static String _fmtSqFt(int n) {
+    if (n >= 1000) {
+      final k = n / 1000;
+      return k == k.truncateToDouble()
+          ? '${k.toInt()}k'
+          : '${k.toStringAsFixed(1)}k';
+    }
+    return '$n';
+  }
+
+  static String _fmtNum(double n) =>
+      n == n.truncateToDouble() ? n.toInt().toString() : '$n';
+}
+
+class _StatCell extends StatelessWidget {
+  const _StatCell({required this.value, required this.label});
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         Text(
-          label,
-          style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.textSecondary,
+          value,
+          style: AppTextStyles.monoDisplay.copyWith(color: AppColors.darkText),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label.toUpperCase(),
+          style: AppTextStyles.monoTiny.copyWith(
+            color: AppColors.darkTextTertiary,
           ),
         ),
       ],
@@ -354,21 +373,63 @@ class _StatChip extends StatelessWidget {
   }
 }
 
-// ── Section row ───────────────────────────────────────────────────────────────
+// ── Section header ────────────────────────────────────────────────────────────
 
-class _SectionRow extends StatelessWidget {
-  const _SectionRow({
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({
+    required this.label,
+    required this.count,
+    this.warning,
+  });
+
+  final String label;
+  final int count;
+  final String? warning;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(label, style: AppTextStyles.headlineMedium),
+        const SizedBox(width: AppSizes.sm),
+        Text(
+          '$count tracked',
+          style: AppTextStyles.monoLabel.copyWith(color: AppColors.textTertiary),
+        ),
+        if (warning != null) ...[
+          const Spacer(),
+          Icon(Icons.warning_amber_rounded,
+              size: 12, color: AppColors.sand),
+          const SizedBox(width: 3),
+          Text(
+            warning!,
+            style: AppTextStyles.monoLabel
+                .copyWith(color: AppColors.sand, fontSize: 10),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// ── Section tile ──────────────────────────────────────────────────────────────
+
+class _SectionTile extends StatelessWidget {
+  const _SectionTile({
+    required this.iconBackground,
+    required this.iconColor,
     required this.icon,
     required this.label,
     required this.count,
     required this.onTap,
-    this.warning,
   });
 
+  final Color iconBackground;
+  final Color iconColor;
   final IconData icon;
   final String label;
   final int? count;
-  final String? warning;
   final VoidCallback onTap;
 
   @override
@@ -377,84 +438,61 @@ class _SectionRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: AppColors.border),
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(AppSizes.radiusCard),
+          border: Border.all(color: AppColors.border, width: 1.5),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0D2A2420),
+              blurRadius: 4,
+              offset: Offset(0, 1),
+            ),
+          ],
         ),
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
+          horizontal: 14,
+          vertical: 14,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: AppColors.deepNavy.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-                  ),
-                  child: Icon(icon, size: 20, color: AppColors.deepNavy),
-                ),
-                const SizedBox(width: AppSizes.md),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: AppTextStyles.labelLarge.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                if (count != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSizes.sm,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceVariant,
-                      borderRadius:
-                          BorderRadius.circular(AppSizes.radiusFull),
-                    ),
-                    child: Text(
-                      '$count',
-                      style: AppTextStyles.labelSmall.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                const SizedBox(width: AppSizes.sm),
-                Icon(
-                  Icons.chevron_right,
-                  size: 20,
-                  color: AppColors.textSecondary,
-                ),
-              ],
-            ),
-            if (warning != null) ...[
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  const SizedBox(width: 36 + AppSizes.md),
-                  Icon(
-                    Icons.warning_amber_rounded,
-                    size: 13,
-                    color: AppColors.healthFair,
-                  ),
-                  const SizedBox(width: 3),
-                  Text(
-                    warning!,
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.healthFair,
-                    ),
-                  ),
-                ],
+            // Category icon.
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: iconBackground,
+                borderRadius: BorderRadius.circular(AppSizes.radiusSm + 1),
               ),
+              child: Icon(icon, size: 20, color: iconColor),
+            ),
+            const SizedBox(width: 12),
+            // Label.
+            Expanded(
+              child: Text(label, style: AppTextStyles.titleSmall),
+            ),
+            // Count badge.
+            if (count != null) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.warmFill,
+                  borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                ),
+                child: Text(
+                  '$count',
+                  style: AppTextStyles.monoLabel.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSizes.sm),
             ],
+            Icon(Icons.chevron_right,
+                size: 18, color: AppColors.textTertiary),
           ],
         ),
       ),
@@ -462,10 +500,10 @@ class _SectionRow extends StatelessWidget {
   }
 }
 
-// ── Emergency Hub quick-action button ─────────────────────────────────────────
+// ── Emergency Hub tile ────────────────────────────────────────────────────────
 
-class _EmergencyHubButton extends StatelessWidget {
-  const _EmergencyHubButton({required this.onTap});
+class _EmergencyHubTile extends StatelessWidget {
+  const _EmergencyHubTile({required this.onTap});
   final VoidCallback onTap;
 
   @override
@@ -474,44 +512,44 @@ class _EmergencyHubButton extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF1F0),
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: const Color(0xFFFFBBB8)),
+          color: AppColors.accentDim,
+          borderRadius: BorderRadius.circular(AppSizes.radiusCard),
+          border: Border.all(
+            color: AppColors.accent.withValues(alpha: 0.18),
+            width: 1.5,
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0D2A2420),
+              blurRadius: 4,
+              offset: Offset(0, 1),
+            ),
+          ],
         ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         child: Row(
           children: [
             Container(
-              width: 36,
-              height: 36,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: const Color(0xFFFF4D4D).withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                color: AppColors.accent.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppSizes.radiusSm + 1),
               ),
               child: const Icon(
                 Icons.warning_amber_rounded,
                 size: 20,
-                color: Color(0xFFCC2200),
+                color: AppColors.accent,
               ),
             ),
-            const SizedBox(width: AppSizes.md),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 'Emergency Hub',
-                style: AppTextStyles.labelLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFFCC2200),
-                ),
+                style: AppTextStyles.titleSmall.copyWith(color: AppColors.accent),
               ),
             ),
-            const Icon(
-              Icons.chevron_right,
-              size: 20,
-              color: Color(0xFFCC2200),
-            ),
+            Icon(Icons.chevron_right, size: 18, color: AppColors.accent),
           ],
         ),
       ),
