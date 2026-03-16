@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -11,32 +15,75 @@ import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/upgrade_sheet.dart';
 import '../../../services/providers/service_providers.dart';
 import '../../subscription/providers/subscription_provider.dart';
+import '../models/document.dart';
 import '../models/document_category.dart';
 import '../providers/document_categories_provider.dart';
 import '../providers/documents_provider.dart';
-import '../widgets/document_card.dart';
 import '../widgets/document_empty_state.dart';
 import '../widgets/document_list_skeleton.dart';
-import '../widgets/document_search_bar.dart';
 import '../widgets/document_search_empty_state.dart';
 import '../widgets/document_search_result_card.dart';
 
+// ── Top-level helpers ─────────────────────────────────────────────────────────
+
+/// Parses a hex category color string (e.g. '#B85638') to a [Color].
+/// Falls back to [AppColors.accent] when parsing fails.
+Color _parseCatColor(String? hex) {
+  if (hex == null || hex.isEmpty) return AppColors.accent;
+  final s = hex.replaceAll('#', '');
+  if (s.length != 6) return AppColors.accent;
+  final v = int.tryParse('FF$s', radix: 16);
+  return v != null ? Color(v) : AppColors.accent;
+}
+
+/// Returns a short file-type label from a MIME type string.
+String _fileTypeLabel(String? mimeType) {
+  if (mimeType == null) return 'FILE';
+  if (mimeType.contains('pdf')) return 'PDF';
+  if (mimeType.contains('jpeg') || mimeType.contains('jpg')) return 'JPG';
+  if (mimeType.contains('png')) return 'PNG';
+  if (mimeType.contains('word') || mimeType.contains('docx')) return 'DOC';
+  return 'FILE';
+}
+
+/// Formats a file size in bytes to a human-readable string.
+String _formatSize(int? bytes) {
+  if (bytes == null) return '';
+  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(0)} KB';
+  return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+}
+
+/// Returns badge style for a document's expiration date.
+/// Returns null when no badge should be shown (> 90 days or null).
+({Color bg, Color text, String label})? _expiryBadgeStyle(DateTime? exp) {
+  if (exp == null) return null;
+  final days = exp.difference(DateTime.now()).inDays;
+  if (days < 0) {
+    return (bg: AppColors.accentDim, text: AppColors.accent, label: 'EXPIRED');
+  }
+  if (days <= 30) {
+    return (bg: AppColors.accentDim, text: AppColors.accent, label: '${days}d');
+  }
+  if (days <= 90) {
+    return (
+      bg: AppColors.sandDim,
+      text: const Color(0xFF9B7E3E),
+      label: '${days}d',
+    );
+  }
+  return null;
+}
+
+// ── Entry point ───────────────────────────────────────────────────────────────
+
 /// The Document Vault list screen — Tab 1 of the main shell.
-///
-/// Adaptive layout:
-/// - iOS: [CustomScrollView] with [CupertinoSliverNavigationBar] large title,
-///   [CupertinoSliverRefreshControl] for pull-to-refresh, sticky filter chips.
-/// - Android: [Scaffold] with a floating [SliverAppBar], [RefreshIndicator],
-///   and a [FloatingActionButton] for add.
 class DocumentsScreen extends ConsumerWidget {
   const DocumentsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    return isIOS
-        ? const _IOSDocumentsLayout()
-        : const _AndroidDocumentsLayout();
+    return isIOS ? const _IOSDocumentsLayout() : const _AndroidDocumentsLayout();
   }
 }
 
@@ -63,7 +110,8 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
           context,
           config: const UpgradeSheetConfig(
             headline: 'Unlock Unlimited Documents',
-            reason: 'Your Document Vault is full with 25 documents on the Free plan.',
+            reason:
+                'Your Document Vault is full with 25 documents on the Free plan.',
             features: [
               'Unlimited document storage',
               'Full-text search across all docs',
@@ -80,21 +128,21 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
     context.push(AppRoutes.documentsUpload);
   }
 
-  Future<void> _showIOSOverflow(BuildContext context) async {
+  Future<void> _showIOSOverflow(BuildContext ctx) async {
     await showCupertinoModalPopup<void>(
-      context: context,
+      context: ctx,
       builder: (_) => CupertinoActionSheet(
         actions: [
           CupertinoActionSheetAction(
             onPressed: () {
-              Navigator.of(context, rootNavigator: true).pop();
-              context.push(AppRoutes.documentsCategories);
+              Navigator.of(ctx, rootNavigator: true).pop();
+              ctx.push(AppRoutes.documentsCategories);
             },
             child: const Text('Manage Categories'),
           ),
         ],
         cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+          onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(),
           child: const Text('Cancel'),
         ),
       ),
@@ -107,106 +155,105 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
     final categoriesState = ref.watch(documentCategoriesProvider);
     final notifier = ref.read(documentsProvider.notifier);
     final isSearchActive = notifier.isSearchActive;
+    final isPremium = ref.watch(isPremiumProvider);
+
+    final allDocs = documentsState.value ?? [];
+    final docCount = allDocs.length;
+    final catCount = (categoriesState.value ?? []).length;
 
     return CupertinoPageScaffold(
-      child: CustomScrollView(
-        slivers: [
-          // Large-title navigation bar with sort + add buttons.
-          CupertinoSliverNavigationBar(
-            largeTitle: const Text('Documents'),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _SortButton(
+      child: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
+              // Compact nav bar — custom header section replaces large title.
+              CupertinoSliverNavigationBar(
+                largeTitle: const Text('Documents'),
+                trailing: _SortButton(
                   isIOS: true,
                   onSortSelected: (order) =>
                       ref.read(documentsProvider.notifier).setSortOrder(order),
                 ),
-                CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  onPressed: () => _showIOSOverflow(context),
-                  child: const Icon(CupertinoIcons.ellipsis),
-                ),
-                CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  onPressed: _onAddTapped,
-                  child: const Icon(CupertinoIcons.add),
-                ),
-              ],
-            ),
-          ),
+              ),
 
-          // Pull-to-refresh control.
-          CupertinoSliverRefreshControl(
-            onRefresh: () => ref.read(documentsProvider.notifier).refresh(),
-          ),
-
-          // Search bar — debounced 300ms, PRO badge for free users.
-          SliverToBoxAdapter(
-            child: DocumentSearchBar(
-              onChanged: (query) {
-                ref.read(documentsProvider.notifier).setSearchQuery(query);
-              },
-            ),
-          ),
-
-          // Filter chips row — visible but inactive while search is active.
-          SliverToBoxAdapter(
-            child: _FilterRow(
-              categoriesState: categoriesState,
-              selectedCategoryId: _selectedCategoryId,
-              onCategorySelected: (id) {
-                setState(() => _selectedCategoryId = id);
-                ref.read(documentsProvider.notifier).setCategory(id);
-              },
-            ),
-          ),
-
-          // Document list body.
-          documentsState.when(
-            loading: () => const SliverFillRemaining(
-              child: DocumentListSkeleton(),
-            ),
-            error: (e, _) => SliverFillRemaining(
-              child: ErrorView(
-                message: "Couldn't load documents.",
-                onRetry: () =>
+              // Pull-to-refresh.
+              CupertinoSliverRefreshControl(
+                onRefresh: () =>
                     ref.read(documentsProvider.notifier).refresh(),
               ),
-            ),
-            data: (docs) {
-              if (docs.isEmpty) {
-                return SliverFillRemaining(
-                  child: isSearchActive
-                      ? const DocumentSearchEmptyState()
-                      : DocumentEmptyState(
-                          onAdd: _onAddTapped,
-                        ),
-                );
-              }
-              return SliverPadding(
-                padding: AppPadding.screen,
-                sliver: SliverList.separated(
-                  itemCount: docs.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: AppSizes.sm),
-                  itemBuilder: (context, index) {
-                    final doc = docs[index];
-                    if (isSearchActive) {
-                      return DocumentSearchResultCard(
-                        document: doc,
-                        snippet: notifier.snippetFor(doc.id),
-                      );
-                    }
-                    return DocumentCard(document: doc);
+
+              // Custom header: title + subtitle + filter button.
+              SliverToBoxAdapter(
+                child: _DocHeader(
+                  docCount: docCount,
+                  catCount: catCount,
+                  onFilterTap: () => _showIOSOverflow(context),
+                ),
+              ),
+
+              // Search bar with OCR badge.
+              SliverToBoxAdapter(
+                child: _DocSearchBar(
+                  onChanged: (query) =>
+                      ref.read(documentsProvider.notifier).setSearchQuery(query),
+                ),
+              ),
+
+              // Category legend — horizontal dot + name + count row.
+              SliverToBoxAdapter(
+                child: _CategoryLegend(
+                  categoriesState: categoriesState,
+                  selectedCategoryId: _selectedCategoryId,
+                  onCategorySelected: (id) {
+                    setState(() => _selectedCategoryId = id);
+                    ref.read(documentsProvider.notifier).setCategory(id);
                   },
                 ),
-              );
-            },
+              ),
+
+              // Document body.
+              ..._buildBody(
+                context: context,
+                documentsState: documentsState,
+                categoriesState: categoriesState,
+                isSearchActive: isSearchActive,
+                notifier: notifier,
+                isPremium: isPremium,
+                onAddTapped: _onAddTapped,
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 110)),
+            ],
           ),
 
-          // Bottom safe-area breathing room.
-          const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
+          // iOS FAB — Stack + Positioned.
+          Positioned(
+            bottom: 110,
+            right: 22,
+            child: GestureDetector(
+              onTap: _onAddTapped,
+              child: Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: AppColors.deepNavy,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.deepNavy.withAlpha(60),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  CupertinoIcons.add,
+                  color: AppColors.textInverse,
+                  size: 22,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -237,7 +284,8 @@ class _AndroidDocumentsLayoutState
           context,
           config: const UpgradeSheetConfig(
             headline: 'Unlock Unlimited Documents',
-            reason: 'Your Document Vault is full with 25 documents on the Free plan.',
+            reason:
+                'Your Document Vault is full with 25 documents on the Free plan.',
             features: [
               'Unlimited document storage',
               'Full-text search across all docs',
@@ -260,11 +308,16 @@ class _AndroidDocumentsLayoutState
     final categoriesState = ref.watch(documentCategoriesProvider);
     final notifier = ref.read(documentsProvider.notifier);
     final isSearchActive = notifier.isSearchActive;
+    final isPremium = ref.watch(isPremiumProvider);
+
+    final allDocs = documentsState.value ?? [];
+    final docCount = allDocs.length;
+    final catCount = (categoriesState.value ?? []).length;
 
     return Scaffold(
       backgroundColor: AppColors.warmOffWhite,
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.accent,
+        backgroundColor: AppColors.deepNavy,
         foregroundColor: AppColors.textInverse,
         onPressed: _onAddTapped,
         child: const Icon(Icons.add),
@@ -281,11 +334,6 @@ class _AndroidDocumentsLayoutState
               scrolledUnderElevation: 0,
               elevation: 0,
               actions: [
-                _SortButton(
-                  isIOS: false,
-                  onSortSelected: (order) =>
-                      ref.read(documentsProvider.notifier).setSortOrder(order),
-                ),
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert),
                   color: AppColors.surface,
@@ -307,18 +355,23 @@ class _AndroidDocumentsLayoutState
               ],
             ),
 
-            // Search bar — debounced 300ms, PRO badge for free users.
             SliverToBoxAdapter(
-              child: DocumentSearchBar(
-                onChanged: (query) {
-                  ref.read(documentsProvider.notifier).setSearchQuery(query);
-                },
+              child: _DocHeader(
+                docCount: docCount,
+                catCount: catCount,
+                onFilterTap: () {},
               ),
             ),
 
-            // Filter chips — visible but inactive while search is active.
             SliverToBoxAdapter(
-              child: _FilterRow(
+              child: _DocSearchBar(
+                onChanged: (query) =>
+                    ref.read(documentsProvider.notifier).setSearchQuery(query),
+              ),
+            ),
+
+            SliverToBoxAdapter(
+              child: _CategoryLegend(
                 categoriesState: categoriesState,
                 selectedCategoryId: _selectedCategoryId,
                 onCategorySelected: (id) {
@@ -328,50 +381,17 @@ class _AndroidDocumentsLayoutState
               ),
             ),
 
-            // Document list body.
-            documentsState.when(
-              loading: () => const SliverFillRemaining(
-                child: DocumentListSkeleton(),
-              ),
-              error: (e, _) => SliverFillRemaining(
-                child: ErrorView(
-                  message: "Couldn't load documents.",
-                  onRetry: () =>
-                      ref.read(documentsProvider.notifier).refresh(),
-                ),
-              ),
-              data: (docs) {
-                if (docs.isEmpty) {
-                  return SliverFillRemaining(
-                    child: isSearchActive
-                        ? const DocumentSearchEmptyState()
-                        : DocumentEmptyState(
-                            onAdd: _onAddTapped,
-                          ),
-                  );
-                }
-                return SliverPadding(
-                  padding: AppPadding.screen,
-                  sliver: SliverList.separated(
-                    itemCount: docs.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: AppSizes.sm),
-                    itemBuilder: (context, index) {
-                      final doc = docs[index];
-                      if (isSearchActive) {
-                        return DocumentSearchResultCard(
-                          document: doc,
-                          snippet: notifier.snippetFor(doc.id),
-                        );
-                      }
-                      return DocumentCard(document: doc);
-                    },
-                  ),
-                );
-              },
+            ..._buildBody(
+              context: context,
+              documentsState: documentsState,
+              categoriesState: categoriesState,
+              isSearchActive: isSearchActive,
+              notifier: notifier,
+              isPremium: isPremium,
+              onAddTapped: _onAddTapped,
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
+            const SliverToBoxAdapter(child: SizedBox(height: 110)),
           ],
         ),
       ),
@@ -379,15 +399,304 @@ class _AndroidDocumentsLayoutState
   }
 }
 
-// ── Filter chips ──────────────────────────────────────────────────────────────
+// ── Shared body builder ───────────────────────────────────────────────────────
 
-/// Horizontally scrollable row of category filter chips.
-///
-/// The first chip is always "All" which clears the active filter.
-/// Remaining chips come from [documentCategoriesProvider].
-/// The filter row remains visible during search but is inactive.
-class _FilterRow extends StatelessWidget {
-  const _FilterRow({
+List<Widget> _buildBody({
+  required BuildContext context,
+  required AsyncValue<List<Document>> documentsState,
+  required AsyncValue<List<DocumentCategory>> categoriesState,
+  required bool isSearchActive,
+  required DocumentsNotifier notifier,
+  required bool isPremium,
+  required VoidCallback onAddTapped,
+}) {
+  return documentsState.when(
+    loading: () => [
+      const SliverFillRemaining(child: DocumentListSkeleton()),
+    ],
+    error: (e, _) => [
+      SliverFillRemaining(
+        child: ErrorView(
+          message: "Couldn't load documents.",
+          onRetry: () => notifier.refresh(),
+        ),
+      ),
+    ],
+    data: (docs) {
+      if (docs.isEmpty) {
+        if (isSearchActive) {
+          return [
+            const SliverFillRemaining(child: DocumentSearchEmptyState()),
+          ];
+        }
+        return [
+          SliverFillRemaining(
+            child: DocumentEmptyState(onAdd: onAddTapped),
+          ),
+        ];
+      }
+
+      // When search is active, show search result cards.
+      if (isSearchActive) {
+        return [
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.screenPadding,
+              vertical: AppSizes.sm,
+            ),
+            sliver: SliverList.separated(
+              itemCount: docs.length,
+              separatorBuilder: (_, _) => const SizedBox(height: AppSizes.sm),
+              itemBuilder: (_, i) => DocumentSearchResultCard(
+                document: docs[i],
+                snippet: notifier.snippetFor(docs[i].id),
+              ),
+            ),
+          ),
+        ];
+      }
+
+      // Normal data view: recently-added grid + all docs feed + storage card.
+      final recentDocs = docs.take(6).toList();
+      final categories = categoriesState.value ?? [];
+
+      return [
+        SliverToBoxAdapter(
+          child: _RecentlyAddedSection(docs: recentDocs, categories: categories),
+        ),
+        SliverToBoxAdapter(
+          child: _AllDocsFeed(
+            docs: docs,
+            categories: categories,
+            notifier: notifier,
+          ),
+        ),
+        if (!isPremium)
+          SliverToBoxAdapter(
+            child: _StorageTierCard(docCount: docs.length),
+          ),
+      ];
+    },
+  );
+}
+
+// ── _DocHeader ────────────────────────────────────────────────────────────────
+
+class _DocHeader extends StatelessWidget {
+  const _DocHeader({
+    required this.docCount,
+    required this.catCount,
+    required this.onFilterTap,
+  });
+
+  final int docCount;
+  final int catCount;
+  final VoidCallback onFilterTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSizes.screenPadding,
+        AppSizes.md,
+        AppSizes.screenPadding,
+        AppSizes.sm,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Documents',
+                  style: GoogleFonts.fraunces(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.7,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$docCount docs · $catCount categories',
+                  style: GoogleFonts.ibmPlexMono(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSizes.sm),
+          GestureDetector(
+            onTap: onFilterTap,
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.border,
+                  width: 1.5,
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x0D2A2420),
+                    blurRadius: 4,
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.tune_rounded,
+                size: 17,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── _DocSearchBar ─────────────────────────────────────────────────────────────
+
+/// Inline search bar with OCR badge and 300ms debounce.
+class _DocSearchBar extends ConsumerStatefulWidget {
+  const _DocSearchBar({required this.onChanged});
+
+  final void Function(String? query) onChanged;
+
+  @override
+  ConsumerState<_DocSearchBar> createState() => _DocSearchBarState();
+}
+
+class _DocSearchBarState extends ConsumerState<_DocSearchBar> {
+  final _controller = TextEditingController();
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onTextChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      final trimmed = value.trim();
+      widget.onChanged(trimmed.isEmpty ? null : trimmed);
+    });
+  }
+
+  Future<void> _showOcrUpgradeSheet() async {
+    await UpgradeSheet.show(
+      context,
+      config: const UpgradeSheetConfig(
+        headline: 'Unlock Full-Text Search',
+        reason: 'Free accounts can search by name and category only.',
+        features: [
+          'Search inside every document with OCR',
+          'Find any text across your entire vault',
+          'Instant results with highlighted snippets',
+        ],
+        triggerKey: 'ocr_search',
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isPremium = ref.watch(isPremiumProvider);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSizes.screenPadding,
+        0,
+        AppSizes.screenPadding,
+        AppSizes.sm,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          border: Border.all(color: AppColors.border, width: 1.5),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0D2A2420),
+              blurRadius: 4,
+              offset: Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: Icon(
+                Icons.search_rounded,
+                size: 16,
+                color: AppColors.textTertiary,
+              ),
+            ),
+            Expanded(
+              child: TextField(
+                controller: _controller,
+                onChanged: _onTextChanged,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Search documents...',
+                  hintStyle: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textTertiary,
+                  ),
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: isPremium ? null : _showOcrUpgradeSheet,
+              child: Container(
+                margin: const EdgeInsets.only(right: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.accentDim,
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: Text(
+                  'OCR',
+                  style: GoogleFonts.ibmPlexMono(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.accent,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── _CategoryLegend ───────────────────────────────────────────────────────────
+
+class _CategoryLegend extends StatelessWidget {
+  const _CategoryLegend({
     required this.categoriesState,
     required this.selectedCategoryId,
     required this.onCategorySelected,
@@ -399,28 +708,607 @@ class _FilterRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Use .value (Riverpod v3) — falls back to empty list on loading/error.
     final categories = categoriesState.value ?? [];
 
     return SizedBox(
-      height: 48,
+      height: 44,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding: AppPadding.screenHorizontal,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.screenPadding,
+        ),
         children: [
-          // "All" chip always shown first.
-          _FilterChip(
+          // "All" item — always first, no dot.
+          _LegendItem(
             label: 'All',
+            count: null,
+            dotColor: null,
             isSelected: selectedCategoryId == null,
             onTap: () => onCategorySelected(null),
           ),
-          ...categories.map(
-            (cat) => Padding(
-              padding: const EdgeInsets.only(left: AppSizes.sm),
-              child: _FilterChip(
+          ...categories.map((cat) {
+            return Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: _LegendItem(
                 label: cat.name,
+                count: null,
+                dotColor: _parseCatColor(cat.color),
                 isSelected: selectedCategoryId == cat.id,
                 onTap: () => onCategorySelected(cat.id),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+class _LegendItem extends StatelessWidget {
+  const _LegendItem({
+    required this.label,
+    required this.count,
+    required this.dotColor,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String label;
+  final int? count;
+  final Color? dotColor;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final labelColor = isSelected ? AppColors.textPrimary : AppColors.textTertiary;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (dotColor != null) ...[
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: dotColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 5),
+          ],
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: labelColor,
+            ),
+          ),
+          if (count != null) ...[
+            const SizedBox(width: 3),
+            Text(
+              '$count',
+              style: GoogleFonts.ibmPlexMono(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: labelColor.withAlpha(128),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ── _RecentlyAddedSection ─────────────────────────────────────────────────────
+
+class _RecentlyAddedSection extends StatelessWidget {
+  const _RecentlyAddedSection({
+    required this.docs,
+    required this.categories,
+  });
+
+  final List<Document> docs;
+  final List<DocumentCategory> categories;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSizes.screenPadding,
+        AppSizes.md,
+        AppSizes.screenPadding,
+        AppSizes.sm,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Recently Added',
+            style: GoogleFonts.fraunces(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppSizes.sm),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+              childAspectRatio: 0.8,
+            ),
+            itemCount: docs.length,
+            itemBuilder: (_, i) => _DocGridTile(document: docs[i]),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── _DocGridTile ──────────────────────────────────────────────────────────────
+
+class _DocGridTile extends StatelessWidget {
+  const _DocGridTile({required this.document});
+
+  final Document document;
+
+  @override
+  Widget build(BuildContext context) {
+    final cat = document.category;
+    final catColor = _parseCatColor(cat?.color);
+    final expiry = _expiryBadgeStyle(document.expirationDate);
+    final typeLabel = _fileTypeLabel(document.mimeType);
+    final dateStr = DateFormat('MMM d').format(document.createdAt);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        onTap: () {
+          final path = AppRoutes.documentDetail.replaceFirst(
+            ':documentId',
+            document.id,
+          );
+          context.push(path);
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+            border: Border.all(color: AppColors.border, width: 1.5),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0D2A2420),
+                blurRadius: 4,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Top area: icon + color stripe + badges.
+              Expanded(
+                child: Stack(
+                  children: [
+                    // Category color stripe at top.
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(AppSizes.radiusMd - 1.5),
+                          topRight: Radius.circular(AppSizes.radiusMd - 1.5),
+                        ),
+                        child: Container(
+                          height: 3,
+                          color: catColor,
+                        ),
+                      ),
+                    ),
+
+                    // Centered category icon.
+                    Center(
+                      child: Icon(
+                        Icons.insert_drive_file_outlined,
+                        size: 28,
+                        color: catColor.withAlpha(128),
+                      ),
+                    ),
+
+                    // Expiry badge — top-left.
+                    if (expiry != null)
+                      Positioned(
+                        top: 8,
+                        left: 6,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: expiry.bg,
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                          child: Text(
+                            expiry.label,
+                            style: GoogleFonts.ibmPlexMono(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w700,
+                              color: expiry.text,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    // File type badge — bottom-right.
+                    Positioned(
+                      bottom: 6,
+                      right: 6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0x0F000000),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: Text(
+                          typeLabel,
+                          style: GoogleFonts.ibmPlexMono(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Footer: title + date.
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  border: Border(
+                    top: BorderSide(color: Color(0xFFE9E4DC), width: 1),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      document.name,
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      dateStr,
+                      style: GoogleFonts.inter(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── _AllDocsFeed ──────────────────────────────────────────────────────────────
+
+class _AllDocsFeed extends StatelessWidget {
+  const _AllDocsFeed({
+    required this.docs,
+    required this.categories,
+    required this.notifier,
+  });
+
+  final List<Document> docs;
+  final List<DocumentCategory> categories;
+  final DocumentsNotifier notifier;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSizes.screenPadding,
+        AppSizes.md,
+        AppSizes.screenPadding,
+        0,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section header.
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'All Documents',
+                  style: GoogleFonts.fraunces(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              _SortButton(
+                isIOS: Theme.of(context).platform == TargetPlatform.iOS,
+                onSortSelected: (order) => notifier.setSortOrder(order),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSizes.sm),
+
+          // Feed rows.
+          ...docs.map(
+            (doc) => _FeedRow(document: doc),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── _FeedRow ──────────────────────────────────────────────────────────────────
+
+class _FeedRow extends StatelessWidget {
+  const _FeedRow({required this.document});
+
+  final Document document;
+
+  @override
+  Widget build(BuildContext context) {
+    final cat = document.category;
+    final catColor = _parseCatColor(cat?.color);
+    final expiry = _expiryBadgeStyle(document.expirationDate);
+    final dateStr = DateFormat('MMM d, yyyy').format(document.createdAt);
+    final sizeStr = _formatSize(document.fileSizeBytes);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+        onTap: () {
+          final path = AppRoutes.documentDetail.replaceFirst(
+            ':documentId',
+            document.id,
+          );
+          context.push(path);
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+          child: Row(
+            children: [
+              // Colored dot.
+              Container(
+                width: 8,
+                height: 8,
+                margin: const EdgeInsets.only(right: 10, top: 2),
+                decoration: BoxDecoration(
+                  color: catColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+
+              // Info column.
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      document.name,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        // Category badge.
+                        if (cat != null) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: catColor.withAlpha(25),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                            child: Text(
+                              cat.name,
+                              style: GoogleFonts.inter(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: catColor,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        Text(
+                          dateStr,
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: AppSizes.sm),
+
+              // End column: expiry badge or file size.
+              if (expiry != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: expiry.bg,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  child: Text(
+                    expiry.label,
+                    style: GoogleFonts.ibmPlexMono(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      color: expiry.text,
+                    ),
+                  ),
+                )
+              else if (sizeStr.isNotEmpty)
+                Text(
+                  sizeStr,
+                  style: GoogleFonts.ibmPlexMono(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.textTertiary,
+                  ),
+                ),
+
+              const SizedBox(width: AppSizes.xs),
+
+              // Chevron.
+              const Icon(
+                Icons.chevron_right_rounded,
+                size: 14,
+                color: AppColors.borderStrong,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── _StorageTierCard ──────────────────────────────────────────────────────────
+
+class _StorageTierCard extends StatelessWidget {
+  const _StorageTierCard({required this.docCount});
+
+  final int docCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final fraction = (docCount / kFreeDocumentLimit).clamp(0.0, 1.0);
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(
+        AppSizes.screenPadding,
+        AppSizes.md,
+        AppSizes.screenPadding,
+        0,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.deepNavy,
+        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$docCount of $kFreeDocumentLimit documents used',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textInverse,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Free tier · Upgrade for unlimited',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.textInverse.withAlpha(102),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(2),
+                  child: LinearProgressIndicator(
+                    value: fraction,
+                    minHeight: 3,
+                    backgroundColor: const Color(0x14FFFFFF),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      AppColors.accent,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSizes.md),
+          GestureDetector(
+            onTap: () => UpgradeSheet.show(
+              context,
+              config: const UpgradeSheetConfig(
+                headline: 'Unlock Unlimited Documents',
+                reason:
+                    'Upgrade to store as many documents as you need.',
+                features: [
+                  'Unlimited document storage',
+                  'Full-text search across all docs',
+                  'Home health score tracking',
+                  'Weather-based maintenance alerts',
+                ],
+                triggerKey: 'storage_card',
+              ),
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
+                color: const Color(0x26B85638),
+                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+              ),
+              child: Text(
+                'UPGRADE',
+                style: GoogleFonts.ibmPlexMono(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.accent,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
           ),
@@ -430,46 +1318,7 @@ class _FilterRow extends StatelessWidget {
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.deepNavy : AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-          border: Border.all(
-            color: isSelected ? AppColors.deepNavy : AppColors.border,
-          ),
-        ),
-        child: Text(
-          label,
-          style: AppTextStyles.labelMedium.copyWith(
-            color: isSelected ? AppColors.textInverse : AppColors.textPrimary,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Sort button ───────────────────────────────────────────────────────────────
+// ── _SortButton ───────────────────────────────────────────────────────────────
 
 class _SortButton extends StatelessWidget {
   const _SortButton({
@@ -489,15 +1338,22 @@ class _SortButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isIOS) {
-      return CupertinoButton(
-        padding: EdgeInsets.zero,
-        onPressed: () => _showIOSSortSheet(context),
-        child: const Icon(CupertinoIcons.sort_down),
+      return GestureDetector(
+        onTap: () => _showIOSSortSheet(context),
+        child: Text(
+          'Sort \u2193',
+          style: GoogleFonts.ibmPlexMono(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            color: AppColors.accent,
+            letterSpacing: 0,
+          ),
+        ),
       );
     }
 
     return PopupMenuButton<DocumentSortOrder>(
-      icon: const Icon(Icons.sort),
+      icon: const Icon(Icons.sort, color: AppColors.accent, size: 18),
       color: AppColors.surface,
       onSelected: onSortSelected,
       itemBuilder: (_) => _options

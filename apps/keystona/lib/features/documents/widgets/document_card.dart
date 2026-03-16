@@ -32,32 +32,43 @@ class DocumentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        final path =
-            AppRoutes.documentDetail.replaceFirst(':documentId', document.id);
-        context.push(path);
-      },
-      child: Container(
-        padding: AppPadding.card,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: AppRadius.md,
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _DocumentThumbnail(document: document),
-            const SizedBox(width: AppSizes.md),
-            Expanded(
-              child: _DocumentInfo(document: document),
-            ),
-            if (document.expirationDate != null) ...[
-              const SizedBox(width: AppSizes.sm),
-              ExpirationBadge(expirationDate: document.expirationDate!),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: AppRadius.md,
+        onTap: () {
+          final path =
+              AppRoutes.documentDetail.replaceFirst(':documentId', document.id);
+          context.push(path);
+        },
+        child: Container(
+          padding: AppPadding.card,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: AppRadius.md,
+            border: Border.all(color: AppColors.border, width: 1.5),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0D2A2420),
+                blurRadius: 4,
+                offset: Offset(0, 1),
+              ),
             ],
-          ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _DocumentThumbnail(document: document),
+              const SizedBox(width: AppSizes.md),
+              Expanded(
+                child: _DocumentInfo(document: document),
+              ),
+              if (document.expirationDate != null) ...[
+                const SizedBox(width: AppSizes.sm),
+                ExpirationBadge(expirationDate: document.expirationDate!),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -107,7 +118,7 @@ class _NetworkThumbnail extends StatelessWidget {
           height: 48,
           color: AppColors.gray200,
         ),
-        errorWidget: (context, url, error) => _CategoryIconThumbnail(
+        errorWidget: (context, url, error) => const _CategoryIconThumbnail(
           category: null,
         ),
       ),
@@ -138,14 +149,14 @@ class _CategoryIconThumbnail extends StatelessWidget {
     );
   }
 
-/// Parses a hex color string like '#1565C0' to a [Color].
-  /// Falls back to [AppColors.deepNavy] when parsing fails.
+  /// Parses a hex color string like '#1565C0' to a [Color].
+  /// Falls back to [AppColors.accent] when parsing fails.
   Color _parseCategoryColor(String? hex) {
-    if (hex == null || hex.isEmpty) return AppColors.deepNavy;
+    if (hex == null || hex.isEmpty) return AppColors.accent;
     final sanitised = hex.replaceAll('#', '');
-    if (sanitised.length != 6) return AppColors.deepNavy;
+    if (sanitised.length != 6) return AppColors.accent;
     final value = int.tryParse('FF$sanitised', radix: 16);
-    return value != null ? Color(value) : AppColors.deepNavy;
+    return value != null ? Color(value) : AppColors.accent;
   }
 }
 
@@ -214,9 +225,8 @@ class _CategoryBadge extends StatelessWidget {
 
   Color _parseCategoryColor(String hex) {
     final sanitised = hex.replaceAll('#', '');
-    if (sanitised.length != 6) return AppColors.deepNavy;
+    if (sanitised.length != 6) return AppColors.accent;
     final value = int.tryParse('FF$sanitised', radix: 16);
-    return value != null ? Color(value) : AppColors.deepNavy;
+    return value != null ? Color(value) : AppColors.accent;
   }
 }
-
