@@ -84,7 +84,7 @@ class _TaskEmptyStateState extends ConsumerState<TaskEmptyState> {
             Icon(
               Icons.handyman_outlined,
               size: 120,
-              color: AppColors.deepNavy.withAlpha(180),
+              color: AppColors.accent.withAlpha(180),
             ),
             const SizedBox(height: AppSizes.lg),
             Text(

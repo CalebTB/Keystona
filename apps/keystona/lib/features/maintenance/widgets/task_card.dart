@@ -30,19 +30,29 @@ class TaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final stripeColor = _stripeColor(task);
 
-    return GestureDetector(
-      onTap: () {
-        final path = AppRoutes.maintenanceTaskDetail.replaceFirst(
-          ':taskId',
-          task.id,
-        );
-        context.push(path);
-      },
-      child: Container(
+    return Material(
+      color: AppColors.surface,
+      borderRadius: AppRadius.card,
+      child: InkWell(
+        onTap: () {
+          final path = AppRoutes.maintenanceTaskDetail.replaceFirst(
+            ':taskId',
+            task.id,
+          );
+          context.push(path);
+        },
+        borderRadius: AppRadius.card,
+        child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: AppRadius.md,
-          border: Border.all(color: AppColors.border),
+          borderRadius: AppRadius.card,
+          border: Border.all(color: AppColors.border, width: 1.5),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0D2A2420),
+              blurRadius: 4,
+              offset: Offset(0, 1),
+            ),
+          ],
         ),
         clipBehavior: Clip.antiAlias,
         child: IntrinsicHeight(
@@ -72,6 +82,7 @@ class TaskCard extends StatelessWidget {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

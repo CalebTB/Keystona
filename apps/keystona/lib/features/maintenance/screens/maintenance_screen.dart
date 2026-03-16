@@ -94,7 +94,7 @@ class _AndroidMaintenanceLayout extends ConsumerWidget {
       backgroundColor: AppColors.warmOffWhite,
       floatingActionButton: const _AddTaskFAB(),
       body: RefreshIndicator(
-        color: AppColors.deepNavy,
+        color: AppColors.accent,
         onRefresh: () =>
             ref.read(maintenanceTasksProvider.notifier).refresh(),
         child: CustomScrollView(
@@ -363,10 +363,10 @@ class _FilterChip extends StatelessWidget {
           vertical: AppSizes.sm,
         ),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.deepNavy : AppColors.surface,
+          color: isSelected ? AppColors.accent : AppColors.surface,
           borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           border: Border.all(
-            color: isSelected ? AppColors.deepNavy : AppColors.border,
+            color: isSelected ? AppColors.accent : AppColors.border,
           ),
         ),
         child: Text(
