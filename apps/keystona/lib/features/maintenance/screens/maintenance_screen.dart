@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -13,7 +14,6 @@ import '../models/maintenance_task.dart';
 import '../providers/maintenance_tasks_provider.dart';
 import '../widgets/agenda_task_card.dart';
 import '../widgets/overdue_banner.dart';
-import '../widgets/task_list_skeleton.dart';
 import '../widgets/tip_card.dart';
 import '../widgets/upcoming_peek.dart';
 import '../widgets/week_strip.dart';
@@ -453,7 +453,7 @@ class _AgendaSliver extends ConsumerWidget {
       loading: () => const SliverToBoxAdapter(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
-          child: TaskListSkeleton(),
+          child: _AgendaSkeleton(),
         ),
       ),
       error: (e, _) => SliverToBoxAdapter(
@@ -509,6 +509,67 @@ class _AgendaSliver extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+// ── Agenda skeleton ────────────────────────────────────────────────────────────
+
+/// Column-based shimmer skeleton for the agenda loading state.
+/// Uses Column (not ListView) so it works inside SliverToBoxAdapter.
+class _AgendaSkeleton extends StatelessWidget {
+  const _AgendaSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: AppColors.gray200,
+      highlightColor: AppColors.gray100,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(height: 10, width: 110, color: AppColors.gray200),
+          const SizedBox(height: 10),
+          _SkeletonAgendaCard(),
+          const SizedBox(height: AppSizes.sm),
+          _SkeletonAgendaCard(),
+          const SizedBox(height: AppSizes.sm),
+          _SkeletonAgendaCard(),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkeletonAgendaCard extends StatelessWidget {
+  const _SkeletonAgendaCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 68,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.card,
+      ),
+      child: Row(
+        children: [
+          Container(width: 56, color: AppColors.gray200),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(height: 13, width: double.infinity, color: AppColors.gray200),
+                const SizedBox(height: 6),
+                Container(height: 10, width: 140, color: AppColors.gray200),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+        ],
+      ),
     );
   }
 }
