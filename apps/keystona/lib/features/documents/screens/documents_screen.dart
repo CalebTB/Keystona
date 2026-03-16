@@ -501,7 +501,7 @@ class _DocSubtitle extends StatelessWidget {
         AppSizes.screenPadding,
         AppSizes.xs,
         AppSizes.screenPadding,
-        AppSizes.sm,
+        AppSizes.xs,
       ),
       child: Text(
         '$docCount docs · $catCount categories',
@@ -601,7 +601,7 @@ class _DocSearchBarState extends ConsumerState<_DocSearchBar> {
         AppSizes.screenPadding,
         0,
         AppSizes.screenPadding,
-        AppSizes.sm,
+        AppSizes.xs,
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -803,9 +803,9 @@ class _RecentlyAddedSection extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSizes.screenPadding,
-        AppSizes.sm,
-        AppSizes.screenPadding,
         AppSizes.xs,
+        AppSizes.screenPadding,
+        0,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -818,7 +818,7 @@ class _RecentlyAddedSection extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AppSizes.xs),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -1019,7 +1019,7 @@ class _AllDocsFeed extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSizes.screenPadding,
-        AppSizes.sm,
+        AppSizes.xs,
         AppSizes.screenPadding,
         0,
       ),
@@ -1045,7 +1045,7 @@ class _AllDocsFeed extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AppSizes.xs),
 
           // Feed rows.
           ...docs.map(
