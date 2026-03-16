@@ -168,7 +168,13 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
             slivers: [
               // Nav bar with Sort + Filter actions in trailing.
               CupertinoSliverNavigationBar(
-                largeTitle: const Text('Documents'),
+                largeTitle: Text(
+                  'Documents',
+                  style: GoogleFonts.fraunces(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
+                  ),
+                ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -637,6 +643,8 @@ class _DocSearchBarState extends ConsumerState<_DocSearchBar> {
                     color: AppColors.textTertiary,
                   ),
                   border: InputBorder.none,
+                  filled: true,
+                  fillColor: Colors.transparent,
                   isDense: true,
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -795,9 +803,9 @@ class _RecentlyAddedSection extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSizes.screenPadding,
-        AppSizes.md,
-        AppSizes.screenPadding,
         AppSizes.sm,
+        AppSizes.screenPadding,
+        AppSizes.xs,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1011,7 +1019,7 @@ class _AllDocsFeed extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSizes.screenPadding,
-        AppSizes.md,
+        AppSizes.sm,
         AppSizes.screenPadding,
         0,
       ),
