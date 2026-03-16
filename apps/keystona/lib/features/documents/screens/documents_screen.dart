@@ -19,6 +19,7 @@ import '../models/document.dart';
 import '../models/document_category.dart';
 import '../providers/document_categories_provider.dart';
 import '../providers/documents_provider.dart';
+import '../widgets/category_form_sheet.dart';
 import '../widgets/document_empty_state.dart';
 import '../widgets/document_list_skeleton.dart';
 import '../widgets/document_search_empty_state.dart';
@@ -99,6 +100,7 @@ class _IOSDocumentsLayout extends ConsumerStatefulWidget {
 
 class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
   String? _selectedCategoryId;
+  bool _recentlyAddedExpanded = true;
 
   Future<void> _onAddTapped() async {
     final isPremium = ref.read(isPremiumProvider);
@@ -128,31 +130,12 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
     context.push(AppRoutes.documentsUpload);
   }
 
-  Future<void> _showIOSOverflow(BuildContext ctx) async {
-    await showCupertinoModalPopup<void>(
-      context: ctx,
-      builder: (_) => CupertinoActionSheet(
-        actions: [
-          CupertinoActionSheetAction(
-            onPressed: () {
-              Navigator.of(ctx, rootNavigator: true).pop();
-              ctx.push(AppRoutes.documentsCategories);
-            },
-            child: const Text('Manage Categories'),
-          ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(),
-          child: const Text('Cancel'),
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     final documentsState = ref.watch(documentsProvider);
     final categoriesState = ref.watch(documentCategoriesProvider);
+    final countsState = ref.watch(documentCategoryCountsProvider);
     final notifier = ref.read(documentsProvider.notifier);
     final isSearchActive = notifier.isSearchActive;
     final isPremium = ref.watch(isPremiumProvider);
@@ -160,35 +143,17 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
     final allDocs = documentsState.value ?? [];
     final docCount = allDocs.length;
     final catCount = (categoriesState.value ?? []).length;
+    final categoryCounts = countsState.value ?? {};
 
     return CupertinoPageScaffold(
       child: Stack(
         children: [
           CustomScrollView(
             slivers: [
-              // Nav bar with Sort + Filter actions in trailing.
-              CupertinoSliverNavigationBar(
-                largeTitle: Text(
-                  'Documents',
-                  style: GoogleFonts.fraunces(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _FilterButton(
-                      isIOS: true,
-                      onTap: () => _showIOSOverflow(context),
-                    ),
-                    const SizedBox(width: 6),
-                    _SortButton(
-                      isIOS: true,
-                      onSortSelected: (order) =>
-                          ref.read(documentsProvider.notifier).setSortOrder(order),
-                    ),
-                  ],
+              // Safe area spacer — replaces nav bar.
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: MediaQuery.of(context).padding.top,
                 ),
               ),
 
@@ -196,6 +161,39 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
               CupertinoSliverRefreshControl(
                 onRefresh: () =>
                     ref.read(documentsProvider.notifier).refresh(),
+              ),
+
+              // Title row: large title + add button on the same line.
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 10, 16, 0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Documents',
+                          style: GoogleFonts.fraunces(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.7,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      CupertinoButton(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(36, 36),
+                        onPressed: _onAddTapped,
+                        child: const Icon(
+                          CupertinoIcons.add_circled_solid,
+                          color: AppColors.accent,
+                          size: 28,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
 
               // Subtitle row: doc count + category count.
@@ -223,6 +221,7 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
                     setState(() => _selectedCategoryId = id);
                     ref.read(documentsProvider.notifier).setCategory(id);
                   },
+                  categoryCounts: categoryCounts,
                 ),
               ),
 
@@ -235,40 +234,16 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
                 notifier: notifier,
                 isPremium: isPremium,
                 onAddTapped: _onAddTapped,
+                recentlyAddedExpanded: _recentlyAddedExpanded,
+                onToggleRecentlyAdded: () => setState(
+                  () => _recentlyAddedExpanded = !_recentlyAddedExpanded,
+                ),
               ),
 
               const SliverToBoxAdapter(child: SizedBox(height: 110)),
             ],
           ),
 
-          // iOS FAB — Stack + Positioned.
-          Positioned(
-            bottom: 110,
-            right: 22,
-            child: GestureDetector(
-              onTap: _onAddTapped,
-              child: Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: AppColors.deepNavy,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.deepNavy.withAlpha(60),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  CupertinoIcons.add,
-                  color: AppColors.textInverse,
-                  size: 22,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -288,6 +263,7 @@ class _AndroidDocumentsLayout extends ConsumerStatefulWidget {
 class _AndroidDocumentsLayoutState
     extends ConsumerState<_AndroidDocumentsLayout> {
   String? _selectedCategoryId;
+  bool _recentlyAddedExpanded = true;
 
   Future<void> _onAddTapped() async {
     final isPremium = ref.read(isPremiumProvider);
@@ -321,6 +297,7 @@ class _AndroidDocumentsLayoutState
   Widget build(BuildContext context) {
     final documentsState = ref.watch(documentsProvider);
     final categoriesState = ref.watch(documentCategoriesProvider);
+    final countsState = ref.watch(documentCategoryCountsProvider);
     final notifier = ref.read(documentsProvider.notifier);
     final isSearchActive = notifier.isSearchActive;
     final isPremium = ref.watch(isPremiumProvider);
@@ -328,6 +305,7 @@ class _AndroidDocumentsLayoutState
     final allDocs = documentsState.value ?? [];
     final docCount = allDocs.length;
     final catCount = (categoriesState.value ?? []).length;
+    final categoryCounts = countsState.value ?? {};
 
     return Scaffold(
       backgroundColor: AppColors.warmOffWhite,
@@ -384,6 +362,7 @@ class _AndroidDocumentsLayoutState
                   setState(() => _selectedCategoryId = id);
                   ref.read(documentsProvider.notifier).setCategory(id);
                 },
+                categoryCounts: categoryCounts,
               ),
             ),
 
@@ -395,6 +374,10 @@ class _AndroidDocumentsLayoutState
               notifier: notifier,
               isPremium: isPremium,
               onAddTapped: _onAddTapped,
+              recentlyAddedExpanded: _recentlyAddedExpanded,
+              onToggleRecentlyAdded: () => setState(
+                () => _recentlyAddedExpanded = !_recentlyAddedExpanded,
+              ),
             ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 110)),
@@ -415,6 +398,8 @@ List<Widget> _buildBody({
   required DocumentsNotifier notifier,
   required bool isPremium,
   required VoidCallback onAddTapped,
+  required bool recentlyAddedExpanded,
+  required VoidCallback onToggleRecentlyAdded,
 }) {
   return documentsState.when(
     loading: () => [
@@ -467,9 +452,58 @@ List<Widget> _buildBody({
       final categories = categoriesState.value ?? [];
 
       return [
+        // "Recently Added" heading — tap to collapse/expand.
         SliverToBoxAdapter(
-          child: _RecentlyAddedSection(docs: recentDocs, categories: categories),
+          child: InkWell(
+            onTap: onToggleRecentlyAdded,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Recently Added',
+                      style: GoogleFonts.fraunces(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: recentlyAddedExpanded ? 0 : -0.25,
+                    duration: const Duration(milliseconds: 200),
+                    child: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 20,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
+
+        // Grid of up to 6 recent documents — collapsible.
+        if (recentlyAddedExpanded)
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(22, 8, 22, 0),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+                childAspectRatio: 0.85,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (_, i) => _DocGridTile(document: recentDocs[i]),
+                childCount: recentDocs.length,
+              ),
+            ),
+          ),
+
+        // All documents feed.
         SliverToBoxAdapter(
           child: _AllDocsFeed(
             docs: docs,
@@ -477,6 +511,7 @@ List<Widget> _buildBody({
             notifier: notifier,
           ),
         ),
+
         if (!isPremium)
           SliverToBoxAdapter(
             child: _StorageTierCard(docCount: docs.length),
@@ -503,47 +538,10 @@ class _DocSubtitle extends StatelessWidget {
         AppSizes.screenPadding,
         AppSizes.xs,
       ),
-      child: Text(
-        '$docCount docs · $catCount categories',
-        style: GoogleFonts.ibmPlexMono(
-          fontSize: 11,
-          fontWeight: FontWeight.w400,
-          color: AppColors.textTertiary,
-        ),
-      ),
     );
   }
 }
 
-// ── _FilterButton ─────────────────────────────────────────────────────────────
-
-class _FilterButton extends StatelessWidget {
-  const _FilterButton({required this.isIOS, required this.onTap});
-
-  final bool isIOS;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    if (isIOS) {
-      return CupertinoButton(
-        padding: EdgeInsets.zero,
-        minimumSize: const Size(32, 32),
-        onPressed: onTap,
-        child: const Icon(
-          CupertinoIcons.slider_horizontal_3,
-          size: 20,
-          color: AppColors.accent,
-        ),
-      );
-    }
-    return IconButton(
-      icon: const Icon(Icons.tune_rounded),
-      color: AppColors.textSecondary,
-      onPressed: onTap,
-    );
-  }
-}
 
 // ── _DocSearchBar ─────────────────────────────────────────────────────────────
 
@@ -604,26 +602,27 @@ class _DocSearchBarState extends ConsumerState<_DocSearchBar> {
         AppSizes.xs,
       ),
       child: Container(
+        height: 48,
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: AppColors.border, width: 1.5),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: AppColors.border, width: 1),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x0D2A2420),
-              blurRadius: 4,
-              offset: Offset(0, 1),
+              color: Color(0x0A2A2420),
+              blurRadius: 8,
+              offset: Offset(0, 2),
             ),
           ],
         ),
         child: Row(
           children: [
             const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
+              padding: EdgeInsets.symmetric(horizontal: 14),
               child: Icon(
                 Icons.search_rounded,
-                size: 16,
-                color: AppColors.textTertiary,
+                size: 18,
+                color: AppColors.textSecondary,
               ),
             ),
             Expanded(
@@ -631,40 +630,52 @@ class _DocSearchBarState extends ConsumerState<_DocSearchBar> {
                 controller: _controller,
                 onChanged: _onTextChanged,
                 style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
                   color: AppColors.textPrimary,
                 ),
                 decoration: InputDecoration(
                   hintText: 'Search documents...',
                   hintStyle: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textTertiary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.textSecondary,
                   ),
                   border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
                   filled: true,
                   fillColor: Colors.transparent,
                   isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
                 ),
               ),
             ),
             GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: isPremium ? null : _showOcrUpgradeSheet,
-              child: Container(
-                margin: const EdgeInsets.only(right: 10),
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.accentDim,
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: Text(
-                  'OCR',
-                  style: GoogleFonts.ibmPlexMono(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.accent,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isPremium
+                        ? AppColors.sandDim
+                        : AppColors.warmFill,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    'OCR',
+                    style: GoogleFonts.ibmPlexMono(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: isPremium
+                          ? AppColors.sand
+                          : AppColors.textSecondary,
+                    ),
                   ),
                 ),
               ),
@@ -683,46 +694,58 @@ class _CategoryLegend extends StatelessWidget {
     required this.categoriesState,
     required this.selectedCategoryId,
     required this.onCategorySelected,
+    required this.categoryCounts,
   });
 
   final AsyncValue<List<DocumentCategory>> categoriesState;
   final String? selectedCategoryId;
   final void Function(String? id) onCategorySelected;
+  final Map<String, int> categoryCounts;
 
   @override
   Widget build(BuildContext context) {
-    final categories = categoriesState.value ?? [];
+    final categories = List<DocumentCategory>.from(
+      categoriesState.value ?? [],
+    );
 
-    return SizedBox(
-      height: 44,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.screenPadding,
-        ),
-        children: [
-          // "All" item — always first, no dot.
-          _LegendItem(
-            label: 'All',
-            count: null,
-            dotColor: null,
-            isSelected: selectedCategoryId == null,
-            onTap: () => onCategorySelected(null),
+    // Selected category floats to front.
+    if (selectedCategoryId != null) {
+      final idx = categories.indexWhere((c) => c.id == selectedCategoryId);
+      if (idx > 0) {
+        final selected = categories.removeAt(idx);
+        categories.insert(0, selected);
+      }
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: 36,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.screenPadding,
+            ),
+            children: categories.map((cat) {
+              final shortName = cat.name.split(' ').first;
+              final isSelected = selectedCategoryId == cat.id;
+              return Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: _LegendItem(
+                  label: shortName,
+                  count: categoryCounts[cat.id] ?? 0,
+                  dotColor: _parseCatColor(cat.color),
+                  isSelected: isSelected,
+                  // Tap selected → deselect. Tap unselected → select.
+                  onTap: () => onCategorySelected(isSelected ? null : cat.id),
+                ),
+              );
+            }).toList(),
           ),
-          ...categories.map((cat) {
-            return Padding(
-              padding: const EdgeInsets.only(left: 12),
-              child: _LegendItem(
-                label: cat.name,
-                count: null,
-                dotColor: _parseCatColor(cat.color),
-                isSelected: selectedCategoryId == cat.id,
-                onTap: () => onCategorySelected(cat.id),
-              ),
-            );
-          }),
-        ],
-      ),
+        ),
+        const Divider(height: 1, thickness: 1, color: AppColors.divider),
+      ],
     );
   }
 }
@@ -744,17 +767,23 @@ class _LegendItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final labelColor = isSelected ? AppColors.textPrimary : AppColors.textTertiary;
+    final isActive = isSelected;
+    final nameColor = isActive ? AppColors.textPrimary : AppColors.textSecondary;
+    final countColor = isActive
+        ? AppColors.textPrimary
+        : AppColors.textTertiary;
 
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (dotColor != null) ...[
             Container(
-              width: 6,
-              height: 6,
+              width: 7,
+              height: 7,
               decoration: BoxDecoration(
                 color: dotColor,
                 shape: BoxShape.circle,
@@ -765,72 +794,22 @@ class _LegendItem extends StatelessWidget {
           Text(
             label,
             style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: labelColor,
+              fontSize: 12,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+              color: nameColor,
             ),
           ),
           if (count != null) ...[
-            const SizedBox(width: 3),
+            const SizedBox(width: 4),
             Text(
               '$count',
-              style: GoogleFonts.ibmPlexMono(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: labelColor.withAlpha(128),
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: countColor,
               ),
             ),
           ],
-        ],
-      ),
-    );
-  }
-}
-
-// ── _RecentlyAddedSection ─────────────────────────────────────────────────────
-
-class _RecentlyAddedSection extends StatelessWidget {
-  const _RecentlyAddedSection({
-    required this.docs,
-    required this.categories,
-  });
-
-  final List<Document> docs;
-  final List<DocumentCategory> categories;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSizes.screenPadding,
-        AppSizes.xs,
-        AppSizes.screenPadding,
-        0,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Recently Added',
-            style: GoogleFonts.fraunces(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: AppSizes.xs),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-              childAspectRatio: 0.8,
-            ),
-            itemCount: docs.length,
-            itemBuilder: (_, i) => _DocGridTile(document: docs[i]),
-          ),
         ],
       ),
     );
@@ -877,42 +856,35 @@ class _DocGridTile extends StatelessWidget {
             ],
           ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Top area: icon + color stripe + badges.
+              // Category color stripe at top.
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(AppSizes.radiusMd - 1.5),
+                  topRight: Radius.circular(AppSizes.radiusMd - 1.5),
+                ),
+                child: Container(height: 4, color: catColor),
+              ),
+
+              // Icon area: fills available space.
               Expanded(
                 child: Stack(
                   children: [
-                    // Category color stripe at top.
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(AppSizes.radiusMd - 1.5),
-                          topRight: Radius.circular(AppSizes.radiusMd - 1.5),
-                        ),
-                        child: Container(
-                          height: 3,
-                          color: catColor,
-                        ),
-                      ),
-                    ),
-
-                    // Centered category icon.
+                    // Large centered icon.
                     Center(
                       child: Icon(
-                        Icons.insert_drive_file_outlined,
-                        size: 28,
-                        color: catColor.withAlpha(128),
+                        CategoryIcons.forKey(cat?.icon ?? ''),
+                        size: 44,
+                        color: catColor.withAlpha(160),
                       ),
                     ),
 
-                    // Expiry badge — top-left.
+                    // Expiry badge — top-right.
                     if (expiry != null)
                       Positioned(
-                        top: 8,
-                        left: 6,
+                        top: 6,
+                        right: 6,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 4,
@@ -933,7 +905,7 @@ class _DocGridTile extends StatelessWidget {
                         ),
                       ),
 
-                    // File type badge — bottom-right.
+                    // File type badge — bottom-right (category color).
                     Positioned(
                       bottom: 6,
                       right: 6,
@@ -951,7 +923,7 @@ class _DocGridTile extends StatelessWidget {
                           style: GoogleFonts.ibmPlexMono(
                             fontSize: 8,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.textTertiary,
+                            color: catColor,
                           ),
                         ),
                       ),
@@ -960,16 +932,18 @@ class _DocGridTile extends StatelessWidget {
                 ),
               ),
 
-              // Footer: title + date.
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(
-                  border: Border(
-                    top: BorderSide(color: Color(0xFFE9E4DC), width: 1),
-                  ),
+              // Divider.
+              const Divider(height: 1, color: Color(0xFFE9E4DC)),
+
+              // Footer: name + date.
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 7,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       document.name,
@@ -1072,20 +1046,37 @@ class _FeedRow extends StatelessWidget {
     final dateStr = DateFormat('MMM d, yyyy').format(document.createdAt);
     final sizeStr = _formatSize(document.fileSizeBytes);
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-        onTap: () {
-          final path = AppRoutes.documentDetail.replaceFirst(
-            ':documentId',
-            document.id,
-          );
-          context.push(path);
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-          child: Row(
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.all(Radius.circular(10)),
+        border: Border.fromBorderSide(
+          BorderSide(color: AppColors.border, width: 1),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x0D2A2420),
+            blurRadius: 4,
+            offset: Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: const BorderRadius.all(Radius.circular(10)),
+        child: InkWell(
+          borderRadius: const BorderRadius.all(Radius.circular(10)),
+          onTap: () {
+            final path = AppRoutes.documentDetail.replaceFirst(
+              ':documentId',
+              document.id,
+            );
+            context.push(path);
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
             children: [
               // Colored dot.
               Container(
@@ -1124,7 +1115,7 @@ class _FeedRow extends StatelessWidget {
                               vertical: 1,
                             ),
                             decoration: BoxDecoration(
-                              color: catColor.withAlpha(25),
+                              color: catColor.withAlpha(20),
                               borderRadius: BorderRadius.circular(3),
                             ),
                             child: Text(
@@ -1196,7 +1187,8 @@ class _FeedRow extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 }
 

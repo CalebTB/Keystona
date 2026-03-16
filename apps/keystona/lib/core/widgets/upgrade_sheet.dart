@@ -60,7 +60,7 @@ class UpgradeSheet extends StatelessWidget {
     final count = prefs.getInt(countKey) ?? 0;
     final lastAtMs = prefs.getInt(atKey);
 
-    if (count >= 3 && lastAtMs != null) {
+    if (count >= 99 && lastAtMs != null) {
       final lastDismissed =
           DateTime.fromMillisecondsSinceEpoch(lastAtMs);
       final daysSince =

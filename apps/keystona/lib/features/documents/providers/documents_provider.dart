@@ -7,6 +7,45 @@ import '../models/document.dart';
 
 part 'documents_provider.g.dart';
 
+/// Provides a static map of `category_id → document count` for the current
+/// user's property, unaffected by any active category filter.
+///
+/// Used by the Documents screen filter row so counts don't zero out when a
+/// filter is active. Invalidated whenever [DocumentsNotifier] invalidates
+/// (both are keyed to the same property/user).
+@riverpod
+Future<Map<String, int>> documentCategoryCounts(
+  Ref ref,
+) async {
+  final user = SupabaseService.client.auth.currentUser;
+  if (user == null) return {};
+
+  final profileRow = await SupabaseService.client
+      .from('properties')
+      .select('id')
+      .eq('user_id', user.id)
+      .isFilter('deleted_at', null)
+      .order('created_at', ascending: false)
+      .limit(1)
+      .maybeSingle();
+
+  if (profileRow == null) return {};
+  final propertyId = profileRow['id'] as String;
+
+  final rows = await SupabaseService.client
+      .from('documents')
+      .select('category_id')
+      .eq('property_id', propertyId)
+      .isFilter('deleted_at', null);
+
+  final counts = <String, int>{};
+  for (final row in rows) {
+    final id = row['category_id'] as String?;
+    if (id != null) counts[id] = (counts[id] ?? 0) + 1;
+  }
+  return counts;
+}
+
 /// Sort options available from the Documents screen overflow menu.
 enum DocumentSortOrder {
   /// Newest first (default).
@@ -168,6 +207,7 @@ class DocumentsNotifier extends _$DocumentsNotifier {
     }
 
     ref.invalidateSelf();
+    ref.invalidate(documentCategoryCountsProvider);
     await future;
     final docs = state.value ?? [];
     if (docs.isEmpty) throw StateError('No documents after add');
@@ -307,6 +347,7 @@ class DocumentsNotifier extends _$DocumentsNotifier {
         .eq('id', id);
 
     ref.invalidateSelf();
+    ref.invalidate(documentCategoryCountsProvider);
   }
 
   /// Restores a soft-deleted document by clearing [deleted_at].
@@ -319,5 +360,6 @@ class DocumentsNotifier extends _$DocumentsNotifier {
         .eq('id', id);
 
     ref.invalidateSelf();
+    ref.invalidate(documentCategoryCountsProvider);
   }
 }
