@@ -155,8 +155,8 @@ abstract final class AppColors {
   /// Secondary text — warm medium brown. #6B6058
   static const Color textSecondary = Color(0xFF6B6058);
 
-  /// Tertiary text — labels, metadata, timestamps, placeholders. #5C554E
-  static const Color textTertiary = Color(0xFF5C554E);
+  /// Tertiary text — labels, metadata, timestamps, placeholders. #3D3830
+  static const Color textTertiary = Color(0xFF3D3830);
 
   /// Disabled text.
   static const Color textDisabled = Color(0xFFCBC4B8);
