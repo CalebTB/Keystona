@@ -166,13 +166,23 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
         children: [
           CustomScrollView(
             slivers: [
-              // Compact nav bar — custom header section replaces large title.
+              // Nav bar with Sort + Filter actions in trailing.
               CupertinoSliverNavigationBar(
                 largeTitle: const Text('Documents'),
-                trailing: _SortButton(
-                  isIOS: true,
-                  onSortSelected: (order) =>
-                      ref.read(documentsProvider.notifier).setSortOrder(order),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _FilterButton(
+                      isIOS: true,
+                      onTap: () => _showIOSOverflow(context),
+                    ),
+                    const SizedBox(width: 6),
+                    _SortButton(
+                      isIOS: true,
+                      onSortSelected: (order) =>
+                          ref.read(documentsProvider.notifier).setSortOrder(order),
+                    ),
+                  ],
                 ),
               ),
 
@@ -182,12 +192,11 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
                     ref.read(documentsProvider.notifier).refresh(),
               ),
 
-              // Custom header: title + subtitle + filter button.
+              // Subtitle row: doc count + category count.
               SliverToBoxAdapter(
-                child: _DocHeader(
+                child: _DocSubtitle(
                   docCount: docCount,
                   catCount: catCount,
-                  onFilterTap: () => _showIOSOverflow(context),
                 ),
               ),
 
@@ -334,32 +343,23 @@ class _AndroidDocumentsLayoutState
               scrolledUnderElevation: 0,
               elevation: 0,
               actions: [
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert),
-                  color: AppColors.surface,
-                  onSelected: (value) {
-                    if (value == 'categories') {
-                      context.push(AppRoutes.documentsCategories);
-                    }
-                  },
-                  itemBuilder: (_) => [
-                    PopupMenuItem<String>(
-                      value: 'categories',
-                      child: Text(
-                        'Manage Categories',
-                        style: AppTextStyles.bodyMedium,
-                      ),
-                    ),
-                  ],
+                IconButton(
+                  icon: const Icon(Icons.tune_rounded),
+                  color: AppColors.textSecondary,
+                  onPressed: () => context.push(AppRoutes.documentsCategories),
+                ),
+                _SortButton(
+                  isIOS: false,
+                  onSortSelected: (order) =>
+                      ref.read(documentsProvider.notifier).setSortOrder(order),
                 ),
               ],
             ),
 
             SliverToBoxAdapter(
-              child: _DocHeader(
+              child: _DocSubtitle(
                 docCount: docCount,
                 catCount: catCount,
-                onFilterTap: () {},
               ),
             ),
 
@@ -480,86 +480,61 @@ List<Widget> _buildBody({
   );
 }
 
-// ── _DocHeader ────────────────────────────────────────────────────────────────
+// ── _DocSubtitle ──────────────────────────────────────────────────────────────
 
-class _DocHeader extends StatelessWidget {
-  const _DocHeader({
-    required this.docCount,
-    required this.catCount,
-    required this.onFilterTap,
-  });
+class _DocSubtitle extends StatelessWidget {
+  const _DocSubtitle({required this.docCount, required this.catCount});
 
   final int docCount;
   final int catCount;
-  final VoidCallback onFilterTap;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSizes.screenPadding,
-        AppSizes.md,
+        AppSizes.xs,
         AppSizes.screenPadding,
         AppSizes.sm,
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Documents',
-                  style: GoogleFonts.fraunces(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.7,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '$docCount docs · $catCount categories',
-                  style: GoogleFonts.ibmPlexMono(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.textTertiary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: AppSizes.sm),
-          GestureDetector(
-            onTap: onFilterTap,
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.border,
-                  width: 1.5,
-                ),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x0D2A2420),
-                    blurRadius: 4,
-                    offset: Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.tune_rounded,
-                size: 17,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ],
+      child: Text(
+        '$docCount docs · $catCount categories',
+        style: GoogleFonts.ibmPlexMono(
+          fontSize: 11,
+          fontWeight: FontWeight.w400,
+          color: AppColors.textTertiary,
+        ),
       ),
+    );
+  }
+}
+
+// ── _FilterButton ─────────────────────────────────────────────────────────────
+
+class _FilterButton extends StatelessWidget {
+  const _FilterButton({required this.isIOS, required this.onTap});
+
+  final bool isIOS;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isIOS) {
+      return CupertinoButton(
+        padding: EdgeInsets.zero,
+        minimumSize: const Size(32, 32),
+        onPressed: onTap,
+        child: const Icon(
+          CupertinoIcons.slider_horizontal_3,
+          size: 20,
+          color: AppColors.accent,
+        ),
+      );
+    }
+    return IconButton(
+      icon: const Icon(Icons.tune_rounded),
+      color: AppColors.textSecondary,
+      onPressed: onTap,
     );
   }
 }
