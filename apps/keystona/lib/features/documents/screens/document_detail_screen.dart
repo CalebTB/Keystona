@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:share_plus/share_plus.dart';
@@ -18,19 +19,48 @@ import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/supabase_service.dart';
 import '../models/document.dart';
+import '../models/document_category.dart';
 import '../providers/document_detail_provider.dart';
 import '../providers/document_links_provider.dart';
 import '../widgets/document_detail_skeleton.dart';
 import '../widgets/edit_metadata_sheet.dart';
-import '../widgets/expiration_badge.dart';
 
-/// Full document detail screen with in-app preview, metadata, and actions.
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+Color _catColor(DocumentCategory? category) {
+  final hex = category?.color;
+  if (hex == null || hex.isEmpty) return AppColors.slate;
+  try {
+    final cleaned = hex.replaceAll('#', '');
+    return Color(int.parse('FF$cleaned', radix: 16));
+  } catch (_) {
+    return AppColors.slate;
+  }
+}
+
+String _extFromMime(String? mime) {
+  if (mime == null || mime.isEmpty) return 'FILE';
+  if (mime.contains('pdf')) return 'PDF';
+  if (mime.contains('jpeg') || mime.contains('jpg')) return 'JPG';
+  if (mime.contains('png')) return 'PNG';
+  if (mime.contains('heic')) return 'HEIC';
+  if (mime.contains('gif')) return 'GIF';
+  if (mime.contains('webp')) return 'WEBP';
+  final ext = mime.split('/').last.toUpperCase();
+  return ext.length > 4 ? ext.substring(0, 4) : ext;
+}
+
+String _formatFileSize(int bytes) {
+  if (bytes < 1024) return '${bytes}B';
+  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+  return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+}
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
+
+/// Card-stack document detail screen.
 ///
 /// Route: `/documents/:documentId`
-///
-/// Adaptive layout:
-/// - iOS: [CupertinoPageScaffold] with [CupertinoNavigationBar]
-/// - Android: [Scaffold] with [AppBar]
 class DocumentDetailScreen extends ConsumerWidget {
   const DocumentDetailScreen({super.key, required this.documentId});
 
@@ -38,90 +68,24 @@ class DocumentDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    return isIOS
-        ? _IOSDetailLayout(documentId: documentId)
-        : _AndroidDetailLayout(documentId: documentId);
-  }
-}
-
-// ── iOS layout ────────────────────────────────────────────────────────────────
-
-class _IOSDetailLayout extends ConsumerWidget {
-  const _IOSDetailLayout({required this.documentId});
-
-  final String documentId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
     final detailState = ref.watch(documentDetailProvider(documentId));
-
-    return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        previousPageTitle: 'Documents',
-        middle: detailState.maybeWhen(
-          data: (doc) => Text(doc.name, overflow: TextOverflow.ellipsis),
-          orElse: () => const Text('Document'),
-        ),
-        trailing: detailState.maybeWhen(
-          data: (doc) => CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: () => EditMetadataSheet.show(context, doc),
-            child: const Text('Edit'),
-          ),
-          orElse: () => null,
-        ),
-      ),
-      child: detailState.when(
-        loading: () => const DocumentDetailSkeleton(),
-        error: (e, _) => ErrorView(
-          message: "Couldn't load document.",
-          onRetry: () => ref.invalidate(documentDetailProvider(documentId)),
-        ),
-        data: (doc) => _DetailBody(document: doc, documentId: documentId),
-      ),
-    );
-  }
-}
-
-// ── Android layout ────────────────────────────────────────────────────────────
-
-class _AndroidDetailLayout extends ConsumerWidget {
-  const _AndroidDetailLayout({required this.documentId});
-
-  final String documentId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final detailState = ref.watch(documentDetailProvider(documentId));
-
     return Scaffold(
       backgroundColor: AppColors.warmOffWhite,
-      appBar: AppBar(
-        title: detailState.maybeWhen(
-          data: (doc) => Text(doc.name, style: AppTextStyles.h4),
-          orElse: () => const Text('Document'),
-        ),
-        backgroundColor: AppColors.warmOffWhite,
-        scrolledUnderElevation: 0,
-        elevation: 0,
-        actions: [
-          if (detailState.hasValue)
-            TextButton(
-              onPressed: () =>
-                  EditMetadataSheet.show(context, detailState.value!),
-              child: Text(
-                'Edit',
-                style: AppTextStyles.button.copyWith(color: AppColors.deepNavy),
-              ),
-            ),
-        ],
-      ),
       body: detailState.when(
         loading: () => const DocumentDetailSkeleton(),
-        error: (e, _) => ErrorView(
-          message: "Couldn't load document.",
-          onRetry: () => ref.invalidate(documentDetailProvider(documentId)),
+        error: (e, _) => SafeArea(
+          child: Column(
+            children: [
+              _BackButton(onTap: () => context.pop()),
+              Expanded(
+                child: ErrorView(
+                  message: "Couldn't load document.",
+                  onRetry: () =>
+                      ref.invalidate(documentDetailProvider(documentId)),
+                ),
+              ),
+            ],
+          ),
         ),
         data: (doc) => _DetailBody(document: doc, documentId: documentId),
       ),
@@ -129,7 +93,39 @@ class _AndroidDetailLayout extends ConsumerWidget {
   }
 }
 
-// ── Shared detail body ────────────────────────────────────────────────────────
+// ─── Back button (error state) ────────────────────────────────────────────────
+
+class _BackButton extends StatelessWidget {
+  const _BackButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSizes.screenPadding, 12, 0, 0),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(CupertinoIcons.chevron_back,
+                color: AppColors.accent, size: 20),
+            const SizedBox(width: 2),
+            Text(
+              'Documents',
+              style: AppTextStyles.labelLarge
+                  .copyWith(color: AppColors.accent, fontSize: 14),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Detail Body ──────────────────────────────────────────────────────────────
 
 class _DetailBody extends ConsumerStatefulWidget {
   const _DetailBody({required this.document, required this.documentId});
@@ -157,9 +153,7 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
           .read(documentDetailProvider(widget.documentId).notifier)
           .getSignedUrl();
       if (url == null) {
-        if (mounted) {
-          SnackbarService.showError(context, "Couldn't generate share link.");
-        }
+        if (mounted) SnackbarService.showError(context, "Couldn't generate share link.");
         return;
       }
       await SharePlus.instance.share(
@@ -176,9 +170,7 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
           .read(documentDetailProvider(widget.documentId).notifier)
           .getSignedUrl();
       if (url == null) {
-        if (mounted) {
-          SnackbarService.showError(context, "Couldn't generate download link.");
-        }
+        if (mounted) SnackbarService.showError(context, "Couldn't generate download link.");
         return;
       }
       final uri = Uri.parse(url);
@@ -194,8 +186,7 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
     await ConfirmDialog.show(
       context,
       title: 'Delete document?',
-      message:
-          'The document will be moved to trash. You can undo this within 5 seconds.',
+      message: 'The document will be moved to trash. You can undo this within 5 seconds.',
       confirmLabel: 'Delete',
       onConfirm: _commitDelete,
     );
@@ -219,7 +210,6 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
 
     if (!mounted) return;
 
-    // Show 5-second undo snackbar. If dismissed without undo, pop the screen.
     final controller = ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -237,7 +227,6 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
       ),
     );
 
-    // Navigate back when the snackbar closes and undo was not pressed.
     _deleteTimer = Timer(const Duration(seconds: 5), () {
       if (mounted && _deletePending) {
         controller.close();
@@ -249,7 +238,6 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
   Future<void> _undoDelete() async {
     _deleteTimer?.cancel();
     _deleteTimer = null;
-
     try {
       await ref
           .read(documentDetailProvider(widget.documentId).notifier)
@@ -259,51 +247,126 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
         SnackbarService.showSuccess(context, 'Document restored.');
       }
     } catch (_) {
-      if (mounted) {
-        SnackbarService.showError(context, "Couldn't restore document.");
-      }
+      if (mounted) SnackbarService.showError(context, "Couldn't restore document.");
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Re-watch so the UI updates after edit metadata saves.
-    final doc = ref
-            .watch(documentDetailProvider(widget.documentId))
-            .value ??
+    final doc = ref.watch(documentDetailProvider(widget.documentId)).value ??
         widget.document;
+    final catColor = _catColor(doc.category);
+    final daysLeft = doc.expirationDate
+        ?.difference(DateTime.now())
+        .inDays;
+    final showExpiryCard = daysLeft != null && daysLeft < 90;
+    final hasNotes = doc.notes != null && doc.notes!.isNotEmpty;
 
-    return SafeArea(
-      bottom: false,
-      child: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: _DocumentPreview(document: doc),
-          ),
-          SliverPadding(
-            padding: AppPadding.screen,
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                const SizedBox(height: AppSizes.lg),
-                _ActionRow(
-                  onShare: _onShare,
-                  onDownload: _onDownload,
-                  onDelete: _deletePending ? null : _onDelete,
-                ),
-                const SizedBox(height: AppSizes.lg),
-                const Divider(height: 1, color: AppColors.divider),
-                const SizedBox(height: AppSizes.md),
-                _MetadataSection(document: doc),
-                if (doc.linkedSystemId != null || doc.linkedApplianceId != null) ...[
-                  const SizedBox(height: AppSizes.md),
-                  const Divider(height: 1, color: AppColors.divider),
-                  const SizedBox(height: AppSizes.md),
-                  _LinkedChip(document: doc),
-                ],
-                _LinkedItemsSection(documentId: widget.documentId),
-                const SizedBox(height: AppSizes.xl),
-              ]),
+    return Stack(
+      children: [
+        CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: SafeArea(
+                bottom: false,
+                child: _NavRow(documentId: widget.documentId, document: doc),
+              ),
             ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.screenPadding,
+              ),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  const SizedBox(height: 14),
+                  _PreviewCard(document: doc, catColor: catColor),
+                  const SizedBox(height: 16),
+                  _TitleArea(
+                    document: doc,
+                    catColor: catColor,
+                    daysLeft: daysLeft,
+                  ),
+                  if (showExpiryCard) ...[
+                    const SizedBox(height: 12),
+                    _ExpiryCountdownCard(daysLeft: daysLeft),
+                  ],
+                  const SizedBox(height: AppSizes.md),
+                  _DetailsCard(document: doc),
+                  const SizedBox(height: AppSizes.md),
+                  _LinkedToCard(document: doc),
+                  _UsedInCard(documentId: widget.documentId),
+                  if (hasNotes) ...[
+                    const SizedBox(height: AppSizes.md),
+                    _NotesCard(document: doc),
+                  ],
+                  const SizedBox(height: AppSizes.md),
+                  _FileInfoCard(document: doc),
+                  const SizedBox(height: 120),
+                ]),
+              ),
+            ),
+          ],
+        ),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: _BottomActionBar(
+            onShare: _onShare,
+            onDownload: _onDownload,
+            onDelete: _deletePending ? null : _onDelete,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Nav Row ──────────────────────────────────────────────────────────────────
+
+class _NavRow extends ConsumerWidget {
+  const _NavRow({required this.documentId, required this.document});
+
+  final String documentId;
+  final Document document;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSizes.screenPadding, 8, AppSizes.screenPadding, 0,
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => context.pop(),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(CupertinoIcons.chevron_back,
+                    color: AppColors.accent, size: 20),
+                const SizedBox(width: 2),
+                Text(
+                  'Documents',
+                  style: AppTextStyles.labelLarge.copyWith(
+                    color: AppColors.accent,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Spacer(),
+          _NavIconButton(
+            icon: Icons.edit_outlined,
+            onTap: () => EditMetadataSheet.show(context, document),
+          ),
+          const SizedBox(width: 6),
+          _NavIconButton(
+            icon: Icons.more_horiz,
+            onTap: () {},
           ),
         ],
       ),
@@ -311,51 +374,1028 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
   }
 }
 
-// ── Document preview ──────────────────────────────────────────────────────────
+class _NavIconButton extends StatelessWidget {
+  const _NavIconButton({required this.icon, required this.onTap});
 
-/// Shows the document file inline.
-///
-/// - `application/pdf` → [PdfView] with page navigation + pinch-to-zoom
-/// - `image/*`         → [PhotoView] with pinch-to-zoom
-/// - Other MIME types  → generic file icon placeholder
-class _DocumentPreview extends StatefulWidget {
-  const _DocumentPreview({required this.document});
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.border, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.deepNavy.withValues(alpha: 0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Icon(icon, size: 16, color: AppColors.textSecondary),
+      ),
+    );
+  }
+}
+
+// ─── Preview Card ─────────────────────────────────────────────────────────────
+
+class _PreviewCard extends StatelessWidget {
+  const _PreviewCard({required this.document, required this.catColor});
+
+  final Document document;
+  final Color catColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final ext = _extFromMime(document.mimeType);
+    final dimColor = catColor.withValues(alpha: 0.07);
+    final borderColor = catColor.withValues(alpha: 0.12);
+
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          fullscreenDialog: true,
+          builder: (_) => _FullscreenPreview(document: document),
+        ),
+      ),
+      child: Container(
+        height: 220,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+          border: Border.all(color: AppColors.border, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.deepNavy.withValues(alpha: 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius:
+              BorderRadius.circular(AppSizes.radiusLg - 1.5),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.center,
+                      colors: [dimColor, AppColors.surface],
+                    ),
+                  ),
+                ),
+              ),
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: dimColor,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: borderColor, width: 1.5),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.insert_drive_file_outlined,
+                              size: 28, color: catColor),
+                          const SizedBox(height: 4),
+                          Text(
+                            ext,
+                            style: AppTextStyles.monoTiny.copyWith(
+                              color: catColor,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      document.pageCount != null
+                          ? '${document.pageCount} page${document.pageCount == 1 ? '' : 's'} · Tap to preview'
+                          : 'Tap to preview',
+                      style: AppTextStyles.monoTiny
+                          .copyWith(color: AppColors.gray500),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                bottom: 12,
+                right: 12,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppColors.deepNavy.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.open_in_full_rounded,
+                      size: 16, color: AppColors.textSecondary),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Fullscreen Preview ───────────────────────────────────────────────────────
+
+class _FullscreenPreview extends StatelessWidget {
+  const _FullscreenPreview({required this.document});
+
+  final Document document;
+
+  bool get _isPdf => (document.mimeType ?? '').contains('pdf');
+  bool get _isImage => (document.mimeType ?? '').startsWith('image/');
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: Text(
+          document.name,
+          style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
+        ),
+        elevation: 0,
+      ),
+      body: _isPdf
+          ? _PdfPreview(filePath: document.filePath)
+          : _isImage
+              ? _ImagePreview(filePath: document.filePath)
+              : Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.insert_drive_file_outlined,
+                          size: 64, color: Colors.white54),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Preview not available',
+                        style: AppTextStyles.bodyMedium
+                            .copyWith(color: Colors.white54),
+                      ),
+                    ],
+                  ),
+                ),
+    );
+  }
+}
+
+// ─── Title Area ───────────────────────────────────────────────────────────────
+
+class _TitleArea extends StatelessWidget {
+  const _TitleArea({
+    required this.document,
+    required this.catColor,
+    required this.daysLeft,
+  });
+
+  final Document document;
+  final Color catColor;
+  final int? daysLeft;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimColor = catColor.withValues(alpha: 0.07);
+    final showExpiryBadge = daysLeft != null && daysLeft! < 90;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          document.name,
+          style: GoogleFonts.fraunces(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.5,
+            color: AppColors.textPrimary,
+            height: 1.2,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          children: [
+            if (document.category != null)
+              _TitleBadge(
+                backgroundColor: dimColor,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: catColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      document.category!.name,
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: catColor,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            if (document.type != null)
+              _TitleBadge(
+                backgroundColor: AppColors.warmFill,
+                child: Text(
+                  document.type!.name,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.gray500,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            if (showExpiryBadge)
+              _TitleBadge(
+                backgroundColor: AppColors.accentDim,
+                border: Border.all(
+                  color: AppColors.accent.withValues(alpha: 0.12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.access_time_rounded,
+                        size: 12, color: AppColors.accent),
+                    const SizedBox(width: 4),
+                    Text(
+                      daysLeft! < 0
+                          ? 'Expired'
+                          : daysLeft == 0
+                              ? 'Expires today'
+                              : 'Expires in ${daysLeft}d',
+                      style: AppTextStyles.monoTiny.copyWith(
+                        color: AppColors.accent,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _TitleBadge extends StatelessWidget {
+  const _TitleBadge({
+    required this.child,
+    required this.backgroundColor,
+    this.border,
+  });
+
+  final Widget child;
+  final Color backgroundColor;
+  final Border? border;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(AppSizes.radiusXs),
+        border: border,
+      ),
+      child: child,
+    );
+  }
+}
+
+// ─── Expiry Countdown Card ────────────────────────────────────────────────────
+
+class _ExpiryCountdownCard extends StatelessWidget {
+  const _ExpiryCountdownCard({required this.daysLeft});
+
+  final int daysLeft;
+
+  @override
+  Widget build(BuildContext context) {
+    final passedSegments = daysLeft >= 60
+        ? 1
+        : daysLeft >= 30
+            ? 2
+            : daysLeft >= 0
+                ? 3
+                : 4;
+
+    final displayDays = daysLeft < 0 ? 'Expired' : '${daysLeft}d';
+
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.md),
+      decoration: BoxDecoration(
+        color: AppColors.accentDim,
+        border: Border.all(
+          color: AppColors.accent.withValues(alpha: 0.12),
+          width: 1.5,
+        ),
+        borderRadius: BorderRadius.circular(AppSizes.radiusCard),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.access_time_rounded,
+                  color: AppColors.accent, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                'Expiration Countdown',
+                style: AppTextStyles.labelLarge.copyWith(
+                  color: AppColors.accent,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                displayDays,
+                style: AppTextStyles.monoDisplay.copyWith(
+                  color: AppColors.accent,
+                  fontSize: 20,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: List.generate(4, (i) {
+              final isPassed = i < passedSegments;
+              final isCurrent = i == passedSegments - 1 && daysLeft >= 0;
+              return Expanded(
+                child: Container(
+                  margin: EdgeInsets.only(right: i < 3 ? 3 : 0),
+                  height: 4,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(2),
+                    gradient: isCurrent
+                        ? LinearGradient(colors: [
+                            AppColors.accent,
+                            AppColors.accent.withValues(alpha: 0.15),
+                          ])
+                        : null,
+                    color: isCurrent
+                        ? null
+                        : isPassed
+                            ? AppColors.accent
+                            : AppColors.accent.withValues(alpha: 0.12),
+                  ),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              _ExpiryLabel('90 days ✓', passed: passedSegments > 0,
+                  align: TextAlign.left),
+              _ExpiryLabel('60 days ✓', passed: passedSegments > 1),
+              _ExpiryLabel('30 days ✓', passed: passedSegments > 2),
+              _ExpiryLabel(
+                daysLeft < 0 ? 'Expired' : '$daysLeft days left',
+                passed: true,
+                isCurrent: true,
+                align: TextAlign.right,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _ExpiryButton(
+                  label: 'Upload Renewal',
+                  primary: true,
+                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Coming soon'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _ExpiryButton(
+                  label: 'Snooze',
+                  primary: false,
+                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Coming soon'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ExpiryLabel extends StatelessWidget {
+  const _ExpiryLabel(
+    this.text, {
+    required this.passed,
+    this.isCurrent = false,
+    this.align = TextAlign.center,
+  });
+
+  final String text;
+  final bool passed;
+  final bool isCurrent;
+  final TextAlign align;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Text(
+        text,
+        style: AppTextStyles.monoTiny.copyWith(
+          color: isCurrent
+              ? AppColors.accent
+              : passed
+                  ? AppColors.accent.withValues(alpha: 0.6)
+                  : AppColors.gray500,
+          fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w600,
+        ),
+        textAlign: align,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+}
+
+class _ExpiryButton extends StatelessWidget {
+  const _ExpiryButton({
+    required this.label,
+    required this.primary,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool primary;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: primary
+              ? AppColors.accent
+              : AppColors.accent.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+          border: primary
+              ? null
+              : Border.all(
+                  color: AppColors.accent.withValues(alpha: 0.15),
+                  width: 1.5,
+                ),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: AppTextStyles.labelLarge.copyWith(
+            color: primary ? Colors.white : AppColors.accent,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Shared Card Shell ────────────────────────────────────────────────────────
+
+class _InfoCard extends StatelessWidget {
+  const _InfoCard({
+    required this.icon,
+    required this.label,
+    required this.child,
+    this.trailing,
+  });
+
+  final IconData icon;
+  final String label;
+  final Widget child;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSizes.radiusCard),
+        border: Border.all(color: AppColors.border, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.deepNavy.withValues(alpha: 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: AppColors.warmFill),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 15, color: AppColors.gray500),
+                const SizedBox(width: 8),
+                Text(label, style: AppTextStyles.monoSection),
+                if (trailing != null) ...[
+                  const Spacer(),
+                  trailing!,
+                ],
+              ],
+            ),
+          ),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Details Card ─────────────────────────────────────────────────────────────
+
+class _DetailsCard extends StatelessWidget {
+  const _DetailsCard({required this.document});
 
   final Document document;
 
   @override
-  State<_DocumentPreview> createState() => _DocumentPreviewState();
+  Widget build(BuildContext context) {
+    return _InfoCard(
+      icon: Icons.info_outline_rounded,
+      label: 'DETAILS',
+      trailing: _CardEditButton(
+        onTap: () => EditMetadataSheet.show(context, document),
+      ),
+      child: _DetailsGrid(document: document),
+    );
+  }
 }
 
-class _DocumentPreviewState extends State<_DocumentPreview> {
-  bool get _isPdf {
-    return (widget.document.mimeType ?? '').contains('pdf');
-  }
+class _DetailsGrid extends StatelessWidget {
+  const _DetailsGrid({required this.document});
 
-  bool get _isImage {
-    return (widget.document.mimeType ?? '').startsWith('image/');
-  }
+  final Document document;
 
   @override
   Widget build(BuildContext context) {
-    if (_isPdf) return _PdfPreview(filePath: widget.document.filePath);
-    if (_isImage) return _ImagePreview(filePath: widget.document.filePath);
+    final uploadedDate =
+        DateFormat('MMM d, yyyy').format(document.createdAt);
+    final updatedDate =
+        DateFormat('MMM d, yyyy').format(document.updatedAt);
 
-    return Container(
-      width: double.infinity,
-      height: 240,
-      color: AppColors.gray100,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final itemWidth = (constraints.maxWidth - 20) / 2;
+          return Wrap(
+            spacing: 20,
+            runSpacing: 14,
+            children: [
+              SizedBox(
+                width: itemWidth,
+                child: _InfoItem(
+                    label: 'Category',
+                    value: document.category?.name ?? '—'),
+              ),
+              SizedBox(
+                width: itemWidth,
+                child: _InfoItem(
+                    label: 'Type',
+                    value: document.type?.name ?? '—'),
+              ),
+              SizedBox(
+                width: itemWidth,
+                child: _InfoItem(
+                    label: 'Uploaded',
+                    value: uploadedDate,
+                    mono: false),
+              ),
+              SizedBox(
+                width: itemWidth,
+                child: _InfoItem(
+                    label: 'Updated',
+                    value: updatedDate,
+                    mono: false),
+              ),
+              if (document.fileSizeBytes != null)
+                SizedBox(
+                  width: itemWidth,
+                  child: _InfoItem(
+                    label: 'Size',
+                    value: _formatFileSize(document.fileSizeBytes!),
+                    mono: true,
+                  ),
+                ),
+              if (document.pageCount != null)
+                SizedBox(
+                  width: itemWidth,
+                  child: _InfoItem(
+                    label: 'Pages',
+                    value: '${document.pageCount}',
+                    mono: true,
+                  ),
+                ),
+              if (document.expirationDate != null)
+                SizedBox(
+                  width: itemWidth,
+                  child: _InfoItem(
+                    label: 'Expiration',
+                    value: DateFormat('MMM d, yyyy')
+                        .format(document.expirationDate!),
+                    valueColor: AppColors.accent,
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _InfoItem extends StatelessWidget {
+  const _InfoItem({
+    required this.label,
+    required this.value,
+    this.mono = false,
+    this.valueColor,
+  });
+
+  final String label;
+  final String value;
+  final bool mono;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: AppTextStyles.monoTiny.copyWith(
+            color: AppColors.gray500,
+            letterSpacing: 0.3,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          value,
+          style: (mono ? AppTextStyles.monoLabel : AppTextStyles.bodySmall)
+              .copyWith(
+            color: valueColor ?? AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CardEditButton extends StatelessWidget {
+  const _CardEditButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Text(
+        'Edit',
+        style: AppTextStyles.labelSmall.copyWith(color: AppColors.accent),
+      ),
+    );
+  }
+}
+
+// ─── Linked To Card ───────────────────────────────────────────────────────────
+
+class _LinkedToCard extends StatelessWidget {
+  const _LinkedToCard({required this.document});
+
+  final Document document;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasLinkedItem = document.linkedSystemId != null ||
+        document.linkedApplianceId != null;
+
+    return _InfoCard(
+      icon: Icons.link_rounded,
+      label: 'LINKED TO',
+      child: Column(
+        children: [
+          _LinkedItemRow(
+            icon: Icons.home_outlined,
+            iconColor: AppColors.olive,
+            iconBg: AppColors.oliveDim,
+            title: 'Your Property',
+            subtitle: 'Primary property',
+            onTap: null,
+          ),
+          if (hasLinkedItem) ...[
+            const Divider(
+              height: 1,
+              color: AppColors.warmFill,
+              indent: 16,
+              endIndent: 16,
+            ),
+            _LinkedItemRow(
+              icon: document.linkedSystemId != null
+                  ? Icons.settings_outlined
+                  : Icons.kitchen_outlined,
+              iconColor: AppColors.slate,
+              iconBg: AppColors.slateDim,
+              title: document.linkedSystemId != null
+                  ? 'Linked System'
+                  : 'Linked Appliance',
+              subtitle: document.linkedSystemId != null ? 'System' : 'Appliance',
+              onTap: () {
+                final id = document.linkedSystemId ??
+                    document.linkedApplianceId ??
+                    '';
+                final path = document.linkedSystemId != null
+                    ? AppRoutes.homeSystemDetail
+                        .replaceFirst(':systemId', id)
+                    : AppRoutes.homeApplianceDetail
+                        .replaceFirst(':applianceId', id);
+                context.push(path);
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _LinkedItemRow extends StatelessWidget {
+  const _LinkedItemRow({
+    required this.icon,
+    required this.iconColor,
+    required this.iconBg,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final Color iconBg;
+  final String title;
+  final String subtitle;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppSizes.radiusCard - 1),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
           children: [
-            const Icon(Icons.insert_drive_file_outlined,
-                size: AppSizes.iconXl, color: AppColors.gray400),
-            const SizedBox(height: AppSizes.sm),
-            Text(
-              widget.document.mimeType ?? 'File',
-              style: AppTextStyles.caption
-                  .copyWith(color: AppColors.textSecondary),
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: Icon(icon, size: 16, color: iconColor),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTextStyles.bodySmall
+                        .copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  Text(
+                    subtitle,
+                    style: AppTextStyles.caption
+                        .copyWith(color: AppColors.gray500),
+                  ),
+                ],
+              ),
+            ),
+            if (onTap != null)
+              const Icon(Icons.chevron_right,
+                  size: 14, color: AppColors.borderStrong),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Used In Card (reverse links) ─────────────────────────────────────────────
+
+class _UsedInCard extends ConsumerWidget {
+  const _UsedInCard({required this.documentId});
+
+  final String documentId;
+
+  static IconData _iconFor(String type) => switch (type) {
+        'project' => Icons.folder_outlined,
+        'appliance' => Icons.kitchen_outlined,
+        _ => Icons.settings_outlined,
+      };
+
+  static String _typeLabel(String type) => switch (type) {
+        'project' => 'Project',
+        'appliance' => 'Appliance',
+        _ => 'System',
+      };
+
+  void _navigate(BuildContext context, DocumentLinkEntry entry) {
+    final path = switch (entry.type) {
+      'project' =>
+        AppRoutes.projectDetail.replaceFirst(':projectId', entry.id),
+      'appliance' =>
+        AppRoutes.homeApplianceDetail.replaceFirst(':applianceId', entry.id),
+      _ => AppRoutes.homeSystemDetail.replaceFirst(':systemId', entry.id),
+    };
+    context.push(path);
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final linksState = ref.watch(documentLinksProvider(documentId));
+    return linksState.maybeWhen(
+      data: (links) {
+        if (links.isEmpty) return const SizedBox.shrink();
+        return Column(
+          children: [
+            const SizedBox(height: AppSizes.md),
+            _InfoCard(
+              icon: Icons.folder_open_outlined,
+              label: 'USED IN',
+              child: Column(
+                children: [
+                  for (int i = 0; i < links.length; i++) ...[
+                    if (i > 0)
+                      const Divider(
+                        height: 1,
+                        color: AppColors.warmFill,
+                        indent: 16,
+                        endIndent: 16,
+                      ),
+                    _LinkedItemRow(
+                      icon: _iconFor(links[i].type),
+                      iconColor: AppColors.slate,
+                      iconBg: AppColors.slateDim,
+                      title: links[i].label,
+                      subtitle:
+                          links[i].subtitle ?? _typeLabel(links[i].type),
+                      onTap: () => _navigate(context, links[i]),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
+    );
+  }
+}
+
+// ─── Notes Card ───────────────────────────────────────────────────────────────
+
+class _NotesCard extends StatelessWidget {
+  const _NotesCard({required this.document});
+
+  final Document document;
+
+  @override
+  Widget build(BuildContext context) {
+    return _InfoCard(
+      icon: Icons.notes_rounded,
+      label: 'NOTES',
+      trailing: _CardEditButton(
+        onTap: () => EditMetadataSheet.show(context, document),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+        child: Text(
+          document.notes!,
+          style: AppTextStyles.bodySmall.copyWith(
+            color: AppColors.textSecondary,
+            height: 1.6,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── File Info Card ───────────────────────────────────────────────────────────
+
+class _FileInfoCard extends StatelessWidget {
+  const _FileInfoCard({required this.document});
+
+  final Document document;
+
+  @override
+  Widget build(BuildContext context) {
+    final ext = _extFromMime(document.mimeType);
+    final addedDate = DateFormat('MMM d, yyyy').format(document.createdAt);
+    final ocrStatus = document.ocrStatus;
+    final ocrLabel = switch (ocrStatus) {
+      'complete' => 'Complete',
+      'processing' => 'Processing',
+      'pending' => 'Pending',
+      'failed' => 'Failed',
+      _ => 'Not run',
+    };
+    final ocrColor = switch (ocrStatus) {
+      'complete' => AppColors.olive,
+      'processing' => AppColors.sand,
+      'failed' => AppColors.error,
+      _ => AppColors.gray500,
+    };
+
+    return _InfoCard(
+      icon: Icons.insert_drive_file_outlined,
+      label: 'FILE INFO',
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+        child: Wrap(
+          spacing: 16,
+          runSpacing: 10,
+          children: [
+            _FileMeta(icon: Icons.insert_drive_file_outlined, value: ext),
+            if (document.fileSizeBytes != null)
+              _FileMeta(
+                icon: Icons.download_outlined,
+                value: _formatFileSize(document.fileSizeBytes!),
+              ),
+            _FileMeta(
+              icon: Icons.calendar_today_outlined,
+              prefix: 'Added ',
+              value: addedDate,
+            ),
+            _FileMeta(
+              icon: Icons.access_time_rounded,
+              prefix: 'OCR ',
+              value: ocrLabel,
+              valueColor: ocrColor,
             ),
           ],
         ),
@@ -363,6 +1403,181 @@ class _DocumentPreviewState extends State<_DocumentPreview> {
     );
   }
 }
+
+class _FileMeta extends StatelessWidget {
+  const _FileMeta({
+    required this.icon,
+    required this.value,
+    this.prefix,
+    this.valueColor,
+  });
+
+  final IconData icon;
+  final String value;
+  final String? prefix;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: AppColors.gray500),
+        const SizedBox(width: 6),
+        RichText(
+          text: TextSpan(
+            style: AppTextStyles.bodySmall.copyWith(color: AppColors.gray500),
+            children: [
+              if (prefix != null) TextSpan(text: prefix),
+              TextSpan(
+                text: value,
+                style: TextStyle(
+                  color: valueColor ?? AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Bottom Action Bar ────────────────────────────────────────────────────────
+
+class _BottomActionBar extends StatelessWidget {
+  const _BottomActionBar({
+    required this.onShare,
+    required this.onDownload,
+    required this.onDelete,
+  });
+
+  final VoidCallback onShare;
+  final VoidCallback onDownload;
+  final VoidCallback? onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.warmOffWhite,
+        border: Border(top: BorderSide(color: AppColors.border)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 12, 22, 12),
+          child: SizedBox(
+            height: 52,
+            child: Row(
+              children: [
+                _BarButton(
+                  icon: Icons.ios_share_rounded,
+                  style: _BarButtonStyle.secondary,
+                  onTap: onShare,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _BarButton(
+                    icon: Icons.download_outlined,
+                    label: 'Download',
+                    style: _BarButtonStyle.primary,
+                    onTap: onDownload,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                _BarButton(
+                  icon: Icons.delete_outline_rounded,
+                  style: _BarButtonStyle.danger,
+                  onTap: onDelete,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+enum _BarButtonStyle { primary, secondary, danger }
+
+class _BarButton extends StatelessWidget {
+  const _BarButton({
+    required this.icon,
+    required this.style,
+    required this.onTap,
+    this.label,
+  });
+
+  final IconData icon;
+  final _BarButtonStyle style;
+  final VoidCallback? onTap;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDisabled = onTap == null;
+    final bg = isDisabled
+        ? AppColors.warmFill
+        : switch (style) {
+            _BarButtonStyle.primary => AppColors.deepNavy,
+            _BarButtonStyle.secondary => AppColors.surface,
+            _BarButtonStyle.danger => AppColors.accentDim,
+          };
+    final fg = isDisabled
+        ? AppColors.textDisabled
+        : switch (style) {
+            _BarButtonStyle.primary => AppColors.textInverse,
+            _BarButtonStyle.secondary => AppColors.textSecondary,
+            _BarButtonStyle.danger => AppColors.accent,
+          };
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(12),
+          border: style == _BarButtonStyle.secondary
+              ? Border.all(color: AppColors.border, width: 1.5)
+              : null,
+          boxShadow: style == _BarButtonStyle.secondary
+              ? [
+                  BoxShadow(
+                    color: AppColors.deepNavy.withValues(alpha: 0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: fg),
+            if (label != null) ...[
+              const SizedBox(width: 6),
+              Text(
+                label!,
+                style: AppTextStyles.labelLarge.copyWith(
+                  color: fg,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── PDF Preview (fullscreen) ─────────────────────────────────────────────────
 
 class _PdfPreview extends StatefulWidget {
   const _PdfPreview({required this.filePath});
@@ -381,8 +1596,6 @@ class _PdfPreviewState extends State<_PdfPreview> {
     super.initState();
     _controller = PdfController(
       document: PdfDocument.openData(
-        // Download raw bytes via the authenticated Supabase client. This
-        // avoids a separate HTTP call and respects RLS-scoped storage policies.
         SupabaseService.client.storage
             .from('documents')
             .download(widget.filePath),
@@ -398,37 +1611,37 @@ class _PdfPreviewState extends State<_PdfPreview> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 480,
-      child: PdfView(
-        controller: _controller,
-        scrollDirection: Axis.vertical,
-        builders: PdfViewBuilders<DefaultBuilderOptions>(
-          options: const DefaultBuilderOptions(),
-          documentLoaderBuilder: (_) => const Center(
-            child: CircularProgressIndicator(color: AppColors.deepNavy),
-          ),
-          pageLoaderBuilder: (_) => const Center(
-            child: CircularProgressIndicator(color: AppColors.deepNavy),
-          ),
-          errorBuilder: (_, error) => Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.error_outline,
-                    size: AppSizes.iconLg, color: AppColors.error),
-                const SizedBox(height: AppSizes.sm),
-                Text('PDF preview unavailable',
-                    style: AppTextStyles.bodyMedium
-                        .copyWith(color: AppColors.textSecondary)),
-              ],
-            ),
+    return PdfView(
+      controller: _controller,
+      scrollDirection: Axis.vertical,
+      builders: PdfViewBuilders<DefaultBuilderOptions>(
+        options: const DefaultBuilderOptions(),
+        documentLoaderBuilder: (_) => const Center(
+          child: CircularProgressIndicator(color: AppColors.deepNavy),
+        ),
+        pageLoaderBuilder: (_) => const Center(
+          child: CircularProgressIndicator(color: AppColors.deepNavy),
+        ),
+        errorBuilder: (_, error) => Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline,
+                  size: AppSizes.iconLg, color: Colors.white54),
+              const SizedBox(height: AppSizes.sm),
+              Text(
+                'PDF preview unavailable',
+                style: AppTextStyles.bodyMedium.copyWith(color: Colors.white54),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 }
+
+// ─── Image Preview (fullscreen) ───────────────────────────────────────────────
 
 class _ImagePreview extends StatefulWidget {
   const _ImagePreview({required this.filePath});
@@ -454,7 +1667,12 @@ class _ImagePreviewState extends State<_ImagePreview> {
       final url = await SupabaseService.client.storage
           .from('documents')
           .createSignedUrl(widget.filePath, 3600);
-      if (mounted) setState(() { _signedUrl = url; _loading = false; });
+      if (mounted) {
+        setState(() {
+          _signedUrl = url;
+          _loading = false;
+        });
+      }
     } catch (_) {
       if (mounted) setState(() => _loading = false);
     }
@@ -463,448 +1681,32 @@ class _ImagePreviewState extends State<_ImagePreview> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return Container(
-        width: double.infinity,
-        height: 320,
-        color: AppColors.gray200,
-        child: const Center(
-          child: CircularProgressIndicator(color: AppColors.deepNavy),
-        ),
+      return const Center(
+        child: CircularProgressIndicator(color: Colors.white70),
       );
     }
-
     if (_signedUrl == null) {
-      return Container(
-        width: double.infinity,
-        height: 320,
-        color: AppColors.gray100,
-        child: Center(
-          child: Text(
-            'Preview unavailable',
-            style: AppTextStyles.bodyMedium
-                .copyWith(color: AppColors.textSecondary),
-          ),
+      return Center(
+        child: Text(
+          'Preview unavailable',
+          style: AppTextStyles.bodyMedium.copyWith(color: Colors.white54),
         ),
       );
     }
-
-    return SizedBox(
-      height: 320,
-      child: PhotoView(
-        imageProvider: NetworkImage(_signedUrl!),
-        minScale: PhotoViewComputedScale.contained,
-        maxScale: PhotoViewComputedScale.covered * 4,
-        backgroundDecoration: const BoxDecoration(color: AppColors.gray900),
-        loadingBuilder: (_, event) => Center(
-          child: CircularProgressIndicator(
-            color: AppColors.deepNavy,
-            value: event == null
-                ? null
-                : event.cumulativeBytesLoaded /
-                    (event.expectedTotalBytes ?? 1),
-          ),
+    return PhotoView(
+      imageProvider: NetworkImage(_signedUrl!),
+      minScale: PhotoViewComputedScale.contained,
+      maxScale: PhotoViewComputedScale.covered * 4,
+      backgroundDecoration: const BoxDecoration(color: Colors.black),
+      loadingBuilder: (_, event) => Center(
+        child: CircularProgressIndicator(
+          color: Colors.white70,
+          value: event == null
+              ? null
+              : event.cumulativeBytesLoaded /
+                  (event.expectedTotalBytes ?? 1),
         ),
       ),
-    );
-  }
-}
-
-// ── Action row ────────────────────────────────────────────────────────────────
-
-class _ActionRow extends StatelessWidget {
-  const _ActionRow({
-    required this.onShare,
-    required this.onDownload,
-    required this.onDelete,
-  });
-
-  final VoidCallback onShare;
-  final VoidCallback onDownload;
-  final VoidCallback? onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _ActionButton(
-          icon: Icons.share_outlined,
-          label: 'Share',
-          onTap: onShare,
-        ),
-        const SizedBox(width: AppSizes.sm),
-        _ActionButton(
-          icon: Icons.download_outlined,
-          label: 'Download',
-          onTap: onDownload,
-        ),
-        const SizedBox(width: AppSizes.sm),
-        _ActionButton(
-          icon: Icons.delete_outline,
-          label: 'Delete',
-          onTap: onDelete,
-          destructive: true,
-        ),
-      ],
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.destructive = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-  final bool destructive;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDisabled = onTap == null;
-    final color = isDisabled
-        ? AppColors.textDisabled
-        : (destructive ? AppColors.error : AppColors.deepNavy);
-    final bg = isDisabled
-        ? AppColors.gray100
-        : (destructive ? AppColors.errorLight : AppColors.surfaceVariant);
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: AppSizes.iconMd, color: color),
-              const SizedBox(height: AppSizes.xs),
-              Text(
-                label,
-                style: AppTextStyles.labelSmall.copyWith(color: color),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Metadata section ──────────────────────────────────────────────────────────
-
-class _MetadataSection extends StatelessWidget {
-  const _MetadataSection({required this.document});
-
-  final Document document;
-
-  @override
-  Widget build(BuildContext context) {
-    final uploadedDate = DateFormat('MMM d, yyyy').format(document.createdAt);
-    final updatedDate = DateFormat('MMM d, yyyy').format(document.updatedAt);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Details', style: AppTextStyles.h4),
-        const SizedBox(height: AppSizes.md),
-
-        _MetadataRow(label: 'Category', value: document.category?.name ?? '—'),
-        _MetadataRow(label: 'Type', value: document.type?.name ?? '—'),
-        _MetadataRow(label: 'Uploaded', value: uploadedDate),
-        _MetadataRow(label: 'Updated', value: updatedDate),
-        if (document.fileSizeBytes != null)
-          _MetadataRow(
-            label: 'Size',
-            value: _formatFileSize(document.fileSizeBytes!),
-          ),
-        if (document.pageCount != null)
-          _MetadataRow(label: 'Pages', value: '${document.pageCount}'),
-
-        // Expiration row with badge.
-        if (document.expirationDate != null) ...[
-          const SizedBox(height: AppSizes.xs),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Expires',
-                style: AppTextStyles.bodyMedium
-                    .copyWith(color: AppColors.textSecondary),
-              ),
-              ExpirationBadge(
-                expirationDate: document.expirationDate!,
-                large: true,
-              ),
-            ],
-          ),
-        ],
-
-        // Notes.
-        if (document.notes != null && document.notes!.isNotEmpty) ...[
-          const SizedBox(height: AppSizes.md),
-          Text(
-            'Notes',
-            style: AppTextStyles.labelMedium
-                .copyWith(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: AppSizes.xs),
-          Text(document.notes!, style: AppTextStyles.bodyMedium),
-        ],
-      ],
-    );
-  }
-
-  String _formatFileSize(int bytes) {
-    if (bytes < 1024) return '${bytes}B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)}KB';
-    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}MB';
-  }
-}
-
-class _MetadataRow extends StatelessWidget {
-  const _MetadataRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: AppTextStyles.bodyMedium
-                .copyWith(color: AppColors.textSecondary),
-          ),
-          const SizedBox(width: AppSizes.md),
-          Flexible(
-            child: Text(
-              value,
-              style: AppTextStyles.bodyMedium,
-              textAlign: TextAlign.end,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Reverse links section ─────────────────────────────────────────────────────
-
-/// Shows all entities across the app that reference this document.
-///
-/// Queries [documentLinksProvider] and hides itself when the result is empty
-/// or still loading — no skeleton or error state is surfaced here since it is
-/// supplemental content below the primary metadata.
-class _LinkedItemsSection extends ConsumerWidget {
-  const _LinkedItemsSection({required this.documentId});
-
-  final String documentId;
-
-  static IconData _iconFor(String type) {
-    return switch (type) {
-      'project' => Icons.folder_outlined,
-      'appliance' => Icons.kitchen_outlined,
-      _ => Icons.settings_outlined,
-    };
-  }
-
-  static String _typeLabel(String type) {
-    return switch (type) {
-      'project' => 'Project',
-      'appliance' => 'Appliance',
-      _ => 'System',
-    };
-  }
-
-  void _navigate(BuildContext context, DocumentLinkEntry entry) {
-    final path = switch (entry.type) {
-      'project' =>
-        AppRoutes.projectDetail.replaceFirst(':projectId', entry.id),
-      'appliance' =>
-        AppRoutes.homeApplianceDetail.replaceFirst(':applianceId', entry.id),
-      _ => AppRoutes.homeSystemDetail.replaceFirst(':systemId', entry.id),
-    };
-    context.push(path);
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final linksState = ref.watch(documentLinksProvider(documentId));
-
-    // Only render when we have at least one link — hide during loading and
-    // on empty results so the section never adds dead whitespace.
-    return linksState.maybeWhen(
-      data: (links) {
-        if (links.isEmpty) return const SizedBox.shrink();
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: AppSizes.md),
-            const Divider(height: 1, color: AppColors.divider),
-            const SizedBox(height: AppSizes.md),
-            Text('Used In', style: AppTextStyles.h4),
-            const SizedBox(height: AppSizes.sm),
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: links.length,
-              separatorBuilder: (_, _) =>
-                  const Divider(height: 1, color: AppColors.divider),
-              itemBuilder: (context, index) {
-                final entry = links[index];
-                return _LinkedItemRow(
-                  entry: entry,
-                  icon: _iconFor(entry.type),
-                  typeLabel: entry.subtitle ?? _typeLabel(entry.type),
-                  onTap: () => _navigate(context, entry),
-                );
-              },
-            ),
-          ],
-        );
-      },
-      orElse: () => const SizedBox.shrink(),
-    );
-  }
-}
-
-class _LinkedItemRow extends StatelessWidget {
-  const _LinkedItemRow({
-    required this.entry,
-    required this.icon,
-    required this.typeLabel,
-    required this.onTap,
-  });
-
-  final DocumentLinkEntry entry;
-  final IconData icon;
-  final String typeLabel;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.deepNavy.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Icon(icon, size: AppSizes.iconSm, color: AppColors.deepNavy),
-            ),
-            const SizedBox(width: AppSizes.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    entry.label,
-                    style: AppTextStyles.bodyMedium,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    typeLabel,
-                    style: AppTextStyles.caption
-                        .copyWith(color: AppColors.textSecondary),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.chevron_right,
-              size: AppSizes.iconSm,
-              color: AppColors.gray400,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Linked system / appliance chip ────────────────────────────────────────────
-
-class _LinkedChip extends StatelessWidget {
-  const _LinkedChip({required this.document});
-
-  final Document document;
-
-  @override
-  Widget build(BuildContext context) {
-    final isSystem = document.linkedSystemId != null;
-    final id = document.linkedSystemId ?? document.linkedApplianceId ?? '';
-    final label = isSystem ? 'Linked System' : 'Linked Appliance';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Linked To',
-          style: AppTextStyles.labelMedium
-              .copyWith(color: AppColors.textSecondary),
-        ),
-        const SizedBox(height: AppSizes.xs),
-        GestureDetector(
-          onTap: () {
-            final path = isSystem
-                ? AppRoutes.homeSystemDetail.replaceFirst(':systemId', id)
-                : AppRoutes.homeApplianceDetail
-                    .replaceFirst(':applianceId', id);
-            context.push(path);
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.md,
-              vertical: AppSizes.sm,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.infoLight,
-              borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-              border: Border.all(color: AppColors.info),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  isSystem ? Icons.home_outlined : Icons.kitchen_outlined,
-                  size: AppSizes.iconSm,
-                  color: AppColors.info,
-                ),
-                const SizedBox(width: AppSizes.xs),
-                Text(
-                  label,
-                  style:
-                      AppTextStyles.labelMedium.copyWith(color: AppColors.info),
-                ),
-                const SizedBox(width: AppSizes.xs),
-                const Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.info),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
