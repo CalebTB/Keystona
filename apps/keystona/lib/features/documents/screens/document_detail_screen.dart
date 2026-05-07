@@ -985,22 +985,75 @@ class _DetailsGrid extends StatelessWidget {
 
   final Document document;
 
+  // snake_case → Title Case
+  static String _formatKey(String key) => key
+      .split('_')
+      .map((w) => w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1)}')
+      .join(' ');
+
+  // Detect values that deserve mono font: codes, money, phone numbers, pure numbers.
+  static bool _isMono(dynamic value) {
+    final s = value.toString();
+    if (s.startsWith(r'$')) return true;
+    if (RegExp(r'^\(?\d{3}\)?[\s\-]\d{3}[\s\-]\d{4}$').hasMatch(s)) return true;
+    if (RegExp(r'^[A-Z0-9][A-Z0-9\-]{2,}$').hasMatch(s)) return true;
+    if (RegExp(r'^\d+(\.\d+)?$').hasMatch(s)) return true;
+    return false;
+  }
+
+  // Phone numbers get slate color to match the design reference.
+  static Color? _valueColor(String key, dynamic value) {
+    final s = value?.toString() ?? '';
+    if (RegExp(r'^\(?\d{3}\)?[\s\-]\d{3}[\s\-]\d{4}$').hasMatch(s)) {
+      return AppColors.slate;
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final uploadedDate =
-        DateFormat('MMM d, yyyy').format(document.createdAt);
-    final updatedDate =
-        DateFormat('MMM d, yyyy').format(document.updatedAt);
+    final hasMetadata = document.metadata.isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final itemWidth = (constraints.maxWidth - 20) / 2;
-          return Wrap(
-            spacing: 20,
-            runSpacing: 14,
-            children: [
+          final items = <Widget>[];
+
+          if (hasMetadata) {
+            // Type-specific fields from the metadata JSONB column.
+            for (final entry in document.metadata.entries) {
+              final value = entry.value;
+              if (value == null || value.toString().isEmpty) continue;
+              items.add(SizedBox(
+                width: itemWidth,
+                child: _InfoItem(
+                  label: _formatKey(entry.key),
+                  value: value.toString(),
+                  mono: _isMono(value),
+                  valueColor: _valueColor(entry.key, value),
+                ),
+              ));
+            }
+            if (document.expirationDate != null) {
+              items.add(SizedBox(
+                width: itemWidth,
+                child: _InfoItem(
+                  label: 'Expiration',
+                  value: DateFormat('MMM d, yyyy')
+                      .format(document.expirationDate!),
+                  valueColor: AppColors.accent,
+                ),
+              ));
+            }
+          } else {
+            // Generic fallback when no type-specific metadata is set.
+            final uploadedDate =
+                DateFormat('MMM d, yyyy').format(document.createdAt);
+            final updatedDate =
+                DateFormat('MMM d, yyyy').format(document.updatedAt);
+            items.addAll([
               SizedBox(
                 width: itemWidth,
                 child: _InfoItem(
@@ -1010,22 +1063,15 @@ class _DetailsGrid extends StatelessWidget {
               SizedBox(
                 width: itemWidth,
                 child: _InfoItem(
-                    label: 'Type',
-                    value: document.type?.name ?? '—'),
+                    label: 'Type', value: document.type?.name ?? '—'),
               ),
               SizedBox(
                 width: itemWidth,
-                child: _InfoItem(
-                    label: 'Uploaded',
-                    value: uploadedDate,
-                    mono: false),
+                child: _InfoItem(label: 'Uploaded', value: uploadedDate),
               ),
               SizedBox(
                 width: itemWidth,
-                child: _InfoItem(
-                    label: 'Updated',
-                    value: updatedDate,
-                    mono: false),
+                child: _InfoItem(label: 'Updated', value: updatedDate),
               ),
               if (document.fileSizeBytes != null)
                 SizedBox(
@@ -1055,8 +1101,10 @@ class _DetailsGrid extends StatelessWidget {
                     valueColor: AppColors.accent,
                   ),
                 ),
-            ],
-          );
+            ]);
+          }
+
+          return Wrap(spacing: 20, runSpacing: 14, children: items);
         },
       ),
     );

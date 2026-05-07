@@ -44,8 +44,11 @@ class _DocumentUploadScreenState
 
   Future<void> _showSourcePicker() async {
     _sourcePickerShown = true;
-    bool filePicked = false;
 
+    // File already set by the calling screen — skip the source picker.
+    if (ref.read(documentUploadProvider).file != null) return;
+
+    bool filePicked = false;
     await UploadSourceSheet.show(
       context,
       ref,

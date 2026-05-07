@@ -18,12 +18,14 @@ import '../../subscription/providers/subscription_provider.dart';
 import '../models/document.dart';
 import '../models/document_category.dart';
 import '../providers/document_categories_provider.dart';
+import '../providers/document_upload_provider.dart';
 import '../providers/documents_provider.dart';
 import '../widgets/category_form_sheet.dart';
 import '../widgets/document_empty_state.dart';
 import '../widgets/document_list_skeleton.dart';
 import '../widgets/document_search_empty_state.dart';
 import '../widgets/document_search_result_card.dart';
+import '../widgets/upload_source_sheet.dart';
 
 // ── Top-level helpers ─────────────────────────────────────────────────────────
 
@@ -127,9 +129,20 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
       }
     }
     if (!mounted) return;
+
+    // Reset any stale upload state from a previous session.
+    ref.invalidate(documentUploadProvider);
+
+    bool filePicked = false;
+    await UploadSourceSheet.show(
+      context,
+      ref,
+      onFilePicked: () => filePicked = true,
+    );
+
+    if (!filePicked || !mounted) return;
     context.push(AppRoutes.documentsUpload);
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -181,14 +194,38 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
                           ),
                         ),
                       ),
-                      CupertinoButton(
-                        padding: EdgeInsets.zero,
-                        minimumSize: const Size(36, 36),
-                        onPressed: _onAddTapped,
-                        child: const Icon(
-                          CupertinoIcons.add_circled_solid,
-                          color: AppColors.accent,
-                          size: 28,
+                      GestureDetector(
+                        onTap: _onAddTapped,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: AppColors.accent,
+                            borderRadius:
+                                BorderRadius.circular(AppSizes.radiusFull),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.accent.withValues(alpha: 0.25),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.add_rounded,
+                                  color: Colors.white, size: 16),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Add',
+                                style: AppTextStyles.labelMedium.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -290,6 +327,17 @@ class _AndroidDocumentsLayoutState
       }
     }
     if (!mounted) return;
+
+    ref.invalidate(documentUploadProvider);
+
+    bool filePicked = false;
+    await UploadSourceSheet.show(
+      context,
+      ref,
+      onFilePicked: () => filePicked = true,
+    );
+
+    if (!filePicked || !mounted) return;
     context.push(AppRoutes.documentsUpload);
   }
 
@@ -309,12 +357,6 @@ class _AndroidDocumentsLayoutState
 
     return Scaffold(
       backgroundColor: AppColors.warmOffWhite,
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.deepNavy,
-        foregroundColor: AppColors.textInverse,
-        onPressed: _onAddTapped,
-        child: const Icon(Icons.add),
-      ),
       body: RefreshIndicator(
         color: AppColors.deepNavy,
         onRefresh: () => ref.read(documentsProvider.notifier).refresh(),
@@ -336,6 +378,43 @@ class _AndroidDocumentsLayoutState
                   isIOS: false,
                   onSortSelected: (order) =>
                       ref.read(documentsProvider.notifier).setSortOrder(order),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: GestureDetector(
+                    onTap: _onAddTapped,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: AppColors.accent,
+                        borderRadius:
+                            BorderRadius.circular(AppSizes.radiusFull),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.accent.withValues(alpha: 0.25),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.add_rounded,
+                              color: Colors.white, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Add',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
