@@ -155,6 +155,9 @@ class DocumentsNotifier extends _$DocumentsNotifier {
     ref.invalidateSelf();
   }
 
+  /// The active sort order — read by the UI to display the current label.
+  DocumentSortOrder get currentSortOrder => _sortOrder;
+
   /// Changes the sort order of the document list.
   void setSortOrder(DocumentSortOrder order) {
     _sortOrder = order;

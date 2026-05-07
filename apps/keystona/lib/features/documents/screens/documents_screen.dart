@@ -376,8 +376,8 @@ class _AndroidDocumentsLayoutState
                 ),
                 _SortButton(
                   isIOS: false,
-                  onSortSelected: (order) =>
-                      ref.read(documentsProvider.notifier).setSortOrder(order),
+                  currentSort: notifier.currentSortOrder,
+                  onSortSelected: (order) => notifier.setSortOrder(order),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(right: 12),
@@ -527,60 +527,66 @@ List<Widget> _buildBody({
       }
 
       // Normal data view: recently-added grid + all docs feed + storage card.
-      final recentDocs = docs.take(6).toList();
+      final cutoff = DateTime.now().subtract(const Duration(days: 30));
+      final recentDocs = docs
+          .where((d) => d.createdAt.isAfter(cutoff))
+          .take(6)
+          .toList();
       final categories = categoriesState.value ?? [];
 
       return [
-        // "Recently Added" heading — tap to collapse/expand.
-        SliverToBoxAdapter(
-          child: InkWell(
-            onTap: onToggleRecentlyAdded,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Recently Added',
-                      style: GoogleFonts.fraunces(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+        // "Recently Added" — only shown when there are docs from the last 30 days.
+        if (recentDocs.isNotEmpty) ...[
+          SliverToBoxAdapter(
+            child: InkWell(
+              onTap: onToggleRecentlyAdded,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Recently Added',
+                        style: GoogleFonts.fraunces(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                     ),
-                  ),
-                  AnimatedRotation(
-                    turns: recentlyAddedExpanded ? 0 : -0.25,
-                    duration: const Duration(milliseconds: 200),
-                    child: const Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      size: 20,
-                      color: AppColors.textSecondary,
+                    AnimatedRotation(
+                      turns: recentlyAddedExpanded ? 0 : -0.25,
+                      duration: const Duration(milliseconds: 200),
+                      child: const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: 20,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-        ),
 
-        // Grid of up to 6 recent documents — collapsible.
-        if (recentlyAddedExpanded)
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(22, 8, 22, 0),
-            sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                childAspectRatio: 0.85,
-              ),
-              delegate: SliverChildBuilderDelegate(
-                (_, i) => _DocGridTile(document: recentDocs[i]),
-                childCount: recentDocs.length,
+          // Grid of up to 6 docs added in the last 30 days — collapsible.
+          if (recentlyAddedExpanded)
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(22, 8, 22, 0),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: 0.85,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (_, i) => _DocGridTile(document: recentDocs[i]),
+                  childCount: recentDocs.length,
+                ),
               ),
             ),
-          ),
+        ],
 
         // All documents feed.
         SliverToBoxAdapter(
@@ -588,6 +594,7 @@ List<Widget> _buildBody({
             docs: docs,
             categories: categories,
             notifier: notifier,
+            currentSort: notifier.currentSortOrder,
           ),
         ),
 
@@ -787,40 +794,49 @@ class _CategoryLegend extends StatelessWidget {
       categoriesState.value ?? [],
     );
 
-    // Selected category floats to front.
-    if (selectedCategoryId != null) {
-      final idx = categories.indexWhere((c) => c.id == selectedCategoryId);
-      if (idx > 0) {
-        final selected = categories.removeAt(idx);
-        categories.insert(0, selected);
-      }
-    }
+    final totalCount = categoryCounts.values.fold(0, (a, b) => a + b);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          height: 36,
+          height: 48,
           child: ListView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(
               horizontal: AppSizes.screenPadding,
+              vertical: 8,
             ),
-            children: categories.map((cat) {
-              final shortName = cat.name.split(' ').first;
-              final isSelected = selectedCategoryId == cat.id;
-              return Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: _LegendItem(
-                  label: shortName,
-                  count: categoryCounts[cat.id] ?? 0,
-                  dotColor: _parseCatColor(cat.color),
-                  isSelected: isSelected,
-                  // Tap selected → deselect. Tap unselected → select.
-                  onTap: () => onCategorySelected(isSelected ? null : cat.id),
+            children: [
+              // "All" pill — active when no category is selected.
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: _FilterPill(
+                  label: 'All',
+                  count: totalCount,
+                  isSelected: selectedCategoryId == null,
+                  activeColor: AppColors.deepNavy,
+                  onTap: () => onCategorySelected(null),
                 ),
-              );
-            }).toList(),
+              ),
+              // One pill per category.
+              ...categories.map((cat) {
+                final isSelected = selectedCategoryId == cat.id;
+                final catColor = _parseCatColor(cat.color);
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: _FilterPill(
+                    label: cat.name,
+                    count: categoryCounts[cat.id] ?? 0,
+                    isSelected: isSelected,
+                    dotColor: catColor,
+                    activeColor: catColor,
+                    onTap: () =>
+                        onCategorySelected(isSelected ? null : cat.id),
+                  ),
+                );
+              }),
+            ],
           ),
         ),
         const Divider(height: 1, thickness: 1, color: AppColors.divider),
@@ -829,67 +845,73 @@ class _CategoryLegend extends StatelessWidget {
   }
 }
 
-class _LegendItem extends StatelessWidget {
-  const _LegendItem({
+class _FilterPill extends StatelessWidget {
+  const _FilterPill({
     required this.label,
     required this.count,
-    required this.dotColor,
     required this.isSelected,
+    required this.activeColor,
     required this.onTap,
+    this.dotColor,
   });
 
   final String label;
-  final int? count;
-  final Color? dotColor;
+  final int count;
   final bool isSelected;
+  final Color activeColor;
   final VoidCallback onTap;
+  final Color? dotColor;
 
   @override
   Widget build(BuildContext context) {
-    final isActive = isSelected;
-    final nameColor = isActive ? AppColors.textPrimary : AppColors.textSecondary;
-    final countColor = isActive
-        ? AppColors.textPrimary
-        : AppColors.textTertiary;
-
     return GestureDetector(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          if (dotColor != null) ...[
-            Container(
-              width: 7,
-              height: 7,
-              decoration: BoxDecoration(
-                color: dotColor,
-                shape: BoxShape.circle,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? activeColor : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+          border: Border.all(
+            color: isSelected ? activeColor : AppColors.border,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (dotColor != null && !isSelected) ...[
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: dotColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 5),
+            ],
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : AppColors.textPrimary,
               ),
             ),
-            const SizedBox(width: 5),
-          ],
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-              color: nameColor,
-            ),
-          ),
-          if (count != null) ...[
             const SizedBox(width: 4),
             Text(
               '$count',
               style: GoogleFonts.inter(
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w400,
-                color: countColor,
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.75)
+                    : AppColors.textSecondary,
               ),
             ),
           ],
-        ],
+        ),
       ),
     );
   }
@@ -1061,11 +1083,13 @@ class _AllDocsFeed extends StatelessWidget {
     required this.docs,
     required this.categories,
     required this.notifier,
+    required this.currentSort,
   });
 
   final List<Document> docs;
   final List<DocumentCategory> categories;
   final DocumentsNotifier notifier;
+  final DocumentSortOrder currentSort;
 
   @override
   Widget build(BuildContext context) {
@@ -1094,6 +1118,7 @@ class _AllDocsFeed extends StatelessWidget {
               ),
               _SortButton(
                 isIOS: Theme.of(context).platform == TargetPlatform.iOS,
+                currentSort: currentSort,
                 onSortSelected: (order) => notifier.setSortOrder(order),
               ),
             ],
@@ -1377,47 +1402,59 @@ class _StorageTierCard extends StatelessWidget {
 class _SortButton extends StatelessWidget {
   const _SortButton({
     required this.isIOS,
+    required this.currentSort,
     required this.onSortSelected,
   });
 
   final bool isIOS;
+  final DocumentSortOrder currentSort;
   final void Function(DocumentSortOrder order) onSortSelected;
 
   static const _options = [
     (label: 'Date Added', order: DocumentSortOrder.dateAddedDesc),
-    (label: 'Name', order: DocumentSortOrder.nameAsc),
+    (label: 'Name A–Z', order: DocumentSortOrder.nameAsc),
     (label: 'Category', order: DocumentSortOrder.categoryAsc),
   ];
 
+  String get _currentLabel => _options
+      .firstWhere(
+        (o) => o.order == currentSort,
+        orElse: () => _options.first,
+      )
+      .label;
+
   @override
   Widget build(BuildContext context) {
-    if (isIOS) {
-      return GestureDetector(
-        onTap: () => _showIOSSortSheet(context),
-        child: Text(
-          'Sort \u2193',
-          style: GoogleFonts.ibmPlexMono(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            color: AppColors.accent,
-            letterSpacing: 0,
-          ),
+    return GestureDetector(
+      onTap: () =>
+          isIOS ? _showIOSSortSheet(context) : _showAndroidSortSheet(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+          border: Border.all(color: AppColors.border, width: 1),
         ),
-      );
-    }
-
-    return PopupMenuButton<DocumentSortOrder>(
-      icon: const Icon(Icons.sort, color: AppColors.accent, size: 18),
-      color: AppColors.surface,
-      onSelected: onSortSelected,
-      itemBuilder: (_) => _options
-          .map(
-            (opt) => PopupMenuItem<DocumentSortOrder>(
-              value: opt.order,
-              child: Text(opt.label, style: AppTextStyles.bodyMedium),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _currentLabel,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary,
+              ),
             ),
-          )
-          .toList(),
+            const SizedBox(width: 2),
+            const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 14,
+              color: AppColors.textSecondary,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1429,6 +1466,7 @@ class _SortButton extends StatelessWidget {
         actions: _options
             .map(
               (opt) => CupertinoActionSheetAction(
+                isDefaultAction: opt.order == currentSort,
                 onPressed: () {
                   Navigator.of(context, rootNavigator: true).pop();
                   onSortSelected(opt.order);
@@ -1438,9 +1476,42 @@ class _SortButton extends StatelessWidget {
             )
             .toList(),
         cancelButton: CupertinoActionSheetAction(
-          isDestructiveAction: false,
           onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
           child: const Text('Cancel'),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showAndroidSortSheet(BuildContext context) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Text('Sort By', style: AppTextStyles.h4),
+            const Divider(height: 16),
+            ..._options.map(
+              (opt) => ListTile(
+                title: Text(opt.label, style: AppTextStyles.bodyMedium),
+                trailing: opt.order == currentSort
+                    ? const Icon(Icons.check_rounded,
+                        color: AppColors.accent, size: 20)
+                    : null,
+                onTap: () {
+                  Navigator.of(context).pop();
+                  onSortSelected(opt.order);
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
         ),
       ),
     );
