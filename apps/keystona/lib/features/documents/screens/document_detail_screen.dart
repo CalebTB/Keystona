@@ -260,8 +260,6 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
         ?.difference(DateTime.now())
         .inDays;
     final showExpiryCard = daysLeft != null && daysLeft < 90;
-    final hasNotes = doc.notes != null && doc.notes!.isNotEmpty;
-
     return Stack(
       children: [
         CustomScrollView(
@@ -292,13 +290,10 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
                   ],
                   const SizedBox(height: AppSizes.md),
                   _DetailsCard(document: doc),
-                  const SizedBox(height: AppSizes.md),
                   _LinkedToCard(document: doc),
                   _UsedInCard(documentId: widget.documentId),
-                  if (hasNotes) ...[
-                    const SizedBox(height: AppSizes.md),
-                    _NotesCard(document: doc),
-                  ],
+                  const SizedBox(height: AppSizes.md),
+                  _NotesCard(document: doc),
                   const SizedBox(height: AppSizes.md),
                   _FileInfoCard(document: doc),
                   const SizedBox(height: 120),
@@ -1169,60 +1164,82 @@ class _CardEditButton extends StatelessWidget {
 
 // ─── Linked To Card ───────────────────────────────────────────────────────────
 
-class _LinkedToCard extends StatelessWidget {
+class _LinkedToCard extends StatefulWidget {
   const _LinkedToCard({required this.document});
 
   final Document document;
 
   @override
-  Widget build(BuildContext context) {
-    final hasLinkedItem = document.linkedSystemId != null ||
-        document.linkedApplianceId != null;
+  State<_LinkedToCard> createState() => _LinkedToCardState();
+}
 
-    return _InfoCard(
-      icon: Icons.link_rounded,
-      label: 'LINKED TO',
-      child: Column(
-        children: [
-          _LinkedItemRow(
-            icon: Icons.home_outlined,
-            iconColor: AppColors.olive,
-            iconBg: AppColors.oliveDim,
-            title: 'Your Property',
-            subtitle: 'Primary property',
-            onTap: null,
-          ),
-          if (hasLinkedItem) ...[
-            const Divider(
-              height: 1,
-              color: AppColors.warmFill,
-              indent: 16,
-              endIndent: 16,
-            ),
-            _LinkedItemRow(
-              icon: document.linkedSystemId != null
-                  ? Icons.settings_outlined
-                  : Icons.kitchen_outlined,
-              iconColor: AppColors.slate,
-              iconBg: AppColors.slateDim,
-              title: document.linkedSystemId != null
-                  ? 'Linked System'
-                  : 'Linked Appliance',
-              subtitle: document.linkedSystemId != null ? 'System' : 'Appliance',
-              onTap: () {
-                final id = document.linkedSystemId ??
-                    document.linkedApplianceId ??
-                    '';
-                final path = document.linkedSystemId != null
-                    ? AppRoutes.homeSystemDetail
-                        .replaceFirst(':systemId', id)
-                    : AppRoutes.homeApplianceDetail
-                        .replaceFirst(':applianceId', id);
-                context.push(path);
-              },
-            ),
-          ],
-        ],
+class _LinkedToCardState extends State<_LinkedToCard> {
+  String? _linkedName;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLinkedName();
+  }
+
+  Future<void> _fetchLinkedName() async {
+    final systemId = widget.document.linkedSystemId;
+    final applianceId = widget.document.linkedApplianceId;
+    if (systemId == null && applianceId == null) return;
+
+    try {
+      final Map<String, dynamic>? row;
+      if (systemId != null) {
+        row = await SupabaseService.client
+            .from('systems')
+            .select('name')
+            .eq('id', systemId)
+            .maybeSingle();
+      } else {
+        row = await SupabaseService.client
+            .from('appliances')
+            .select('name')
+            .eq('id', applianceId!)
+            .maybeSingle();
+      }
+      if (mounted && row != null) {
+        setState(() => _linkedName = row!['name'] as String?);
+      }
+    } catch (_) {
+      // Name lookup is best-effort — subtitle falls back to type label.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final doc = widget.document;
+    final hasLinkedItem =
+        doc.linkedSystemId != null || doc.linkedApplianceId != null;
+
+    if (!hasLinkedItem) return const SizedBox.shrink();
+
+    final isSystem = doc.linkedSystemId != null;
+    final linkedId = (doc.linkedSystemId ?? doc.linkedApplianceId)!;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSizes.md),
+      child: _InfoCard(
+        icon: Icons.link_rounded,
+        label: 'LINKED TO',
+        child: _LinkedItemRow(
+          icon: isSystem ? Icons.settings_outlined : Icons.kitchen_outlined,
+          iconColor: AppColors.slate,
+          iconBg: AppColors.slateDim,
+          title: _linkedName ?? (isSystem ? 'Linked System' : 'Linked Appliance'),
+          subtitle: isSystem ? 'System' : 'Appliance',
+          onTap: () {
+            final path = isSystem
+                ? AppRoutes.homeSystemDetail.replaceFirst(':systemId', linkedId)
+                : AppRoutes.homeApplianceDetail
+                    .replaceFirst(':applianceId', linkedId);
+            context.push(path);
+          },
+        ),
       ),
     );
   }
@@ -1371,24 +1388,48 @@ class _NotesCard extends StatelessWidget {
 
   final Document document;
 
+  bool get _hasNotes => document.notes != null && document.notes!.isNotEmpty;
+
   @override
   Widget build(BuildContext context) {
     return _InfoCard(
       icon: Icons.notes_rounded,
       label: 'NOTES',
-      trailing: _CardEditButton(
-        onTap: () => EditMetadataSheet.show(context, document),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-        child: Text(
-          document.notes!,
-          style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondary,
-            height: 1.6,
-          ),
-        ),
-      ),
+      trailing: _hasNotes
+          ? _CardEditButton(
+              onTap: () => EditMetadataSheet.show(context, document),
+            )
+          : null,
+      child: _hasNotes
+          ? Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+              child: Text(
+                document.notes!,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                  height: 1.6,
+                ),
+              ),
+            )
+          : GestureDetector(
+              onTap: () => EditMetadataSheet.show(context, document),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                child: Row(
+                  children: [
+                    const Icon(Icons.add_rounded,
+                        size: 16, color: AppColors.textSecondary),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Add a note…',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
     );
   }
 }

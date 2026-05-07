@@ -153,9 +153,6 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
     final isSearchActive = notifier.isSearchActive;
     final isPremium = ref.watch(isPremiumProvider);
 
-    final allDocs = documentsState.value ?? [];
-    final docCount = allDocs.length;
-    final catCount = (categoriesState.value ?? []).length;
     final categoryCounts = countsState.value ?? {};
 
     return CupertinoPageScaffold(
@@ -233,14 +230,6 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
                 ),
               ),
 
-              // Subtitle row: doc count + category count.
-              SliverToBoxAdapter(
-                child: _DocSubtitle(
-                  docCount: docCount,
-                  catCount: catCount,
-                ),
-              ),
-
               // Search bar with OCR badge.
               SliverToBoxAdapter(
                 child: _DocSearchBar(
@@ -249,18 +238,19 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
                 ),
               ),
 
-              // Category legend — horizontal dot + name + count row.
-              SliverToBoxAdapter(
-                child: _CategoryLegend(
-                  categoriesState: categoriesState,
-                  selectedCategoryId: _selectedCategoryId,
-                  onCategorySelected: (id) {
-                    setState(() => _selectedCategoryId = id);
-                    ref.read(documentsProvider.notifier).setCategory(id);
-                  },
-                  categoryCounts: categoryCounts,
+              // Category filter pills — hidden during active search.
+              if (!isSearchActive)
+                SliverToBoxAdapter(
+                  child: _CategoryLegend(
+                    categoriesState: categoriesState,
+                    selectedCategoryId: _selectedCategoryId,
+                    onCategorySelected: (id) {
+                      setState(() => _selectedCategoryId = id);
+                      ref.read(documentsProvider.notifier).setCategory(id);
+                    },
+                    categoryCounts: categoryCounts,
+                  ),
                 ),
-              ),
 
               // Document body.
               ..._buildBody(
@@ -268,6 +258,8 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
                 documentsState: documentsState,
                 categoriesState: categoriesState,
                 isSearchActive: isSearchActive,
+                selectedCategoryId: _selectedCategoryId,
+                totalDocCount: categoryCounts.values.fold(0, (a, b) => a + b),
                 notifier: notifier,
                 isPremium: isPremium,
                 onAddTapped: _onAddTapped,
@@ -350,9 +342,6 @@ class _AndroidDocumentsLayoutState
     final isSearchActive = notifier.isSearchActive;
     final isPremium = ref.watch(isPremiumProvider);
 
-    final allDocs = documentsState.value ?? [];
-    final docCount = allDocs.length;
-    final catCount = (categoriesState.value ?? []).length;
     final categoryCounts = countsState.value ?? {};
 
     return Scaffold(
@@ -420,36 +409,32 @@ class _AndroidDocumentsLayoutState
             ),
 
             SliverToBoxAdapter(
-              child: _DocSubtitle(
-                docCount: docCount,
-                catCount: catCount,
-              ),
-            ),
-
-            SliverToBoxAdapter(
               child: _DocSearchBar(
                 onChanged: (query) =>
                     ref.read(documentsProvider.notifier).setSearchQuery(query),
               ),
             ),
 
-            SliverToBoxAdapter(
-              child: _CategoryLegend(
-                categoriesState: categoriesState,
-                selectedCategoryId: _selectedCategoryId,
-                onCategorySelected: (id) {
-                  setState(() => _selectedCategoryId = id);
-                  ref.read(documentsProvider.notifier).setCategory(id);
-                },
-                categoryCounts: categoryCounts,
+            if (!isSearchActive)
+              SliverToBoxAdapter(
+                child: _CategoryLegend(
+                  categoriesState: categoriesState,
+                  selectedCategoryId: _selectedCategoryId,
+                  onCategorySelected: (id) {
+                    setState(() => _selectedCategoryId = id);
+                    ref.read(documentsProvider.notifier).setCategory(id);
+                  },
+                  categoryCounts: categoryCounts,
+                ),
               ),
-            ),
 
             ..._buildBody(
               context: context,
               documentsState: documentsState,
               categoriesState: categoriesState,
               isSearchActive: isSearchActive,
+              selectedCategoryId: _selectedCategoryId,
+              totalDocCount: categoryCounts.values.fold(0, (a, b) => a + b),
               notifier: notifier,
               isPremium: isPremium,
               onAddTapped: _onAddTapped,
@@ -474,6 +459,8 @@ List<Widget> _buildBody({
   required AsyncValue<List<Document>> documentsState,
   required AsyncValue<List<DocumentCategory>> categoriesState,
   required bool isSearchActive,
+  required String? selectedCategoryId,
+  required int totalDocCount,
   required DocumentsNotifier notifier,
   required bool isPremium,
   required VoidCallback onAddTapped,
@@ -497,6 +484,17 @@ List<Widget> _buildBody({
         if (isSearchActive) {
           return [
             const SliverFillRemaining(child: DocumentSearchEmptyState()),
+          ];
+        }
+        if (selectedCategoryId != null) {
+          final catName = (categoriesState.value ?? [])
+              .where((c) => c.id == selectedCategoryId)
+              .map((c) => c.name)
+              .firstOrNull ?? 'this category';
+          return [
+            SliverFillRemaining(
+              child: _FilteredEmptyState(categoryName: catName),
+            ),
           ];
         }
         return [
@@ -595,39 +593,79 @@ List<Widget> _buildBody({
             categories: categories,
             notifier: notifier,
             currentSort: notifier.currentSortOrder,
+            sectionTitle: selectedCategoryId != null
+                ? ((categoriesState.value ?? [])
+                        .where((c) => c.id == selectedCategoryId)
+                        .map((c) => c.name)
+                        .firstOrNull ??
+                    'Documents')
+                : 'All Documents',
           ),
         ),
 
         if (!isPremium)
           SliverToBoxAdapter(
-            child: _StorageTierCard(docCount: docs.length),
+            child: _StorageTierCard(docCount: totalDocCount),
           ),
       ];
     },
   );
 }
 
-// ── _DocSubtitle ──────────────────────────────────────────────────────────────
+// ── _FilteredEmptyState ───────────────────────────────────────────────────────
 
-class _DocSubtitle extends StatelessWidget {
-  const _DocSubtitle({required this.docCount, required this.catCount});
+class _FilteredEmptyState extends StatelessWidget {
+  const _FilteredEmptyState({required this.categoryName});
 
-  final int docCount;
-  final int catCount;
+  final String categoryName;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSizes.screenPadding,
-        AppSizes.xs,
-        AppSizes.screenPadding,
-        AppSizes.xs,
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: AppColors.warmFill,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.folder_open_outlined,
+                size: 28,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No $categoryName documents',
+              style: GoogleFonts.fraunces(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Documents you add to this category will appear here.',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
 }
-
 
 // ── _DocSearchBar ─────────────────────────────────────────────────────────────
 
@@ -1084,12 +1122,14 @@ class _AllDocsFeed extends StatelessWidget {
     required this.categories,
     required this.notifier,
     required this.currentSort,
+    required this.sectionTitle,
   });
 
   final List<Document> docs;
   final List<DocumentCategory> categories;
   final DocumentsNotifier notifier;
   final DocumentSortOrder currentSort;
+  final String sectionTitle;
 
   @override
   Widget build(BuildContext context) {
@@ -1108,7 +1148,7 @@ class _AllDocsFeed extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'All Documents',
+                  sectionTitle,
                   style: GoogleFonts.fraunces(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
