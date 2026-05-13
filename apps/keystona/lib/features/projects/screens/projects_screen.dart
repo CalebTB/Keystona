@@ -474,25 +474,28 @@ class _Lane extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Top divider
+        Container(height: 1, color: AppColors.warmFill),
+
         // Lane header
         Padding(
           padding: const EdgeInsets.fromLTRB(
             AppSizes.md,
+            14,
             AppSizes.md,
-            AppSizes.md,
-            AppSizes.sm,
+            10,
           ),
           child: Row(
             children: [
               Container(
-                width: 8,
-                height: 8,
+                width: 10,
+                height: 10,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: color,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 9),
               Text(
                 label,
                 style: AppTextStyles.monoSection.copyWith(
@@ -500,9 +503,9 @@ class _Lane extends StatelessWidget {
                   letterSpacing: 1.2,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 9),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(4),
@@ -515,16 +518,20 @@ class _Lane extends StatelessWidget {
             ],
           ),
         ),
+
         // Horizontal tile scroll
         SizedBox(
-          height: 200,
+          height: 220,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
+            padding: const EdgeInsets.only(
+              left: AppSizes.md,
+              right: AppSizes.lg,
+            ),
             itemCount: projects.length,
             separatorBuilder: (_, _) => const SizedBox(width: 12),
             itemBuilder: (ctx, i) => SizedBox(
-              width: 260,
+              width: 265,
               child: ProjectCard(
                 project: projects[i],
                 onTap: () => onTap(projects[i].id),
@@ -532,7 +539,8 @@ class _Lane extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: AppSizes.sm),
+
+        const SizedBox(height: AppSizes.md),
       ],
     );
   }
