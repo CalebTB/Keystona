@@ -429,10 +429,10 @@ class _BoardView extends StatelessWidget {
   final ValueChanged<String> onTap;
 
   static const _lanes = [
-    (status: 'in_progress', label: 'IN PROGRESS', color: AppColors.slate),
-    (status: 'planning',    label: 'PLANNING',    color: AppColors.sand),
-    (status: 'on_hold',     label: 'ON HOLD',     color: AppColors.amber),
-    (status: 'completed',   label: 'COMPLETED',   color: AppColors.olive),
+    (status: 'in_progress', label: 'IN PROGRESS', color: AppColors.slate,  laneHeight: 220.0),
+    (status: 'planning',    label: 'PLANNING',    color: AppColors.sand,   laneHeight: 220.0),
+    (status: 'on_hold',     label: 'ON HOLD',     color: AppColors.amber,  laneHeight: 220.0),
+    (status: 'completed',   label: 'COMPLETED',   color: AppColors.olive,  laneHeight: 76.0),
   ];
 
   @override
@@ -444,6 +444,7 @@ class _BoardView extends StatelessWidget {
           _Lane(
             label: lane.label,
             color: lane.color,
+            laneHeight: lane.laneHeight,
             projects: projects
                 .where((p) => p.status == lane.status)
                 .toList(),
@@ -458,12 +459,14 @@ class _Lane extends StatelessWidget {
   const _Lane({
     required this.label,
     required this.color,
+    required this.laneHeight,
     required this.projects,
     required this.onTap,
   });
 
   final String label;
   final Color color;
+  final double laneHeight;
   final List<Project> projects;
   final ValueChanged<String> onTap;
 
@@ -521,7 +524,7 @@ class _Lane extends StatelessWidget {
 
         // Horizontal tile scroll
         SizedBox(
-          height: 220,
+          height: laneHeight,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.only(

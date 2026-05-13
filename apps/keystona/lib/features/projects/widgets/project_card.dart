@@ -10,8 +10,8 @@ import '../models/project.dart';
 
 /// Card for a single project — board/list shared component.
 ///
-/// Hero: dark gradient with project emoji + name.
-/// Body: phase scope dots, budget bar, work-type pill + date range.
+/// Active projects: dark gradient hero + body.
+/// Completed projects: simplified warm-fill hero, dashed olive border, faded.
 class ProjectCard extends StatelessWidget {
   const ProjectCard({
     super.key,
@@ -48,6 +48,34 @@ class ProjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isCompleted = project.status == 'completed';
+    final emoji = _emoji[project.projectType] ?? '🏠';
+
+    if (isCompleted) {
+      return Opacity(
+        opacity: 0.72,
+        child: GestureDetector(
+          onTap: onTap,
+          child: CustomPaint(
+            foregroundPainter: _DashedBorderPainter(
+              color: AppColors.olive,
+              radius: 12,
+              strokeWidth: 1.5,
+              dashLength: 5,
+              gapLength: 4,
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: _CompletedRow(project: project),
+            ),
+          ),
+        ),
+      );
+    }
+
     final borderColor = _statusColor(project.status);
     return GestureDetector(
       onTap: onTap,
@@ -64,7 +92,7 @@ class ProjectCard extends StatelessWidget {
             children: [
               _HeroSection(
                 project: project,
-                emoji: _emoji[project.projectType] ?? '🏠',
+                emoji: emoji,
               ),
               _CardBody(project: project),
             ],
@@ -73,6 +101,64 @@ class ProjectCard extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Dashed border painter ─────────────────────────────────────────────────────
+
+class _DashedBorderPainter extends CustomPainter {
+  const _DashedBorderPainter({
+    required this.color,
+    required this.radius,
+    required this.strokeWidth,
+    required this.dashLength,
+    required this.gapLength,
+  });
+
+  final Color color;
+  final double radius;
+  final double strokeWidth;
+  final double dashLength;
+  final double gapLength;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(
+        strokeWidth / 2,
+        strokeWidth / 2,
+        size.width - strokeWidth,
+        size.height - strokeWidth,
+      ),
+      Radius.circular(radius),
+    );
+
+    final path = Path()..addRRect(rrect);
+    final metrics = path.computeMetrics();
+    for (final metric in metrics) {
+      double distance = 0;
+      while (distance < metric.length) {
+        canvas.drawPath(
+          metric.extractPath(distance, distance + dashLength),
+          paint,
+        );
+        distance += dashLength + gapLength;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedBorderPainter old) =>
+      old.color != color ||
+      old.radius != radius ||
+      old.strokeWidth != strokeWidth ||
+      old.dashLength != dashLength ||
+      old.gapLength != gapLength;
 }
 
 // ── Hero ─────────────────────────────────────────────────────────────────────
@@ -119,6 +205,73 @@ class _HeroSection extends StatelessWidget {
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Completed row (condensed) ─────────────────────────────────────────────────
+
+class _CompletedRow extends StatelessWidget {
+  const _CompletedRow({required this.project});
+
+  final Project project;
+
+  static String _compact(double v) {
+    if (v >= 1000) {
+      final k = v / 1000;
+      return '\$${k % 1 == 0 ? k.toInt().toString() : k.toStringAsFixed(1)}k';
+    }
+    return '\$${NumberFormat('#,###').format(v.toInt())}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = <String>[];
+    if (project.estimatedBudget != null) {
+      parts.add(_compact(project.estimatedBudget!));
+    }
+    if (project.plannedEndDate != null) {
+      parts.add(DateFormat("MMM ''yy").format(project.plannedEndDate!));
+    }
+    parts.add(project.workType.workTypeLabel);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Icon(Icons.check, size: 14, color: AppColors.olive),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  project.name,
+                  style: AppTextStyles.headlineSmall.copyWith(
+                    fontSize: 14,
+                    color: AppColors.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (parts.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    parts.join(' · '),
+                    style: AppTextStyles.monoLabel.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
             ),
           ),
         ],
