@@ -291,6 +291,7 @@ class _CardBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasPhases = project.phaseCount > 0;
     final hasBudget = project.estimatedBudget != null;
+    final dotCount = math.min(project.phaseCount, 7);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
@@ -298,7 +299,13 @@ class _CardBody extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (hasPhases) ...[
-            _PhaseDots(count: math.min(project.phaseCount, 7)),
+            _PhaseDots(
+              count: dotCount,
+              currentPhaseIndex: project.currentPhaseIndex != null
+                  ? math.min(project.currentPhaseIndex!, dotCount - 1)
+                  : null,
+              currentPhaseName: project.currentPhaseName,
+            ),
             const SizedBox(height: 8),
           ],
           if (hasBudget) ...[
@@ -314,19 +321,59 @@ class _CardBody extends StatelessWidget {
 
 // ── Phase dots ────────────────────────────────────────────────────────────────
 
+enum _DotState { completed, active, upcoming }
+
 class _PhaseDots extends StatelessWidget {
-  const _PhaseDots({required this.count});
+  const _PhaseDots({
+    required this.count,
+    this.currentPhaseIndex,
+    this.currentPhaseName,
+  });
 
   final int count;
+  final int? currentPhaseIndex;
+  final String? currentPhaseName;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final hasProgress = currentPhaseIndex != null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (int i = 0; i < count; i++) ...[
-          if (i > 0)
-            Expanded(child: Container(height: 2, color: AppColors.gray200)),
-          const _PhaseDot(),
+        Row(
+          children: [
+            for (int i = 0; i < count; i++) ...[
+              if (i > 0)
+                Expanded(
+                  child: Container(
+                    height: 2,
+                    color: hasProgress && i <= currentPhaseIndex!
+                        ? AppColors.oliveLight.withValues(alpha: 0.65)
+                        : AppColors.gray200,
+                  ),
+                ),
+              _PhaseDot(
+                state: !hasProgress
+                    ? _DotState.upcoming
+                    : i < currentPhaseIndex!
+                        ? _DotState.completed
+                        : i == currentPhaseIndex!
+                            ? _DotState.active
+                            : _DotState.upcoming,
+              ),
+            ],
+          ],
+        ),
+        if (hasProgress && currentPhaseName != null) ...[
+          const SizedBox(height: 5),
+          Text(
+            'Phase ${currentPhaseIndex! + 1} of $count · $currentPhaseName',
+            style: AppTextStyles.monoLabel.copyWith(
+              fontSize: 10,
+              color: AppColors.textSecondary,
+            ),
+          ),
         ],
       ],
     );
@@ -334,18 +381,45 @@ class _PhaseDots extends StatelessWidget {
 }
 
 class _PhaseDot extends StatelessWidget {
-  const _PhaseDot();
+  const _PhaseDot({required this.state});
+
+  final _DotState state;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 7,
-      height: 7,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: AppColors.gray300, width: 1.5),
-      ),
-    );
+    return switch (state) {
+      _DotState.completed => Container(
+          width: 9,
+          height: 9,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.oliveLight,
+          ),
+        ),
+      _DotState.active => Container(
+          width: 11,
+          height: 11,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.accent,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.accent.withValues(alpha: 0.45),
+                blurRadius: 6,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+        ),
+      _DotState.upcoming => Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.gray300, width: 1.5),
+          ),
+        ),
+    };
   }
 }
 

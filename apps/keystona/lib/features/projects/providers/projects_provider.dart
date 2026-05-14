@@ -109,6 +109,51 @@ class ProjectsNotifier extends _$ProjectsNotifier {
     return (rows as List<dynamic>).cast<Map<String, dynamic>>();
   }
 
+  // ── Private helpers ───────────────────────────────────────────────────────
+
+  /// Builds a [Project] from a Supabase row that includes a nested
+  /// `project_phases` array, and populates [Project.currentPhaseIndex] /
+  /// [Project.currentPhaseName] from the active phase.
+  Project _fromRow(Map<String, dynamic> row) {
+    final project = Project.fromJson(row);
+
+    final rawPhases = (row['project_phases'] as List<dynamic>?)
+            ?.cast<Map<String, dynamic>>() ??
+        [];
+
+    final phases = rawPhases
+        .where((p) =>
+            p['deleted_at'] == null && p['status'] != 'cancelled')
+        .toList()
+      ..sort((a, b) =>
+          (a['sort_order'] as int).compareTo(b['sort_order'] as int));
+
+    Map<String, dynamic>? active;
+    int? activeIndex;
+    for (int i = 0; i < phases.length; i++) {
+      if (phases[i]['status'] == 'in_progress') {
+        active = phases[i];
+        activeIndex = i;
+        break;
+      }
+    }
+    if (active == null) {
+      for (int i = 0; i < phases.length; i++) {
+        if (phases[i]['status'] == 'planning') {
+          active = phases[i];
+          activeIndex = i;
+          break;
+        }
+      }
+    }
+
+    if (activeIndex == null) return project;
+    return project.copyWith(
+      currentPhaseIndex: activeIndex,
+      currentPhaseName: active!['name'] as String?,
+    );
+  }
+
   // ── Private fetch ─────────────────────────────────────────────────────────
 
   Future<List<Project>> _fetch() async {
@@ -132,7 +177,8 @@ class ProjectsNotifier extends _$ProjectsNotifier {
           'id, property_id, user_id, name, description, project_type, status, work_type, '
           'estimated_budget, actual_spent, planned_start_date, planned_end_date, '
           'actual_start_date, actual_end_date, cover_photo_path, '
-          'phase_count, contractor_ids, created_at, updated_at, deleted_at',
+          'phase_count, contractor_ids, created_at, updated_at, deleted_at, '
+          'project_phases(name, status, sort_order, deleted_at)',
         )
         .eq('property_id', propertyRow['id'] as String)
         .isFilter('deleted_at', null)
@@ -140,7 +186,7 @@ class ProjectsNotifier extends _$ProjectsNotifier {
 
     return (rows as List<dynamic>)
         .cast<Map<String, dynamic>>()
-        .map(Project.fromJson)
+        .map(_fromRow)
         .toList();
   }
 }
