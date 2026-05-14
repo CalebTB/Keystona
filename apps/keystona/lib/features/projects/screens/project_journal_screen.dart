@@ -33,6 +33,7 @@ class ProjectJournalScreen extends ConsumerStatefulWidget {
 class _ProjectJournalScreenState
     extends ConsumerState<ProjectJournalScreen> {
   final Map<String, String> _phaseNames = {};
+  String? _selectedPhaseId;
 
   @override
   void initState() {
@@ -56,6 +57,71 @@ class _ProjectJournalScreenState
     } catch (_) {
       // Phase names are supplemental — silently ignore failures.
     }
+  }
+
+  Map<String, String> _linkedPhases(List<ProjectJournalNote> notes) {
+    final ids = notes
+        .where((n) => n.phaseId != null)
+        .map((n) => n.phaseId!)
+        .toSet();
+    return {
+      for (final id in ids)
+        if (_phaseNames.containsKey(id)) id: _phaseNames[id]!,
+    };
+  }
+
+  Future<void> _showFilterSheet(
+    BuildContext ctx,
+    Map<String, String> linked,
+  ) async {
+    const kClear = '__all__';
+    String? picked;
+
+    await showCupertinoModalPopup<void>(
+      context: ctx,
+      builder: (sheetCtx) => CupertinoActionSheet(
+        title: const Text('Filter by Phase'),
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () {
+              picked = kClear;
+              Navigator.of(sheetCtx).pop();
+            },
+            child: Row(
+              children: [
+                const Expanded(child: Text('All notes')),
+                if (_selectedPhaseId == null)
+                  const Icon(CupertinoIcons.checkmark, size: 16),
+              ],
+            ),
+          ),
+          ...linked.entries.map(
+            (e) => CupertinoActionSheetAction(
+              onPressed: () {
+                picked = e.key;
+                Navigator.of(sheetCtx).pop();
+              },
+              child: Row(
+                children: [
+                  Expanded(child: Text(e.value)),
+                  if (_selectedPhaseId == e.key)
+                    const Icon(CupertinoIcons.checkmark, size: 16),
+                ],
+              ),
+            ),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          isDefaultAction: true,
+          onPressed: () => Navigator.of(sheetCtx).pop(),
+          child: const Text('Cancel'),
+        ),
+      ),
+    );
+
+    if (picked == null || !mounted) return;
+    setState(() =>
+        _selectedPhaseId = picked == kClear ? null : picked);
   }
 
   void _onAddTap() =>
@@ -134,6 +200,9 @@ class _ProjectJournalScreenState
   Widget build(BuildContext context) {
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
     final asyncData = ref.watch(projectJournalProvider(widget.projectId));
+    final allNotes = asyncData.value ?? [];
+    final linked = _linkedPhases(allNotes);
+    final isFiltered = _selectedPhaseId != null;
 
     final body = asyncData.when(
       loading: () => const JournalSkeleton(),
@@ -147,6 +216,7 @@ class _ProjectJournalScreenState
               phaseNames: _phaseNames,
               projectId: widget.projectId,
               onDelete: _onDeleteNote,
+              selectedPhaseId: _selectedPhaseId,
             ),
     );
 
@@ -154,10 +224,42 @@ class _ProjectJournalScreenState
       return CupertinoPageScaffold(
         navigationBar: CupertinoNavigationBar(
           middle: const Text('Journal'),
-          trailing: CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: _onAddTap,
-            child: const Icon(CupertinoIcons.add),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (linked.isNotEmpty)
+                CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: () => _showFilterSheet(context, linked),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Icon(
+                        CupertinoIcons.slider_horizontal_3,
+                        color: isFiltered ? AppColors.accent : null,
+                      ),
+                      if (isFiltered)
+                        Positioned(
+                          top: -2,
+                          right: -2,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: AppColors.accent,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: _onAddTap,
+                child: const Icon(CupertinoIcons.add),
+              ),
+            ],
           ),
         ),
         child: SafeArea(bottom: false, child: body),
@@ -165,7 +267,19 @@ class _ProjectJournalScreenState
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Journal')),
+      appBar: AppBar(
+        title: const Text('Journal'),
+        actions: [
+          if (linked.isNotEmpty)
+            IconButton(
+              icon: Icon(
+                Icons.filter_list,
+                color: isFiltered ? AppColors.accent : null,
+              ),
+              onPressed: () => _showFilterSheet(context, linked),
+            ),
+        ],
+      ),
       body: body,
       floatingActionButton: FloatingActionButton(
         onPressed: _onAddTap,
@@ -198,12 +312,14 @@ class _NoteList extends ConsumerStatefulWidget {
     required this.phaseNames,
     required this.projectId,
     required this.onDelete,
+    this.selectedPhaseId,
   });
 
   final List<ProjectJournalNote> notes;
   final Map<String, String> phaseNames;
   final String projectId;
   final void Function(ProjectJournalNote) onDelete;
+  final String? selectedPhaseId;
 
   @override
   ConsumerState<_NoteList> createState() => _NoteListState();
@@ -213,7 +329,6 @@ class _NoteListState extends ConsumerState<_NoteList> {
   final _searchCtrl = TextEditingController();
   Timer? _debounce;
   String _query = '';
-  String? _selectedPhaseId;
 
   static final _monthFmt = DateFormat('MMMM yyyy');
 
@@ -231,22 +346,12 @@ class _NoteListState extends ConsumerState<_NoteList> {
     });
   }
 
-  // Only phases that actually have notes linked to them.
-  Map<String, String> get _linkedPhases {
-    final ids = widget.notes
-        .where((n) => n.phaseId != null)
-        .map((n) => n.phaseId!)
-        .toSet();
-    return {
-      for (final id in ids)
-        if (widget.phaseNames.containsKey(id)) id: widget.phaseNames[id]!,
-    };
-  }
-
   List<ProjectJournalNote> get _filtered {
     var result = widget.notes;
-    if (_selectedPhaseId != null) {
-      result = result.where((n) => n.phaseId == _selectedPhaseId).toList();
+    if (widget.selectedPhaseId != null) {
+      result = result
+          .where((n) => n.phaseId == widget.selectedPhaseId)
+          .toList();
     }
     if (_query.isNotEmpty) {
       result = result.where((n) =>
@@ -322,64 +427,8 @@ class _NoteListState extends ConsumerState<_NoteList> {
           ),
         ),
 
-        // Phase filter chips (only when notes are phase-linked)
-        if (_linkedPhases.isNotEmpty)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: AppPadding.screen.copyWith(top: 0, bottom: 0),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: AppSizes.sm),
-                  child: Row(
-                    children: _linkedPhases.entries.map((entry) {
-                      final selected = _selectedPhaseId == entry.key;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: AppSizes.xs),
-                        child: GestureDetector(
-                          onTap: () => setState(() => _selectedPhaseId =
-                              selected ? null : entry.key),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSizes.sm + 2,
-                              vertical: AppSizes.xs + 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? AppColors.slate
-                                  : AppColors.surface,
-                              borderRadius: BorderRadius.circular(
-                                  AppSizes.radiusFull),
-                              border: Border.all(
-                                color: selected
-                                    ? AppColors.slate
-                                    : AppColors.border,
-                              ),
-                            ),
-                            child: Text(
-                              entry.value,
-                              style: AppTextStyles.labelSmall.copyWith(
-                                color: selected
-                                    ? Colors.white
-                                    : AppColors.textSecondary,
-                                fontWeight: selected
-                                    ? FontWeight.w600
-                                    : FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
         // Summary bar (hidden while searching or filtering)
-        if (_query.isEmpty && _selectedPhaseId == null)
+        if (_query.isEmpty && widget.selectedPhaseId == null)
           SliverToBoxAdapter(
             child: Padding(
               padding: AppPadding.screen.copyWith(bottom: 0),
