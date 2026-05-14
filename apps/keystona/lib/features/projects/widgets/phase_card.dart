@@ -110,7 +110,7 @@ class PhaseCard extends StatelessWidget {
                                 if (phase.plannedStartDate != null ||
                                     phase.plannedEndDate != null) ...[
                                   const SizedBox(height: AppSizes.xs),
-                                  _DateRange(phase: phase),
+                                  _DateInfo(phase: phase),
                                 ],
                               ],
                             ),
@@ -136,10 +136,10 @@ class PhaseCard extends StatelessWidget {
   }
 }
 
-// ── Date range display ────────────────────────────────────────────────────────
+// ── Date info with overdue/due-soon detection ─────────────────────────────────
 
-class _DateRange extends StatelessWidget {
-  const _DateRange({required this.phase});
+class _DateInfo extends StatelessWidget {
+  const _DateInfo({required this.phase});
   final ProjectPhase phase;
 
   static String _fmt(DateTime d) =>
@@ -149,17 +149,63 @@ class _DateRange extends StatelessWidget {
   Widget build(BuildContext context) {
     final start = phase.plannedStartDate;
     final end = phase.plannedEndDate;
-    final text = (start != null && end != null)
+
+    final dateText = (start != null && end != null)
         ? '${_fmt(start)} – ${_fmt(end)}'
         : start != null
             ? 'Starts ${_fmt(start)}'
             : end != null
                 ? 'Ends ${_fmt(end)}'
                 : '';
-    if (text.isEmpty) return const SizedBox.shrink();
-    return Text(
-      text,
-      style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+    if (dateText.isEmpty) return const SizedBox.shrink();
+
+    final done = phase.status == 'completed' || phase.status == 'cancelled';
+    final today = DateTime.now();
+    final todayMidnight = DateTime(today.year, today.month, today.day);
+
+    String? healthLabel;
+    Color dateColor = AppColors.textSecondary;
+    Color labelColor = AppColors.textSecondary;
+
+    if (!done && end != null) {
+      final endDay = DateTime(end.year, end.month, end.day);
+      final diff = endDay.difference(todayMidnight).inDays;
+
+      if (diff < 0) {
+        final days = diff.abs();
+        healthLabel = days == 1 ? '1 day overdue' : '$days days overdue';
+        dateColor = AppColors.error;
+        labelColor = AppColors.error;
+      } else if (diff <= 7) {
+        healthLabel = diff == 0
+            ? 'Due today'
+            : diff == 1
+                ? 'Due tomorrow'
+                : 'Due in $diff days';
+        dateColor = AppColors.amber;
+        labelColor = AppColors.amber;
+      }
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          dateText,
+          style: AppTextStyles.caption.copyWith(color: dateColor),
+        ),
+        if (healthLabel != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            healthLabel,
+            style: AppTextStyles.caption.copyWith(
+              color: labelColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
