@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
@@ -174,6 +175,20 @@ class _ProjectJournalScreenState
   }
 }
 
+// ── Timeline item types ───────────────────────────────────────────────────────
+
+sealed class _ListItem { const _ListItem(); }
+
+class _HeaderItem extends _ListItem {
+  const _HeaderItem(this.label);
+  final String label;
+}
+
+class _NoteItem extends _ListItem {
+  const _NoteItem(this.note);
+  final ProjectJournalNote note;
+}
+
 // ── Note list ─────────────────────────────────────────────────────────────────
 
 class _NoteList extends StatelessWidget {
@@ -191,8 +206,26 @@ class _NoteList extends StatelessWidget {
   final void Function(ProjectJournalNote) onDelete;
   final WidgetRef ref;
 
+  static final _monthFmt = DateFormat('MMMM yyyy');
+
+  List<_ListItem> _buildItems() {
+    final items = <_ListItem>[];
+    String? currentMonth;
+    for (final note in notes) {
+      final month = _monthFmt.format(note.noteDate);
+      if (month != currentMonth) {
+        items.add(_HeaderItem(month));
+        currentMonth = month;
+      }
+      items.add(_NoteItem(note));
+    }
+    return items;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final items = _buildItems();
+
     return CustomScrollView(
       slivers: [
         CupertinoSliverRefreshControl(
@@ -201,34 +234,73 @@ class _NoteList extends StatelessWidget {
         ),
         SliverPadding(
           padding: AppPadding.screen.copyWith(top: AppSizes.sm),
-          sliver: SliverList.separated(
-            itemCount: notes.length,
-            separatorBuilder: (_, _) => const SizedBox(height: AppSizes.sm),
+          sliver: SliverList.builder(
+            itemCount: items.length,
             itemBuilder: (ctx, i) {
-              final note = notes[i];
-              return Dismissible(
-                key: ValueKey(note.id),
-                direction: DismissDirection.endToStart,
-                background: _DeleteBackground(),
-                confirmDismiss: (_) async {
-                  onDelete(note);
-                  return false;
-                },
-                child: JournalNoteCard(
-                  note: note,
-                  phaseName:
-                      note.phaseId != null ? phaseNames[note.phaseId] : null,
-                  onTap: () => ctx.push(
-                    '/projects/$projectId/notes/${note.id}/edit',
-                    extra: note,
+              final item = items[i];
+              return switch (item) {
+                _HeaderItem(:final label) => Padding(
+                    padding: EdgeInsets.only(
+                      top: i == 0 ? 0 : AppSizes.md,
+                      bottom: AppSizes.sm,
+                    ),
+                    child: _MonthHeader(label: label),
                   ),
-                ),
-              );
+                _NoteItem(:final note) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSizes.sm),
+                    child: Dismissible(
+                      key: ValueKey(note.id),
+                      direction: DismissDirection.endToStart,
+                      background: _DeleteBackground(),
+                      confirmDismiss: (_) async {
+                        onDelete(note);
+                        return false;
+                      },
+                      child: JournalNoteCard(
+                        note: note,
+                        phaseName: note.phaseId != null
+                            ? phaseNames[note.phaseId]
+                            : null,
+                        onTap: () => ctx.push(
+                          '/projects/$projectId/notes/${note.id}/edit',
+                          extra: note,
+                        ),
+                      ),
+                    ),
+                  ),
+              };
             },
           ),
         ),
         const SliverToBoxAdapter(
           child: SizedBox(height: AppSizes.xxl + AppSizes.xl),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Month section header ──────────────────────────────────────────────────────
+
+class _MonthHeader extends StatelessWidget {
+  const _MonthHeader({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          label,
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(width: AppSizes.sm),
+        const Expanded(
+          child: Divider(thickness: 1),
         ),
       ],
     );
