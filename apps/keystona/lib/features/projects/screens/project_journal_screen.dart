@@ -213,6 +213,7 @@ class _NoteListState extends ConsumerState<_NoteList> {
   final _searchCtrl = TextEditingController();
   Timer? _debounce;
   String _query = '';
+  String? _selectedPhaseId;
 
   static final _monthFmt = DateFormat('MMMM yyyy');
 
@@ -230,11 +231,29 @@ class _NoteListState extends ConsumerState<_NoteList> {
     });
   }
 
+  // Only phases that actually have notes linked to them.
+  Map<String, String> get _linkedPhases {
+    final ids = widget.notes
+        .where((n) => n.phaseId != null)
+        .map((n) => n.phaseId!)
+        .toSet();
+    return {
+      for (final id in ids)
+        if (widget.phaseNames.containsKey(id)) id: widget.phaseNames[id]!,
+    };
+  }
+
   List<ProjectJournalNote> get _filtered {
-    if (_query.isEmpty) return widget.notes;
-    return widget.notes.where((n) =>
-        (n.title?.toLowerCase().contains(_query) ?? false) ||
-        n.content.toLowerCase().contains(_query)).toList();
+    var result = widget.notes;
+    if (_selectedPhaseId != null) {
+      result = result.where((n) => n.phaseId == _selectedPhaseId).toList();
+    }
+    if (_query.isNotEmpty) {
+      result = result.where((n) =>
+          (n.title?.toLowerCase().contains(_query) ?? false) ||
+          n.content.toLowerCase().contains(_query)).toList();
+    }
+    return result;
   }
 
   List<_ListItem> _buildItems(List<ProjectJournalNote> notes) {
@@ -303,8 +322,64 @@ class _NoteListState extends ConsumerState<_NoteList> {
           ),
         ),
 
-        // Summary bar (hidden while searching)
-        if (_query.isEmpty)
+        // Phase filter chips (only when notes are phase-linked)
+        if (_linkedPhases.isNotEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: AppPadding.screen.copyWith(top: 0, bottom: 0),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: AppSizes.sm),
+                  child: Row(
+                    children: _linkedPhases.entries.map((entry) {
+                      final selected = _selectedPhaseId == entry.key;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: AppSizes.xs),
+                        child: GestureDetector(
+                          onTap: () => setState(() => _selectedPhaseId =
+                              selected ? null : entry.key),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSizes.sm + 2,
+                              vertical: AppSizes.xs + 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: selected
+                                  ? AppColors.slate
+                                  : AppColors.surface,
+                              borderRadius: BorderRadius.circular(
+                                  AppSizes.radiusFull),
+                              border: Border.all(
+                                color: selected
+                                    ? AppColors.slate
+                                    : AppColors.border,
+                              ),
+                            ),
+                            child: Text(
+                              entry.value,
+                              style: AppTextStyles.labelSmall.copyWith(
+                                color: selected
+                                    ? Colors.white
+                                    : AppColors.textSecondary,
+                                fontWeight: selected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+        // Summary bar (hidden while searching or filtering)
+        if (_query.isEmpty && _selectedPhaseId == null)
           SliverToBoxAdapter(
             child: Padding(
               padding: AppPadding.screen.copyWith(bottom: 0),
