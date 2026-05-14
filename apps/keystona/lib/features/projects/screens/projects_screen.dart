@@ -429,10 +429,11 @@ class _BoardView extends StatelessWidget {
   final ValueChanged<String> onTap;
 
   static const _lanes = [
-    (status: 'in_progress', label: 'IN PROGRESS', color: AppColors.slate,  laneHeight: 220.0),
-    (status: 'planning',    label: 'PLANNING',    color: AppColors.sand,   laneHeight: 220.0),
-    (status: 'on_hold',     label: 'ON HOLD',     color: AppColors.amber,  laneHeight: 220.0),
-    (status: 'completed',   label: 'COMPLETED',   color: AppColors.olive,  laneHeight: 76.0),
+    (status: 'in_progress', label: 'IN PROGRESS', color: AppColors.slate,    laneHeight: 220.0),
+    (status: 'planning',    label: 'PLANNING',    color: AppColors.sand,     laneHeight: 220.0),
+    (status: 'on_hold',     label: 'ON HOLD',     color: AppColors.amber,    laneHeight: 220.0),
+    (status: 'completed',   label: 'COMPLETED',   color: AppColors.olive,    laneHeight: 76.0),
+    (status: 'cancelled',   label: 'CANCELLED',   color: AppColors.gray400,  laneHeight: 76.0),
   ];
 
   @override

@@ -43,6 +43,7 @@ class ProjectCard extends StatelessWidget {
         'planning'    => AppColors.sand,
         'on_hold'     => AppColors.amber,
         'completed'   => AppColors.olive,
+        'cancelled'   => AppColors.gray300,
         _             => AppColors.border,
       };
 
@@ -51,14 +52,17 @@ class ProjectCard extends StatelessWidget {
     final isCompleted = project.status == 'completed';
     final emoji = _emoji[project.projectType] ?? '🏠';
 
-    if (isCompleted) {
+    final isCancelled = project.status == 'cancelled';
+
+    if (isCompleted || isCancelled) {
+      final borderColor = isCompleted ? AppColors.olive : AppColors.gray300;
       return Opacity(
-        opacity: 0.72,
+        opacity: isCompleted ? 0.72 : 0.55,
         child: GestureDetector(
           onTap: onTap,
           child: CustomPaint(
             foregroundPainter: _DashedBorderPainter(
-              color: AppColors.olive,
+              color: borderColor,
               radius: 12,
               strokeWidth: 1.5,
               dashLength: 5,
@@ -69,7 +73,11 @@ class ProjectCard extends StatelessWidget {
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: _CompletedRow(project: project),
+              child: _CondensedRow(
+                project: project,
+                icon: isCompleted ? Icons.check : Icons.close,
+                iconColor: isCompleted ? AppColors.olive : AppColors.gray500,
+              ),
             ),
           ),
         ),
@@ -213,12 +221,18 @@ class _HeroSection extends StatelessWidget {
   }
 }
 
-// ── Completed row (condensed) ─────────────────────────────────────────────────
+// ── Condensed row (completed + cancelled) ─────────────────────────────────────
 
-class _CompletedRow extends StatelessWidget {
-  const _CompletedRow({required this.project});
+class _CondensedRow extends StatelessWidget {
+  const _CondensedRow({
+    required this.project,
+    required this.icon,
+    required this.iconColor,
+  });
 
   final Project project;
+  final IconData icon;
+  final Color iconColor;
 
   static String _compact(double v) {
     if (v >= 1000) {
@@ -244,7 +258,7 @@ class _CompletedRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Icon(Icons.check, size: 14, color: AppColors.olive),
+          Icon(icon, size: 14, color: iconColor),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
