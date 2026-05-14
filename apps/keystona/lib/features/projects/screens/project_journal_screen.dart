@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -145,7 +147,6 @@ class _ProjectJournalScreenState
               phaseNames: _phaseNames,
               projectId: widget.projectId,
               onDelete: _onDeleteNote,
-              ref: ref,
             ),
     );
 
@@ -191,24 +192,52 @@ class _NoteItem extends _ListItem {
 
 // ── Note list ─────────────────────────────────────────────────────────────────
 
-class _NoteList extends StatelessWidget {
+class _NoteList extends ConsumerStatefulWidget {
   const _NoteList({
     required this.notes,
     required this.phaseNames,
     required this.projectId,
     required this.onDelete,
-    required this.ref,
   });
 
   final List<ProjectJournalNote> notes;
   final Map<String, String> phaseNames;
   final String projectId;
   final void Function(ProjectJournalNote) onDelete;
-  final WidgetRef ref;
+
+  @override
+  ConsumerState<_NoteList> createState() => _NoteListState();
+}
+
+class _NoteListState extends ConsumerState<_NoteList> {
+  final _searchCtrl = TextEditingController();
+  Timer? _debounce;
+  String _query = '';
 
   static final _monthFmt = DateFormat('MMMM yyyy');
 
-  List<_ListItem> _buildItems() {
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String val) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) setState(() => _query = val.toLowerCase().trim());
+    });
+  }
+
+  List<ProjectJournalNote> get _filtered {
+    if (_query.isEmpty) return widget.notes;
+    return widget.notes.where((n) =>
+        (n.title?.toLowerCase().contains(_query) ?? false) ||
+        n.content.toLowerCase().contains(_query)).toList();
+  }
+
+  List<_ListItem> _buildItems(List<ProjectJournalNote> notes) {
     final items = <_ListItem>[];
     String? currentMonth;
     for (final note in notes) {
@@ -224,60 +253,123 @@ class _NoteList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = _buildItems();
+    final filtered = _filtered;
+    final items = _buildItems(filtered);
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
 
     return CustomScrollView(
       slivers: [
         CupertinoSliverRefreshControl(
-          onRefresh: () =>
-              ref.read(projectJournalProvider(projectId).notifier).refresh(),
+          onRefresh: () => ref
+              .read(projectJournalProvider(widget.projectId).notifier)
+              .refresh(),
         ),
+
+        // Search bar
         SliverToBoxAdapter(
           child: Padding(
             padding: AppPadding.screen.copyWith(bottom: 0),
-            child: _SummaryBar(notes: notes),
-          ),
-        ),
-        SliverPadding(
-          padding: AppPadding.screen.copyWith(top: AppSizes.sm),
-          sliver: SliverList.builder(
-            itemCount: items.length,
-            itemBuilder: (ctx, i) {
-              final item = items[i];
-              return switch (item) {
-                _HeaderItem(:final label) => Padding(
-                    padding: EdgeInsets.only(
-                      top: i == 0 ? 0 : AppSizes.md,
-                      bottom: AppSizes.sm,
-                    ),
-                    child: _MonthHeader(label: label),
-                  ),
-                _NoteItem(:final note) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppSizes.sm),
-                    child: Dismissible(
-                      key: ValueKey(note.id),
-                      direction: DismissDirection.endToStart,
-                      background: _DeleteBackground(),
-                      confirmDismiss: (_) async {
-                        onDelete(note);
-                        return false;
-                      },
-                      child: JournalNoteCard(
-                        note: note,
-                        phaseName: note.phaseId != null
-                            ? phaseNames[note.phaseId]
-                            : null,
-                        onTap: () => ctx.push(
-                          '/projects/$projectId/notes/${note.id}/edit',
-                          extra: note,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: AppSizes.sm),
+              child: isIOS
+                  ? CupertinoSearchTextField(
+                      controller: _searchCtrl,
+                      placeholder: 'Search notes…',
+                      onChanged: _onSearchChanged,
+                    )
+                  : TextField(
+                      controller: _searchCtrl,
+                      onChanged: _onSearchChanged,
+                      decoration: InputDecoration(
+                        hintText: 'Search notes…',
+                        prefixIcon: const Icon(Icons.search, size: 20),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSizes.md,
+                          vertical: AppSizes.sm,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppSizes.radiusMd),
+                          borderSide: BorderSide(color: AppColors.border),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppSizes.radiusMd),
+                          borderSide: BorderSide(color: AppColors.border),
                         ),
                       ),
                     ),
-                  ),
-              };
-            },
+            ),
           ),
         ),
+
+        // Summary bar (hidden while searching)
+        if (_query.isEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: AppPadding.screen.copyWith(bottom: 0),
+              child: _SummaryBar(notes: widget.notes),
+            ),
+          ),
+
+        // Notes feed or no-results state
+        if (filtered.isEmpty && _query.isNotEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: Padding(
+                padding: AppPadding.screen,
+                child: Text(
+                  'No notes match "$_query"',
+                  style: AppTextStyles.bodyMedium
+                      .copyWith(color: AppColors.textSecondary),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          )
+        else
+          SliverPadding(
+            padding: AppPadding.screen.copyWith(top: AppSizes.sm),
+            sliver: SliverList.builder(
+              itemCount: items.length,
+              itemBuilder: (ctx, i) {
+                final item = items[i];
+                return switch (item) {
+                  _HeaderItem(:final label) => Padding(
+                      padding: EdgeInsets.only(
+                        top: i == 0 ? 0 : AppSizes.md,
+                        bottom: AppSizes.sm,
+                      ),
+                      child: _MonthHeader(label: label),
+                    ),
+                  _NoteItem(:final note) => Padding(
+                      padding: const EdgeInsets.only(bottom: AppSizes.sm),
+                      child: Dismissible(
+                        key: ValueKey(note.id),
+                        direction: DismissDirection.endToStart,
+                        background: _DeleteBackground(),
+                        confirmDismiss: (_) async {
+                          widget.onDelete(note);
+                          return false;
+                        },
+                        child: JournalNoteCard(
+                          note: note,
+                          phaseName: note.phaseId != null
+                              ? widget.phaseNames[note.phaseId]
+                              : null,
+                          onTap: () => ctx.push(
+                            '/projects/${widget.projectId}/notes/${note.id}/edit',
+                            extra: note,
+                          ),
+                        ),
+                      ),
+                    ),
+                };
+              },
+            ),
+          ),
+
         const SliverToBoxAdapter(
           child: SizedBox(height: AppSizes.xxl + AppSizes.xl),
         ),
