@@ -40,21 +40,12 @@ class JournalNoteCard extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             onTap: onTap,
-            child: IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+            child: Padding(
+              padding: const EdgeInsets.all(AppSizes.md),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Sand accent strip ────────────────────────────────────
-                  Container(width: 4, color: AppColors.sand),
-
-                  // ── Content ──────────────────────────────────────────────
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSizes.md),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
                           // Title
                           if (_hasTitle) ...[
                             Text(
@@ -98,10 +89,6 @@ class JournalNoteCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
         ),
