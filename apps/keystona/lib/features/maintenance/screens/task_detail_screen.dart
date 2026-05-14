@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -841,6 +842,7 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
 
   Future<void> _handleQuickComplete() async {
     if (_isCompleting) return;
+    HapticFeedback.mediumImpact();
     setState(() => _isCompleting = true);
 
     String? completionId;
@@ -897,6 +899,7 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
     );
 
     if (completionId == null || !mounted) return;
+    HapticFeedback.heavyImpact();
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()

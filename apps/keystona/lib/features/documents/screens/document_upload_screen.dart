@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -63,6 +64,13 @@ class _DocumentUploadScreenState
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<DocumentUploadState>(documentUploadProvider, (prev, next) {
+      if (prev?.step != DocumentUploadStep.success &&
+          next.step == DocumentUploadStep.success) {
+        HapticFeedback.heavyImpact();
+      }
+    });
+
     final state = ref.watch(documentUploadProvider);
 
     // Nothing to show until a file is selected.

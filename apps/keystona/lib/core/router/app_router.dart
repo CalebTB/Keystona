@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -159,6 +160,13 @@ abstract final class AppRoutes {
   static bool isAuthOnly(String path) => _authOnlyRoutes.contains(path);
 }
 
+// ─── Page builder helper ───────────────────────────────────────────────────
+
+/// Returns a [CupertinoPage] for all pushed routes, giving iOS the native
+/// slide-from-right transition and swipe-back gesture on every screen.
+CupertinoPage<void> _buildPage(GoRouterState state, Widget child) =>
+    CupertinoPage<void>(key: state.pageKey, child: child);
+
 // ─── Router provider ───────────────────────────────────────────────────────
 
 /// The single [GoRouter] instance for the app.
@@ -199,29 +207,29 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ── Auth routes (no shell) ───────────────────────────────────────────
       GoRoute(
         path: AppRoutes.login,
-        builder: (_, _) => const LoginScreen(),
+        pageBuilder: (_, state) => _buildPage(state, const LoginScreen()),
       ),
       GoRoute(
         path: AppRoutes.signup,
-        builder: (_, _) => const SignupScreen(),
+        pageBuilder: (_, state) => _buildPage(state, const SignupScreen()),
       ),
       GoRoute(
         path: AppRoutes.forgotPassword,
-        builder: (_, _) => const ForgotPasswordScreen(),
+        pageBuilder: (_, state) => _buildPage(state, const ForgotPasswordScreen()),
       ),
 
       // ── Onboarding routes (no shell) ─────────────────────────────────────
       GoRoute(
         path: AppRoutes.onboarding,
-        builder: (_, _) => const WelcomeScreen(),
+        pageBuilder: (_, state) => _buildPage(state, const WelcomeScreen()),
       ),
       GoRoute(
         path: AppRoutes.onboardingProperty,
-        builder: (_, _) => const PropertySetupScreen(),
+        pageBuilder: (_, state) => _buildPage(state, const PropertySetupScreen()),
       ),
       GoRoute(
         path: AppRoutes.onboardingTrial,
-        builder: (_, _) => const TrialScreen(),
+        pageBuilder: (_, state) => _buildPage(state, const TrialScreen()),
       ),
 
       // ── Shell — five tabs with persistent state ──────────────────────────
@@ -238,98 +246,118 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'systems',
-                    builder: (_, _) => const SystemsScreen(),
+                    pageBuilder: (_, state) =>
+                        _buildPage(state, const SystemsScreen()),
                     routes: [
-                      // Static 'add' must come before parameterised ':systemId'.
                       GoRoute(
                         path: 'add',
-                        builder: (_, state) {
-                          final existingSystem = state.extra as HomeSystem?;
-                          return SystemFormScreen(
-                            existingSystem: existingSystem,
-                          );
-                        },
+                        pageBuilder: (_, state) => _buildPage(
+                          state,
+                          SystemFormScreen(
+                            existingSystem: state.extra as HomeSystem?,
+                          ),
+                        ),
                       ),
                       GoRoute(
                         path: ':systemId',
-                        builder: (_, state) => SystemDetailScreen(
-                          systemId: state.pathParameters['systemId']!,
+                        pageBuilder: (_, state) => _buildPage(
+                          state,
+                          SystemDetailScreen(
+                            systemId: state.pathParameters['systemId']!,
+                          ),
                         ),
                       ),
                     ],
                   ),
                   GoRoute(
                     path: 'appliances',
-                    builder: (context, _) => const AppliancesScreen(),
+                    pageBuilder: (_, state) =>
+                        _buildPage(state, const AppliancesScreen()),
                     routes: [
-                      // Static 'add' must come before parameterised ':applianceId'.
                       GoRoute(
                         path: 'add',
-                        builder: (_, state) {
-                          final existing = state.extra as Appliance?;
-                          return ApplianceFormScreen(
-                              existingAppliance: existing);
-                        },
+                        pageBuilder: (_, state) => _buildPage(
+                          state,
+                          ApplianceFormScreen(
+                            existingAppliance: state.extra as Appliance?,
+                          ),
+                        ),
                       ),
                       GoRoute(
                         path: ':applianceId',
-                        builder: (_, state) => ApplianceDetailScreen(
-                          applianceId:
-                              state.pathParameters['applianceId']!,
+                        pageBuilder: (_, state) => _buildPage(
+                          state,
+                          ApplianceDetailScreen(
+                            applianceId:
+                                state.pathParameters['applianceId']!,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  // [#41] Stub routes for downstream issues.
                   GoRoute(
                     path: 'edit',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Edit Property'),
+                    pageBuilder: (_, state) => _buildPage(
+                      state,
+                      const PlaceholderScreen(name: 'Edit Property'),
+                    ),
                   ),
                   GoRoute(
                     path: 'lifespan',
-                    builder: (_, _) => const LifespanScreen(),
+                    pageBuilder: (_, state) =>
+                        _buildPage(state, const LifespanScreen()),
                   ),
                 ],
               ),
               GoRoute(
                 path: AppRoutes.emergency,
-                builder: (_, _) => const EmergencyHubScreen(),
+                pageBuilder: (_, state) =>
+                    _buildPage(state, const EmergencyHubScreen()),
                 routes: [
                   GoRoute(
                     path: 'shutoffs/:type',
-                    builder: (_, state) => ShutoffDetailScreen(
-                      utilityType: state.pathParameters['type']!,
+                    pageBuilder: (_, state) => _buildPage(
+                      state,
+                      ShutoffDetailScreen(
+                        utilityType: state.pathParameters['type']!,
+                      ),
                     ),
                   ),
                   GoRoute(
                     path: 'contacts',
-                    builder: (_, _) => const ContactsListScreen(),
+                    pageBuilder: (_, state) =>
+                        _buildPage(state, const ContactsListScreen()),
                     routes: [
                       GoRoute(
                         path: 'add',
-                        builder: (_, state) => ContactFormScreen(
-                          existingContact:
-                              state.extra as EmergencyContact?,
+                        pageBuilder: (_, state) => _buildPage(
+                          state,
+                          ContactFormScreen(
+                            existingContact:
+                                state.extra as EmergencyContact?,
+                          ),
                         ),
                       ),
                     ],
                   ),
                   GoRoute(
                     path: 'insurance',
-                    builder: (_, _) => const InsuranceListScreen(),
+                    pageBuilder: (_, state) =>
+                        _buildPage(state, const InsuranceListScreen()),
                     routes: [
-                      // Static 'add' before parameterised 'edit/:policyId'.
                       GoRoute(
                         path: 'add',
-                        builder: (_, _) => const InsuranceFormScreen(),
+                        pageBuilder: (_, state) =>
+                            _buildPage(state, const InsuranceFormScreen()),
                       ),
                       GoRoute(
                         path: 'edit/:policyId',
-                        builder: (_, state) {
-                          final policy = state.extra as InsurancePolicy;
-                          return InsuranceFormScreen(existingPolicy: policy);
-                        },
+                        pageBuilder: (_, state) => _buildPage(
+                          state,
+                          InsuranceFormScreen(
+                            existingPolicy: state.extra as InsurancePolicy,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -348,26 +376,35 @@ final routerProvider = Provider<GoRouter>((ref) {
                   // Static segments must precede parameterised ':documentId'.
                   GoRoute(
                     path: 'upload',
-                    builder: (_, _) => const DocumentUploadScreen(),
+                    pageBuilder: (_, state) =>
+                        _buildPage(state, const DocumentUploadScreen()),
                   ),
                   GoRoute(
                     path: 'search',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Search Documents'),
+                    pageBuilder: (_, state) => _buildPage(
+                      state,
+                      const PlaceholderScreen(name: 'Search Documents'),
+                    ),
                   ),
                   GoRoute(
                     path: 'expiring',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Expiring Documents'),
+                    pageBuilder: (_, state) => _buildPage(
+                      state,
+                      const PlaceholderScreen(name: 'Expiring Documents'),
+                    ),
                   ),
                   GoRoute(
                     path: 'categories',
-                    builder: (_, _) => const DocumentCategoriesScreen(),
+                    pageBuilder: (_, state) =>
+                        _buildPage(state, const DocumentCategoriesScreen()),
                   ),
                   GoRoute(
                     path: ':documentId',
-                    builder: (_, state) => DocumentDetailScreen(
-                      documentId: state.pathParameters['documentId']!,
+                    pageBuilder: (_, state) => _buildPage(
+                      state,
+                      DocumentDetailScreen(
+                        documentId: state.pathParameters['documentId']!,
+                      ),
                     ),
                   ),
                 ],
@@ -385,25 +422,32 @@ final routerProvider = Provider<GoRouter>((ref) {
                   // Static segments must come before parameterised ':taskId'.
                   GoRoute(
                     path: 'create',
-                    builder: (_, _) => const TaskFormScreen(),
+                    pageBuilder: (_, state) =>
+                        _buildPage(state, const TaskFormScreen()),
                   ),
                   GoRoute(
                     path: 'edit/:taskId',
-                    builder: (_, state) {
-                      final task = state.extra as MaintenanceTask;
-                      return TaskFormScreen(existingTask: task);
-                    },
+                    pageBuilder: (_, state) => _buildPage(
+                      state,
+                      TaskFormScreen(existingTask: state.extra as MaintenanceTask),
+                    ),
                   ),
                   GoRoute(
                     path: 'complete/:taskId',
-                    builder: (_, state) => TaskCompletionFormScreen(
-                      taskId: state.pathParameters['taskId']!,
+                    pageBuilder: (_, state) => _buildPage(
+                      state,
+                      TaskCompletionFormScreen(
+                        taskId: state.pathParameters['taskId']!,
+                      ),
                     ),
                   ),
                   GoRoute(
                     path: ':taskId',
-                    builder: (_, state) => TaskDetailScreen(
-                      taskId: state.pathParameters['taskId']!,
+                    pageBuilder: (_, state) => _buildPage(
+                      state,
+                      TaskDetailScreen(
+                        taskId: state.pathParameters['taskId']!,
+                      ),
                     ),
                   ),
                 ],
@@ -421,107 +465,145 @@ final routerProvider = Provider<GoRouter>((ref) {
                   // Static 'create' must come before parameterised ':projectId'.
                   GoRoute(
                     path: 'create',
-                    builder: (_, _) => const ProjectFormScreen(),
+                    pageBuilder: (_, state) =>
+                        _buildPage(state, const ProjectFormScreen()),
                   ),
                   GoRoute(
                     path: ':projectId',
-                    builder: (_, state) => ProjectDetailScreen(
-                      projectId: state.pathParameters['projectId']!,
+                    pageBuilder: (_, state) => _buildPage(
+                      state,
+                      ProjectDetailScreen(
+                        projectId: state.pathParameters['projectId']!,
+                      ),
                     ),
                     routes: [
                       // Static 'edit' before downstream param routes.
                       GoRoute(
                         path: 'edit',
-                        builder: (_, state) => ProjectFormScreen(
-                          existingProject: state.extra as Project?,
+                        pageBuilder: (_, state) => _buildPage(
+                          state,
+                          ProjectFormScreen(
+                            existingProject: state.extra as Project?,
+                          ),
                         ),
                       ),
                       // #5.3 — Phases
                       GoRoute(
                         path: 'phases',
-                        builder: (_, state) => PhasesScreen(
-                          projectId: state.pathParameters['projectId']!,
+                        pageBuilder: (_, state) => _buildPage(
+                          state,
+                          PhasesScreen(
+                            projectId: state.pathParameters['projectId']!,
+                          ),
                         ),
                         routes: [
                           // Static 'create' before parameterised ':phaseId'.
                           GoRoute(
                             path: 'create',
-                            builder: (_, state) => PhaseFormScreen(
-                              projectId:
-                                  state.pathParameters['projectId']!,
+                            pageBuilder: (_, state) => _buildPage(
+                              state,
+                              PhaseFormScreen(
+                                projectId: state.pathParameters['projectId']!,
+                              ),
                             ),
                           ),
                           GoRoute(
                             path: ':phaseId/edit',
-                            builder: (_, state) => PhaseFormScreen(
-                              projectId:
-                                  state.pathParameters['projectId']!,
-                              existingPhase:
-                                  state.extra as ProjectPhase?,
+                            pageBuilder: (_, state) => _buildPage(
+                              state,
+                              PhaseFormScreen(
+                                projectId: state.pathParameters['projectId']!,
+                                existingPhase: state.extra as ProjectPhase?,
+                              ),
                             ),
                           ),
                         ],
                       ),
                       GoRoute(
                         path: 'budget',
-                        builder: (_, state) => ProjectBudgetScreen(
-                          projectId: state.pathParameters['projectId']!,
+                        pageBuilder: (_, state) => _buildPage(
+                          state,
+                          ProjectBudgetScreen(
+                            projectId: state.pathParameters['projectId']!,
+                          ),
                         ),
                         routes: [
                           GoRoute(
                             path: 'create',
-                            builder: (_, state) => BudgetItemFormScreen(
-                              projectId: state.pathParameters['projectId']!,
+                            pageBuilder: (_, state) => _buildPage(
+                              state,
+                              BudgetItemFormScreen(
+                                projectId: state.pathParameters['projectId']!,
+                              ),
                             ),
                           ),
                           GoRoute(
                             path: ':itemId/edit',
-                            builder: (_, state) => BudgetItemFormScreen(
-                              projectId: state.pathParameters['projectId']!,
-                              existingItem:
-                                  state.extra as ProjectBudgetItem?,
+                            pageBuilder: (_, state) => _buildPage(
+                              state,
+                              BudgetItemFormScreen(
+                                projectId: state.pathParameters['projectId']!,
+                                existingItem: state.extra as ProjectBudgetItem?,
+                              ),
                             ),
                           ),
                         ],
                       ),
                       GoRoute(
                         path: 'photos',
-                        builder: (_, state) => ProjectPhotosScreen(
-                          projectId: state.pathParameters['projectId']!,
+                        pageBuilder: (_, state) => _buildPage(
+                          state,
+                          ProjectPhotosScreen(
+                            projectId: state.pathParameters['projectId']!,
+                          ),
                         ),
                       ),
                       GoRoute(
                         path: 'notes',
-                        builder: (_, state) => ProjectJournalScreen(
-                          projectId: state.pathParameters['projectId']!,
+                        pageBuilder: (_, state) => _buildPage(
+                          state,
+                          ProjectJournalScreen(
+                            projectId: state.pathParameters['projectId']!,
+                          ),
                         ),
                         routes: [
                           GoRoute(
                             path: 'create',
-                            builder: (_, state) => NoteFormScreen(
-                              projectId: state.pathParameters['projectId']!,
+                            pageBuilder: (_, state) => _buildPage(
+                              state,
+                              NoteFormScreen(
+                                projectId: state.pathParameters['projectId']!,
+                              ),
                             ),
                           ),
                           GoRoute(
                             path: ':noteId/edit',
-                            builder: (_, state) => NoteFormScreen(
-                              projectId: state.pathParameters['projectId']!,
-                              existingNote:
-                                  state.extra as ProjectJournalNote?,
+                            pageBuilder: (_, state) => _buildPage(
+                              state,
+                              NoteFormScreen(
+                                projectId: state.pathParameters['projectId']!,
+                                existingNote: state.extra as ProjectJournalNote?,
+                              ),
                             ),
                           ),
                         ],
                       ),
                       GoRoute(
                         path: 'contractors',
-                        builder: (_, state) => ProjectContractorsScreen(
-                          projectId: state.pathParameters['projectId']!,
+                        pageBuilder: (_, state) => _buildPage(
+                          state,
+                          ProjectContractorsScreen(
+                            projectId: state.pathParameters['projectId']!,
+                          ),
                         ),
                       ),
                       GoRoute(
                         path: 'documents',
-                        builder: (_, state) => ProjectDocumentsScreen(
-                          projectId: state.pathParameters['projectId']!,
+                        pageBuilder: (_, state) => _buildPage(
+                          state,
+                          ProjectDocumentsScreen(
+                            projectId: state.pathParameters['projectId']!,
+                          ),
                         ),
                       ),
                     ],
@@ -540,38 +622,50 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'profile',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Edit Profile'),
+                    pageBuilder: (_, state) => _buildPage(
+                      state,
+                      const PlaceholderScreen(name: 'Edit Profile'),
+                    ),
                   ),
                   GoRoute(
                     path: 'notifications',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Notifications'),
+                    pageBuilder: (_, state) => _buildPage(
+                      state,
+                      const PlaceholderScreen(name: 'Notifications'),
+                    ),
                   ),
                   GoRoute(
                     path: 'subscription',
-                    builder: (_, _) => const SubscriptionScreen(),
+                    pageBuilder: (_, state) =>
+                        _buildPage(state, const SubscriptionScreen()),
                     routes: [
                       GoRoute(
                         path: 'paywall',
-                        builder: (_, _) => const PaywallScreen(),
+                        pageBuilder: (_, state) =>
+                            _buildPage(state, const PaywallScreen()),
                       ),
                     ],
                   ),
                   GoRoute(
                     path: 'household',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Household'),
+                    pageBuilder: (_, state) => _buildPage(
+                      state,
+                      const PlaceholderScreen(name: 'Household'),
+                    ),
                   ),
                   GoRoute(
                     path: 'export',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Export Data'),
+                    pageBuilder: (_, state) => _buildPage(
+                      state,
+                      const PlaceholderScreen(name: 'Export Data'),
+                    ),
                   ),
                   GoRoute(
                     path: 'delete-account',
-                    builder: (_, _) =>
-                        const PlaceholderScreen(name: 'Delete Account'),
+                    pageBuilder: (_, state) => _buildPage(
+                      state,
+                      const PlaceholderScreen(name: 'Delete Account'),
+                    ),
                   ),
                 ],
               ),
