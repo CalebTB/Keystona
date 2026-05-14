@@ -175,6 +175,12 @@ class _PhaseList extends ConsumerWidget {
           onRefresh: () =>
               ref.read(projectPhasesProvider(projectId).notifier).refresh(),
         ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: AppPadding.screen.copyWith(bottom: 0),
+            child: _ProgressHeader(phases: phases),
+          ),
+        ),
         SliverPadding(
           padding: AppPadding.screen.copyWith(top: AppSizes.sm),
           sliver: SliverList.separated(
@@ -211,6 +217,82 @@ class _PhaseList extends ConsumerWidget {
           child: SizedBox(height: AppSizes.xxl + AppSizes.xl),
         ),
       ],
+    );
+  }
+}
+
+// ── Progress header ───────────────────────────────────────────────────────────
+
+class _ProgressHeader extends StatelessWidget {
+  const _ProgressHeader({required this.phases});
+
+  final List<ProjectPhase> phases;
+
+  @override
+  Widget build(BuildContext context) {
+    final active = phases
+        .where((p) => p.status != 'cancelled' && p.deletedAt == null)
+        .toList();
+    final total = active.length;
+    if (total == 0) return const SizedBox.shrink();
+
+    final completed = active.where((p) => p.status == 'completed').length;
+    final inProgress = active.where((p) => p.status == 'in_progress').length;
+    final fraction = completed / total;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSizes.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.md,
+        vertical: AppSizes.sm + 4,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSizes.radiusCard),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                '$completed of $total complete',
+                style: AppTextStyles.bodyMediumSemibold,
+              ),
+              if (inProgress > 0) ...[
+                const SizedBox(width: AppSizes.xs),
+                Text(
+                  '· $inProgress in progress',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.slate,
+                  ),
+                ),
+              ],
+              const Spacer(),
+              Text(
+                '${(fraction * 100).round()}%',
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSizes.sm),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+            child: LinearProgressIndicator(
+              value: fraction,
+              minHeight: 6,
+              backgroundColor: AppColors.warmInset,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                completed == total ? AppColors.olive : AppColors.slate,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
