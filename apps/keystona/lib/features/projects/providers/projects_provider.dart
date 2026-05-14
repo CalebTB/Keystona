@@ -147,8 +147,17 @@ class ProjectsNotifier extends _$ProjectsNotifier {
       }
     }
 
-    if (activeIndex == null) return project;
+    // Always update phaseCount from the live nested select — the denormalized
+    // DB column can lag behind if the trigger hasn't fired yet.
+    final liveCount = phases.length;
+
+    if (activeIndex == null) {
+      return liveCount > 0
+          ? project.copyWith(phaseCount: liveCount)
+          : project;
+    }
     return project.copyWith(
+      phaseCount: liveCount > 0 ? liveCount : project.phaseCount,
       currentPhaseIndex: activeIndex,
       currentPhaseName: active!['name'] as String?,
     );
