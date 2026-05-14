@@ -8,8 +8,8 @@ import '../models/project_journal_note.dart';
 
 /// Card displaying a single project journal note.
 ///
-/// Shows: title (bold, if present), content (plain text, max 4 lines),
-/// date, and an optional phase badge when [phaseName] is provided.
+/// Layout: 4px sand left strip, title (when present) in bold at the top,
+/// content preview below, footer row with short date and optional phase badge.
 class JournalNoteCard extends StatelessWidget {
   const JournalNoteCard({
     super.key,
@@ -22,52 +22,88 @@ class JournalNoteCard extends StatelessWidget {
   final VoidCallback onTap;
   final String? phaseName;
 
-  static final _dateFmt = DateFormat('EEEE, MMMM d');
+  static final _dateFmt = DateFormat('EEE, MMM d');
+
+  bool get _hasTitle => note.title != null && note.title!.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(AppSizes.md),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Date + phase badge row ───────────────────────────────────
-            Row(
-              children: [
-                Text(
-                  _dateFmt.format(note.noteDate),
-                  style: AppTextStyles.caption,
-                ),
-                if (phaseName != null) ...[
-                  const SizedBox(width: AppSizes.xs),
-                  _PhaseBadge(name: phaseName!),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppSizes.radiusMd - 1),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // ── Sand accent strip ────────────────────────────────────
+                  Container(width: 4, color: AppColors.sand),
+
+                  // ── Content ──────────────────────────────────────────────
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSizes.md),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Title
+                          if (_hasTitle) ...[
+                            Text(
+                              note.title!,
+                              style: AppTextStyles.bodyMediumSemibold,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: AppSizes.xs),
+                          ],
+
+                          // Content preview
+                          Text(
+                            note.content,
+                            style: _hasTitle
+                                ? AppTextStyles.bodySmall.copyWith(
+                                    color: AppColors.textSecondary,
+                                  )
+                                : AppTextStyles.bodyMedium.copyWith(
+                                    color: AppColors.textPrimary,
+                                  ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+
+                          // Footer: date + phase badge
+                          const SizedBox(height: AppSizes.sm),
+                          Row(
+                            children: [
+                              Text(
+                                _dateFmt.format(note.noteDate),
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                              if (phaseName != null) ...[
+                                const Spacer(),
+                                _PhaseBadge(name: phaseName!),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
-              ],
-            ),
-            // ── Title (if present) ───────────────────────────────────────
-            if (note.title != null && note.title!.isNotEmpty) ...[
-              const SizedBox(height: AppSizes.xs),
-              Text(
-                note.title!,
-                style: AppTextStyles.bodyMediumSemibold,
               ),
-            ],
-            // ── Content ──────────────────────────────────────────────────
-            const SizedBox(height: AppSizes.xs),
-            Text(
-              note.content,
-              style: AppTextStyles.bodyMedium,
-              maxLines: 4,
-              overflow: TextOverflow.ellipsis,
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -86,13 +122,14 @@ class _PhaseBadge extends StatelessWidget {
         vertical: 2,
       ),
       decoration: BoxDecoration(
-        color: AppColors.deepNavy.withValues(alpha: 0.08),
+        color: AppColors.slateDim,
         borderRadius: BorderRadius.circular(AppSizes.radiusFull),
       ),
       child: Text(
         name,
         style: AppTextStyles.labelSmall.copyWith(
-          color: AppColors.deepNavy,
+          color: AppColors.slate,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
