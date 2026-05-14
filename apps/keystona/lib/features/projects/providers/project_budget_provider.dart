@@ -103,22 +103,47 @@ class ProjectBudgetNotifier extends _$ProjectBudgetNotifier {
   }
 }
 
-/// Computes the budget summary from the loaded items list.
-/// Uses the project's [estimatedBudget] (set at creation) as the budget cap,
-/// and sums [actualCost] across items for the spent figure.
+/// Computes the budget summary (totals + per-category breakdown) from items.
 @riverpod
 Future<BudgetSummary> projectBudgetSummary(
     Ref ref, String projectId) async {
   final items = await ref.watch(projectBudgetProvider(projectId).future);
-  final project =
-      await ref.watch(projectDetailProvider(projectId).future);
+  final project = await ref.watch(projectDetailProvider(projectId).future);
 
   final actual = items.fold<double>(0, (s, i) => s + i.actualCost);
   final estimated = project.estimatedBudget ?? 0;
+  final overBudgetCount =
+      items.where((i) => i.actualCost > i.estimatedCost && i.estimatedCost > 0).length;
+
+  // Per-category aggregation
+  final Map<String, ({double est, double act, int count, int pending})> byCategory = {};
+  for (final item in items) {
+    final e = byCategory[item.category] ??
+        (est: 0.0, act: 0.0, count: 0, pending: 0);
+    byCategory[item.category] = (
+      est: e.est + item.estimatedCost,
+      act: e.act + item.actualCost,
+      count: e.count + 1,
+      pending: e.pending + (item.isPaid ? 0 : 1),
+    );
+  }
+  final breakdown = byCategory.entries
+      .map((e) => BudgetCategoryRow(
+            category: e.key,
+            estimated: e.value.est,
+            actual: e.value.act,
+            lineItemCount: e.value.count,
+            pendingCount: e.value.pending,
+          ))
+      .toList()
+    ..sort((a, b) => b.actual.compareTo(a.actual));
+
   return BudgetSummary(
     estimatedTotal: estimated,
     actualTotal: actual,
     remaining: estimated - actual,
-    categoryBreakdown: [],
+    categoryBreakdown: breakdown,
+    overBudgetCount: overBudgetCount,
+    totalItems: items.length,
   );
 }

@@ -62,6 +62,9 @@ abstract final class AppColors {
   /// Sand dim (≈8% opacity). #14B8A060
   static const Color sandDim = Color(0x14B8A060);
 
+  /// Sand Amber — darker sand, budget overages, equipment category. #9B7E3E
+  static const Color sandAmber = Color(0xFF9B7E3E);
+
   /// Gold Accent alias → maps to [sand] for backward compatibility. #B8A060
   static const Color goldAccent = Color(0xFFB8A060);
 

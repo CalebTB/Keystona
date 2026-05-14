@@ -37,27 +37,18 @@ class BudgetSummary {
     required this.actualTotal,
     required this.remaining,
     required this.categoryBreakdown,
+    this.overBudgetCount = 0,
+    this.totalItems = 0,
   });
 
   final double estimatedTotal;
   final double actualTotal;
   final double remaining;
   final List<BudgetCategoryRow> categoryBreakdown;
+  final int overBudgetCount;
+  final int totalItems;
 
   bool get isOverBudget => actualTotal > estimatedTotal && estimatedTotal > 0;
-
-  factory BudgetSummary.fromRpc(Map<String, dynamic> json) {
-    final breakdown = (json['category_breakdown'] as List<dynamic>? ?? [])
-        .cast<Map<String, dynamic>>()
-        .map(BudgetCategoryRow.fromRpc)
-        .toList();
-    return BudgetSummary(
-      estimatedTotal: (json['estimated_total'] as num?)?.toDouble() ?? 0,
-      actualTotal: (json['actual_total'] as num?)?.toDouble() ?? 0,
-      remaining: (json['remaining'] as num?)?.toDouble() ?? 0,
-      categoryBreakdown: breakdown,
-    );
-  }
 
   static BudgetSummary empty() => const BudgetSummary(
         estimatedTotal: 0,
@@ -72,18 +63,15 @@ class BudgetCategoryRow {
     required this.category,
     required this.estimated,
     required this.actual,
+    this.lineItemCount = 0,
+    this.pendingCount = 0,
   });
 
   final String category;
   final double estimated;
   final double actual;
-
-  factory BudgetCategoryRow.fromRpc(Map<String, dynamic> json) =>
-      BudgetCategoryRow(
-        category: json['category'] as String,
-        estimated: (json['estimated'] as num?)?.toDouble() ?? 0,
-        actual: (json['actual'] as num?)?.toDouble() ?? 0,
-      );
+  final int lineItemCount;
+  final int pendingCount;
 }
 
 // ── Budget category helpers ───────────────────────────────────────────────
