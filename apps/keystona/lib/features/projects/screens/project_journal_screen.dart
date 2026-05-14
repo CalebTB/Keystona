@@ -232,6 +232,12 @@ class _NoteList extends StatelessWidget {
           onRefresh: () =>
               ref.read(projectJournalProvider(projectId).notifier).refresh(),
         ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: AppPadding.screen.copyWith(bottom: 0),
+            child: _SummaryBar(notes: notes),
+          ),
+        ),
         SliverPadding(
           padding: AppPadding.screen.copyWith(top: AppSizes.sm),
           sliver: SliverList.builder(
@@ -276,6 +282,71 @@ class _NoteList extends StatelessWidget {
           child: SizedBox(height: AppSizes.xxl + AppSizes.xl),
         ),
       ],
+    );
+  }
+}
+
+// ── Summary bar ───────────────────────────────────────────────────────────────
+
+class _SummaryBar extends StatelessWidget {
+  const _SummaryBar({required this.notes});
+
+  final List<ProjectJournalNote> notes;
+
+  static final _sinceFmt = DateFormat("MMM ''yy");
+
+  @override
+  Widget build(BuildContext context) {
+    final phaseCount =
+        notes.where((n) => n.phaseId != null).map((n) => n.phaseId!).toSet().length;
+
+    // Notes are sorted newest-first; oldest is last.
+    final oldest = notes.last.noteDate;
+    final sinceLabel = _sinceFmt.format(oldest);
+
+    final parts = [
+      '${notes.length} ${notes.length == 1 ? 'note' : 'notes'}',
+      if (phaseCount > 0)
+        '$phaseCount ${phaseCount == 1 ? 'phase' : 'phases'}',
+      'since $sinceLabel',
+    ];
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSizes.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.md,
+        vertical: AppSizes.sm + 2,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSizes.radiusCard),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < parts.length; i++) ...[
+            if (i > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSizes.xs),
+                child: Text(
+                  '·',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.gray400,
+                  ),
+                ),
+              ),
+            Text(
+              parts[i],
+              style: AppTextStyles.caption.copyWith(
+                color: i == 0
+                    ? AppColors.textPrimary
+                    : AppColors.textSecondary,
+                fontWeight: i == 0 ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
