@@ -178,9 +178,8 @@ class _BudgetEditorialView extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: AppSizes.xs),
                     _ScreenHeader(phases: phases),
-                    const SizedBox(height: AppSizes.sm),
+                    const SizedBox(height: AppSizes.xs),
                   ],
                 ),
               ),
@@ -317,34 +316,24 @@ class _ScreenHeader extends StatelessWidget {
       return lastDone >= 0 ? lastDone + 1 : 0;
     }();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        Row(
-          children: [
-            Container(
-              width: 7,
-              height: 7,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.accent,
-              ),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              activePhases.isNotEmpty
-                  ? 'ACTIVE PROJECT · PHASE $currentIndex OF ${activePhases.length}'
-                  : 'ACTIVE PROJECT',
-              style: AppTextStyles.monoSection.copyWith(
-                color: AppColors.gray500,
-              ),
-            ),
-          ],
+        Container(
+          width: 7,
+          height: 7,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.accent,
+          ),
         ),
-        const SizedBox(height: 5),
+        const SizedBox(width: 6),
         Text(
-          "Where it's\ngoing.",
-          style: AppTextStyles.displayMedium,
+          activePhases.isNotEmpty
+              ? 'ACTIVE PROJECT · PHASE $currentIndex OF ${activePhases.length}'
+              : 'ACTIVE PROJECT',
+          style: AppTextStyles.monoSection.copyWith(
+            color: AppColors.gray500,
+          ),
         ),
       ],
     );
