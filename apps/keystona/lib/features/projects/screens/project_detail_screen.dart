@@ -276,9 +276,14 @@ class _DetailBody extends ConsumerWidget {
             ),
           ),
 
-          // ── Quick-access chips ─────────────────────────────────────────
+          // ── Section grid ──────────────────────────────────────────────
           SliverToBoxAdapter(
-            child: _QuickAccessRow(projectId: projectId),
+            child: _SectionGrid(
+              projectId: projectId,
+              project: project,
+              phases: phases,
+              notes: notes,
+            ),
           ),
 
           // ── Timeline ──────────────────────────────────────────────────
@@ -688,84 +693,174 @@ class _BudgetRingPainter extends CustomPainter {
       old.fraction != fraction || old.color != color;
 }
 
-// ── Quick-access chips ────────────────────────────────────────────────────────
+// ── Section grid (3 × 2 compact cards) ───────────────────────────────────────
 
-class _QuickAccessRow extends StatelessWidget {
-  const _QuickAccessRow({required this.projectId});
+typedef _Section = ({
+  IconData icon,
+  String label,
+  String metric,
+  Color color,
+  String route,
+});
+
+class _SectionGrid extends StatelessWidget {
+  const _SectionGrid({
+    required this.projectId,
+    required this.project,
+    required this.phases,
+    required this.notes,
+  });
+
   final String projectId;
+  final Project project;
+  final List<ProjectPhase> phases;
+  final List<ProjectJournalNote> notes;
+
+  static String _compact(double v) {
+    if (v >= 1000) {
+      final k = v / 1000;
+      return '\$${k % 1 == 0 ? k.toInt() : k.toStringAsFixed(1)}k';
+    }
+    return '\$${NumberFormat('#,###').format(v.toInt())}';
+  }
 
   @override
   Widget build(BuildContext context) {
-    final chips = [
-      (Icons.format_list_numbered_outlined, 'Phases',
-          '/projects/$projectId/phases'),
-      (Icons.account_balance_wallet_outlined, 'Budget',
-          '/projects/$projectId/budget'),
-      (Icons.photo_library_outlined, 'Photos',
-          '/projects/$projectId/photos'),
-      (Icons.menu_book_outlined, 'Journal', '/projects/$projectId/notes'),
-      (Icons.people_outline, 'Contractors',
-          '/projects/$projectId/contractors'),
-      (Icons.folder_outlined, 'Documents',
-          '/projects/$projectId/documents'),
+    final hasBudget = project.estimatedBudget != null;
+    final isOverBudget =
+        hasBudget && project.actualSpent >= project.estimatedBudget!;
+
+    final sections = <_Section>[
+      (
+        icon: Icons.format_list_numbered_outlined,
+        label: 'Phases',
+        metric: phases.isEmpty
+            ? 'Add phases'
+            : '${phases.length} phase${phases.length == 1 ? '' : 's'}',
+        color: AppColors.slate,
+        route: '/projects/$projectId/phases',
+      ),
+      (
+        icon: Icons.account_balance_wallet_outlined,
+        label: 'Budget',
+        metric: hasBudget ? _compact(project.estimatedBudget!) : 'Not set',
+        color: isOverBudget ? AppColors.error : AppColors.olive,
+        route: '/projects/$projectId/budget',
+      ),
+      (
+        icon: Icons.photo_library_outlined,
+        label: 'Photos',
+        metric: 'Progress shots',
+        color: AppColors.accent,
+        route: '/projects/$projectId/photos',
+      ),
+      (
+        icon: Icons.menu_book_outlined,
+        label: 'Journal',
+        metric: notes.isEmpty
+            ? 'Start logging'
+            : '${notes.length} note${notes.length == 1 ? '' : 's'}',
+        color: AppColors.sand,
+        route: '/projects/$projectId/notes',
+      ),
+      (
+        icon: Icons.people_outline,
+        label: 'Contractors',
+        metric: project.contractorIds.isEmpty
+            ? 'None linked'
+            : '${project.contractorIds.length} linked',
+        color: AppColors.plum,
+        route: '/projects/$projectId/contractors',
+      ),
+      (
+        icon: Icons.folder_outlined,
+        label: 'Documents',
+        metric: 'Permits, quotes',
+        color: AppColors.teal,
+        route: '/projects/$projectId/documents',
+      ),
     ];
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 16),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          children: chips.map((c) {
-            final (icon, label, route) = c;
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: _QuickChip(
-                icon: icon,
-                label: label,
-                onTap: () => context.push(route),
+    Widget buildRow(List<_Section> row) => Row(
+          children: row.asMap().entries.map((e) {
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(left: e.key > 0 ? 8 : 0),
+                child: _SectionCard(
+                  section: e.value,
+                  onTap: () => context.push(e.value.route),
+                ),
               ),
             );
           }).toList(),
-        ),
+        );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Column(
+        children: [
+          buildRow(sections.sublist(0, 3)),
+          const SizedBox(height: 8),
+          buildRow(sections.sublist(3)),
+        ],
       ),
     );
   }
 }
 
-class _QuickChip extends StatelessWidget {
-  const _QuickChip({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({required this.section, required this.onTap});
 
-  final IconData icon;
-  final String label;
+  final _Section section;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final color = section.color;
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.fromLTRB(12, 11, 10, 11),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.border),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 16, color: AppColors.textSecondary),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: AppTextStyles.bodySmall.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+            // Icon bubble
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(8),
               ),
+              child: Icon(section.icon, size: 15, color: color),
+            ),
+            const SizedBox(height: 8),
+            // Label
+            Text(
+              section.label,
+              style: AppTextStyles.bodySmall.copyWith(
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+                fontSize: 12,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            // Metric
+            Text(
+              section.metric,
+              style: AppTextStyles.monoLabel.copyWith(
+                fontSize: 10,
+                color: AppColors.gray500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
