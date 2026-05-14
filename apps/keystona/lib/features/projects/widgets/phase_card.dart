@@ -187,18 +187,17 @@ class _DateInfo extends StatelessWidget {
       }
     }
 
-    return Column(
+    return Row(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           dateText,
           style: AppTextStyles.caption.copyWith(color: dateColor),
         ),
         if (healthLabel != null) ...[
-          const SizedBox(height: 2),
+          const SizedBox(width: AppSizes.xs),
           Text(
-            healthLabel,
+            '· $healthLabel',
             style: AppTextStyles.caption.copyWith(
               color: labelColor,
               fontWeight: FontWeight.w600,
