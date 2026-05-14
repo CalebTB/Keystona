@@ -1365,17 +1365,20 @@ class _DetailSkeletonState extends State<_DetailSkeleton>
               ),
               const SizedBox(height: 16),
               // Quick-access chips
-              Row(
-                children: List.generate(
-                  4,
-                  (_) => Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Container(
-                      width: 90,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: AppColors.gray200,
-                        borderRadius: BorderRadius.circular(8),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: List.generate(
+                    4,
+                    (_) => Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Container(
+                        width: 88,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppColors.gray200,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
                   ),
