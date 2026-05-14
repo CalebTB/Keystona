@@ -15,12 +15,14 @@ class PhaseCard extends StatelessWidget {
     super.key,
     required this.phase,
     required this.onTap,
+    this.onStatusTap,
     this.onMoveUp,
     this.onMoveDown,
   });
 
   final ProjectPhase phase;
   final VoidCallback onTap;
+  final VoidCallback? onStatusTap;
   final VoidCallback? onMoveUp;
   final VoidCallback? onMoveDown;
 
@@ -89,7 +91,10 @@ class PhaseCard extends StatelessWidget {
             const SizedBox(width: AppSizes.sm),
 
             // ── Status badge ─────────────────────────────────────────────
-            _StatusBadge(status: phase.status),
+            GestureDetector(
+              onTap: onStatusTap,
+              child: _StatusBadge(status: phase.status),
+            ),
           ],
         ),
       ),

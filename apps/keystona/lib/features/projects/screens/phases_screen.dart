@@ -101,6 +101,77 @@ class _PhaseList extends ConsumerWidget {
     }
   }
 
+  Future<void> _showStatusPicker(
+    BuildContext context,
+    WidgetRef ref,
+    ProjectPhase phase,
+  ) async {
+    final next = PhaseStatusTransitions.nextFor(phase.status);
+    if (next.isEmpty) return;
+
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    String? picked;
+
+    if (isIOS) {
+      await showCupertinoModalPopup<void>(
+        context: context,
+        builder: (ctx) => CupertinoActionSheet(
+          title: Text(phase.name),
+          message: const Text('Move to status'),
+          actions: next
+              .map(
+                (s) => CupertinoActionSheetAction(
+                  onPressed: () {
+                    picked = s;
+                    Navigator.of(ctx).pop();
+                  },
+                  child: Text(s.phaseStatusLabel),
+                ),
+              )
+              .toList(),
+          cancelButton: CupertinoActionSheetAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+        ),
+      );
+    } else {
+      picked = await showModalBottomSheet<String>(
+        context: context,
+        builder: (ctx) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    AppSizes.md, AppSizes.md, AppSizes.md, AppSizes.xs),
+                child: Text('Move to status',
+                    style: AppTextStyles.bodyMediumSemibold),
+              ),
+              ...next.map(
+                (s) => ListTile(
+                  title: Text(s.phaseStatusLabel),
+                  onTap: () => Navigator.of(ctx).pop(s),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (picked == null || !context.mounted) return;
+
+    final notifier = ref.read(projectPhasesProvider(projectId).notifier);
+    try {
+      await notifier.updatePhase(phase.id, {'status': picked});
+    } catch (_) {
+      if (!context.mounted) return;
+      SnackbarService.showError(context, 'Could not update status.');
+    }
+  }
+
   Future<void> _deletePhase(BuildContext context, WidgetRef ref, ProjectPhase phase) async {
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
     bool confirmed = false;
@@ -202,6 +273,7 @@ class _PhaseList extends ConsumerWidget {
                     '/projects/$projectId/phases/${phase.id}/edit',
                     extra: phase,
                   ),
+                  onStatusTap: () => _showStatusPicker(ctx, ref, phase),
                   onMoveUp: i > 0
                       ? () => _reorderPhase(ctx, ref, i, i - 1)
                       : null,
