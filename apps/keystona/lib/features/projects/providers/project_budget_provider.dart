@@ -9,8 +9,7 @@ part 'project_budget_provider.g.dart';
 
 const _kColumns =
     'id, project_id, user_id, name, category, estimated_cost, actual_cost, '
-    'is_paid, vendor, receipt_document_id, phase_id, created_at, updated_at, '
-    'deleted_at';
+    'is_paid, vendor, created_at, updated_at, deleted_at';
 
 /// Manages budget line items for a single project.
 @riverpod
