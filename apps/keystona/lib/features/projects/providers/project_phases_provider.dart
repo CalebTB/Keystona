@@ -58,13 +58,32 @@ class ProjectPhasesNotifier extends _$ProjectPhasesNotifier {
   }
 
   /// Updates a phase by [id].
+  ///
+  /// Applies an optimistic local update first so the list never flashes to
+  /// skeleton (which would make the order appear to jump). Reverts on failure.
   Future<void> updatePhase(String id, Map<String, dynamic> data) async {
-    await SupabaseService.client
-        .from('project_phases')
-        .update(data)
-        .eq('id', id);
+    final previous = state.value;
+    if (previous != null) {
+      state = AsyncData(
+        previous
+            .map((p) => p.id == id
+                ? ProjectPhase.fromJson({...p.toJson(), ...data})
+                : p)
+            .toList(),
+      );
+    }
 
-    state = const AsyncLoading();
+    try {
+      await SupabaseService.client
+          .from('project_phases')
+          .update(data)
+          .eq('id', id);
+    } catch (e) {
+      if (previous != null) state = AsyncData(previous);
+      rethrow;
+    }
+
+    // Silent background sync — no skeleton flash.
     state = await AsyncValue.guard(_fetch);
   }
 
