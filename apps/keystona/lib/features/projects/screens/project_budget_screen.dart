@@ -32,14 +32,22 @@ class ProjectBudgetScreen extends ConsumerWidget {
 
     void onAdd() => context.push('/projects/$projectId/budget/create');
 
+    final project = asyncProject.value;
+    final isFinished = project?.status == 'completed' || project?.status == 'cancelled';
+
     final body = asyncProject.when(
       loading: () => const BudgetSkeleton(),
       error: (_, _) => _ErrorState(
         onRetry: () => ref.invalidate(projectDetailProvider(projectId)),
       ),
-      data: (project) {
-        // Variant B (Timeline) for completed/cancelled — TODO next sprint
-        return _BudgetEditorialView(projectId: projectId, onAdd: onAdd);
+      data: (p) {
+        final finished = p.status == 'completed' || p.status == 'cancelled';
+        return finished
+            ? _BudgetTimelineView(
+                projectId: projectId,
+                isCancelled: p.status == 'cancelled',
+              )
+            : _BudgetEditorialView(projectId: projectId, onAdd: onAdd);
       },
     );
 
@@ -47,11 +55,17 @@ class ProjectBudgetScreen extends ConsumerWidget {
       return CupertinoPageScaffold(
         navigationBar: CupertinoNavigationBar(
           middle: const Text('Budget'),
-          trailing: CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: onAdd,
-            child: const Icon(CupertinoIcons.add),
-          ),
+          trailing: isFinished
+              ? CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: () {},
+                  child: const Icon(CupertinoIcons.share),
+                )
+              : CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: onAdd,
+                  child: const Icon(CupertinoIcons.add),
+                ),
         ),
         child: SafeArea(bottom: false, child: body),
       );
@@ -60,14 +74,38 @@ class ProjectBudgetScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Budget')),
       body: body,
-      floatingActionButton: FloatingActionButton(
-        onPressed: onAdd,
-        backgroundColor: AppColors.accent,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+      floatingActionButton: isFinished
+          ? null
+          : FloatingActionButton(
+              onPressed: onAdd,
+              backgroundColor: AppColors.accent,
+              child: const Icon(Icons.add, color: Colors.white),
+            ),
     );
   }
 }
+
+// ── Shared helpers ─────────────────────────────────────────────────────────────
+
+Color _categoryColor(String cat) => switch (cat) {
+      'labor' => AppColors.slate,
+      'materials' => AppColors.teal,
+      'fixtures' => AppColors.plum,
+      'permits' => AppColors.sand,
+      'equipment_rental' => AppColors.sandAmber,
+      'design' => AppColors.olive,
+      _ => AppColors.gray500,
+    };
+
+String _categoryDisplayName(String cat) => switch (cat) {
+      'labor' => 'Labor',
+      'materials' => 'Materials',
+      'fixtures' => 'Fixtures',
+      'permits' => 'Permits',
+      'equipment_rental' => 'Equipment',
+      'design' => 'Design',
+      _ => cat,
+    };
 
 // ── Variant A · Editorial Summary ─────────────────────────────────────────────
 
@@ -295,6 +333,626 @@ class _BudgetEditorialView extends ConsumerWidget {
           ],
         );
       },
+    );
+  }
+}
+
+// ── Variant B · Timeline Spend ────────────────────────────────────────────────
+
+class _BudgetTimelineView extends ConsumerWidget {
+  const _BudgetTimelineView({
+    required this.projectId,
+    required this.isCancelled,
+  });
+
+  final String projectId;
+  final bool isCancelled;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncItems = ref.watch(projectBudgetProvider(projectId));
+    final asyncSummary = ref.watch(projectBudgetSummaryProvider(projectId));
+    final asyncPhases = ref.watch(projectPhasesProvider(projectId));
+
+    return asyncItems.when(
+      loading: () => const BudgetSkeleton(),
+      error: (_, _) => _ErrorState(
+        onRetry: () => ref.invalidate(projectBudgetProvider(projectId)),
+      ),
+      data: (items) {
+        final summary = asyncSummary.value;
+        final phases = List<ProjectPhase>.from(asyncPhases.value ?? [])
+          ..removeWhere((p) => p.deletedAt != null)
+          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+        if (items.isEmpty) {
+          return _TimelineEmptyState(isCancelled: isCancelled);
+        }
+
+        return CustomScrollView(
+          slivers: [
+            CupertinoSliverRefreshControl(
+              onRefresh: () async {
+                ref.invalidate(projectBudgetProvider(projectId));
+                ref.invalidate(projectBudgetSummaryProvider(projectId));
+              },
+            ),
+
+            // ── Screen header ─────────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: AppPadding.screen.copyWith(bottom: 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _TimelineHeader(isCancelled: isCancelled),
+                    const SizedBox(height: AppSizes.xs),
+                  ],
+                ),
+              ),
+            ),
+
+            // ── Summary card ──────────────────────────────────────────────
+            if (summary != null)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: AppPadding.screen.copyWith(top: 0, bottom: 0),
+                  child: _TimelineSummaryCard(
+                    summary: summary,
+                    isCancelled: isCancelled,
+                  ),
+                ),
+              ),
+
+            // ── Phase timeline ────────────────────────────────────────────
+            if (phases.isNotEmpty) ...[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: AppPadding.screen.copyWith(
+                    top: AppSizes.lg,
+                    bottom: 0,
+                  ),
+                  child: _SectionLabel(
+                    label: 'SPEND BY PHASE',
+                    dotColor: AppColors.accent,
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: AppPadding.screen.copyWith(
+                    top: AppSizes.xs,
+                    bottom: 0,
+                  ),
+                  child: _PhaseTimeline(phases: phases),
+                ),
+              ),
+            ],
+
+            const SliverToBoxAdapter(child: SizedBox(height: 80)),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// ── Timeline header ────────────────────────────────────────────────────────────
+
+class _TimelineHeader extends StatelessWidget {
+  const _TimelineHeader({required this.isCancelled});
+  final bool isCancelled;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isCancelled ? AppColors.accent : AppColors.olive,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          isCancelled ? 'CANCELLED · PARTIAL SPEND' : 'SPEND ACROSS PHASES',
+          style: AppTextStyles.monoSection.copyWith(
+            color: isCancelled ? AppColors.accent : AppColors.gray500,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Summary card with stacked bar + legend ────────────────────────────────────
+
+class _TimelineSummaryCard extends StatelessWidget {
+  const _TimelineSummaryCard({
+    required this.summary,
+    required this.isCancelled,
+  });
+
+  final BudgetSummary summary;
+  final bool isCancelled;
+
+  static final _fmt =
+      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
+
+  @override
+  Widget build(BuildContext context) {
+    final isOver =
+        summary.estimatedTotal > 0 && summary.actualTotal > summary.estimatedTotal;
+    final isUnder =
+        summary.estimatedTotal > 0 && summary.actualTotal < summary.estimatedTotal;
+    final difference = (summary.estimatedTotal - summary.actualTotal).abs();
+
+    final remainingLabel = isCancelled
+        ? 'UNSPENT'
+        : isOver
+            ? 'OVER BUDGET'
+            : isUnder
+                ? 'UNDER BUDGET'
+                : 'REMAINING';
+    final remainingColor = isCancelled
+        ? AppColors.textPrimary
+        : isOver
+            ? AppColors.accent
+            : isUnder
+                ? AppColors.olive
+                : AppColors.textPrimary;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: AppColors.border, width: 1.5),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Totals row
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'TOTAL SPENT',
+                      style: AppTextStyles.monoTiny
+                          .copyWith(color: AppColors.gray500),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _fmt.format(summary.actualTotal),
+                      style: AppTextStyles.displayMedium,
+                    ),
+                    if (summary.estimatedTotal > 0) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        'of ${_fmt.format(summary.estimatedTotal)} · '
+                        '${summary.totalItems} items',
+                        style: AppTextStyles.monoLabel
+                            .copyWith(color: AppColors.textTertiary),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    remainingLabel,
+                    style: AppTextStyles.monoTiny
+                        .copyWith(color: AppColors.gray500),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _fmt.format(difference),
+                    style: AppTextStyles.monoDisplay.copyWith(
+                      color: remainingColor,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // Stacked bar
+          if (summary.categoryBreakdown.isNotEmpty &&
+              summary.actualTotal > 0) ...[
+            const SizedBox(height: 14),
+            _StackedCategoryBar(
+              rows: summary.categoryBreakdown,
+              total: summary.actualTotal,
+            ),
+          ],
+
+          // Legend
+          if (summary.categoryBreakdown.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            _LegendGrid(rows: summary.categoryBreakdown),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ── Stacked category bar ──────────────────────────────────────────────────────
+
+class _StackedCategoryBar extends StatelessWidget {
+  const _StackedCategoryBar({required this.rows, required this.total});
+
+  final List<BudgetCategoryRow> rows;
+  final double total;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: _semanticLabel(),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(9),
+        child: SizedBox(
+          height: 18,
+          child: Row(
+            children: rows.map((row) {
+              final flex = total > 0
+                  ? ((row.actual / total) * 1000).round().clamp(1, 1000)
+                  : 0;
+              return Expanded(
+                flex: flex,
+                child: Container(color: _categoryColor(row.category)),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _semanticLabel() {
+    if (total == 0) return 'No spending data';
+    final parts = rows.map((r) {
+      final pct = (r.actual / total * 100).round();
+      return '$pct% ${_categoryDisplayName(r.category)}';
+    }).join(', ');
+    return 'Spending breakdown: $parts';
+  }
+}
+
+// ── Legend grid (2-column) ────────────────────────────────────────────────────
+
+class _LegendGrid extends StatelessWidget {
+  const _LegendGrid({required this.rows});
+
+  final List<BudgetCategoryRow> rows;
+
+  static final _fmt =
+      NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
+
+  @override
+  Widget build(BuildContext context) {
+    final pairs = <(BudgetCategoryRow, BudgetCategoryRow?)>[];
+    for (int i = 0; i < rows.length; i += 2) {
+      pairs.add((rows[i], i + 1 < rows.length ? rows[i + 1] : null));
+    }
+
+    return Column(
+      children: pairs.map((pair) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Row(
+            children: [
+              Expanded(child: _legendItem(pair.$1)),
+              const SizedBox(width: 10),
+              pair.$2 != null
+                  ? Expanded(child: _legendItem(pair.$2!))
+                  : const Expanded(child: SizedBox()),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _legendItem(BudgetCategoryRow row) {
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: _categoryColor(row.category),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 5),
+        Expanded(
+          child: Text(
+            _categoryDisplayName(row.category),
+            style: AppTextStyles.monoTiny.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: 10,
+              letterSpacing: 0,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        Text(
+          _fmt.format(row.actual),
+          style: AppTextStyles.monoTiny.copyWith(
+            color: AppColors.textPrimary,
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Phase timeline ────────────────────────────────────────────────────────────
+
+class _PhaseTimeline extends StatelessWidget {
+  const _PhaseTimeline({required this.phases});
+
+  final List<ProjectPhase> phases;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: List.generate(phases.length, (i) {
+        return _PhaseRow(
+          phase: phases[i],
+          number: i + 1,
+          isLast: i == phases.length - 1,
+        );
+      }),
+    );
+  }
+}
+
+// ── Phase row (dot + connecting line + card) ──────────────────────────────────
+
+class _PhaseRow extends StatelessWidget {
+  const _PhaseRow({
+    required this.phase,
+    required this.number,
+    required this.isLast,
+  });
+
+  final ProjectPhase phase;
+  final int number;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDone = phase.status == 'completed';
+    final isSkipped =
+        phase.status == 'planning' || phase.status == 'cancelled';
+
+    final dotBg = isDone ? AppColors.olive : AppColors.warmFill;
+    final lineColor = isDone ? AppColors.olive : AppColors.warmFill;
+
+    Widget content = Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Dot + vertical connecting line
+            SizedBox(
+              width: 28,
+              child: Column(
+                children: [
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: dotBg,
+                    ),
+                    child: isDone
+                        ? const Icon(Icons.check,
+                            size: 14, color: Colors.white)
+                        : Center(
+                            child: Text(
+                              '$number',
+                              style: AppTextStyles.monoSection.copyWith(
+                                color: AppColors.textTertiary,
+                                fontSize: 11,
+                                letterSpacing: 0,
+                              ),
+                            ),
+                          ),
+                  ),
+                  if (!isLast)
+                    Expanded(
+                      child: ExcludeSemantics(
+                        child: Container(
+                          width: 2,
+                          margin: const EdgeInsets.symmetric(vertical: 3),
+                          decoration: BoxDecoration(
+                            color: lineColor,
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _PhaseCard(phase: phase),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (isSkipped) {
+      content = Opacity(opacity: 0.4, child: content);
+    }
+
+    return content;
+  }
+}
+
+// ── Phase card ────────────────────────────────────────────────────────────────
+
+class _PhaseCard extends StatelessWidget {
+  const _PhaseCard({required this.phase});
+
+  final ProjectPhase phase;
+
+  static final _dateFmt = DateFormat('MMM d');
+
+  @override
+  Widget build(BuildContext context) {
+    final isDone = phase.status == 'completed';
+    final isSkipped =
+        phase.status == 'planning' || phase.status == 'cancelled';
+
+    // Date label
+    String dateLabel;
+    Color dateLabelColor;
+    if (isDone && phase.actualEndDate != null) {
+      if (phase.plannedEndDate != null &&
+          phase.actualEndDate!.isAfter(phase.plannedEndDate!)) {
+        final days =
+            phase.actualEndDate!.difference(phase.plannedEndDate!).inDays;
+        dateLabel = 'OVER · ${days}D LATE';
+        dateLabelColor = AppColors.accent;
+      } else {
+        dateLabel = 'DONE · ${_dateFmt.format(phase.actualEndDate!).toUpperCase()}';
+        dateLabelColor = AppColors.olive;
+      }
+    } else if (phase.plannedEndDate != null) {
+      dateLabel = _dateFmt.format(phase.plannedEndDate!).toUpperCase();
+      dateLabelColor = AppColors.textTertiary;
+    } else {
+      dateLabel = '—';
+      dateLabelColor = AppColors.textTertiary;
+    }
+
+    // Variance badge for skipped phases
+    Widget? badge;
+    if (isSkipped) {
+      badge = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        decoration: BoxDecoration(
+          color: AppColors.warmFill,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          'NOT STARTED',
+          style: AppTextStyles.monoTiny.copyWith(
+            color: AppColors.textTertiary,
+            fontSize: 9,
+          ),
+        ),
+      );
+    }
+
+    return Semantics(
+      label: '${phase.name}, $dateLabel',
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Phase name + date label
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Expanded(
+                  child: Text(
+                    phase.name,
+                    style: GoogleFonts.fraunces(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  dateLabel,
+                  style: AppTextStyles.monoTiny.copyWith(
+                    color: dateLabelColor,
+                    fontSize: 9,
+                  ),
+                ),
+              ],
+            ),
+            if (badge != null) ...[
+              const SizedBox(height: 6),
+              badge,
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Timeline empty state ──────────────────────────────────────────────────────
+
+class _TimelineEmptyState extends StatelessWidget {
+  const _TimelineEmptyState({required this.isCancelled});
+  final bool isCancelled;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: AppPadding.screen,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.receipt_long_outlined,
+              size: AppSizes.iconXl,
+              color: AppColors.gray400,
+            ),
+            const SizedBox(height: AppSizes.md),
+            Text(
+              isCancelled
+                  ? 'No spending recorded'
+                  : 'No budget items tracked',
+              style: AppTextStyles.displaySmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSizes.sm),
+            Text(
+              'No budget items were tracked for this project.',
+              style: AppTextStyles.bodyMedium
+                  .copyWith(color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -666,15 +1324,7 @@ class _CategoryCardState extends State<_CategoryCard> {
 
   String _fmt(double v) => _moneyFmt.format(v);
 
-  static Color _dotColor(String cat) => switch (cat) {
-        'labor' => AppColors.slate,
-        'materials' => AppColors.teal,
-        'fixtures' => AppColors.plum,
-        'permits' => AppColors.sand,
-        'equipment_rental' => AppColors.sandAmber,
-        'design' => AppColors.olive,
-        _ => AppColors.gray500,
-      };
+  static Color _dotColor(String cat) => _categoryColor(cat);
 
   (String label, Color bg, Color text) _pill(BudgetCategoryRow row) {
     if (row.pendingCount > 0) {
