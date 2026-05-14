@@ -105,19 +105,28 @@ class ProjectPhasesNotifier extends _$ProjectPhasesNotifier {
 
   /// Reorders phases by updating sort_order for each phase in [orderedIds].
   Future<void> reorderPhases(List<String> orderedIds) async {
-    // Optimistic update.
     final current = state.value;
     if (current == null) return;
 
-    // Batch update each phase's sort_order.
-    for (var i = 0; i < orderedIds.length; i++) {
-      await SupabaseService.client
-          .from('project_phases')
-          .update({'sort_order': i})
-          .eq('id', orderedIds[i]);
+    // Optimistic local reorder — no skeleton flash.
+    final byId = {for (final p in current) p.id: p};
+    state = AsyncData(
+      orderedIds.where(byId.containsKey).map((id) => byId[id]!).toList(),
+    );
+
+    try {
+      for (var i = 0; i < orderedIds.length; i++) {
+        await SupabaseService.client
+            .from('project_phases')
+            .update({'sort_order': i})
+            .eq('id', orderedIds[i]);
+      }
+    } catch (e) {
+      state = AsyncData(current);
+      rethrow;
     }
 
-    state = const AsyncLoading();
+    // Silent background sync.
     state = await AsyncValue.guard(_fetch);
   }
 

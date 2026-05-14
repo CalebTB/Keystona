@@ -7,23 +7,25 @@ import '../models/project_phase.dart';
 
 /// Card displaying a single project phase.
 ///
-/// Left-edge strip and background tint reflect the phase status at a glance.
-/// Status badge is tappable via [onStatusTap] for quick status changes.
+/// [leading] is typically a [ReorderableDragStartListener]-wrapped handle
+/// icon supplied by the list screen so the card stays decoupled from
+/// the reorderable list implementation.
 class PhaseCard extends StatelessWidget {
   const PhaseCard({
     super.key,
     required this.phase,
     required this.onTap,
     this.onStatusTap,
-    this.onMoveUp,
-    this.onMoveDown,
+    this.leading,
   });
 
   final ProjectPhase phase;
   final VoidCallback onTap;
   final VoidCallback? onStatusTap;
-  final VoidCallback? onMoveUp;
-  final VoidCallback? onMoveDown;
+
+  /// Widget rendered on the left before the phase name.
+  /// Pass a drag handle here from the parent list.
+  final Widget? leading;
 
   static Color _stripColor(String s) => switch (s) {
         'planning'    => AppColors.gray400,
@@ -75,21 +77,11 @@ class PhaseCard extends StatelessWidget {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // Reorder arrows
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _ReorderButton(
-                                icon: Icons.keyboard_arrow_up,
-                                onPressed: onMoveUp,
-                              ),
-                              _ReorderButton(
-                                icon: Icons.keyboard_arrow_down,
-                                onPressed: onMoveDown,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(width: AppSizes.sm),
+                          // Drag handle (or nothing)
+                          if (leading != null) ...[
+                            leading!,
+                            const SizedBox(width: AppSizes.sm),
+                          ],
 
                           // Name + description + dates
                           Expanded(
@@ -139,26 +131,6 @@ class PhaseCard extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-// ── Reorder button ────────────────────────────────────────────────────────────
-
-class _ReorderButton extends StatelessWidget {
-  const _ReorderButton({required this.icon, this.onPressed});
-  final IconData icon;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Icon(
-        icon,
-        size: 18,
-        color: onPressed != null ? AppColors.gray600 : AppColors.gray200,
       ),
     );
   }

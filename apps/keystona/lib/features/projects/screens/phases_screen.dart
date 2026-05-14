@@ -14,8 +14,8 @@ import '../widgets/phase_list_skeleton.dart';
 
 /// Project Phases list screen.
 ///
-/// Shows all phases for a project with reordering via up/down arrows and
-/// swipe-to-delete. FAB/nav-bar button opens the phase create form.
+/// Shows all phases for a project with drag-to-reorder and swipe-to-delete.
+/// FAB/nav-bar button opens the phase create form.
 ///
 /// Route: /projects/:projectId/phases
 class PhasesScreen extends ConsumerWidget {
@@ -81,20 +81,20 @@ class _PhaseList extends ConsumerWidget {
   final List<ProjectPhase> phases;
   final String projectId;
 
-  Future<void> _reorderPhase(
+  Future<void> _onReorder(
     BuildContext context,
     WidgetRef ref,
     int oldIndex,
     int newIndex,
   ) async {
-    final notifier =
-        ref.read(projectPhasesProvider(projectId).notifier);
+    // SliverReorderableList passes newIndex computed before removal;
+    // adjust when moving an item down the list.
+    if (newIndex > oldIndex) newIndex -= 1;
     final reordered = List<ProjectPhase>.from(phases);
-    final moved = reordered.removeAt(oldIndex);
-    reordered.insert(newIndex, moved);
+    reordered.insert(newIndex, reordered.removeAt(oldIndex));
     final ids = reordered.map((p) => p.id).toList();
     try {
-      await notifier.reorderPhases(ids);
+      await ref.read(projectPhasesProvider(projectId).notifier).reorderPhases(ids);
     } catch (_) {
       if (!context.mounted) return;
       SnackbarService.showError(context, 'Could not reorder phases.');
@@ -254,32 +254,39 @@ class _PhaseList extends ConsumerWidget {
         ),
         SliverPadding(
           padding: AppPadding.screen.copyWith(top: AppSizes.sm),
-          sliver: SliverList.separated(
+          sliver: SliverReorderableList(
             itemCount: phases.length,
-            separatorBuilder: (_, _) => const SizedBox(height: AppSizes.sm),
+            onReorder: (oldIndex, newIndex) =>
+                _onReorder(context, ref, oldIndex, newIndex),
             itemBuilder: (ctx, i) {
               final phase = phases[i];
-              return Dismissible(
+              return ReorderableDelayedDragStartListener(
                 key: ValueKey(phase.id),
-                direction: DismissDirection.endToStart,
-                background: _DeleteBackground(),
-                confirmDismiss: (_) async {
-                  await _deletePhase(ctx, ref, phase);
-                  return false;
-                },
-                child: PhaseCard(
-                  phase: phase,
-                  onTap: () => ctx.push(
-                    '/projects/$projectId/phases/${phase.id}/edit',
-                    extra: phase,
+                index: i,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: AppSizes.sm),
+                  child: Dismissible(
+                    key: Key('dismiss_${phase.id}'),
+                    direction: DismissDirection.endToStart,
+                    background: _DeleteBackground(),
+                    confirmDismiss: (_) async {
+                      await _deletePhase(ctx, ref, phase);
+                      return false;
+                    },
+                    child: PhaseCard(
+                      phase: phase,
+                      onTap: () => ctx.push(
+                        '/projects/$projectId/phases/${phase.id}/edit',
+                        extra: phase,
+                      ),
+                      onStatusTap: () => _showStatusPicker(ctx, ref, phase),
+                      leading: Icon(
+                        Icons.drag_handle,
+                        size: 20,
+                        color: AppColors.gray400,
+                      ),
+                    ),
                   ),
-                  onStatusTap: () => _showStatusPicker(ctx, ref, phase),
-                  onMoveUp: i > 0
-                      ? () => _reorderPhase(ctx, ref, i, i - 1)
-                      : null,
-                  onMoveDown: i < phases.length - 1
-                      ? () => _reorderPhase(ctx, ref, i, i + 1)
-                      : null,
                 ),
               );
             },
