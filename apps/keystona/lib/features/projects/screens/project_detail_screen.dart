@@ -315,9 +315,34 @@ class _ProjectHeaderCard extends StatelessWidget {
     final statusColor = _statusColor(project.status);
     final statusDim = _statusDim(project.status);
 
-    final activePhaseName = project.currentPhaseName;
-    final activePhaseIndex = project.currentPhaseIndex;
-    final phaseCount = phases.isNotEmpty ? phases.length : project.phaseCount;
+    // Compute active phase from live phases list (projectDetailProvider does
+    // not join phases, so project.currentPhaseIndex is always null here).
+    final validPhases = phases
+        .where((p) => p.status != 'cancelled' && p.deletedAt == null)
+        .toList()
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+    int? activePhaseIndex;
+    String? activePhaseName;
+    for (int i = 0; i < validPhases.length; i++) {
+      if (validPhases[i].status == 'in_progress') {
+        activePhaseIndex = i;
+        activePhaseName = validPhases[i].name;
+        break;
+      }
+    }
+    if (activePhaseIndex == null) {
+      for (int i = 0; i < validPhases.length; i++) {
+        if (validPhases[i].status == 'planning') {
+          activePhaseIndex = i;
+          activePhaseName = validPhases[i].name;
+          break;
+        }
+      }
+    }
+
+    final phaseCount =
+        validPhases.isNotEmpty ? validPhases.length : project.phaseCount;
 
     return Container(
       decoration: BoxDecoration(
