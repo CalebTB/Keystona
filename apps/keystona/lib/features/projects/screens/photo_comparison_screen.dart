@@ -38,7 +38,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen> {
         return Stack(
           children: [
             // After photo — base layer.
-            widget.afterPhoto.signedUrl != null
+            (widget.afterPhoto.signedUrl?.isNotEmpty == true)
                 ? PhotoView(
                     imageProvider:
                         NetworkImage(widget.afterPhoto.signedUrl!),
@@ -54,7 +54,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen> {
                 widthFactor: _divider,
                 child: SizedBox(
                   width: w,
-                  child: widget.beforePhoto.signedUrl != null
+                  child: (widget.beforePhoto.signedUrl?.isNotEmpty == true)
                       ? PhotoView(
                           imageProvider: NetworkImage(
                               widget.beforePhoto.signedUrl!),

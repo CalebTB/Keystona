@@ -12,9 +12,9 @@ import '../models/project_photo.dart';
 import '../providers/project_detail_provider.dart';
 import '../providers/project_photos_provider.dart';
 import '../widgets/photo_upload_type_sheet.dart';
+import '../widgets/photos/diptych/photos_diptych_view.dart';
 import '../widgets/photos/grid/photos_curated_grid.dart';
 import '../widgets/photos/grid/photos_grid_skeleton.dart';
-import '../widgets/photos/shared/photo_camera_fab.dart';
 import '../widgets/photos/shared/photos_view_toggle.dart';
 import 'photo_comparison_screen.dart';
 
@@ -240,59 +240,50 @@ class _ProjectPhotosScreenState extends ConsumerState<ProjectPhotosScreen> {
           return _EmptyState(onAdd: () => _showUploadActionSheet(context));
         }
 
-        return Column(
-          children: [
-            viewToggle,
-            Expanded(
-              child: PhotosCuratedGrid(
+        final activeView = _activeSegment == 'pairs'
+            ? PhotosDiptychView(
+                photos: data,
+                projectName: asyncProject.value?.name ?? '',
+                onCompareTap: (before, after) {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => PhotoComparisonScreen(
+                      beforePhoto: before,
+                      afterPhoto: after,
+                    ),
+                  ));
+                },
+              )
+            : PhotosCuratedGrid(
                 projectId: widget.projectId,
                 viewSource: _activeSegment,
                 onPhotoTap: _onPhotoTap,
                 onChainTap: _onChainTap,
-              ),
-            ),
+              );
+
+        return Column(
+          children: [
+            viewToggle,
+            Expanded(child: activeView),
           ],
         );
       },
     );
 
-    // FAB — uploading spinner or camera button; only show with content.
-    final fab = _uploading
-        ? const SizedBox(
-            width: 56,
-            height: 56,
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation(_kAccent),
-            ),
-          )
-        : PhotoCameraFAB(
-            onTap: () => _showUploadActionSheet(context),
+    final trailingAction = _uploading
+        ? const CupertinoActivityIndicator()
+        : CupertinoButton(
+            padding: EdgeInsets.zero,
+            onPressed: () => _showUploadActionSheet(context),
+            child: const Icon(CupertinoIcons.add),
           );
 
     if (isIOS) {
       return CupertinoPageScaffold(
         navigationBar: CupertinoNavigationBar(
           middle: const Text('Photos'),
-          trailing: CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: () => _showUploadActionSheet(context),
-            child: const Icon(CupertinoIcons.add),
-          ),
+          trailing: trailingAction,
         ),
-        child: SafeArea(
-          bottom: false,
-          child: Stack(
-            children: [
-              body,
-              if (hasPhotos || _uploading)
-                Positioned(
-                  bottom: AppSizes.lg,
-                  right: AppSizes.md,
-                  child: fab,
-                ),
-            ],
-          ),
-        ),
+        child: SafeArea(bottom: false, child: body),
       );
     }
 
@@ -300,15 +291,19 @@ class _ProjectPhotosScreenState extends ConsumerState<ProjectPhotosScreen> {
       appBar: AppBar(
         title: const Text('Photos'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add_a_photo_outlined),
-            onPressed: () => _showUploadActionSheet(context),
-          ),
+          if (_uploading)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.add_a_photo_outlined),
+              onPressed: () => _showUploadActionSheet(context),
+            ),
         ],
       ),
       body: body,
-      floatingActionButton:
-          (hasPhotos || _uploading) ? fab : null,
     );
   }
 }

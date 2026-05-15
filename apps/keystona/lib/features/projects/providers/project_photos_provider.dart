@@ -34,10 +34,16 @@ class ProjectPhotosNotifier extends _$ProjectPhotosNotifier {
 
     final storage = StorageService();
     final urls = await Future.wait(
-      rows.map((r) => storage.getSignedUrl(
+      rows.map((r) async {
+        try {
+          return await storage.getSignedUrl(
             bucket: _kBucket,
             path: r['storage_path'] as String,
-          )),
+          );
+        } catch (_) {
+          return '';
+        }
+      }),
     );
 
     return List.generate(
