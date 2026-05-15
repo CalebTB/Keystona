@@ -771,7 +771,7 @@ class _ReceiptPickerSheetState extends ConsumerState<_ReceiptPickerSheet> {
           Expanded(
             child: docsAsync.when(
               loading: () =>
-                  const Center(child: CircularProgressIndicator()),
+                  const Center(child: CircularProgressIndicator(strokeWidth: 2)),
               error: (_, _) => Center(
                 child: Text(
                   'Couldn\'t load documents.',

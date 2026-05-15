@@ -409,7 +409,8 @@ class _PhotoViewer extends StatelessWidget {
                   fit: BoxFit.contain,
                   placeholder: (_, _) => const Center(
                     child: CircularProgressIndicator(
-                      color: Colors.white54,
+                      strokeWidth: 2,
+                      color: AppColors.darkTextSecondary,
                     ),
                   ),
                   errorWidget: (_, _, _) => const Icon(

@@ -97,7 +97,7 @@ class _Body extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return detailState.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
       error: (e, _) => ErrorView(
         message: "Couldn't load appliance details.",
         onRetry: () =>

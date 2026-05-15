@@ -297,7 +297,7 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
                       const Center(
                         child: Padding(
                           padding: EdgeInsets.symmetric(vertical: AppSizes.lg),
-                          child: CircularProgressIndicator(),
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                       )
                     else if (_availableContacts.isEmpty)

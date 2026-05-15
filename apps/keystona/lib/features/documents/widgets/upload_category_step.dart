@@ -48,7 +48,7 @@ class _UploadCategoryStepState extends ConsumerState<UploadCategoryStep> {
         const SizedBox(height: AppSizes.lg),
         Expanded(
           child: categoriesAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
             error: (e, st) => Center(
               child: Text(
                 'Could not load categories.',
@@ -223,7 +223,7 @@ class _TypeList extends ConsumerWidget {
     return typesAsync.when(
       loading: () => const Padding(
         padding: EdgeInsets.all(AppSizes.md),
-        child: Center(child: CircularProgressIndicator()),
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
       ),
       error: (e, st) => _SkipRow(onSkip: () => onSkip(category)),
       data: (types) {

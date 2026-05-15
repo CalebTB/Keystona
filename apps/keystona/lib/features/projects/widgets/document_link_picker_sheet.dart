@@ -88,7 +88,7 @@ class _DocumentLinkPickerSheetState
             Flexible(
               child: asyncDocs.when(
                 loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                    const Center(child: CircularProgressIndicator(strokeWidth: 2)),
                 error: (_, _) => Center(
                   child: Text(
                     'Could not load documents.',

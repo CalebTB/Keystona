@@ -1706,10 +1706,10 @@ class _PdfPreviewState extends State<_PdfPreview> {
       builders: PdfViewBuilders<DefaultBuilderOptions>(
         options: const DefaultBuilderOptions(),
         documentLoaderBuilder: (_) => const Center(
-          child: CircularProgressIndicator(color: AppColors.deepNavy),
+          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.deepNavy),
         ),
         pageLoaderBuilder: (_) => const Center(
-          child: CircularProgressIndicator(color: AppColors.deepNavy),
+          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.deepNavy),
         ),
         errorBuilder: (_, error) => Center(
           child: Column(
@@ -1771,7 +1771,7 @@ class _ImagePreviewState extends State<_ImagePreview> {
   Widget build(BuildContext context) {
     if (_loading) {
       return const Center(
-        child: CircularProgressIndicator(color: Colors.white70),
+        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.darkText),
       );
     }
     if (_signedUrl == null) {
@@ -1789,7 +1789,8 @@ class _ImagePreviewState extends State<_ImagePreview> {
       backgroundDecoration: const BoxDecoration(color: Colors.black),
       loadingBuilder: (_, event) => Center(
         child: CircularProgressIndicator(
-          color: Colors.white70,
+          strokeWidth: 2,
+          color: AppColors.darkText,
           value: event == null
               ? null
               : event.cumulativeBytesLoaded /

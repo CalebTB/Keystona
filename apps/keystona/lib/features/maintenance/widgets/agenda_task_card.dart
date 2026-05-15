@@ -78,7 +78,7 @@ class AgendaTaskCard extends StatelessWidget {
               Container(
                 width: 1.5,
                 height: 56,
-                color: const Color(0xFFE9E4DC),
+                color: AppColors.warmFill,
               ),
               // ── Body ──────────────────────────────────────────────────────
               Expanded(
@@ -199,7 +199,7 @@ class AgendaTaskCard extends StatelessWidget {
     } else if (cat == 'safety' || cat == 'security') {
       return const _CategoryStyle(
         icon: Icons.security_outlined,
-        iconColor: Color(0xFF9B7E3E),
+        iconColor: AppColors.sandAmber,
         bgColor: AppColors.sandDim,
       );
     } else if (cat == 'exterior' || cat == 'roofing' || cat == 'landscaping') {

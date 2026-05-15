@@ -70,7 +70,7 @@ String _formatSize(int? bytes) {
   if (days <= 90) {
     return (
       bg: AppColors.sandDim,
-      text: const Color(0xFF9B7E3E),
+      text: AppColors.sandAmber,
       label: '${days}d',
     );
   }
@@ -1072,7 +1072,7 @@ class _DocGridTile extends StatelessWidget {
               ),
 
               // Divider.
-              const Divider(height: 1, color: Color(0xFFE9E4DC)),
+              const Divider(height: 1, color: AppColors.warmFill),
 
               // Footer: name + date.
               Padding(

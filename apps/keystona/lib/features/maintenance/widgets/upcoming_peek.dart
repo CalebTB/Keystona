@@ -38,7 +38,7 @@ class UpcomingPeek extends StatelessWidget {
             children: [
               if (i > 0)
                 const Divider(
-                  color: Color(0xFFE9E4DC),
+                  color: AppColors.warmFill,
                   height: 1,
                   thickness: 1,
                 ),
@@ -97,7 +97,7 @@ class UpcomingPeek extends StatelessWidget {
     } else if (cat == 'electrical') {
       return AppColors.sand;
     } else if (cat == 'safety' || cat == 'security') {
-      return const Color(0xFF9B7E3E);
+      return AppColors.sandAmber;
     } else if (cat == 'exterior' || cat == 'roofing' || cat == 'landscaping') {
       return AppColors.olive;
     } else if (cat == 'interior' || cat == 'kitchen' || cat == 'bathroom') {

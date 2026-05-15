@@ -49,6 +49,18 @@ abstract final class AppTheme {
         inversePrimary: AppColors.sand,
       ),
 
+      // ─── Page Transitions ──────────────────────────────────────────────────
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.android: ZoomPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: ZoomPageTransitionsBuilder(),
+          TargetPlatform.linux: ZoomPageTransitionsBuilder(),
+          TargetPlatform.windows: ZoomPageTransitionsBuilder(),
+        },
+      ),
+
       // ─── Scaffold ──────────────────────────────────────────────────────────
       scaffoldBackgroundColor: AppColors.warmOffWhite,
 

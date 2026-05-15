@@ -162,10 +162,20 @@ abstract final class AppRoutes {
 
 // ─── Page builder helper ───────────────────────────────────────────────────
 
-/// Returns a [CupertinoPage] for all pushed routes, giving iOS the native
-/// slide-from-right transition and swipe-back gesture on every screen.
-CupertinoPage<void> _buildPage(GoRouterState state, Widget child) =>
-    CupertinoPage<void>(key: state.pageKey, child: child);
+/// Returns a [CupertinoPage] for all pushed routes.
+///
+/// Pass [fullscreenDialog: true] for create/edit form screens — they slide up
+/// from the bottom (modal) instead of from the right.
+CupertinoPage<void> _buildPage(
+  GoRouterState state,
+  Widget child, {
+  bool fullscreenDialog = false,
+}) =>
+    CupertinoPage<void>(
+      key: state.pageKey,
+      child: child,
+      fullscreenDialog: fullscreenDialog,
+    );
 
 // ─── Router provider ───────────────────────────────────────────────────────
 
@@ -256,6 +266,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                           SystemFormScreen(
                             existingSystem: state.extra as HomeSystem?,
                           ),
+                          fullscreenDialog: true,
                         ),
                       ),
                       GoRoute(
@@ -281,6 +292,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                           ApplianceFormScreen(
                             existingAppliance: state.extra as Appliance?,
                           ),
+                          fullscreenDialog: true,
                         ),
                       ),
                       GoRoute(
@@ -336,6 +348,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                             existingContact:
                                 state.extra as EmergencyContact?,
                           ),
+                          fullscreenDialog: true,
                         ),
                       ),
                     ],
@@ -347,8 +360,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                     routes: [
                       GoRoute(
                         path: 'add',
-                        pageBuilder: (_, state) =>
-                            _buildPage(state, const InsuranceFormScreen()),
+                        pageBuilder: (_, state) => _buildPage(
+                          state,
+                          const InsuranceFormScreen(),
+                          fullscreenDialog: true,
+                        ),
                       ),
                       GoRoute(
                         path: 'edit/:policyId',
@@ -357,6 +373,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                           InsuranceFormScreen(
                             existingPolicy: state.extra as InsurancePolicy,
                           ),
+                          fullscreenDialog: true,
                         ),
                       ),
                     ],
@@ -376,8 +393,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                   // Static segments must precede parameterised ':documentId'.
                   GoRoute(
                     path: 'upload',
-                    pageBuilder: (_, state) =>
-                        _buildPage(state, const DocumentUploadScreen()),
+                    pageBuilder: (_, state) => _buildPage(
+                      state,
+                      const DocumentUploadScreen(),
+                      fullscreenDialog: true,
+                    ),
                   ),
                   GoRoute(
                     path: 'search',
@@ -422,14 +442,18 @@ final routerProvider = Provider<GoRouter>((ref) {
                   // Static segments must come before parameterised ':taskId'.
                   GoRoute(
                     path: 'create',
-                    pageBuilder: (_, state) =>
-                        _buildPage(state, const TaskFormScreen()),
+                    pageBuilder: (_, state) => _buildPage(
+                      state,
+                      const TaskFormScreen(),
+                      fullscreenDialog: true,
+                    ),
                   ),
                   GoRoute(
                     path: 'edit/:taskId',
                     pageBuilder: (_, state) => _buildPage(
                       state,
                       TaskFormScreen(existingTask: state.extra as MaintenanceTask),
+                      fullscreenDialog: true,
                     ),
                   ),
                   GoRoute(
@@ -439,6 +463,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                       TaskCompletionFormScreen(
                         taskId: state.pathParameters['taskId']!,
                       ),
+                      fullscreenDialog: true,
                     ),
                   ),
                   GoRoute(
@@ -465,8 +490,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                   // Static 'create' must come before parameterised ':projectId'.
                   GoRoute(
                     path: 'create',
-                    pageBuilder: (_, state) =>
-                        _buildPage(state, const ProjectFormScreen()),
+                    pageBuilder: (_, state) => _buildPage(
+                      state,
+                      const ProjectFormScreen(),
+                      fullscreenDialog: true,
+                    ),
                   ),
                   GoRoute(
                     path: ':projectId',
@@ -485,6 +513,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                           ProjectFormScreen(
                             existingProject: state.extra as Project?,
                           ),
+                          fullscreenDialog: true,
                         ),
                       ),
                       // #5.3 — Phases
@@ -505,6 +534,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                               PhaseFormScreen(
                                 projectId: state.pathParameters['projectId']!,
                               ),
+                              fullscreenDialog: true,
                             ),
                           ),
                           GoRoute(
@@ -515,6 +545,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                                 projectId: state.pathParameters['projectId']!,
                                 existingPhase: state.extra as ProjectPhase?,
                               ),
+                              fullscreenDialog: true,
                             ),
                           ),
                         ],
@@ -535,6 +566,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                               BudgetItemFormScreen(
                                 projectId: state.pathParameters['projectId']!,
                               ),
+                              fullscreenDialog: true,
                             ),
                           ),
                           GoRoute(
@@ -545,6 +577,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                                 projectId: state.pathParameters['projectId']!,
                                 existingItem: state.extra as ProjectBudgetItem?,
                               ),
+                              fullscreenDialog: true,
                             ),
                           ),
                         ],
@@ -574,6 +607,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                               NoteFormScreen(
                                 projectId: state.pathParameters['projectId']!,
                               ),
+                              fullscreenDialog: true,
                             ),
                           ),
                           GoRoute(
@@ -584,6 +618,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                                 projectId: state.pathParameters['projectId']!,
                                 existingNote: state.extra as ProjectJournalNote?,
                               ),
+                              fullscreenDialog: true,
                             ),
                           ),
                         ],
