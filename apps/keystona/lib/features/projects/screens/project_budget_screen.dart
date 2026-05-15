@@ -152,7 +152,7 @@ class _BudgetEditorialView extends ConsumerWidget {
       ),
     );
 
-    ctrl.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) => ctrl.dispose());
     if (newValue == null || !context.mounted) return;
 
     try {

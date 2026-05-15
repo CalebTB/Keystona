@@ -8,19 +8,9 @@ import '../../../../../core/theme/app_text_styles.dart';
 import '../../../models/project_photo.dart';
 import '../shared/photo_type_tag.dart';
 
-// accent terracotta — matches the project photos screen accent constant
-const Color _kAccent = Color(0xFFB85638);
-
-// Card surface — warm off-white, slightly lighter than the app background
 const Color _kCardSurface = Color(0xFFF5F2EC);
-
-// Card border
 const Color _kCardBorder = Color(0xFFDDD6CC);
-
-// Muted green for room-tag chip text
 const Color _kRoomTagText = Color(0xFF6B7E6D);
-
-// Caption / quote text
 const Color _kCaptionColor = Color(0xFF6B6560);
 
 /// A before/after pair resolved from grouped photos.
@@ -92,7 +82,7 @@ class PhotosDiptychView extends StatelessWidget {
                       width: 6,
                       height: 6,
                       decoration: const BoxDecoration(
-                        color: _kAccent,
+                        color: AppColors.accent,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -312,7 +302,7 @@ class _PairCard extends StatelessWidget {
                       const Icon(
                         Icons.compare_arrows_rounded,
                         size: 14,
-                        color: _kAccent,
+                        color: AppColors.accent,
                       ),
                       const SizedBox(width: 4),
                       const Text(
@@ -322,7 +312,7 @@ class _PairCard extends StatelessWidget {
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.0,
-                          color: _kAccent,
+                          color: AppColors.accent,
                         ),
                       ),
                     ],

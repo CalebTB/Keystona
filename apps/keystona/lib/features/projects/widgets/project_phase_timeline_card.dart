@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -32,7 +33,27 @@ class ProjectPhaseTimelineCard extends ConsumerWidget {
 
     return asyncPhases.when(
       loading: () => _CardShell(project: project, onOpen: onOpen, child: const _PhasesSkeleton()),
-      error: (_, _) => _CardShell(project: project, onOpen: onOpen, child: const SizedBox.shrink()),
+      error: (_, _) => _CardShell(
+        project: project,
+        onOpen: onOpen,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.warning_amber_rounded, size: 28, color: AppColors.gray400),
+                const SizedBox(height: 8),
+                Text(
+                  "Couldn't load phases",
+                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
       data: (phases) {
         final visible = phases
             .where((p) => p.status != 'cancelled' && p.deletedAt == null)
@@ -84,6 +105,15 @@ class _CardShell extends StatelessWidget {
         _             => AppColors.gray500,
       };
 
+  static Color _statusBorderColor(String s) => switch (s) {
+        'in_progress' => AppColors.accent,
+        'planning'    => AppColors.sand,
+        'on_hold'     => AppColors.amber,
+        'completed'   => AppColors.oliveLight,
+        'cancelled'   => AppColors.gray400,
+        _             => AppColors.deepNavy,
+      };
+
   @override
   Widget build(BuildContext context) {
     final done = phases?.where((p) => p.status == 'completed').length ?? 0;
@@ -91,12 +121,14 @@ class _CardShell extends StatelessWidget {
     final pct = total > 0 ? (done / total * 100).round() : 0;
     final hasBudget = project.estimatedBudget != null;
 
-    return Container(
+    return GestureDetector(
+      onTap: onOpen,
+      child: Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: AppColors.deepNavy,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.deepNavy.withValues(alpha: 0.6), width: 0.5),
+        border: Border.all(color: _statusBorderColor(project.status).withValues(alpha: 0.7), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: AppColors.deepNavy.withValues(alpha: 0.12),
@@ -108,11 +140,21 @@ class _CardShell extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Hero header — slightly lighter section
+          // Hero header — cover photo or solid color
           Container(
-            decoration: const BoxDecoration(
-              color: Color(0xFF352C24),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            decoration: BoxDecoration(
+              color: const Color(0xFF352C24),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              image: project.coverPhotoPath != null
+                  ? DecorationImage(
+                      image: CachedNetworkImageProvider(project.coverPhotoPath!),
+                      fit: BoxFit.cover,
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xCC1A1410),
+                        BlendMode.darken,
+                      ),
+                    )
+                  : null,
             ),
             padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
             child: Column(
@@ -131,7 +173,7 @@ class _CardShell extends StatelessWidget {
                     ),
                     Expanded(
                       child: Text(
-                        '${_statusLabel(project.status)} · ${project.name.toUpperCase()}',
+                        _statusLabel(project.status),
                         style: AppTextStyles.monoSection.copyWith(
                           color: AppColors.darkTextSecondary,
                           fontSize: 9,
@@ -145,12 +187,15 @@ class _CardShell extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Phase Timeline',
+                  project.name,
                   style: AppTextStyles.headlineMedium.copyWith(
                     fontSize: 26,
+                    fontWeight: FontWeight.w800,
                     color: AppColors.darkText,
                     height: 1.05,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 10),
                 Row(
@@ -177,18 +222,28 @@ class _CardShell extends StatelessWidget {
             ),
           ),
           // Footer strip inside card
-          _InCardFooter(project: project, onOpen: onOpen),
+          _InCardFooter(
+            project: project,
+            onOpen: onOpen,
+            activePhase: phases?.where((p) => p.status == 'in_progress').firstOrNull,
+          ),
         ],
       ),
+    ),
     );
   }
 }
 
 class _InCardFooter extends StatelessWidget {
-  const _InCardFooter({required this.project, required this.onOpen});
+  const _InCardFooter({
+    required this.project,
+    required this.onOpen,
+    this.activePhase,
+  });
 
   final Project project;
   final VoidCallback onOpen;
+  final ProjectPhase? activePhase;
 
   @override
   Widget build(BuildContext context) {
@@ -209,9 +264,9 @@ class _InCardFooter extends StatelessWidget {
           if (remaining != null) ...[
             Text(
               _compact(remaining),
-              style: AppTextStyles.monoDisplay.copyWith(
+              style: AppTextStyles.displaySmall.copyWith(
                 fontSize: 20,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w800,
                 color: remaining > 0 ? AppColors.textPrimary : AppColors.accent,
               ),
             ),
@@ -224,15 +279,42 @@ class _InCardFooter extends StatelessWidget {
                 letterSpacing: 1.0,
               ),
             ),
+          ] else if (activePhase != null) ...[
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'CURRENT PHASE',
+                  style: AppTextStyles.monoSection.copyWith(
+                    fontSize: 8,
+                    color: AppColors.textSecondary,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  activePhase!.name,
+                  style: AppTextStyles.headlineSmall.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ],
           const Spacer(),
           GestureDetector(
             onTap: onOpen,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              constraints: const BoxConstraints(minHeight: 36),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: AppColors.deepNavy,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -242,11 +324,11 @@ class _InCardFooter extends StatelessWidget {
                     style: AppTextStyles.labelSmall.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                      fontSize: 11,
                     ),
                   ),
-                  const SizedBox(width: 5),
-                  const Icon(Icons.arrow_forward_ios, size: 11, color: Colors.white),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.arrow_forward_ios, size: 9, color: Colors.white),
                 ],
               ),
             ),
@@ -267,7 +349,7 @@ class _Stat extends StatelessWidget {
       text,
       style: AppTextStyles.monoLabel.copyWith(
         fontSize: 11,
-        color: AppColors.darkTextSecondary,
+        color: Colors.white.withValues(alpha: 0.75),
       ),
     );
   }
@@ -279,8 +361,8 @@ class _StatDot extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6),
       child: Container(
-        width: 3,
-        height: 3,
+        width: 4,
+        height: 4,
         decoration: const BoxDecoration(
           shape: BoxShape.circle,
           color: AppColors.darkTextTertiary,
@@ -351,7 +433,7 @@ class _PhaseRow extends StatelessWidget {
       case _DotState.done:
         final end = phase.actualEndDate ?? phase.plannedEndDate;
         final dateStr = end != null ? ' · ${DateFormat('MMM d').format(end).toUpperCase()}' : '';
-        return (label: 'DONE$dateStr', color: AppColors.olive.withValues(alpha: 0.7));
+        return (label: 'DONE$dateStr', color: AppColors.olive);
 
       case _DotState.current:
         final end = phase.plannedEndDate;
@@ -422,8 +504,10 @@ class _PhaseRow extends StatelessWidget {
                           style: AppTextStyles.headlineSmall.copyWith(
                             fontSize: 14,
                             fontWeight: isDone || isCurrent ? FontWeight.w700 : FontWeight.w500,
-                            color: AppColors.textPrimary,
-                            fontStyle: (!isDone && !isCurrent) ? FontStyle.italic : FontStyle.normal,
+                            color: (!isDone && !isCurrent)
+                                ? AppColors.textPrimary.withValues(alpha: 0.4)
+                                : AppColors.textPrimary,
+                            fontStyle: FontStyle.normal,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -447,7 +531,7 @@ class _PhaseRow extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 3),
                       child: Text(
                         phase.description!,
-                        style: AppTextStyles.monoLabel.copyWith(
+                        style: AppTextStyles.bodySmall.copyWith(
                           fontSize: 10,
                           color: AppColors.textSecondary,
                         ),

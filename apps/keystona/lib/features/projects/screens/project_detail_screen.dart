@@ -13,6 +13,7 @@ import '../../../core/widgets/snackbar_service.dart';
 import '../models/project.dart';
 import '../models/project_journal_note.dart';
 import '../models/project_phase.dart';
+import '../providers/project_budget_provider.dart';
 import '../providers/project_detail_provider.dart';
 import '../providers/project_journal_provider.dart';
 import '../providers/project_phases_provider.dart';
@@ -174,7 +175,16 @@ class ProjectDetailScreen extends ConsumerWidget {
     Project project,
     bool isIOS,
   ) {
-    void onEdit() => context.push('/projects/$projectId/edit', extra: project);
+    Future<void> onEdit() async {
+      final result = await context.push<String>(
+        '/projects/$projectId/edit',
+        extra: project,
+      );
+      if (result != null) {
+        ref.invalidate(projectDetailProvider(projectId));
+        ref.invalidate(projectBudgetSummaryProvider(projectId));
+      }
+    }
 
     final body = SafeArea(
       bottom: false,
@@ -370,8 +380,11 @@ class _ProjectHeaderCard extends StatelessWidget {
           Row(
             children: [
               Container(
+                constraints: const BoxConstraints(minHeight: 44),
+                alignment: Alignment.centerLeft,
+                child: Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: statusDim,
                   borderRadius: BorderRadius.circular(6),
@@ -387,7 +400,7 @@ class _ProjectHeaderCard extends StatelessWidget {
                         color: statusColor,
                       ),
                     ),
-                    const SizedBox(width: 5),
+                    const SizedBox(width: 4),
                     Text(
                       project.status.statusLabel.toUpperCase(),
                       style: AppTextStyles.monoTiny.copyWith(
@@ -398,6 +411,7 @@ class _ProjectHeaderCard extends StatelessWidget {
                     ),
                   ],
                 ),
+              ),
               ),
               const SizedBox(width: 8),
               Text(
@@ -425,7 +439,7 @@ class _ProjectHeaderCard extends StatelessWidget {
           ),
 
           // Type + description
-          const SizedBox(height: 3),
+          const SizedBox(height: 4),
           Text(
             project.projectType.projectTypeLabel +
                 (project.description != null && project.description!.isNotEmpty
@@ -444,10 +458,13 @@ class _ProjectHeaderCard extends StatelessWidget {
                 Icon(Icons.calendar_today_outlined,
                     size: 14, color: AppColors.gray500),
                 const SizedBox(width: 6),
-                Text(
-                  dateStr,
-                  style: AppTextStyles.monoLabel
-                      .copyWith(color: AppColors.gray500),
+                Flexible(
+                  child: Text(
+                    dateStr,
+                    style: AppTextStyles.monoLabel.copyWith(color: AppColors.gray500),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -527,9 +544,9 @@ class _MiniPhaseDots extends StatelessWidget {
           ],
         ),
         if (activeIdx != null && activePhaseName != null) ...[
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
-            'Phase ${activeIdx + 1} of $count · $activePhaseName',
+            'Phase ${activeIdx + 1} of $phaseCount · $activePhaseName',
             style: AppTextStyles.monoLabel.copyWith(
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -820,7 +837,7 @@ class _SectionCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(12, 11, 10, 11),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(12),
@@ -1170,7 +1187,7 @@ class _NoteTimelineCard extends StatelessWidget {
                       ],
                     ),
                     if (note.title != null && note.title!.isNotEmpty) ...[
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 8),
                       Text(
                         note.title!,
                         style: AppTextStyles.bodyMediumSemibold.copyWith(

@@ -13,8 +13,6 @@ import 'photos_grid_filter_chips.dart';
 import 'photos_grid_skeleton.dart';
 import 'photos_summary_strip.dart';
 
-// accent: #B85638
-const Color _kAccent = Color(0xFFB85638);
 
 /// Full-screen curated photo grid for a project.
 ///
@@ -91,7 +89,7 @@ class _PhotosCuratedGridState extends ConsumerState<PhotosCuratedGrid> {
                           height: 5,
                           margin: const EdgeInsets.only(right: 6),
                           decoration: const BoxDecoration(
-                            color: _kAccent,
+                            color: AppColors.accent,
                             shape: BoxShape.circle,
                           ),
                         ),

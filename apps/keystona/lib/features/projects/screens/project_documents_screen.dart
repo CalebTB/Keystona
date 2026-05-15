@@ -138,7 +138,7 @@ class _ContractorBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       color: AppColors.deepNavy.withValues(alpha: 0.07),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Row(
         children: [
           const Icon(Icons.person_outline, size: 14, color: AppColors.deepNavy),

@@ -25,25 +25,20 @@ class ProjectsScreen extends ConsumerStatefulWidget {
 class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
   String? _activeFilter;
   final PageController _pageController = PageController();
-  int _currentPage = 0;
-
-  @override
-  void initState() {
-    super.initState();
-  }
+  final ValueNotifier<int> _currentPage = ValueNotifier(0);
 
   @override
   void dispose() {
     _pageController.dispose();
+    _currentPage.dispose();
     super.dispose();
   }
 
   void _onFilterChanged(String? filter) {
     setState(() {
       _activeFilter = filter;
-      _currentPage = 0;
     });
-    // Jump to page 0 when filter changes
+    _currentPage.value = 0;
     if (_pageController.hasClients) {
       _pageController.jumpToPage(0);
     }
@@ -55,7 +50,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     final asyncData = ref.watch(projectsProvider);
 
     final body = asyncData.when(
-      loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      loading: () => const _ProjectsScreenSkeleton(),
       error: (_, _) => _ErrorState(onRetry: () => ref.invalidate(projectsProvider)),
       data: (projects) {
         if (projects.isEmpty) {
@@ -66,7 +61,6 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
             ? projects
             : projects.where((p) => p.status == _activeFilter).toList();
 
-        final page = _currentPage.clamp(0, (filtered.length - 1).clamp(0, filtered.length));
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,7 +76,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
               activeFilter: _activeFilter,
               onChanged: _onFilterChanged,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             // ── Page view ────────────────────────────────────────────────────
             Expanded(
               child: filtered.isEmpty
@@ -94,11 +88,13 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                       key: ValueKey(_activeFilter),
                       controller: _pageController,
                       itemCount: filtered.length,
-                      onPageChanged: (i) => setState(() => _currentPage = i),
-                      itemBuilder: (ctx, i) => ProjectPhaseTimelineCard(
-                        project: filtered[i],
-                        onOpen: () => context.push(
-                          AppRoutes.projectDetail.replaceFirst(':projectId', filtered[i].id),
+                      onPageChanged: (i) => _currentPage.value = i,
+                      itemBuilder: (ctx, i) => RepaintBoundary(
+                        child: ProjectPhaseTimelineCard(
+                          project: filtered[i],
+                          onOpen: () => context.push(
+                            AppRoutes.projectDetail.replaceFirst(':projectId', filtered[i].id),
+                          ),
                         ),
                       ),
                     ),
@@ -109,7 +105,13 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                 color: AppColors.warmOffWhite,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: _PageDots(total: filtered.length, current: page),
+                  child: ValueListenableBuilder<int>(
+                    valueListenable: _currentPage,
+                    builder: (_, current, _) => _PageDots(
+                      total: filtered.length,
+                      current: current.clamp(0, filtered.length - 1),
+                    ),
+                  ),
                 ),
               ),
           ],
@@ -354,24 +356,34 @@ class _PageDots extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dotSize = total > 8 ? 5.0 : 6.0;
+    final spacing = total > 8 ? 2.0 : 3.0;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(total, (i) {
-        final active = i == current;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: active ? 16 : 6,
-          height: 6,
-          margin: const EdgeInsets.symmetric(horizontal: 3),
-          decoration: BoxDecoration(
-            color: active ? AppColors.deepNavy : Colors.transparent,
-            borderRadius: BorderRadius.circular(3),
-            border: active
-                ? null
-                : Border.all(color: AppColors.deepNavy.withValues(alpha: 0.25), width: 1),
+      children: [
+        Flexible(
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            children: List.generate(total, (i) {
+          final active = i == current;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: active ? 14 : dotSize,
+            height: dotSize,
+            margin: EdgeInsets.symmetric(horizontal: spacing),
+            decoration: BoxDecoration(
+              color: active ? AppColors.deepNavy : Colors.transparent,
+              borderRadius: BorderRadius.circular(dotSize),
+              border: active
+                  ? null
+                  : Border.all(color: AppColors.deepNavy.withValues(alpha: 0.25), width: 1),
+            ),
+          );
+        }),
           ),
-        );
-      }),
+        ),
+      ],
     );
   }
 }
@@ -439,6 +451,214 @@ class _ErrorState extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Projects screen skeleton ───────────────────────────────────────────────────
+
+class _ProjectsScreenSkeleton extends StatefulWidget {
+  const _ProjectsScreenSkeleton();
+
+  @override
+  State<_ProjectsScreenSkeleton> createState() => _ProjectsScreenSkeletonState();
+}
+
+class _ProjectsScreenSkeletonState extends State<_ProjectsScreenSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _opacity = Tween<double>(begin: 0.3, end: 0.7).animate(_ctrl);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _ctrl.repeat(reverse: true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _opacity,
+      builder: (_, _) => Opacity(
+        opacity: _opacity.value,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Header shimmer ───────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _ShimmerBar(width: 70, height: 10, radius: 4),
+                      const SizedBox(height: 6),
+                      _ShimmerBar(width: 180, height: 22, radius: 6),
+                    ],
+                  ),
+                  const Spacer(),
+                  _ShimmerBar(width: 40, height: 40, radius: 20),
+                ],
+              ),
+            ),
+            // ── Filter chips shimmer ─────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+              child: Row(
+                children: [
+                  for (final w in [56.0, 88.0, 72.0, 80.0]) ...[
+                    _ShimmerBar(width: w, height: 32, radius: 16),
+                    const SizedBox(width: 8),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // ── Card shimmer ─────────────────────────────────────────────────
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    // Dark header section
+                    Container(
+                      width: double.infinity,
+                      height: 120,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF352C24),
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                      ),
+                      padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _ShimmerBar(width: 100, height: 10, radius: 4, dark: true),
+                          const SizedBox(height: 10),
+                          _ShimmerBar(width: 220, height: 22, radius: 6, dark: true),
+                          const SizedBox(height: 12),
+                          Row(children: [
+                            _ShimmerBar(width: 60, height: 10, radius: 4, dark: true),
+                            const SizedBox(width: 12),
+                            _ShimmerBar(width: 60, height: 10, radius: 4, dark: true),
+                            const SizedBox(width: 12),
+                            _ShimmerBar(width: 80, height: 10, radius: 4, dark: true),
+                          ]),
+                        ],
+                      ),
+                    ),
+                    // White timeline section
+                    Expanded(
+                      child: Container(
+                        color: AppColors.surface,
+                        padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
+                        child: Column(
+                          children: List.generate(4, (i) => Padding(
+                            padding: const EdgeInsets.only(bottom: 20),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _ShimmerBar(width: 22, height: 22, radius: 11),
+                                const SizedBox(width: 14),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _ShimmerBar(width: 140 + (i * 20).toDouble(), height: 14, radius: 4),
+                                    const SizedBox(height: 5),
+                                    _ShimmerBar(width: 200, height: 10, radius: 4),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          )),
+                        ),
+                      ),
+                    ),
+                    // Footer section
+                    Container(
+                      width: double.infinity,
+                      height: 60,
+                      decoration: const BoxDecoration(
+                        color: AppColors.warmFill,
+                        borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+                      ),
+                      padding: const EdgeInsets.fromLTRB(20, 14, 16, 16),
+                      child: Row(
+                        children: [
+                          _ShimmerBar(width: 80, height: 20, radius: 5),
+                          const SizedBox(width: 10),
+                          _ShimmerBar(width: 100, height: 10, radius: 4),
+                          const Spacer(),
+                          _ShimmerBar(width: 60, height: 30, radius: 8),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // ── Dots shimmer ─────────────────────────────────────────────────
+            ColoredBox(
+              color: AppColors.warmOffWhite,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _ShimmerBar(width: 14, height: 6, radius: 3),
+                    const SizedBox(width: 6),
+                    _ShimmerBar(width: 6, height: 6, radius: 3),
+                    const SizedBox(width: 6),
+                    _ShimmerBar(width: 6, height: 6, radius: 3),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ShimmerBar extends StatelessWidget {
+  const _ShimmerBar({
+    required this.width,
+    required this.height,
+    required this.radius,
+    this.dark = false,
+  });
+
+  final double width;
+  final double height;
+  final double radius;
+  final bool dark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: dark
+            ? Colors.white.withValues(alpha: 0.15)
+            : AppColors.gray200,
+        borderRadius: BorderRadius.circular(radius),
       ),
     );
   }
