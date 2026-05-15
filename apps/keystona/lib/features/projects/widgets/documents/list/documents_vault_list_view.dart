@@ -24,12 +24,14 @@ class DocumentsVaultListView extends ConsumerStatefulWidget {
     super.key,
     required this.projectId,
     required this.onLinkDocument,
+    this.filterContactId,
   });
 
   final String projectId;
-
-  /// Called when the user taps "Link a document" at the bottom of the list.
   final VoidCallback onLinkDocument;
+
+  /// When set, only rows with a matching [ProjectDocumentLink.contactId] are shown.
+  final String? filterContactId;
 
   @override
   ConsumerState<DocumentsVaultListView> createState() =>
@@ -54,12 +56,24 @@ class _DocumentsVaultListViewState
   }
 
   Widget _buildContent(List<ProjectDocumentLink> links) {
-    // Apply filter
+    // Apply contractor filter first (from screen-level param).
+    final base = widget.filterContactId != null
+        ? links.where((l) => l.contactId == widget.filterContactId).toList()
+        : links;
+
+    // Show empty state immediately when contractor filter yields nothing.
+    if (widget.filterContactId != null && base.isEmpty) {
+      return _ContractorNoDocsState(
+        onRefresh: () => ref
+            .read(projectDocumentsProvider(widget.projectId).notifier)
+            .refresh(),
+      );
+    }
+
+    // Apply link-type chip filter on top.
     var filtered = _activeFilter == null
-        ? links
-        : links
-            .where((l) => l.linkType == _activeFilter!.name)
-            .toList();
+        ? base
+        : base.where((l) => l.linkType == _activeFilter!.name).toList();
 
     // Expiring filter (no expirationDate on current model — no-op)
     // note: implement when model gains expirationDate field
@@ -238,6 +252,54 @@ class _NoFilterResults extends StatelessWidget {
               'Clear filter',
               style: AppTextStyles.bodyMedium
                   .copyWith(color: AppColors.deepNavy),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shown when a contractor filter is active but that contractor has no linked docs.
+class _ContractorNoDocsState extends StatelessWidget {
+  const _ContractorNoDocsState({required this.onRefresh});
+
+  final Future<void> Function() onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: ListView(
+        children: [
+          SizedBox(height: MediaQuery.of(context).size.height * 0.25),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.description_outlined,
+                    size: 48,
+                    color: AppColors.gray400,
+                  ),
+                  const SizedBox(height: AppSizes.md),
+                  Text(
+                    'No documents linked to this contractor yet.',
+                    style: AppTextStyles.bodyMedium
+                        .copyWith(color: AppColors.textSecondary),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSizes.sm),
+                  Text(
+                    'Link a document and assign it to this contractor to see it here.',
+                    style: AppTextStyles.bodySmall
+                        .copyWith(color: AppColors.gray400),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
           ),
         ],

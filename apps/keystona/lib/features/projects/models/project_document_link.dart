@@ -14,6 +14,7 @@ abstract class ProjectDocumentLink with _$ProjectDocumentLink {
     required String linkType,
     required String linkedBy,
     required DateTime createdAt,
+    String? contactId,
     // Denormalized — not in DB row, assembled by provider.
     @Default('') String documentName,
     String? documentTypeName,

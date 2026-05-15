@@ -599,12 +599,21 @@ final routerProvider = Provider<GoRouter>((ref) {
                       ),
                       GoRoute(
                         path: 'documents',
-                        pageBuilder: (_, state) => _buildPage(
-                          state,
-                          ProjectDocumentsScreen(
-                            projectId: state.pathParameters['projectId']!,
-                          ),
-                        ),
+                        pageBuilder: (_, state) {
+                          final extra =
+                              state.extra as Map<String, dynamic>?;
+                          return _buildPage(
+                            state,
+                            ProjectDocumentsScreen(
+                              projectId:
+                                  state.pathParameters['projectId']!,
+                              contractorId:
+                                  extra?['contractorId'] as String?,
+                              contractorName:
+                                  extra?['contractorName'] as String?,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

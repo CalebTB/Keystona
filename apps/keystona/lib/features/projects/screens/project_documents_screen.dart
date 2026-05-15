@@ -27,9 +27,16 @@ import '../widgets/documents/shared/documents_view_toggle.dart';
 /// Renders [DocumentsVaultListView] for 'list' view,
 /// [PlaceholderScreen] for 'byType' (spec not yet written).
 class ProjectDocumentsScreen extends ConsumerStatefulWidget {
-  const ProjectDocumentsScreen({super.key, required this.projectId});
+  const ProjectDocumentsScreen({
+    super.key,
+    required this.projectId,
+    this.contractorId,
+    this.contractorName,
+  });
 
   final String projectId;
+  final String? contractorId;
+  final String? contractorName;
 
   @override
   ConsumerState<ProjectDocumentsScreen> createState() =>
@@ -77,13 +84,30 @@ class _ProjectDocumentsScreenState
         onRetry: () =>
             ref.invalidate(projectDocumentsProvider(widget.projectId)),
       ),
-      data: (links) {
-        if (links.isEmpty) {
+      data: (allLinks) {
+        // Apply contractor filter if active.
+        final contractorId = widget.contractorId;
+        final links = contractorId != null
+            ? allLinks.where((l) => l.contactId == contractorId).toList()
+            : allLinks;
+
+        if (allLinks.isEmpty) {
           return _EmptyState(onLink: _onLink);
         }
+
+        if (contractorId != null && links.isEmpty) {
+          return _ContractorEmptyState(
+            contractorName: widget.contractorName ?? 'this contractor',
+          );
+        }
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Contractor filter banner
+            if (contractorId != null)
+              _ContractorBanner(name: widget.contractorName ?? 'Contractor'),
+
             // View toggle
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -93,15 +117,13 @@ class _ProjectDocumentsScreenState
               ),
             ),
 
-            // note: ContractorFilterBanner deferred — needs contractor query
-            // param passed via GoRouter extras; add when route is updated.
-
             // Active view
             Expanded(
               child: _activeView == 'list'
                   ? DocumentsVaultListView(
                       projectId: widget.projectId,
                       onLinkDocument: _onLink,
+                      filterContactId: contractorId,
                     )
                   : const PlaceholderScreen(name: 'By Type View'),
             ),
@@ -134,6 +156,73 @@ class _ProjectDocumentsScreenState
               child: const Icon(Icons.link, color: Colors.white),
             )
           : null,
+    );
+  }
+}
+
+// ── Contractor filter banner ──────────────────────────────────────────────────
+
+class _ContractorBanner extends StatelessWidget {
+  const _ContractorBanner({required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: AppColors.deepNavy.withValues(alpha: 0.07),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        children: [
+          const Icon(Icons.person_outline, size: 14, color: AppColors.deepNavy),
+          const SizedBox(width: 6),
+          Text(
+            'Filtered by $name',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.deepNavy,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Contractor empty state ────────────────────────────────────────────────────
+
+class _ContractorEmptyState extends StatelessWidget {
+  const _ContractorEmptyState({required this.contractorName});
+
+  final String contractorName;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: AppPadding.screen,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.description_outlined,
+                size: AppSizes.iconXl, color: AppColors.gray400),
+            const SizedBox(height: AppSizes.md),
+            Text(
+              'No documents linked to $contractorName yet.',
+              style: AppTextStyles.h3,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSizes.sm),
+            Text(
+              'Link a document and assign it to this contractor.',
+              style: AppTextStyles.bodyMedium
+                  .copyWith(color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
