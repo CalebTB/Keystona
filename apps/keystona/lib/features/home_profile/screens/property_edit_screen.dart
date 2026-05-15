@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
@@ -13,7 +15,6 @@ import 'package:uuid/uuid.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/utils/validators.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/providers/service_providers.dart';
 import '../../../services/supabase_service.dart';
@@ -47,7 +48,7 @@ const List<({String label, String subtitle, int? value})> _kClimateZones = [
 
 const int _kOptionalFieldCount = 8;
 
-// ── Card decoration ───────────────────────────────────────────────────────────
+// ── Card decorations ──────────────────────────────────────────────────────────
 
 const BoxDecoration _kCardDecoration = BoxDecoration(
   color: AppColors.cardBackground,
@@ -75,7 +76,7 @@ class PropertyEditScreen extends ConsumerStatefulWidget {
 }
 
 class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final _scrollController = ScrollController();
 
   // ── Controllers ──────────────────────────────────────────────────────────────
 
@@ -93,7 +94,6 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
   // ── Selected values ──────────────────────────────────────────────────────────
 
   DateTime? _purchaseDate;
-
   String? _selectedPropertyType;
   int? _selectedClimateZone;
 
@@ -102,6 +102,15 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
   File? _localPhoto;
   String? _existingPhotoPath;
   String? _existingPhotoSignedUrl;
+
+  // ── ZIP auto-detect ───────────────────────────────────────────────────────────
+
+  Timer? _zipDebounce;
+  bool _detectingClimate = false;
+
+  // ── Validation errors ────────────────────────────────────────────────────────
+
+  final _errors = <String, String?>{};
 
   // ── UI state ─────────────────────────────────────────────────────────────────
 
@@ -114,6 +123,7 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
     super.initState();
     final overview = ref.read(homeProfileProvider).value;
     if (overview != null) _populateFrom(overview);
+    _zipController.addListener(_onZipChanged);
   }
 
   void _populateFrom(HomeProfileOverview overview) {
@@ -126,7 +136,8 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
     _yearBuiltController.text = p.yearBuilt?.toString() ?? '';
     _squareFeetController.text = p.squareFeet?.toString() ?? '';
     _bedroomsController.text = p.bedrooms != null ? _fmtNum(p.bedrooms!) : '';
-    _bathroomsController.text = p.bathrooms != null ? _fmtNum(p.bathrooms!) : '';
+    _bathroomsController.text =
+        p.bathrooms != null ? _fmtNum(p.bathrooms!) : '';
     _selectedPropertyType = p.propertyType;
     _selectedClimateZone = p.climateZone;
     _existingPhotoPath = p.exteriorPhotoPath;
@@ -137,13 +148,34 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
   static String _fmtNum(double n) =>
       n == n.truncateToDouble() ? n.toInt().toString() : '$n';
 
+  void _onZipChanged() {
+    _zipDebounce?.cancel();
+    final zip = _zipController.text.trim();
+    if (zip.length != 5) return;
+    _zipDebounce = Timer(const Duration(milliseconds: 350), () {
+      _detectClimateFromZip(zip);
+    });
+  }
+
+  Future<void> _detectClimateFromZip(String zip) async {
+    if (!mounted) return;
+    setState(() => _detectingClimate = true);
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (!mounted) return;
+    setState(() => _detectingClimate = false);
+  }
+
   @override
   void dispose() {
+    _zipDebounce?.cancel();
+    _scrollController.dispose();
     _addressController.dispose();
     _address2Controller.dispose();
     _cityController.dispose();
     _stateController.dispose();
-    _zipController.dispose();
+    _zipController
+      ..removeListener(_onZipChanged)
+      ..dispose();
     _yearBuiltController.dispose();
     _squareFeetController.dispose();
     _bedroomsController.dispose();
@@ -167,6 +199,56 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
     return n;
   }
 
+  // ── Validation ────────────────────────────────────────────────────────────────
+
+  bool _validate() {
+    final errs = <String, String?>{};
+
+    if (_addressController.text.trim().isEmpty) errs['address'] = 'Required';
+    if (_cityController.text.trim().isEmpty) errs['city'] = 'Required';
+    if (_stateController.text.trim().isEmpty) errs['state'] = 'Required';
+
+    final zip = _zipController.text.trim();
+    if (zip.isEmpty) {
+      errs['zip'] = 'Required';
+    } else if (!RegExp(r'^\d{5}$').hasMatch(zip)) {
+      errs['zip'] = 'Invalid';
+    }
+
+    final year = _yearBuiltController.text.trim();
+    if (year.isNotEmpty) {
+      final y = int.tryParse(year);
+      final now = DateTime.now().year;
+      if (y == null || y < 1800 || y > now) errs['yearBuilt'] = 'Invalid year';
+    }
+
+    final sqft = _squareFeetController.text.trim();
+    if (sqft.isNotEmpty) {
+      final n = num.tryParse(sqft);
+      if (n == null || n <= 0) errs['squareFeet'] = 'Invalid';
+    }
+
+    final bed = _bedroomsController.text.trim();
+    if (bed.isNotEmpty) {
+      final n = num.tryParse(bed);
+      if (n == null || n <= 0) errs['bedrooms'] = 'Invalid';
+    }
+
+    final bath = _bathroomsController.text.trim();
+    if (bath.isNotEmpty) {
+      final n = num.tryParse(bath);
+      if (n == null || n <= 0) errs['bathrooms'] = 'Invalid';
+    }
+
+    setState(() {
+      _errors
+        ..clear()
+        ..addAll(errs);
+    });
+
+    return errs.isEmpty;
+  }
+
   // ── Actions ───────────────────────────────────────────────────────────────────
 
   Future<void> _pickPhoto() async {
@@ -188,9 +270,8 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
         builder: (_) => CupertinoActionSheet(
           title: const Text('Climate Zone'),
           actions: _kClimateZones.map((z) {
-            final label = z.value != null
-                ? '${z.label} · ${z.subtitle}'
-                : z.label;
+            final label =
+                z.value != null ? '${z.label} · ${z.subtitle}' : z.label;
             return CupertinoActionSheetAction(
               onPressed: () {
                 Navigator.of(context, rootNavigator: true).pop();
@@ -213,9 +294,8 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: _kClimateZones.map((z) {
-              final label = z.value != null
-                  ? '${z.label} · ${z.subtitle}'
-                  : z.label;
+              final label =
+                  z.value != null ? '${z.label} · ${z.subtitle}' : z.label;
               return ListTile(
                 title: Text(label),
                 selected: z.value == _selectedClimateZone,
@@ -286,7 +366,14 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
   }
 
   Future<void> _save() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (!_validate()) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+      return;
+    }
     setState(() => _saving = true);
 
     try {
@@ -359,10 +446,23 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
     }
 
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    return isIOS ? _buildIOS() : _buildAndroid();
-  }
+    final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
 
-  // ── iOS layout ────────────────────────────────────────────────────────────────
+    return Stack(
+      children: [
+        isIOS ? _buildIOS() : _buildAndroid(),
+        if (isIOS && keyboardHeight > 0)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: keyboardHeight,
+            child: _DoneToolbar(
+              onDone: () => FocusScope.of(context).unfocus(),
+            ),
+          ),
+      ],
+    );
+  }
 
   Widget _buildIOS() {
     Widget trailing;
@@ -415,8 +515,6 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
     );
   }
 
-  // ── Android layout ────────────────────────────────────────────────────────────
-
   Widget _buildAndroid() {
     return Scaffold(
       backgroundColor: AppColors.warmOffWhite,
@@ -454,386 +552,367 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
     );
   }
 
-  // ── Shared body ───────────────────────────────────────────────────────────────
-
-  Widget _loadingBody() =>
-      const Center(child: CupertinoActivityIndicator());
+  Widget _loadingBody() => const Center(child: CupertinoActivityIndicator());
 
   Widget _formBody() {
     final zoneData = _selectedClimateZone != null
-        ? _kClimateZones.where((z) => z.value == _selectedClimateZone).firstOrNull
+        ? _kClimateZones
+            .where((z) => z.value == _selectedClimateZone)
+            .firstOrNull
         : null;
 
-    return Form(
-      key: _formKey,
-      onChanged: () => setState(() {}),
-      child: ListView(
-        padding: AppPadding.screen.copyWith(top: AppSizes.md),
-        children: [
-          // ── Cover photo ───────────────────────────────────────────────────
-          _PhotoSlot(
-            localFile: _localPhoto,
-            signedUrl: _existingPhotoSignedUrl,
-            onTap: _pickPhoto,
+    return ListView(
+      controller: _scrollController,
+      padding: AppPadding.screen.copyWith(top: AppSizes.md),
+      children: [
+        _PhotoSlot(
+          localFile: _localPhoto,
+          signedUrl: _existingPhotoSignedUrl,
+          onTap: _pickPhoto,
+        ),
+
+        const SizedBox(height: AppSizes.md),
+
+        _CompletionBar(filled: _filledOptional, total: _kOptionalFieldCount),
+
+        const SizedBox(height: AppSizes.xl),
+
+        // ╔═══════════════════════════════════════════════════════════════════╗
+        // ║  IDENTITY                                                         ║
+        // ╚═══════════════════════════════════════════════════════════════════╝
+        _SectionHeader(
+          dot: AppColors.accent,
+          eyebrow: 'IDENTITY',
+          title: 'Where is it?',
+        ),
+
+        const SizedBox(height: AppSizes.md),
+
+        _FieldCard(
+          label: 'ADDRESS',
+          error: _errors['address'],
+          child: _TextInput(
+            controller: _addressController,
+            hint: '123 Main St',
+            textCapitalization: TextCapitalization.words,
+            maxLength: 500,
+            onChanged: (_) => setState(() {}),
           ),
+        ),
 
-          const SizedBox(height: AppSizes.md),
+        const SizedBox(height: AppSizes.cardGap),
 
-          // ── Completion nudge ──────────────────────────────────────────────
-          _CompletionBar(
-            filled: _filledOptional,
-            total: _kOptionalFieldCount,
+        _FieldCard(
+          label: 'UNIT / APT / SUITE',
+          child: _TextInput(
+            controller: _address2Controller,
+            hint: 'Optional',
+            textCapitalization: TextCapitalization.words,
+            onChanged: (_) => setState(() {}),
           ),
+        ),
 
-          const SizedBox(height: AppSizes.xl),
+        const SizedBox(height: AppSizes.cardGap),
 
-          // ╔══════════════════════════════════════════════════════════════════╗
-          // ║  IDENTITY — Where is it?                                        ║
-          // ╚══════════════════════════════════════════════════════════════════╝
-          _SectionHeader(
-            dot: AppColors.accent,
-            eyebrow: 'IDENTITY',
-            title: 'Where is it?',
-          ),
-
-          const SizedBox(height: AppSizes.md),
-
-          // Address
-          _FieldCard(
-            label: 'ADDRESS',
-            child: TextFormField(
-              controller: _addressController,
-              style: AppTextStyles.bodyLarge,
-              decoration: _fieldDecoration('123 Main St'),
-              textCapitalization: TextCapitalization.words,
-              maxLength: 500,
-              buildCounter: _noCounter,
-              validator: Validators.required,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 5,
+              child: _FieldCard(
+                label: 'CITY',
+                error: _errors['city'],
+                child: _TextInput(
+                  controller: _cityController,
+                  hint: 'Austin',
+                  textCapitalization: TextCapitalization.words,
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
             ),
-          ),
-
-          const SizedBox(height: AppSizes.cardGap),
-
-          // Unit / Apt / Suite
-          _FieldCard(
-            label: 'UNIT / APT / SUITE',
-            child: TextFormField(
-              controller: _address2Controller,
-              style: AppTextStyles.bodyLarge,
-              decoration: _fieldDecoration('Optional'),
-              textCapitalization: TextCapitalization.words,
+            const SizedBox(width: AppSizes.cardGap),
+            Expanded(
+              flex: 2,
+              child: _FieldCard(
+                label: 'STATE',
+                error: _errors['state'],
+                child: _TextInput(
+                  controller: _stateController,
+                  hint: 'TX',
+                  maxLength: 2,
+                  textCapitalization: TextCapitalization.characters,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp('[a-zA-Z]')),
+                  ],
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
             ),
-          ),
-
-          const SizedBox(height: AppSizes.cardGap),
-
-          // City / State / ZIP row
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 5,
-                child: _FieldCard(
-                  label: 'CITY',
-                  child: TextFormField(
-                    controller: _cityController,
-                    style: AppTextStyles.bodyLarge,
-                    decoration: _fieldDecoration('Austin'),
-                    textCapitalization: TextCapitalization.words,
-                    validator: Validators.required,
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSizes.cardGap),
-              Expanded(
-                flex: 2,
-                child: _FieldCard(
-                  label: 'STATE',
-                  child: TextFormField(
-                    controller: _stateController,
-                    style: AppTextStyles.bodyLarge,
-                    decoration: _fieldDecoration('TX'),
-                    maxLength: 2,
-                    buildCounter: _noCounter,
-                    textCapitalization: TextCapitalization.characters,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp('[a-zA-Z]')),
-                    ],
-                    validator: Validators.required,
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSizes.cardGap),
-              Expanded(
-                flex: 3,
-                child: _FieldCard(
-                  label: 'ZIP',
-                  child: TextFormField(
-                    controller: _zipController,
-                    style: AppTextStyles.bodyLarge,
-                    decoration: _fieldDecoration('78701'),
-                    maxLength: 5,
-                    buildCounter: _noCounter,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Required';
-                      if (!RegExp(r'^\d{5}$').hasMatch(v.trim())) {
-                        return 'Invalid';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // Climate zone card (shown when zone is set)
-          if (zoneData != null) ...[
-            const SizedBox(height: AppSizes.cardGap),
-            _ClimateZoneCard(
-              zoneLabel: zoneData.label,
-              zoneSub: zoneData.subtitle,
-              onTap: _showZonePicker,
-            ),
-          ] else ...[
-            const SizedBox(height: AppSizes.cardGap),
-            _SetClimateZoneHint(onTap: _showZonePicker),
-          ],
-
-          const SizedBox(height: AppSizes.xl),
-
-          // ╔══════════════════════════════════════════════════════════════════╗
-          // ║  SPECS — About the house                                        ║
-          // ╚══════════════════════════════════════════════════════════════════╝
-          _SectionHeader(
-            dot: AppColors.olive,
-            eyebrow: 'SPECS',
-            title: 'About the house',
-          ),
-
-          const SizedBox(height: AppSizes.md),
-
-          // Property type dropdown
-          _FieldCard(
-            label: 'PROPERTY TYPE',
-            child: DropdownButton<String>(
-              value: _selectedPropertyType,
-              isExpanded: true,
-              underline: const SizedBox.shrink(),
-              hint: Text(
-                'Select',
-                style: AppTextStyles.bodyLarge
-                    .copyWith(color: AppColors.textTertiary),
-              ),
-              style: AppTextStyles.bodyLarge,
-              icon: const Icon(Icons.keyboard_arrow_down,
-                  size: 18, color: AppColors.textTertiary),
-              items: _kPropertyTypes
-                  .map((t) => DropdownMenuItem<String>(
-                        value: t.value,
-                        child: Text(t.label),
-                      ))
-                  .toList(),
-              onChanged: (v) => setState(() => _selectedPropertyType = v),
-            ),
-          ),
-
-          const SizedBox(height: AppSizes.cardGap),
-
-          // Year Built / Square Feet
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _FieldCard(
-                  label: 'YEAR BUILT',
-                  child: TextFormField(
-                    controller: _yearBuiltController,
-                    style: AppTextStyles.bodyLarge,
-                    decoration: _fieldDecoration('e.g. 2005'),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: Validators.year,
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSizes.cardGap),
-              Expanded(
-                child: _FieldCard(
-                  label: 'SQUARE FEET',
-                  child: TextFormField(
-                    controller: _squareFeetController,
-                    style: AppTextStyles.bodyLarge,
-                    decoration: _fieldDecoration('e.g. 2,200'),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) return null;
-                      return Validators.positiveNumber(v);
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: AppSizes.cardGap),
-
-          // Bed / Bath
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _FieldCard(
-                  label: 'BED',
-                  child: TextFormField(
-                    controller: _bedroomsController,
-                    style: AppTextStyles.bodyLarge,
-                    decoration: _fieldDecoration('3'),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) return null;
-                      return Validators.positiveNumber(v);
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSizes.cardGap),
-              Expanded(
-                child: _FieldCard(
-                  label: 'BATH',
-                  child: TextFormField(
-                    controller: _bathroomsController,
-                    style: AppTextStyles.bodyLarge,
-                    decoration: _fieldDecoration('2.5'),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                          RegExp(r'^\d*\.?\d*')),
-                    ],
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) return null;
-                      return Validators.positiveNumber(v);
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: AppSizes.xl),
-
-          // ╔══════════════════════════════════════════════════════════════════╗
-          // ║  PURCHASE — Optional history                                    ║
-          // ╚══════════════════════════════════════════════════════════════════╝
-          _SectionHeader(
-            dot: AppColors.sandAmber,
-            eyebrow: 'PURCHASE',
-            title: 'Optional history',
-          ),
-
-          const SizedBox(height: AppSizes.sm),
-
-          Text(
-            'Adds context for the Home History Report. Stays private.',
-            style: AppTextStyles.bodySmall
-                .copyWith(color: AppColors.textSecondary),
-          ),
-
-          const SizedBox(height: AppSizes.md),
-
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: _showPurchaseDatePicker,
-                  child: _FieldCard(
-                    label: 'PURCHASE DATE',
-                    child: Text(
-                      _purchaseDate != null
-                          ? DateFormat('MMM d, yyyy').format(_purchaseDate!)
-                          : '—',
-                      style: AppTextStyles.bodyLarge.copyWith(
-                        color: _purchaseDate != null
-                            ? AppColors.textPrimary
-                            : AppColors.textTertiary,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSizes.cardGap),
-              Expanded(
-                child: _FieldCard(
-                  label: 'PRICE',
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        r'$',
-                        style: AppTextStyles.bodyLarge
-                            .copyWith(color: AppColors.textSecondary),
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _priceController,
-                          style: AppTextStyles.bodyLarge,
-                          decoration: _fieldDecoration('0'),
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                                RegExp(r'^\d*\.?\d*')),
-                          ],
+            const SizedBox(width: AppSizes.cardGap),
+            Expanded(
+              flex: 3,
+              child: _FieldCard(
+                label: 'ZIP',
+                error: _errors['zip'],
+                suffix: _detectingClimate
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 1.5,
+                          color: AppColors.textTertiary,
                         ),
-                      ),
-                    ],
+                      )
+                    : null,
+                child: _TextInput(
+                  controller: _zipController,
+                  hint: '78701',
+                  maxLength: 5,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        if (zoneData != null) ...[
+          const SizedBox(height: AppSizes.cardGap),
+          _ClimateZoneCard(
+            zoneLabel: zoneData.label,
+            zoneSub: zoneData.subtitle,
+            onTap: _showZonePicker,
+          ),
+        ] else ...[
+          const SizedBox(height: AppSizes.cardGap),
+          _SetClimateZoneHint(onTap: _showZonePicker),
+        ],
+
+        const SizedBox(height: AppSizes.xl),
+
+        // ╔═══════════════════════════════════════════════════════════════════╗
+        // ║  SPECS                                                            ║
+        // ╚═══════════════════════════════════════════════════════════════════╝
+        _SectionHeader(
+          dot: AppColors.olive,
+          eyebrow: 'SPECS',
+          title: 'About the house',
+        ),
+
+        const SizedBox(height: AppSizes.md),
+
+        _FieldCard(
+          label: 'PROPERTY TYPE',
+          child: DropdownButton<String>(
+            value: _selectedPropertyType,
+            isExpanded: true,
+            underline: const SizedBox.shrink(),
+            hint: Text(
+              'Select',
+              style:
+                  AppTextStyles.bodyLarge.copyWith(color: AppColors.textTertiary),
+            ),
+            style: AppTextStyles.bodyLarge,
+            icon: const Icon(Icons.keyboard_arrow_down,
+                size: 18, color: AppColors.textTertiary),
+            items: _kPropertyTypes
+                .map((t) => DropdownMenuItem<String>(
+                      value: t.value,
+                      child: Text(t.label),
+                    ))
+                .toList(),
+            onChanged: (v) => setState(() => _selectedPropertyType = v),
+          ),
+        ),
+
+        const SizedBox(height: AppSizes.cardGap),
+
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _FieldCard(
+                label: 'YEAR BUILT',
+                error: _errors['yearBuilt'],
+                child: _TextInput(
+                  controller: _yearBuiltController,
+                  hint: 'e.g. 2005',
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSizes.cardGap),
+            Expanded(
+              child: _FieldCard(
+                label: 'SQUARE FEET',
+                error: _errors['squareFeet'],
+                child: _TextInput(
+                  controller: _squareFeetController,
+                  hint: 'e.g. 2,200',
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: AppSizes.cardGap),
+
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _FieldCard(
+                label: 'BED',
+                error: _errors['bedrooms'],
+                child: _TextInput(
+                  controller: _bedroomsController,
+                  hint: '3',
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSizes.cardGap),
+            Expanded(
+              child: _FieldCard(
+                label: 'BATH',
+                error: _errors['bathrooms'],
+                child: _TextInput(
+                  controller: _bathroomsController,
+                  hint: '2.5',
+                  keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                  ],
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: AppSizes.xl),
+
+        // ╔═══════════════════════════════════════════════════════════════════╗
+        // ║  PURCHASE                                                         ║
+        // ╚═══════════════════════════════════════════════════════════════════╝
+        _SectionHeader(
+          dot: AppColors.sandAmber,
+          eyebrow: 'PURCHASE',
+          title: 'Optional history',
+        ),
+
+        const SizedBox(height: AppSizes.sm),
+
+        Text(
+          'Adds context for the Home History Report. Stays private.',
+          style:
+              AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+        ),
+
+        const SizedBox(height: AppSizes.md),
+
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: _showPurchaseDatePicker,
+                child: _FieldCard(
+                  label: 'PURCHASE DATE',
+                  suffix: _purchaseDate != null
+                      ? GestureDetector(
+                          onTap: () => setState(() => _purchaseDate = null),
+                          child: const Icon(Icons.close,
+                              size: 16, color: AppColors.textTertiary),
+                        )
+                      : const Icon(Icons.calendar_today_outlined,
+                          size: 14, color: AppColors.textTertiary),
+                  child: Text(
+                    _purchaseDate != null
+                        ? DateFormat('MMM d, yyyy').format(_purchaseDate!)
+                        : '—',
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      color: _purchaseDate != null
+                          ? AppColors.textPrimary
+                          : AppColors.textTertiary,
+                    ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: AppSizes.cardGap),
+            Expanded(
+              child: _FieldCard(
+                label: 'PRICE',
+                child: Row(
+                  children: [
+                    Text(
+                      r'$',
+                      style: AppTextStyles.bodyLarge
+                          .copyWith(color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: _TextInput(
+                        controller: _priceController,
+                        hint: '0',
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d*\.?\d*')),
+                        ],
+                        onChanged: (_) => setState(() {}),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
 
-          const SizedBox(height: AppSizes.xl),
+        const SizedBox(height: AppSizes.xl),
+      ],
+    );
+  }
+}
+
+// ── Supporting widgets ────────────────────────────────────────────────────────
+
+class _DoneToolbar extends StatelessWidget {
+  const _DoneToolbar({required this.onDone});
+  final VoidCallback onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 44,
+      color: CupertinoColors.systemBackground.resolveFrom(context),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          CupertinoButton(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            onPressed: onDone,
+            child: const Text(
+              'Done',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
         ],
       ),
     );
   }
 }
-
-// ── Decoration helper ─────────────────────────────────────────────────────────
-
-InputDecoration _fieldDecoration(String hint) => InputDecoration(
-      isDense: true,
-      filled: true,
-      fillColor: AppColors.cardBackground,
-      contentPadding: const EdgeInsets.only(top: 2),
-      border: InputBorder.none,
-      enabledBorder: InputBorder.none,
-      focusedBorder: InputBorder.none,
-      errorBorder: InputBorder.none,
-      focusedErrorBorder: InputBorder.none,
-      hintText: hint,
-      hintStyle: AppTextStyles.bodyLarge.copyWith(
-        color: AppColors.textTertiary,
-      ),
-      errorStyle: TextStyle(
-        fontSize: 10,
-        color: AppColors.accent,
-        height: 1.4,
-      ),
-    );
-
-Widget? Function(BuildContext, {required int currentLength, required bool isFocused, required int? maxLength})
-    get _noCounter => (_, {required currentLength, required isFocused, required maxLength}) => null;
-
-// ── Supporting widgets ────────────────────────────────────────────────────────
 
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({
@@ -859,10 +938,7 @@ class _SectionHeader extends StatelessWidget {
               decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
             ),
             const SizedBox(width: 6),
-            Text(
-              eyebrow,
-              style: AppTextStyles.monoSection,
-            ),
+            Text(eyebrow, style: AppTextStyles.monoSection),
           ],
         ),
         const SizedBox(height: 6),
@@ -872,23 +948,152 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _FieldCard extends StatelessWidget {
-  const _FieldCard({required this.label, required this.child});
+/// A text field card with a label, optional suffix icon, and optional error.
+/// Uses [_TextInput] children for pixel-perfect label/value alignment.
+class _FieldCard extends StatefulWidget {
+  const _FieldCard({
+    required this.label,
+    required this.child,
+    this.suffix,
+    this.error,
+  });
 
   final String label;
   final Widget child;
+  final Widget? suffix;
+  final String? error;
+
+  @override
+  State<_FieldCard> createState() => _FieldCardState();
+}
+
+class _FieldCardState extends State<_FieldCard> {
+  final _focusNode = FocusNode();
+  bool _focused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      if (mounted) setState(() => _focused = _focusNode.hasFocus);
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: _kCardDecoration,
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+    return Focus(
+      focusNode: _focusNode,
+      skipTraversal: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: AppTextStyles.monoSection),
-          const SizedBox(height: 4),
-          child,
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            decoration: BoxDecoration(
+              color: AppColors.cardBackground,
+              borderRadius:
+                  const BorderRadius.all(Radius.circular(AppSizes.radiusMd)),
+              border: Border.fromBorderSide(
+                BorderSide(
+                  color: _focused ? AppColors.deepNavy : AppColors.border,
+                  width: _focused ? 2.0 : 1.5,
+                ),
+              ),
+            ),
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Text(widget.label, style: AppTextStyles.monoSection),
+                    if (widget.suffix != null) ...[
+                      const Spacer(),
+                      widget.suffix!,
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 6),
+                widget.child,
+              ],
+            ),
+          ),
+          if (widget.error != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 14, top: 3),
+              child: Text(
+                widget.error!,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: AppColors.accent,
+                  height: 1.4,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Raw text input with zero InputDecorator overhead.
+/// [TextField] with [decoration: null] skips [InputDecorator] entirely —
+/// the text starts at exactly x=0, aligning flush with the card label above.
+class _TextInput extends StatelessWidget {
+  const _TextInput({
+    required this.controller,
+    required this.hint,
+    this.keyboardType,
+    this.inputFormatters,
+    this.textCapitalization = TextCapitalization.none,
+    this.maxLength,
+    this.onChanged,
+  });
+
+  final TextEditingController controller;
+  final String hint;
+  final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
+  final TextCapitalization textCapitalization;
+  final int? maxLength;
+  final ValueChanged<String>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      builder: (context, value, _) => Stack(
+        children: [
+          TextField(
+            controller: controller,
+            style: AppTextStyles.bodyLarge,
+            // decoration: null bypasses InputDecorator entirely — zero left offset
+            decoration: null,
+            keyboardType: keyboardType,
+            inputFormatters: inputFormatters,
+            textCapitalization: textCapitalization,
+            maxLength: maxLength,
+            maxLengthEnforcement: MaxLengthEnforcement.enforced,
+            onChanged: onChanged,
+            cursorColor: AppColors.deepNavy,
+            cursorWidth: 1.5,
+          ),
+          if (value.text.isEmpty)
+            IgnorePointer(
+              child: Text(
+                hint,
+                style: AppTextStyles.bodyLarge
+                    .copyWith(color: AppColors.textTertiary),
+              ),
+            ),
         ],
       ),
     );
@@ -922,37 +1127,27 @@ class _ClimateZoneCard extends StatelessWidget {
                 color: AppColors.olive.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(9),
               ),
-              child: const Icon(
-                Icons.thermostat_outlined,
-                size: 18,
-                color: AppColors.olive,
-              ),
+              child: const Icon(Icons.thermostat_outlined,
+                  size: 18, color: AppColors.olive),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'CLIMATE ZONE',
-                    style: AppTextStyles.monoSection
-                        .copyWith(color: AppColors.olive),
-                  ),
+                  Text('CLIMATE ZONE',
+                      style: AppTextStyles.monoSection
+                          .copyWith(color: AppColors.olive)),
                   const SizedBox(height: 2),
-                  Text(
-                    '$zoneLabel · $zoneSub',
-                    style: AppTextStyles.bodyMediumSemibold
-                        .copyWith(color: AppColors.olive),
-                  ),
+                  Text('$zoneLabel · $zoneSub',
+                      style: AppTextStyles.bodyMediumSemibold
+                          .copyWith(color: AppColors.olive)),
                 ],
               ),
             ),
-            Text(
-              'Change',
-              style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.olive,
-              ),
-            ),
+            Text('Change',
+                style:
+                    AppTextStyles.labelMedium.copyWith(color: AppColors.olive)),
           ],
         ),
       ),
@@ -973,23 +1168,15 @@ class _SetClimateZoneHint extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(
           children: [
-            const Icon(
-              Icons.thermostat_outlined,
-              size: 16,
-              color: AppColors.textTertiary,
-            ),
+            const Icon(Icons.thermostat_outlined,
+                size: 16, color: AppColors.textTertiary),
             const SizedBox(width: 8),
-            Text(
-              'Set climate zone',
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textTertiary),
-            ),
+            Text('Set climate zone',
+                style: AppTextStyles.bodyMedium
+                    .copyWith(color: AppColors.textTertiary)),
             const Spacer(),
-            const Icon(
-              Icons.keyboard_arrow_right,
-              size: 16,
-              color: AppColors.textTertiary,
-            ),
+            const Icon(Icons.keyboard_arrow_right,
+                size: 16, color: AppColors.textTertiary),
           ],
         ),
       ),
@@ -1070,7 +1257,12 @@ class _PhotoSlot extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSizes.radiusLg),
         child: Stack(
           children: [
-            AspectRatio(aspectRatio: 16 / 9, child: image),
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: hasPhoto
+                  ? image
+                  : CustomPaint(painter: _DashedBorderPainter(), child: image),
+            ),
             Positioned.fill(
               child: Container(
                 color: hasPhoto
@@ -1111,10 +1303,44 @@ class _PhotoSlot extends StatelessWidget {
   }
 
   Widget _placeholder() => Container(
-        color: AppColors.darkBackground,
+        color: AppColors.cardBackground,
         child: const Center(
           child: Icon(Icons.home_outlined,
               size: 48, color: AppColors.textTertiary),
         ),
       );
+}
+
+class _DashedBorderPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    const dashWidth = 6.0;
+    const dashGap = 4.0;
+    const strokeWidth = 1.5;
+    const radius = Radius.circular(AppSizes.radiusLg);
+
+    final paint = Paint()
+      ..color = AppColors.border
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final path = Path()
+      ..addRRect(RRect.fromRectAndRadius(
+        Rect.fromLTWH(strokeWidth / 2, strokeWidth / 2,
+            size.width - strokeWidth, size.height - strokeWidth),
+        radius,
+      ));
+
+    for (final metric in path.computeMetrics()) {
+      double distance = 0.0;
+      while (distance < metric.length) {
+        final end = math.min(distance + dashWidth, metric.length);
+        canvas.drawPath(metric.extractPath(distance, end), paint);
+        distance += dashWidth + dashGap;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedBorderPainter oldDelegate) => false;
 }
