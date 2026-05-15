@@ -141,10 +141,11 @@ Future<BudgetSummary> projectBudgetSummary(
   double effectiveCost(ProjectBudgetItem i) =>
       i.actualCost > 0 ? i.actualCost : i.estimatedCost;
 
-  // Only paid items count as "spent"; unpaid items are pending
+  // Paid items = spent; all items = committed (total exposure)
   final actual = items
       .where((i) => i.isPaid)
       .fold<double>(0, (s, i) => s + effectiveCost(i));
+  final committed = items.fold<double>(0, (s, i) => s + effectiveCost(i));
   final estimated = project.estimatedBudget ?? 0;
   final overBudgetCount =
       items.where((i) => effectiveCost(i) > i.estimatedCost && i.estimatedCost > 0).length;
@@ -175,6 +176,7 @@ Future<BudgetSummary> projectBudgetSummary(
   return BudgetSummary(
     estimatedTotal: estimated,
     actualTotal: actual,
+    committedTotal: committed,
     remaining: estimated - actual,
     categoryBreakdown: breakdown,
     overBudgetCount: overBudgetCount,

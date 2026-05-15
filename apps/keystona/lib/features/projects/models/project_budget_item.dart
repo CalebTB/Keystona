@@ -35,6 +35,7 @@ class BudgetSummary {
   const BudgetSummary({
     required this.estimatedTotal,
     required this.actualTotal,
+    required this.committedTotal,
     required this.remaining,
     required this.categoryBreakdown,
     this.overBudgetCount = 0,
@@ -42,7 +43,10 @@ class BudgetSummary {
   });
 
   final double estimatedTotal;
+  /// Sum of effectiveCost for paid items only.
   final double actualTotal;
+  /// Sum of effectiveCost for ALL items (paid + unpaid) — total exposure.
+  final double committedTotal;
   final double remaining;
   final List<BudgetCategoryRow> categoryBreakdown;
   final int overBudgetCount;
@@ -53,6 +57,7 @@ class BudgetSummary {
   static BudgetSummary empty() => const BudgetSummary(
         estimatedTotal: 0,
         actualTotal: 0,
+        committedTotal: 0,
         remaining: 0,
         categoryBreakdown: [],
       );

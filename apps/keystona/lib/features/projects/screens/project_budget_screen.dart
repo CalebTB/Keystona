@@ -316,7 +316,11 @@ class _BudgetEditorialView extends ConsumerWidget {
                     final row = summary.categoryBreakdown[i];
                     final categoryItems = items
                         .where((item) => item.category == row.category)
-                        .toList();
+                        .toList()
+                      ..sort((a, b) {
+                        if (a.isPaid == b.isPaid) return 0;
+                        return a.isPaid ? 1 : -1; // unpaid first
+                      });
                     return _CategoryCard(
                       key: ValueKey(row.category),
                       row: row,
@@ -470,9 +474,11 @@ class _EditorialHero extends StatelessWidget {
                 Text(
                   estimated > 0
                       ? 'SPENT OF ${_fmt(estimated)}'
-                      : 'TOTAL SPENT',
+                      : 'NO BUDGET SET · TAP TO SET',
                   style: AppTextStyles.monoTiny.copyWith(
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: estimated > 0
+                        ? Colors.white.withValues(alpha: 0.5)
+                        : AppColors.sand.withValues(alpha: 0.85),
                     letterSpacing: 1.4,
                   ),
                 ),
@@ -480,7 +486,9 @@ class _EditorialHero extends StatelessWidget {
                 Icon(
                   Icons.edit_outlined,
                   size: 12,
-                  color: Colors.white.withValues(alpha: 0.35),
+                  color: estimated > 0
+                      ? Colors.white.withValues(alpha: 0.35)
+                      : AppColors.sand.withValues(alpha: 0.6),
                 ),
               ],
             ),
@@ -510,13 +518,13 @@ class _EditorialHero extends StatelessWidget {
               children: [
                 TextSpan(
                   text: _fmt(remaining.abs()),
-                  style: const TextStyle(
-                    color: AppColors.textInverse,
+                  style: TextStyle(
+                    color: remaining < 0 ? AppColors.accent : AppColors.textInverse,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 TextSpan(
-                    text: remaining >= 0 ? ' remaining · ' : ' over · '),
+                    text: remaining >= 0 ? ' remaining · ' : ' over budget · '),
                 TextSpan(
                   text: '${spentPct.toStringAsFixed(1)}%',
                   style: const TextStyle(
@@ -556,9 +564,11 @@ class _EditorialHero extends StatelessWidget {
               ),
               _MiniDivider(),
               _MiniStat(
-                label: 'ITEMS',
-                value: '${summary.totalItems}',
-                valueColor: AppColors.textInverse,
+                label: 'COMMITTED',
+                value: _fmt(summary.committedTotal),
+                valueColor: summary.committedTotal > summary.estimatedTotal && summary.estimatedTotal > 0
+                    ? AppColors.sand
+                    : AppColors.textInverse,
               ),
             ],
           ),
@@ -849,50 +859,60 @@ class _CategoryCardState extends State<_CategoryCard> {
                     ),
                     const SizedBox(height: 8),
 
-                    // Progress bar
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(3),
-                      child: SizedBox(
-                        height: 5,
-                        child: Stack(
-                          children: [
-                            Container(color: AppColors.warmInset),
-                            FractionallySizedBox(
-                              widthFactor: barFraction,
-                              child: Container(color: barColor),
-                            ),
-                          ],
+                    // Progress bar — hidden when no estimate set
+                    if (row.estimated > 0) ...[
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(3),
+                        child: SizedBox(
+                          height: 5,
+                          child: Stack(
+                            children: [
+                              Container(color: AppColors.warmInset),
+                              FractionallySizedBox(
+                                widthFactor: barFraction,
+                                child: Container(color: barColor),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
+                      const SizedBox(height: 6),
+                    ] else
+                      const SizedBox(height: 6),
 
                     // Footer: meta | status pill
                     Row(
                       children: [
                         Expanded(
-                          child: Text.rich(
-                            TextSpan(
-                              style: AppTextStyles.monoTiny.copyWith(
-                                color: AppColors.gray500,
-                                fontSize: 10,
-                                letterSpacing: 0.3,
-                              ),
-                              children: [
-                                TextSpan(
-                                  text:
-                                      '${pctOfSpent.toStringAsFixed(0)}%',
-                                  style: const TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.w700,
+                          child: row.estimated > 0
+                              ? Text.rich(
+                                  TextSpan(
+                                    style: AppTextStyles.monoTiny.copyWith(
+                                      color: AppColors.gray500,
+                                      fontSize: 10,
+                                      letterSpacing: 0.3,
+                                    ),
+                                    children: [
+                                      TextSpan(
+                                        text: '${pctOfSpent.toStringAsFixed(0)}%',
+                                        style: const TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                          text: ' of est. ${_fmt(row.estimated)}'),
+                                    ],
+                                  ),
+                                )
+                              : Text(
+                                  'No estimate set',
+                                  style: AppTextStyles.monoTiny.copyWith(
+                                    color: AppColors.gray400,
+                                    fontSize: 10,
+                                    fontStyle: FontStyle.italic,
                                   ),
                                 ),
-                                TextSpan(
-                                    text:
-                                        ' of spent · est. ${_fmt(row.estimated)}'),
-                              ],
-                            ),
-                          ),
                         ),
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 250),
