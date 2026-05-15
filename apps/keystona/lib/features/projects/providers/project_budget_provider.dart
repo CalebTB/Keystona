@@ -137,13 +137,17 @@ Future<BudgetSummary> projectBudgetSummary(
   final items = await ref.watch(projectBudgetProvider(projectId).future);
   final project = await ref.watch(projectDetailProvider(projectId).future);
 
+  // For paid items with no actualCost entered, fall back to estimatedCost.
+  double effectiveCost(ProjectBudgetItem i) =>
+      i.actualCost > 0 ? i.actualCost : i.estimatedCost;
+
   // Only paid items count as "spent"; unpaid items are pending
   final actual = items
       .where((i) => i.isPaid)
-      .fold<double>(0, (s, i) => s + i.actualCost);
+      .fold<double>(0, (s, i) => s + effectiveCost(i));
   final estimated = project.estimatedBudget ?? 0;
   final overBudgetCount =
-      items.where((i) => i.actualCost > i.estimatedCost && i.estimatedCost > 0).length;
+      items.where((i) => effectiveCost(i) > i.estimatedCost && i.estimatedCost > 0).length;
 
   // Per-category aggregation — act = paid only, pending = unpaid count
   final Map<String, ({double est, double act, int count, int pending})> byCategory = {};
@@ -152,7 +156,7 @@ Future<BudgetSummary> projectBudgetSummary(
         (est: 0.0, act: 0.0, count: 0, pending: 0);
     byCategory[item.category] = (
       est: e.est + item.estimatedCost,
-      act: e.act + (item.isPaid ? item.actualCost : 0),
+      act: e.act + (item.isPaid ? effectiveCost(item) : 0),
       count: e.count + 1,
       pending: e.pending + (item.isPaid ? 0 : 1),
     );
