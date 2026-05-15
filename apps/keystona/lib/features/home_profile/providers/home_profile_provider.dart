@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../services/storage_service.dart';
 import '../../../services/supabase_service.dart';
 import '../models/home_profile_overview.dart';
 import '../models/property.dart';
@@ -63,7 +64,7 @@ class HomeProfileNotifier extends _$HomeProfileNotifier {
 
     final property = Property.fromJson(propertyRow);
 
-    // 2. In parallel: fetch lightweight system rows + appliances count.
+    // 2. In parallel: systems, appliances, and optional exterior photo URL.
     final results = await Future.wait([
       SupabaseService.client
           .from('systems')
@@ -79,10 +80,21 @@ class HomeProfileNotifier extends _$HomeProfileNotifier {
           .select('id')
           .eq('property_id', property.id)
           .isFilter('deleted_at', null),
+      if (property.exteriorPhotoPath != null)
+        StorageService()
+            .getSignedUrl(
+              bucket: 'property-photos',
+              path: property.exteriorPhotoPath!,
+            )
+            .then<dynamic>((url) => url)
+            .catchError((_) => null)
+      else
+        Future<dynamic>.value(null),
     ]);
 
     final systemRows = results[0] as List<dynamic>;
     final applianceRows = results[1] as List<dynamic>;
+    final exteriorPhotoSignedUrl = results[2] as String?;
 
     // 3. Classify nearing-end-of-life in Dart — matches #48 Lifespan Tracking
     //    threshold (lifespan_percentage ≥ 75 %).
@@ -96,6 +108,7 @@ class HomeProfileNotifier extends _$HomeProfileNotifier {
       systemCount: systemRows.length,
       systemsNearingEndOfLife: nearingEndOfLife,
       applianceCount: applianceRows.length,
+      exteriorPhotoSignedUrl: exteriorPhotoSignedUrl,
     );
   }
 

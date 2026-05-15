@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_redundant_argument_values
 import 'dart:math' as math;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -398,7 +399,10 @@ class _ContentSliver extends ConsumerWidget {
           children: [
             const TrialBanner(),
             // 1. Dark hero property card.
-            _PropertyCard(property: overview.property),
+            _PropertyCard(
+              property: overview.property,
+              exteriorPhotoUrl: overview.exteriorPhotoSignedUrl,
+            ),
             const SizedBox(height: AppSizes.md),
 
             // 2. 5-year replacement forecast strip (conditional).
@@ -426,8 +430,9 @@ class _ContentSliver extends ConsumerWidget {
 // ── 1. Property card — dark hero block ───────────────────────────────────────
 
 class _PropertyCard extends StatelessWidget {
-  const _PropertyCard({required this.property});
+  const _PropertyCard({required this.property, this.exteriorPhotoUrl});
   final Property property;
+  final String? exteriorPhotoUrl;
 
   String get _streetLine => [
         property.addressLine1,
@@ -452,22 +457,34 @@ class _PropertyCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Thumbnail placeholder.
-              Container(
-                width: 64,
-                height: 64,
-                decoration: const BoxDecoration(
+              // Exterior photo thumbnail (or placeholder).
+              ClipRRect(
+                borderRadius: const BorderRadius.all(Radius.circular(14)),
+                child: Container(
+                  width: 64,
+                  height: 64,
                   color: AppColors.darkBorder,
-                  borderRadius:
-                      BorderRadius.all(Radius.circular(14)),
-                  border: Border.fromBorderSide(
-                    BorderSide(color: AppColors.darkBorder),
-                  ),
-                ),
-                child: const Icon(
-                  Icons.home_outlined,
-                  size: 28,
-                  color: AppColors.darkTextSecondary,
+                  child: exteriorPhotoUrl != null
+                      ? CachedNetworkImage(
+                          imageUrl: exteriorPhotoUrl!,
+                          fit: BoxFit.cover,
+                          placeholder: (_, _) => const Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.darkTextSecondary,
+                            ),
+                          ),
+                          errorWidget: (_, _, _) => const Icon(
+                            Icons.home_outlined,
+                            size: 28,
+                            color: AppColors.darkTextSecondary,
+                          ),
+                        )
+                      : const Icon(
+                          Icons.home_outlined,
+                          size: 28,
+                          color: AppColors.darkTextSecondary,
+                        ),
                 ),
               ),
               const SizedBox(width: 14),
