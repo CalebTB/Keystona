@@ -30,6 +30,7 @@ import '../../features/home_profile/screens/appliance_form_screen.dart';
 import '../../features/home_profile/screens/appliances_screen.dart';
 import '../../features/home_profile/screens/home_profile_screen.dart';
 import '../../features/home_profile/screens/lifespan_screen.dart';
+import '../../features/home_profile/screens/property_edit_screen.dart';
 import '../../features/home_profile/screens/system_detail_screen.dart';
 import '../../features/projects/models/project.dart';
 import '../../features/projects/models/project_budget_item.dart';
@@ -311,7 +312,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: 'edit',
                     pageBuilder: (_, state) => _buildPage(
                       state,
-                      const PlaceholderScreen(name: 'Edit Property'),
+                      const PropertyEditScreen(),
+                      fullscreenDialog: true,
                     ),
                   ),
                   GoRoute(

@@ -25,9 +25,18 @@ class HomeProfileNotifier extends _$HomeProfileNotifier {
     state = await AsyncValue.guard(_fetchOverview);
   }
 
-  /// [Future] Edit property fields — implemented in the property edit flow.
   Future<void> updateProperty(Map<String, dynamic> data) async {
-    throw UnimplementedError('updateProperty() — implement in property edit flow');
+    final user = SupabaseService.client.auth.currentUser;
+    if (user == null) throw Exception('Not authenticated');
+
+    await SupabaseService.client
+        .from('properties')
+        .update(data)
+        .eq('user_id', user.id)
+        .isFilter('deleted_at', null);
+
+    ref.invalidateSelf();
+    await future;
   }
 
   // ── Private fetch ───────────────────────────────────────────────────────────
