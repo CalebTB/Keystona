@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -90,6 +91,8 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
   final _priceController = TextEditingController();
 
   // ── Selected values ──────────────────────────────────────────────────────────
+
+  DateTime? _purchaseDate;
 
   String? _selectedPropertyType;
   int? _selectedClimateZone;
@@ -228,6 +231,60 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
     }
   }
 
+  Future<void> _showPurchaseDatePicker() async {
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    if (isIOS) {
+      DateTime picked = _purchaseDate ?? DateTime.now();
+      await showCupertinoModalPopup<void>(
+        context: context,
+        builder: (_) => Material(
+          type: MaterialType.transparency,
+          child: Container(
+            height: 300,
+            color: CupertinoColors.systemBackground.resolveFrom(context),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    CupertinoButton(
+                      child: const Text('Cancel'),
+                      onPressed: () =>
+                          Navigator.of(context, rootNavigator: true).pop(),
+                    ),
+                    CupertinoButton(
+                      child: const Text('Done'),
+                      onPressed: () {
+                        setState(() => _purchaseDate = picked);
+                        Navigator.of(context, rootNavigator: true).pop();
+                      },
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: CupertinoDatePicker(
+                    mode: CupertinoDatePickerMode.date,
+                    initialDateTime: picked,
+                    maximumDate: DateTime.now(),
+                    onDateTimeChanged: (dt) => picked = dt,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    } else {
+      final picked = await showDatePicker(
+        context: context,
+        initialDate: _purchaseDate ?? DateTime.now(),
+        firstDate: DateTime(1900),
+        lastDate: DateTime.now(),
+      );
+      if (picked != null) setState(() => _purchaseDate = picked);
+    }
+  }
+
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _saving = true);
@@ -264,6 +321,8 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
           'bathrooms': num.parse(_bathroomsController.text.trim()),
         if (_priceController.text.trim().isNotEmpty)
           'purchase_price': num.parse(_priceController.text.trim()),
+        if (_purchaseDate != null)
+          'purchase_date': _purchaseDate!.toIso8601String().split('T')[0],
         'climate_zone': _selectedClimateZone,
         'exterior_photo_path': newPhotoPath ?? _existingPhotoPath,
       };
@@ -688,31 +747,57 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
 
           const SizedBox(height: AppSizes.md),
 
-          _FieldCard(
-            label: 'PRICE',
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  r'$',
-                  style: AppTextStyles.bodyLarge
-                      .copyWith(color: AppColors.textSecondary),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: _showPurchaseDatePicker,
+                  child: _FieldCard(
+                    label: 'PURCHASE DATE',
+                    child: Text(
+                      _purchaseDate != null
+                          ? DateFormat('MMM d, yyyy').format(_purchaseDate!)
+                          : '—',
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: _purchaseDate != null
+                            ? AppColors.textPrimary
+                            : AppColors.textTertiary,
+                      ),
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: TextFormField(
-                    controller: _priceController,
-                    style: AppTextStyles.bodyLarge,
-                    decoration: _fieldDecoration('0'),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                          RegExp(r'^\d*\.?\d*')),
+              ),
+              const SizedBox(width: AppSizes.cardGap),
+              Expanded(
+                child: _FieldCard(
+                  label: 'PRICE',
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        r'$',
+                        style: AppTextStyles.bodyLarge
+                            .copyWith(color: AppColors.textSecondary),
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _priceController,
+                          style: AppTextStyles.bodyLarge,
+                          decoration: _fieldDecoration('0'),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d*\.?\d*')),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
 
           const SizedBox(height: AppSizes.xl),
@@ -726,6 +811,8 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
 
 InputDecoration _fieldDecoration(String hint) => InputDecoration(
       isDense: true,
+      filled: true,
+      fillColor: AppColors.cardBackground,
       contentPadding: const EdgeInsets.only(top: 2),
       border: InputBorder.none,
       enabledBorder: InputBorder.none,
@@ -1024,7 +1111,7 @@ class _PhotoSlot extends StatelessWidget {
   }
 
   Widget _placeholder() => Container(
-        color: AppColors.warmFill,
+        color: AppColors.darkBackground,
         child: const Center(
           child: Icon(Icons.home_outlined,
               size: 48, color: AppColors.textTertiary),
