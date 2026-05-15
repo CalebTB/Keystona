@@ -48,27 +48,54 @@ class ProjectBudgetNotifier extends _$ProjectBudgetNotifier {
   }
 
   /// Updates a budget line item by [id].
+  /// Optimistically patches in-memory first so the UI updates without a
+  /// loading flash, then confirms from the server.
   Future<void> updateItem(String id, Map<String, dynamic> data) async {
+    // Optimistic patch — update state immediately, no loading state
+    if (state.hasValue) {
+      state = AsyncData(
+        state.value!.map((item) {
+          if (item.id != id) return item;
+          return item.copyWith(
+            isPaid: data['is_paid'] as bool? ?? item.isPaid,
+            actualCost: (data['actual_cost'] as num?)?.toDouble() ?? item.actualCost,
+            estimatedCost: (data['estimated_cost'] as num?)?.toDouble() ?? item.estimatedCost,
+            name: data['name'] as String? ?? item.name,
+            vendor: data['vendor'] as String? ?? item.vendor,
+          );
+        }).toList(),
+      );
+    }
+
     await SupabaseService.client
         .from('project_budget_items')
         .update(data)
         .eq('id', id);
 
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetch);
+    // Confirm from server without a loading flash
+    state = AsyncData(await _fetch());
     ref.invalidate(projectDetailProvider(projectId));
     ref.invalidate(projectsProvider);
   }
 
   /// Soft-deletes a budget line item by [id].
+  /// Removes item from in-memory list immediately so the UI animates out
+  /// without a skeleton flash.
   Future<void> deleteItem(String id) async {
+    // Optimistic remove
+    if (state.hasValue) {
+      state = AsyncData(
+        state.value!.where((item) => item.id != id).toList(),
+      );
+    }
+
     await SupabaseService.client
         .from('project_budget_items')
         .update({'deleted_at': DateTime.now().toIso8601String()})
         .eq('id', id);
 
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetch);
+    // Confirm from server without a loading flash
+    state = AsyncData(await _fetch());
     ref.invalidate(projectDetailProvider(projectId));
     ref.invalidate(projectsProvider);
   }

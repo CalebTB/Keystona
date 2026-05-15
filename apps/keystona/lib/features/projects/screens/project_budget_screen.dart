@@ -318,6 +318,7 @@ class _BudgetEditorialView extends ConsumerWidget {
                         .where((item) => item.category == row.category)
                         .toList();
                     return _CategoryCard(
+                      key: ValueKey(row.category),
                       row: row,
                       totalActual: summary.actualTotal,
                       items: categoryItems,
@@ -718,6 +719,7 @@ class _SectionLabel extends StatelessWidget {
 
 class _CategoryCard extends StatefulWidget {
   const _CategoryCard({
+    super.key,
     required this.row,
     required this.totalActual,
     required this.items,
@@ -894,19 +896,23 @@ class _CategoryCardState extends State<_CategoryCard> {
                             ),
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 7, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: pillBg,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            pillLabel,
-                            style: AppTextStyles.monoTiny.copyWith(
-                              color: pillText,
-                              letterSpacing: 0.6,
-                              fontSize: 9,
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 250),
+                          child: Container(
+                            key: ValueKey(pillLabel),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 7, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: pillBg,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              pillLabel,
+                              style: AppTextStyles.monoTiny.copyWith(
+                                color: pillText,
+                                letterSpacing: 0.6,
+                                fontSize: 9,
+                              ),
                             ),
                           ),
                         ),
@@ -990,8 +996,10 @@ class _CategoryItemRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
           child: Row(
             children: [
-              // Paid dot
-              Container(
+              // Paid dot — animates when item flips paid
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
                 width: 8,
                 height: 8,
                 decoration: BoxDecoration(
