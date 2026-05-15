@@ -1,49 +1,81 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/widgets/snackbar_service.dart';
+import '../../../core/widgets/placeholder_screen.dart';
+import '../models/project.dart';
 import '../models/project_contractor.dart';
 import '../providers/project_contractors_provider.dart';
-import '../widgets/contractor_card.dart';
+import '../providers/project_detail_provider.dart';
 import '../widgets/contractor_form_sheet.dart';
 import '../widgets/contractor_skeleton.dart';
+import '../widgets/contractors/ledger/contractors_ledger_view.dart';
+import '../widgets/contractors/ledger/contractors_ledger_skeleton.dart';
 
-/// Contractor list for a single project.
+/// Wrapper screen for the contractors sub-page.
 ///
-/// Shows contacts linked to this project with project-specific fields.
-/// Route: /projects/:projectId/contractors
-class ProjectContractorsScreen extends ConsumerWidget {
+/// Loads the project + contractor list, then routes to:
+///   - [ContractorsLedgerView]  — active/on-hold projects with data
+///   - [PlaceholderScreen]      — story view (deferred spec)
+///   - [_EmptyState]            — no contractors yet
+///
+/// Mirrors the pattern established by [ProjectBudgetScreen].
+class ProjectContractorsScreen extends ConsumerStatefulWidget {
   const ProjectContractorsScreen({super.key, required this.projectId});
 
   final String projectId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProjectContractorsScreen> createState() =>
+      _ProjectContractorsScreenState();
+}
+
+class _ProjectContractorsScreenState
+    extends ConsumerState<ProjectContractorsScreen> {
+  /// 'ledger' | 'story'. Only relevant when project is active and ≥ 2 vendors.
+  String _selectedView = 'ledger';
+
+  void _onAdd() => showContractorFormSheet(
+        context: context,
+        projectId: widget.projectId,
+        ref: ref,
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final asyncProject =
+        ref.watch(projectDetailProvider(widget.projectId));
     final asyncContractors =
-        ref.watch(projectContractorsProvider(projectId));
+        ref.watch(projectContractorsProvider(widget.projectId));
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
 
-    void onAdd() => showContractorFormSheet(
-          context: context,
-          projectId: projectId,
-          ref: ref,
-        );
+    // Determine view toggle visibility:
+    // Show only when project is NOT completed/cancelled AND contractors >= 2.
+    final projectStatus = asyncProject.value?.status;
+    final contractorCount = asyncContractors.value?.length ?? 0;
+    final isTerminal =
+        projectStatus == 'completed' || projectStatus == 'cancelled';
+    final showToggle = !isTerminal && contractorCount >= 2;
 
-    final body = asyncContractors.when(
-      loading: () => const ContractorSkeleton(),
+    final body = asyncProject.when(
+      loading: () => const ContractorsLedgerSkeleton(),
       error: (_, _) => _ErrorState(
-        onRetry: () => ref
-            .invalidate(projectContractorsProvider(projectId)),
+        onRetry: () {
+          ref.invalidate(projectDetailProvider(widget.projectId));
+          ref.invalidate(projectContractorsProvider(widget.projectId));
+        },
       ),
-      data: (contractors) => contractors.isEmpty
-          ? _EmptyState(onAdd: onAdd)
-          : _ContractorList(
-              contractors: contractors,
-              projectId: projectId,
-            ),
+      data: (project) => asyncContractors.when(
+        loading: () => const ContractorSkeleton(),
+        error: (_, _) => _ErrorState(
+          onRetry: () =>
+              ref.invalidate(projectContractorsProvider(widget.projectId)),
+        ),
+        data: (contractors) => _selectView(project, contractors),
+      ),
     );
 
     if (isIOS) {
@@ -52,150 +84,155 @@ class ProjectContractorsScreen extends ConsumerWidget {
           middle: const Text('Contractors'),
           trailing: CupertinoButton(
             padding: EdgeInsets.zero,
-            onPressed: onAdd,
+            onPressed: _onAdd,
             child: const Icon(CupertinoIcons.add),
           ),
         ),
-        child: SafeArea(bottom: false, child: body),
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              if (showToggle) _ViewToggle(
+                selected: _selectedView,
+                onChanged: (v) => setState(() => _selectedView = v),
+              ),
+              Expanded(child: body),
+            ],
+          ),
+        ),
       );
     }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Contractors')),
-      body: body,
+      body: Column(
+        children: [
+          if (showToggle) _ViewToggle(
+            selected: _selectedView,
+            onChanged: (v) => setState(() => _selectedView = v),
+          ),
+          Expanded(child: body),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
-        onPressed: onAdd,
-        backgroundColor: AppColors.accent,
+        onPressed: _onAdd,
+        backgroundColor: AppColors.deepNavy,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
+
+  Widget _selectView(Project project, List<ProjectContractor> contractors) {
+    if (contractors.isEmpty) {
+      return _EmptyState(onAdd: _onAdd);
+    }
+
+    final isTerminal =
+        project.status == 'completed' || project.status == 'cancelled';
+
+    if (isTerminal) {
+      // Story placeholder — spec deferred.
+      return const PlaceholderScreen(name: 'Contractor Story');
+    }
+
+    if (_selectedView == 'story') {
+      return const PlaceholderScreen(name: 'Contractor Story');
+    }
+
+    return ContractorsLedgerView(
+      projectId: widget.projectId,
+      project: project,
+    );
+  }
 }
 
-// ── Contractor list ───────────────────────────────────────────────────────────
+// ── View toggle pill ──────────────────────────────────────────────────────────
 
-class _ContractorList extends ConsumerWidget {
-  const _ContractorList({
-    required this.contractors,
-    required this.projectId,
+class _ViewToggle extends StatelessWidget {
+  const _ViewToggle({
+    required this.selected,
+    required this.onChanged,
   });
 
-  final List<ProjectContractor> contractors;
-  final String projectId;
+  final String selected;
+  final ValueChanged<String> onChanged;
 
-  Future<void> _remove(
-      BuildContext context, WidgetRef ref, ProjectContractor c) async {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    bool confirmed = false;
-
-    if (isIOS) {
-      await showCupertinoDialog<void>(
-        context: context,
-        builder: (ctx) => CupertinoAlertDialog(
-          title: const Text('Remove Contractor'),
-          content: Text(
-              'Remove ${c.contactName} from this project? The contact will stay in your contacts list.'),
-          actions: [
-            CupertinoDialogAction(
-              isDefaultAction: true,
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cancel'),
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.md,
+        vertical: AppSizes.sm,
+      ),
+      child: Container(
+        height: 36,
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(100),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _ToggleSegment(
+              label: 'Ledger',
+              selected: selected == 'ledger',
+              onTap: () => onChanged('ledger'),
             ),
-            CupertinoDialogAction(
-              isDestructiveAction: true,
-              onPressed: () {
-                confirmed = true;
-                Navigator.of(ctx).pop();
-              },
-              child: const Text('Remove'),
+            _ToggleSegment(
+              label: 'Story',
+              selected: selected == 'story',
+              onTap: () => onChanged('story'),
             ),
           ],
         ),
-      );
-    } else {
-      confirmed = await showDialog<bool>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('Remove Contractor'),
-              content: Text(
-                  'Remove ${c.contactName} from this project?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(false),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(true),
-                  child: Text('Remove',
-                      style: TextStyle(color: AppColors.error)),
-                ),
-              ],
-            ),
-          ) ??
-          false;
-    }
-
-    if (!confirmed || !context.mounted) return;
-
-    final notifier = ref.read(
-        projectContractorsProvider(projectId).notifier);
-    try {
-      await notifier.removeContractor(c.id);
-      if (!context.mounted) return;
-      SnackbarService.showSuccess(context, 'Contractor removed.');
-    } catch (_) {
-      if (!context.mounted) return;
-      SnackbarService.showError(context, 'Could not remove contractor.');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return RefreshIndicator(
-      onRefresh: () async => ref
-          .read(projectContractorsProvider(projectId).notifier)
-          .refresh(),
-      child: ListView.separated(
-        padding: AppPadding.screen,
-        itemCount: contractors.length,
-        separatorBuilder: (_, _) => const SizedBox(height: AppSizes.sm),
-        itemBuilder: (ctx, i) {
-          final c = contractors[i];
-          return Dismissible(
-            key: ValueKey(c.id),
-            direction: DismissDirection.endToStart,
-            background: _DeleteBackground(),
-            confirmDismiss: (_) async {
-              await _remove(ctx, ref, c);
-              return false;
-            },
-            child: ContractorCard(
-              contractor: c,
-              onTap: () => showContractorFormSheet(
-                context: ctx,
-                projectId: projectId,
-                ref: ref,
-                existingContractor: c,
-              ),
-            ),
-          );
-        },
       ),
     );
   }
 }
 
-class _DeleteBackground extends StatelessWidget {
+class _ToggleSegment extends StatelessWidget {
+  const _ToggleSegment({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      alignment: Alignment.centerRight,
-      padding: const EdgeInsets.only(right: AppSizes.lg),
-      decoration: BoxDecoration(
-        color: AppColors.error,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.md,
+          vertical: AppSizes.xs,
+        ),
+        decoration: BoxDecoration(
+          color: selected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(100),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.labelSmall.copyWith(
+            color: selected ? AppColors.textPrimary : AppColors.textSecondary,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+          ),
+        ),
       ),
-      child: const Icon(Icons.person_remove_outlined, color: Colors.white),
     );
   }
 }
@@ -204,6 +241,7 @@ class _DeleteBackground extends StatelessWidget {
 
 class _EmptyState extends StatelessWidget {
   const _EmptyState({required this.onAdd});
+
   final VoidCallback onAdd;
 
   @override
@@ -221,13 +259,13 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppSizes.md),
             Text(
-              'Add your project team',
+              'No contractors yet',
               style: AppTextStyles.h3,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSizes.sm),
             Text(
-              'Link contractors, designers, and other professionals working on this project.',
+              'Add the people working on this project — your existing emergency contacts can be added with one tap.',
               style: AppTextStyles.bodyMedium
                   .copyWith(color: AppColors.textSecondary),
               textAlign: TextAlign.center,
@@ -236,7 +274,7 @@ class _EmptyState extends StatelessWidget {
             FilledButton(
               onPressed: onAdd,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accent,
+                backgroundColor: AppColors.deepNavy,
                 padding: AppPadding.button,
               ),
               child: const Text('+ Add Contractor'),
@@ -252,6 +290,7 @@ class _EmptyState extends StatelessWidget {
 
 class _ErrorState extends StatelessWidget {
   const _ErrorState({required this.onRetry});
+
   final VoidCallback onRetry;
 
   @override
@@ -265,13 +304,16 @@ class _ErrorState extends StatelessWidget {
             Icon(Icons.error_outline,
                 size: AppSizes.iconXl, color: AppColors.error),
             const SizedBox(height: AppSizes.md),
-            Text("Couldn't load contractors",
-                style: AppTextStyles.h3, textAlign: TextAlign.center),
+            Text(
+              "Couldn't load contractors",
+              style: AppTextStyles.h3,
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: AppSizes.lg),
             FilledButton(
               onPressed: onRetry,
-              style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accent),
+              style:
+                  FilledButton.styleFrom(backgroundColor: AppColors.deepNavy),
               child: const Text('Retry'),
             ),
           ],
