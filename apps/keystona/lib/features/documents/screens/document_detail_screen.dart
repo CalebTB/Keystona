@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -358,11 +359,6 @@ class _NavRow extends ConsumerWidget {
             icon: Icons.edit_outlined,
             onTap: () => EditMetadataSheet.show(context, document),
           ),
-          const SizedBox(width: 6),
-          _NavIconButton(
-            icon: Icons.more_horiz,
-            onTap: () {},
-          ),
         ],
       ),
     );
@@ -402,14 +398,42 @@ class _NavIconButton extends StatelessWidget {
 
 // ─── Preview Card ─────────────────────────────────────────────────────────────
 
-class _PreviewCard extends StatelessWidget {
+class _PreviewCard extends StatefulWidget {
   const _PreviewCard({required this.document, required this.catColor});
 
   final Document document;
   final Color catColor;
 
   @override
+  State<_PreviewCard> createState() => _PreviewCardState();
+}
+
+class _PreviewCardState extends State<_PreviewCard> {
+  String? _thumbnailUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.document.thumbnailPath != null) {
+      _fetchThumbnail();
+    }
+  }
+
+  Future<void> _fetchThumbnail() async {
+    try {
+      final url = await SupabaseService.client.storage
+          .from('documents')
+          .createSignedUrl(widget.document.thumbnailPath!, 3600);
+      if (mounted) setState(() => _thumbnailUrl = url);
+    } catch (_) {
+      // Fall back to icon placeholder — no-op
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final document = widget.document;
+    final catColor = widget.catColor;
     final ext = _extFromMime(document.mimeType);
     final dimColor = catColor.withValues(alpha: 0.07);
     final borderColor = catColor.withValues(alpha: 0.12);
@@ -436,60 +460,57 @@ class _PreviewCard extends StatelessWidget {
           ],
         ),
         child: ClipRRect(
-          borderRadius:
-              BorderRadius.circular(AppSizes.radiusLg - 1.5),
+          borderRadius: BorderRadius.circular(AppSizes.radiusLg - 1.5),
           child: Stack(
+            fit: StackFit.expand,
             children: [
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.center,
-                      colors: [dimColor, AppColors.surface],
-                    ),
-                  ),
-                ),
-              ),
-              Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 64,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: dimColor,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: borderColor, width: 1.5),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.insert_drive_file_outlined,
-                              size: 28, color: catColor),
-                          const SizedBox(height: 4),
-                          Text(
-                            ext,
-                            style: AppTextStyles.monoTiny.copyWith(
-                              color: catColor,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
+              // ── Background: thumbnail or gradient placeholder ──────────────
+              if (_thumbnailUrl != null)
+                CachedNetworkImage(
+                  imageUrl: _thumbnailUrl!,
+                  fit: BoxFit.cover,
+                  placeholder: (_, _) => _iconPlaceholder(
+                      dimColor, borderColor, catColor, ext, document),
+                  errorWidget: (_, _, _) => _iconPlaceholder(
+                      dimColor, borderColor, catColor, ext, document),
+                )
+              else
+                _iconPlaceholder(dimColor, borderColor, catColor, ext, document),
+
+              // ── Scrim for readability when thumbnail is shown ──────────────
+              if (_thumbnailUrl != null)
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.35),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Text(
-                      document.pageCount != null
-                          ? '${document.pageCount} page${document.pageCount == 1 ? '' : 's'} · Tap to preview'
-                          : 'Tap to preview',
-                      style: AppTextStyles.monoTiny
-                          .copyWith(color: AppColors.gray500),
-                    ),
-                  ],
+                  ),
+                ),
+
+              // ── "Tap to preview" hint ─────────────────────────────────────
+              Positioned(
+                bottom: 12,
+                left: 12,
+                child: Text(
+                  document.pageCount != null
+                      ? '${document.pageCount} page${document.pageCount == 1 ? '' : 's'} · Tap to preview'
+                      : 'Tap to preview',
+                  style: AppTextStyles.monoTiny.copyWith(
+                    color: _thumbnailUrl != null
+                        ? Colors.white.withValues(alpha: 0.85)
+                        : AppColors.gray500,
+                  ),
                 ),
               ),
+
+              // ── Expand icon ───────────────────────────────────────────────
               Positioned(
                 bottom: 12,
                 right: 12,
@@ -497,17 +518,74 @@ class _PreviewCard extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: AppColors.deepNavy.withValues(alpha: 0.06),
+                    color: _thumbnailUrl != null
+                        ? Colors.black.withValues(alpha: 0.35)
+                        : AppColors.deepNavy.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.open_in_full_rounded,
-                      size: 16, color: AppColors.textSecondary),
+                  child: Icon(
+                    Icons.open_in_full_rounded,
+                    size: 16,
+                    color: _thumbnailUrl != null
+                        ? Colors.white
+                        : AppColors.textSecondary,
+                  ),
                 ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _iconPlaceholder(Color dimColor, Color borderColor, Color catColor,
+      String ext, Document document) {
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.center,
+                colors: [dimColor, AppColors.surface],
+              ),
+            ),
+          ),
+        ),
+        Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: dimColor,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: borderColor, width: 1.5),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.insert_drive_file_outlined,
+                        size: 28, color: catColor),
+                    const SizedBox(height: 4),
+                    Text(
+                      ext,
+                      style: AppTextStyles.monoTiny.copyWith(
+                        color: catColor,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -784,36 +862,6 @@ class _ExpiryCountdownCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _ExpiryButton(
-                  label: 'Upload Renewal',
-                  primary: true,
-                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Coming soon'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _ExpiryButton(
-                  label: 'Snooze',
-                  primary: false,
-                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Coming soon'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -849,48 +897,6 @@ class _ExpiryLabel extends StatelessWidget {
         textAlign: align,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-      ),
-    );
-  }
-}
-
-class _ExpiryButton extends StatelessWidget {
-  const _ExpiryButton({
-    required this.label,
-    required this.primary,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool primary;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: primary
-              ? AppColors.accent
-              : AppColors.accent.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(10),
-          border: primary
-              ? null
-              : Border.all(
-                  color: AppColors.accent.withValues(alpha: 0.15),
-                  width: 1.5,
-                ),
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: AppTextStyles.labelLarge.copyWith(
-            color: primary ? Colors.white : AppColors.accent,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
       ),
     );
   }
@@ -1480,12 +1486,13 @@ class _FileInfoCard extends StatelessWidget {
               prefix: 'Added ',
               value: addedDate,
             ),
-            _FileMeta(
-              icon: Icons.access_time_rounded,
-              prefix: 'OCR ',
-              value: ocrLabel,
-              valueColor: ocrColor,
-            ),
+            if (ocrStatus != 'pending')
+              _FileMeta(
+                icon: Icons.access_time_rounded,
+                prefix: 'OCR ',
+                value: ocrLabel,
+                valueColor: ocrColor,
+              ),
           ],
         ),
       ),
