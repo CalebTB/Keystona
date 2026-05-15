@@ -9,12 +9,12 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/snackbar_service.dart';
+import '../../../services/supabase_service.dart';
 import '../models/project_budget_item.dart';
 import '../models/project_phase.dart';
 import '../providers/project_budget_provider.dart';
 import '../providers/project_detail_provider.dart';
 import '../providers/project_phases_provider.dart';
-import '../widgets/budget_item_card.dart';
 import '../widgets/budget_skeleton.dart';
 
 /// Budget screen — routes to Editorial Summary (active) or Timeline (completed).
@@ -88,6 +88,86 @@ class _BudgetEditorialView extends ConsumerWidget {
 
   final String projectId;
   final VoidCallback onAdd;
+
+  Future<void> _markItemPaid(
+    BuildContext context,
+    WidgetRef ref,
+    ProjectBudgetItem item,
+  ) async {
+    if (item.isPaid) return;
+    try {
+      await ref
+          .read(projectBudgetProvider(projectId).notifier)
+          .updateItem(item.id, {'is_paid': true});
+    } catch (_) {
+      if (!context.mounted) return;
+      SnackbarService.showError(context, 'Could not mark item as paid.');
+    }
+  }
+
+  Future<void> _editBudget(
+    BuildContext context,
+    WidgetRef ref,
+    double currentEstimate,
+  ) async {
+    final ctrl = TextEditingController(
+      text: currentEstimate > 0 ? currentEstimate.toStringAsFixed(0) : '',
+    );
+    double? newValue;
+
+    await showCupertinoDialog<void>(
+      context: context,
+      builder: (ctx) => CupertinoAlertDialog(
+        title: const Text('Edit Total Budget'),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Material(
+            type: MaterialType.transparency,
+            child: TextField(
+              controller: ctrl,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              autofocus: true,
+              decoration: const InputDecoration(
+                prefixText: r'$ ',
+                hintText: '0',
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          CupertinoDialogAction(
+            onPressed: () {
+              newValue = double.tryParse(ctrl.text.trim());
+              Navigator.of(ctx).pop();
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    ctrl.dispose();
+    if (newValue == null || !context.mounted) return;
+
+    try {
+      await SupabaseService.client
+          .from('projects')
+          .update({'estimated_budget': newValue})
+          .eq('id', projectId);
+      if (!context.mounted) return;
+      ref.invalidate(projectDetailProvider(projectId));
+      ref.invalidate(projectBudgetSummaryProvider(projectId));
+    } catch (_) {
+      if (!context.mounted) return;
+      SnackbarService.showError(context, 'Could not update budget.');
+    }
+  }
 
   Future<void> _deleteItem(
     BuildContext context,
@@ -199,8 +279,20 @@ class _BudgetEditorialView extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: AppPadding.screen.copyWith(top: 0, bottom: 0),
-                  child: _EditorialHero(summary: summary, phases: phases),
+                  child: _EditorialHero(
+                    summary: summary,
+                    phases: phases,
+                    onEditBudget: () =>
+                        _editBudget(context, ref, summary.estimatedTotal),
+                  ),
                 ),
+              ),
+
+            // ── Empty state ───────────────────────────────────────────────
+            if (items.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: _EmptyState(onAdd: onAdd),
               ),
 
             // ── Category cards ────────────────────────────────────────────
@@ -233,6 +325,9 @@ class _BudgetEditorialView extends ConsumerWidget {
                         '/projects/$projectId/budget/${item.id}/edit',
                         extra: item,
                       ),
+                      onItemMarkPaid: (item) =>
+                          _markItemPaid(ctx, ref, item),
+                      onItemDelete: (item) => _deleteItem(ctx, ref, item),
                     );
                   },
                 ),
@@ -249,54 +344,6 @@ class _BudgetEditorialView extends ConsumerWidget {
                 child: const _InsightUpsell(),
               ),
             ),
-
-            // ── All line items ────────────────────────────────────────────
-            if (items.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: _EmptyState(onAdd: onAdd),
-              )
-            else ...[
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: AppPadding.screen.copyWith(
-                    top: AppSizes.lg,
-                    bottom: 0,
-                  ),
-                  child: _SectionLabel(
-                    label: 'ALL ITEMS',
-                    dotColor: AppColors.gray400,
-                  ),
-                ),
-              ),
-              SliverPadding(
-                padding: AppPadding.screen.copyWith(top: AppSizes.xs),
-                sliver: SliverList.separated(
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) =>
-                      const SizedBox(height: AppSizes.sm),
-                  itemBuilder: (ctx, i) {
-                    final item = items[i];
-                    return Dismissible(
-                      key: ValueKey(item.id),
-                      direction: DismissDirection.endToStart,
-                      background: _DeleteBackground(),
-                      confirmDismiss: (_) async {
-                        await _deleteItem(ctx, ref, item);
-                        return false;
-                      },
-                      child: BudgetItemCard(
-                        item: item,
-                        onTap: () => ctx.push(
-                          '/projects/$projectId/budget/${item.id}/edit',
-                          extra: item,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
 
             const SliverToBoxAdapter(
               child: SizedBox(height: AppSizes.xxl + AppSizes.xl),
@@ -352,10 +399,15 @@ class _ScreenHeader extends StatelessWidget {
 // ── Editorial hero strip ──────────────────────────────────────────────────────
 
 class _EditorialHero extends StatelessWidget {
-  const _EditorialHero({required this.summary, required this.phases});
+  const _EditorialHero({
+    required this.summary,
+    required this.phases,
+    required this.onEditBudget,
+  });
 
   final BudgetSummary summary;
   final List<ProjectPhase> phases;
+  final VoidCallback onEditBudget;
 
   static final _moneyFmt =
       NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 0);
@@ -409,14 +461,28 @@ class _EditorialHero extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Eyebrow
-          Text(
-            estimated > 0
-                ? 'SPENT OF ${_fmt(estimated)}'
-                : 'TOTAL SPENT',
-            style: AppTextStyles.monoTiny.copyWith(
-              color: Colors.white.withValues(alpha: 0.5),
-              letterSpacing: 1.4,
+          // Eyebrow + edit budget tap
+          GestureDetector(
+            onTap: onEditBudget,
+            behavior: HitTestBehavior.opaque,
+            child: Row(
+              children: [
+                Text(
+                  estimated > 0
+                      ? 'SPENT OF ${_fmt(estimated)}'
+                      : 'TOTAL SPENT',
+                  style: AppTextStyles.monoTiny.copyWith(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    letterSpacing: 1.4,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Icon(
+                  Icons.edit_outlined,
+                  size: 12,
+                  color: Colors.white.withValues(alpha: 0.35),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 8),
@@ -656,12 +722,16 @@ class _CategoryCard extends StatefulWidget {
     required this.totalActual,
     required this.items,
     required this.onItemTap,
+    required this.onItemMarkPaid,
+    required this.onItemDelete,
   });
 
   final BudgetCategoryRow row;
   final double totalActual;
   final List<ProjectBudgetItem> items;
   final void Function(ProjectBudgetItem) onItemTap;
+  final void Function(ProjectBudgetItem) onItemMarkPaid;
+  final void Function(ProjectBudgetItem) onItemDelete;
 
   @override
   State<_CategoryCard> createState() => _CategoryCardState();
@@ -857,10 +927,24 @@ class _CategoryCardState extends State<_CategoryCard> {
                     children: [
                       Container(height: 1, color: AppColors.border),
                       ...widget.items.map(
-                        (item) => _CategoryItemRow(
-                          item: item,
-                          categoryColor: color,
-                          onTap: () => widget.onItemTap(item),
+                        (item) => Dismissible(
+                          key: ValueKey(item.id),
+                          direction: DismissDirection.horizontal,
+                          confirmDismiss: (direction) async {
+                            if (direction == DismissDirection.startToEnd) {
+                              if (!item.isPaid) widget.onItemMarkPaid(item);
+                            } else {
+                              widget.onItemDelete(item);
+                            }
+                            return false; // provider refresh updates list
+                          },
+                          background: const _PaidBackground(),
+                          secondaryBackground: _DeleteBackground(),
+                          child: _CategoryItemRow(
+                            item: item,
+                            categoryColor: color,
+                            onTap: () => widget.onItemTap(item),
+                          ),
                         ),
                       ),
                     ],
@@ -1030,16 +1114,27 @@ class _InsightUpsell extends StatelessWidget {
 
 // ── Supporting widgets ────────────────────────────────────────────────────────
 
+class _PaidBackground extends StatelessWidget {
+  const _PaidBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.only(left: AppSizes.lg),
+      color: AppColors.olive,
+      child: const Icon(Icons.check_circle_outline, color: Colors.white),
+    );
+  }
+}
+
 class _DeleteBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
       alignment: Alignment.centerRight,
       padding: const EdgeInsets.only(right: AppSizes.lg),
-      decoration: BoxDecoration(
-        color: AppColors.error,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-      ),
+      color: AppColors.error,
       child: const Icon(Icons.delete_outline, color: Colors.white),
     );
   }
