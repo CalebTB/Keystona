@@ -11,12 +11,15 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/providers/service_providers.dart';
 import '../../../services/supabase_service.dart';
 import '../models/home_profile_overview.dart';
 import '../providers/home_profile_provider.dart';
+
+// ── Constants ─────────────────────────────────────────────────────────────────
 
 const String _kBucket = 'property-photos';
 
@@ -29,20 +32,39 @@ const List<({String label, String value})> _kPropertyTypes = [
   (label: 'Other', value: 'other'),
 ];
 
-const List<({String label, int? value})> _kClimateZones = [
-  (label: 'Climate Zone 1', value: 1),
-  (label: 'Climate Zone 2', value: 2),
-  (label: 'Climate Zone 3', value: 3),
-  (label: 'Climate Zone 4', value: 4),
-  (label: 'Climate Zone 5', value: 5),
-  (label: 'Climate Zone 6', value: 6),
-  (label: 'Climate Zone 7', value: 7),
-  (label: 'Climate Zone 8', value: 8),
-  (label: "I don't know", value: null),
+const List<({String label, String subtitle, int? value})> _kClimateZones = [
+  (label: 'Zone 1', subtitle: 'Hot-humid', value: 1),
+  (label: 'Zone 2', subtitle: 'Hot-dry', value: 2),
+  (label: 'Zone 3', subtitle: 'Warm-humid', value: 3),
+  (label: 'Zone 4', subtitle: 'Mixed-humid', value: 4),
+  (label: 'Zone 5', subtitle: 'Cold', value: 5),
+  (label: 'Zone 6', subtitle: 'Cold', value: 6),
+  (label: 'Zone 7', subtitle: 'Very Cold', value: 7),
+  (label: 'Zone 8', subtitle: 'Subarctic', value: 8),
+  (label: "I don't know", subtitle: '', value: null),
 ];
 
-/// Optional fields we track for the completion nudge (8 total).
 const int _kOptionalFieldCount = 8;
+
+// ── Card decoration ───────────────────────────────────────────────────────────
+
+const BoxDecoration _kCardDecoration = BoxDecoration(
+  color: AppColors.cardBackground,
+  borderRadius: BorderRadius.all(Radius.circular(AppSizes.radiusMd)),
+  border: Border.fromBorderSide(
+    BorderSide(color: AppColors.border, width: 1.5),
+  ),
+);
+
+const BoxDecoration _kClimateCardDecoration = BoxDecoration(
+  color: AppColors.oliveDim,
+  borderRadius: BorderRadius.all(Radius.circular(AppSizes.radiusMd)),
+  border: Border.fromBorderSide(
+    BorderSide(color: Color(0x225A7050), width: 1.5),
+  ),
+);
+
+// ── Main screen ───────────────────────────────────────────────────────────────
 
 class PropertyEditScreen extends ConsumerStatefulWidget {
   const PropertyEditScreen({super.key});
@@ -65,12 +87,12 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
   final _squareFeetController = TextEditingController();
   final _bedroomsController = TextEditingController();
   final _bathroomsController = TextEditingController();
+  final _priceController = TextEditingController();
 
   // ── Selected values ──────────────────────────────────────────────────────────
 
   String? _selectedPropertyType;
   int? _selectedClimateZone;
-  String? _climateZoneDropdownValue;
 
   // ── Photo state ───────────────────────────────────────────────────────────────
 
@@ -88,9 +110,7 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
   void initState() {
     super.initState();
     final overview = ref.read(homeProfileProvider).value;
-    if (overview != null) {
-      _populateFrom(overview);
-    }
+    if (overview != null) _populateFrom(overview);
   }
 
   void _populateFrom(HomeProfileOverview overview) {
@@ -103,15 +123,11 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
     _yearBuiltController.text = p.yearBuilt?.toString() ?? '';
     _squareFeetController.text = p.squareFeet?.toString() ?? '';
     _bedroomsController.text = p.bedrooms != null ? _fmtNum(p.bedrooms!) : '';
-    _bathroomsController.text =
-        p.bathrooms != null ? _fmtNum(p.bathrooms!) : '';
+    _bathroomsController.text = p.bathrooms != null ? _fmtNum(p.bathrooms!) : '';
     _selectedPropertyType = p.propertyType;
+    _selectedClimateZone = p.climateZone;
     _existingPhotoPath = p.exteriorPhotoPath;
     _existingPhotoSignedUrl = overview.exteriorPhotoSignedUrl;
-    if (p.climateZone != null) {
-      _selectedClimateZone = p.climateZone;
-      _climateZoneDropdownValue = p.climateZone!.toString();
-    }
     _initialized = true;
   }
 
@@ -129,25 +145,26 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
     _squareFeetController.dispose();
     _bedroomsController.dispose();
     _bathroomsController.dispose();
+    _priceController.dispose();
     super.dispose();
   }
 
   // ── Completion nudge ──────────────────────────────────────────────────────────
 
   int get _filledOptional {
-    int count = 0;
-    if (_address2Controller.text.trim().isNotEmpty) count++;
-    if (_selectedPropertyType != null) count++;
-    if (_yearBuiltController.text.trim().isNotEmpty) count++;
-    if (_squareFeetController.text.trim().isNotEmpty) count++;
-    if (_bedroomsController.text.trim().isNotEmpty) count++;
-    if (_bathroomsController.text.trim().isNotEmpty) count++;
-    if (_selectedClimateZone != null) count++;
-    if (_localPhoto != null || _existingPhotoPath != null) count++;
-    return count;
+    int n = 0;
+    if (_address2Controller.text.trim().isNotEmpty) n++;
+    if (_selectedPropertyType != null) n++;
+    if (_yearBuiltController.text.trim().isNotEmpty) n++;
+    if (_squareFeetController.text.trim().isNotEmpty) n++;
+    if (_bedroomsController.text.trim().isNotEmpty) n++;
+    if (_bathroomsController.text.trim().isNotEmpty) n++;
+    if (_selectedClimateZone != null) n++;
+    if (_localPhoto != null || _existingPhotoPath != null) n++;
+    return n;
   }
 
-  // ── Photo picker ──────────────────────────────────────────────────────────────
+  // ── Actions ───────────────────────────────────────────────────────────────────
 
   Future<void> _pickPhoto() async {
     final picked = await ImagePicker().pickImage(
@@ -156,19 +173,66 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
       maxWidth: 1920,
       maxHeight: 1920,
     );
-    if (picked == null) return;
-    if (!mounted) return;
+    if (picked == null || !mounted) return;
     setState(() => _localPhoto = File(picked.path));
   }
 
-  // ── Save ──────────────────────────────────────────────────────────────────────
+  void _showZonePicker() {
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    if (isIOS) {
+      showCupertinoModalPopup<void>(
+        context: context,
+        builder: (_) => CupertinoActionSheet(
+          title: const Text('Climate Zone'),
+          actions: _kClimateZones.map((z) {
+            final label = z.value != null
+                ? '${z.label} · ${z.subtitle}'
+                : z.label;
+            return CupertinoActionSheetAction(
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).pop();
+                setState(() => _selectedClimateZone = z.value);
+              },
+              isDefaultAction: z.value == _selectedClimateZone,
+              child: Text(label),
+            );
+          }).toList(),
+          cancelButton: CupertinoActionSheetAction(
+            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+            child: const Text('Cancel'),
+          ),
+        ),
+      );
+    } else {
+      showModalBottomSheet<void>(
+        context: context,
+        builder: (_) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: _kClimateZones.map((z) {
+              final label = z.value != null
+                  ? '${z.label} · ${z.subtitle}'
+                  : z.label;
+              return ListTile(
+                title: Text(label),
+                selected: z.value == _selectedClimateZone,
+                onTap: () {
+                  Navigator.of(context).pop();
+                  setState(() => _selectedClimateZone = z.value);
+                },
+              );
+            }).toList(),
+          ),
+        ),
+      );
+    }
+  }
 
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _saving = true);
 
     try {
-      // Upload new photo if one was picked.
       String? newPhotoPath;
       if (_localPhoto != null) {
         final user = SupabaseService.client.auth.currentUser;
@@ -198,6 +262,8 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
           'bedrooms': num.parse(_bedroomsController.text.trim()),
         if (_bathroomsController.text.trim().isNotEmpty)
           'bathrooms': num.parse(_bathroomsController.text.trim()),
+        if (_priceController.text.trim().isNotEmpty)
+          'purchase_price': num.parse(_priceController.text.trim()),
         'climate_zone': _selectedClimateZone,
         'exterior_photo_path': newPhotoPath ?? _existingPhotoPath,
       };
@@ -210,8 +276,6 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
         _saving = false;
         _saveSuccess = true;
       });
-
-      // Brief success moment before dismissing.
       await Future.delayed(const Duration(milliseconds: 650));
       if (!mounted) return;
       context.pop();
@@ -266,7 +330,10 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
     }
 
     return CupertinoPageScaffold(
+      backgroundColor: AppColors.warmOffWhite,
       navigationBar: CupertinoNavigationBar(
+        backgroundColor: AppColors.warmOffWhite,
+        border: null,
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
           onPressed: _saving ? null : () => context.pop(),
@@ -293,7 +360,11 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
 
   Widget _buildAndroid() {
     return Scaffold(
+      backgroundColor: AppColors.warmOffWhite,
       appBar: AppBar(
+        backgroundColor: AppColors.warmOffWhite,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: const Text('Edit Property'),
         leading: IconButton(
           icon: const Icon(Icons.close),
@@ -303,7 +374,7 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
           if (_saveSuccess)
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Icon(Icons.check_circle, color: Colors.green),
+              child: Icon(Icons.check_circle, color: Colors.green, size: 22),
             )
           else if (_saving)
             const Padding(
@@ -326,18 +397,21 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
 
   // ── Shared body ───────────────────────────────────────────────────────────────
 
-  Widget _loadingBody() => const Center(child: CupertinoActivityIndicator());
+  Widget _loadingBody() =>
+      const Center(child: CupertinoActivityIndicator());
 
   Widget _formBody() {
+    final zoneData = _selectedClimateZone != null
+        ? _kClimateZones.where((z) => z.value == _selectedClimateZone).firstOrNull
+        : null;
+
     return Form(
       key: _formKey,
-      onChanged: () => setState(() {}), // rebuild to update completion count
+      onChanged: () => setState(() {}),
       child: ListView(
-        padding: AppPadding.screen,
+        padding: AppPadding.screen.copyWith(top: AppSizes.md),
         children: [
-          const SizedBox(height: AppSizes.sm),
-
-          // ── Exterior photo slot ─────────────────────────────────────────────
+          // ── Cover photo ───────────────────────────────────────────────────
           _PhotoSlot(
             localFile: _localPhoto,
             signedUrl: _existingPhotoSignedUrl,
@@ -346,186 +420,299 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
 
           const SizedBox(height: AppSizes.md),
 
-          // ── Completion nudge ────────────────────────────────────────────────
-          _CompletionBar(filled: _filledOptional, total: _kOptionalFieldCount),
+          // ── Completion nudge ──────────────────────────────────────────────
+          _CompletionBar(
+            filled: _filledOptional,
+            total: _kOptionalFieldCount,
+          ),
 
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AppSizes.xl),
 
-          // ── Address section ─────────────────────────────────────────────────
-          const _SectionLabel('Address'),
-          const SizedBox(height: AppSizes.sm),
-
-          TextFormField(
-            controller: _addressController,
-            decoration: const InputDecoration(labelText: 'Street Address'),
-            maxLength: 500,
-            textCapitalization: TextCapitalization.words,
-            validator: Validators.required,
+          // ╔══════════════════════════════════════════════════════════════════╗
+          // ║  IDENTITY — Where is it?                                        ║
+          // ╚══════════════════════════════════════════════════════════════════╝
+          _SectionHeader(
+            dot: AppColors.accent,
+            eyebrow: 'IDENTITY',
+            title: 'Where is it?',
           ),
 
           const SizedBox(height: AppSizes.md),
 
-          TextFormField(
-            controller: _address2Controller,
-            decoration: const InputDecoration(
-              labelText: 'Unit / Apt / Suite',
-              hintText: 'Optional',
+          // Address
+          _FieldCard(
+            label: 'ADDRESS',
+            child: TextFormField(
+              controller: _addressController,
+              style: AppTextStyles.bodyLarge,
+              decoration: _fieldDecoration('123 Main St'),
+              textCapitalization: TextCapitalization.words,
+              maxLength: 500,
+              buildCounter: _noCounter,
+              validator: Validators.required,
             ),
-            textCapitalization: TextCapitalization.words,
           ),
 
-          const SizedBox(height: AppSizes.md),
+          const SizedBox(height: AppSizes.cardGap),
 
-          TextFormField(
-            controller: _cityController,
-            decoration: const InputDecoration(labelText: 'City'),
-            textCapitalization: TextCapitalization.words,
-            validator: Validators.required,
+          // Unit / Apt / Suite
+          _FieldCard(
+            label: 'UNIT / APT / SUITE',
+            child: TextFormField(
+              controller: _address2Controller,
+              style: AppTextStyles.bodyLarge,
+              decoration: _fieldDecoration('Optional'),
+              textCapitalization: TextCapitalization.words,
+            ),
           ),
 
-          const SizedBox(height: AppSizes.md),
+          const SizedBox(height: AppSizes.cardGap),
 
+          // City / State / ZIP row
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Flexible(
+              Expanded(
+                flex: 5,
+                child: _FieldCard(
+                  label: 'CITY',
+                  child: TextFormField(
+                    controller: _cityController,
+                    style: AppTextStyles.bodyLarge,
+                    decoration: _fieldDecoration('Austin'),
+                    textCapitalization: TextCapitalization.words,
+                    validator: Validators.required,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSizes.cardGap),
+              Expanded(
                 flex: 2,
-                child: TextFormField(
-                  controller: _stateController,
-                  decoration: const InputDecoration(labelText: 'State'),
-                  maxLength: 2,
-                  textCapitalization: TextCapitalization.characters,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp('[a-zA-Z]')),
-                  ],
-                  validator: Validators.required,
+                child: _FieldCard(
+                  label: 'STATE',
+                  child: TextFormField(
+                    controller: _stateController,
+                    style: AppTextStyles.bodyLarge,
+                    decoration: _fieldDecoration('TX'),
+                    maxLength: 2,
+                    buildCounter: _noCounter,
+                    textCapitalization: TextCapitalization.characters,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp('[a-zA-Z]')),
+                    ],
+                    validator: Validators.required,
+                  ),
                 ),
               ),
-              const SizedBox(width: AppSizes.md),
-              Flexible(
+              const SizedBox(width: AppSizes.cardGap),
+              Expanded(
                 flex: 3,
-                child: TextFormField(
-                  controller: _zipController,
-                  decoration: const InputDecoration(labelText: 'ZIP Code'),
-                  maxLength: 5,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) return 'Required';
-                    if (!RegExp(r'^\d{5}$').hasMatch(value.trim())) {
-                      return 'Enter a 5-digit ZIP';
-                    }
-                    return null;
-                  },
+                child: _FieldCard(
+                  label: 'ZIP',
+                  child: TextFormField(
+                    controller: _zipController,
+                    style: AppTextStyles.bodyLarge,
+                    decoration: _fieldDecoration('78701'),
+                    maxLength: 5,
+                    buildCounter: _noCounter,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Required';
+                      if (!RegExp(r'^\d{5}$').hasMatch(v.trim())) {
+                        return 'Invalid';
+                      }
+                      return null;
+                    },
+                  ),
                 ),
               ),
             ],
           ),
 
-          const SizedBox(height: AppSizes.lg),
+          // Climate zone card (shown when zone is set)
+          if (zoneData != null) ...[
+            const SizedBox(height: AppSizes.cardGap),
+            _ClimateZoneCard(
+              zoneLabel: zoneData.label,
+              zoneSub: zoneData.subtitle,
+              onTap: _showZonePicker,
+            ),
+          ] else ...[
+            const SizedBox(height: AppSizes.cardGap),
+            _SetClimateZoneHint(onTap: _showZonePicker),
+          ],
 
-          // ── Property details section ────────────────────────────────────────
-          const _SectionLabel('Property Details'),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AppSizes.xl),
 
-          DropdownButtonFormField<String>(
-            initialValue: _selectedPropertyType,
-            decoration: const InputDecoration(labelText: 'Property Type'),
-            items: _kPropertyTypes
-                .map((t) => DropdownMenuItem<String>(
-                      value: t.value,
-                      child: Text(t.label),
-                    ))
-                .toList(),
-            onChanged: (v) => setState(() => _selectedPropertyType = v),
+          // ╔══════════════════════════════════════════════════════════════════╗
+          // ║  SPECS — About the house                                        ║
+          // ╚══════════════════════════════════════════════════════════════════╝
+          _SectionHeader(
+            dot: AppColors.olive,
+            eyebrow: 'SPECS',
+            title: 'About the house',
           ),
 
           const SizedBox(height: AppSizes.md),
 
-          TextFormField(
-            controller: _yearBuiltController,
-            decoration: const InputDecoration(labelText: 'Year Built'),
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            validator: Validators.year,
+          // Property type dropdown
+          _FieldCard(
+            label: 'PROPERTY TYPE',
+            child: DropdownButton<String>(
+              value: _selectedPropertyType,
+              isExpanded: true,
+              underline: const SizedBox.shrink(),
+              hint: Text(
+                'Select',
+                style: AppTextStyles.bodyLarge
+                    .copyWith(color: AppColors.textTertiary),
+              ),
+              style: AppTextStyles.bodyLarge,
+              icon: const Icon(Icons.keyboard_arrow_down,
+                  size: 18, color: AppColors.textTertiary),
+              items: _kPropertyTypes
+                  .map((t) => DropdownMenuItem<String>(
+                        value: t.value,
+                        child: Text(t.label),
+                      ))
+                  .toList(),
+              onChanged: (v) => setState(() => _selectedPropertyType = v),
+            ),
           ),
 
-          const SizedBox(height: AppSizes.md),
+          const SizedBox(height: AppSizes.cardGap),
 
-          TextFormField(
-            controller: _squareFeetController,
-            decoration: const InputDecoration(labelText: 'Square Feet'),
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) return null;
-              return Validators.positiveNumber(value);
-            },
-          ),
-
-          const SizedBox(height: AppSizes.md),
-
+          // Year Built / Square Feet
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Flexible(
-                child: TextFormField(
-                  controller: _bedroomsController,
-                  decoration: const InputDecoration(labelText: 'Bedrooms'),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) return null;
-                    return Validators.positiveNumber(value);
-                  },
+              Expanded(
+                child: _FieldCard(
+                  label: 'YEAR BUILT',
+                  child: TextFormField(
+                    controller: _yearBuiltController,
+                    style: AppTextStyles.bodyLarge,
+                    decoration: _fieldDecoration('e.g. 2005'),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    validator: Validators.year,
+                  ),
                 ),
               ),
-              const SizedBox(width: AppSizes.md),
-              Flexible(
-                child: TextFormField(
-                  controller: _bathroomsController,
-                  decoration: const InputDecoration(labelText: 'Bathrooms'),
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                  ],
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) return null;
-                    return Validators.positiveNumber(value);
-                  },
+              const SizedBox(width: AppSizes.cardGap),
+              Expanded(
+                child: _FieldCard(
+                  label: 'SQUARE FEET',
+                  child: TextFormField(
+                    controller: _squareFeetController,
+                    style: AppTextStyles.bodyLarge,
+                    decoration: _fieldDecoration('e.g. 2,200'),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return null;
+                      return Validators.positiveNumber(v);
+                    },
+                  ),
                 ),
               ),
             ],
           ),
 
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AppSizes.cardGap),
 
-          // ── Climate section ─────────────────────────────────────────────────
-          const _SectionLabel('Climate'),
+          // Bed / Bath
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _FieldCard(
+                  label: 'BED',
+                  child: TextFormField(
+                    controller: _bedroomsController,
+                    style: AppTextStyles.bodyLarge,
+                    decoration: _fieldDecoration('3'),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return null;
+                      return Validators.positiveNumber(v);
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSizes.cardGap),
+              Expanded(
+                child: _FieldCard(
+                  label: 'BATH',
+                  child: TextFormField(
+                    controller: _bathroomsController,
+                    style: AppTextStyles.bodyLarge,
+                    decoration: _fieldDecoration('2.5'),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d*\.?\d*')),
+                    ],
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return null;
+                      return Validators.positiveNumber(v);
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: AppSizes.xl),
+
+          // ╔══════════════════════════════════════════════════════════════════╗
+          // ║  PURCHASE — Optional history                                    ║
+          // ╚══════════════════════════════════════════════════════════════════╝
+          _SectionHeader(
+            dot: AppColors.sandAmber,
+            eyebrow: 'PURCHASE',
+            title: 'Optional history',
+          ),
+
           const SizedBox(height: AppSizes.sm),
 
-          DropdownButtonFormField<String>(
-            key: ValueKey(_climateZoneDropdownValue),
-            initialValue: _climateZoneDropdownValue,
-            decoration: const InputDecoration(labelText: 'Climate Zone'),
-            items: _kClimateZones
-                .map((z) => DropdownMenuItem<String>(
-                      value: z.value?.toString() ?? 'unknown',
-                      child: Text(z.label),
-                    ))
-                .toList(),
-            onChanged: (rawValue) {
-              setState(() {
-                if (rawValue == null || rawValue == 'unknown') {
-                  _selectedClimateZone = null;
-                  _climateZoneDropdownValue = 'unknown';
-                } else {
-                  _selectedClimateZone = int.tryParse(rawValue);
-                  _climateZoneDropdownValue = rawValue;
-                }
-              });
-            },
+          Text(
+            'Adds context for the Home History Report. Stays private.',
+            style: AppTextStyles.bodySmall
+                .copyWith(color: AppColors.textSecondary),
+          ),
+
+          const SizedBox(height: AppSizes.md),
+
+          _FieldCard(
+            label: 'PRICE',
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  r'$',
+                  style: AppTextStyles.bodyLarge
+                      .copyWith(color: AppColors.textSecondary),
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: TextFormField(
+                    controller: _priceController,
+                    style: AppTextStyles.bodyLarge,
+                    decoration: _fieldDecoration('0'),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d*\.?\d*')),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
 
           const SizedBox(height: AppSizes.xl),
@@ -535,28 +722,190 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
   }
 }
 
+// ── Decoration helper ─────────────────────────────────────────────────────────
+
+InputDecoration _fieldDecoration(String hint) => InputDecoration(
+      isDense: true,
+      contentPadding: const EdgeInsets.only(top: 2),
+      border: InputBorder.none,
+      enabledBorder: InputBorder.none,
+      focusedBorder: InputBorder.none,
+      errorBorder: InputBorder.none,
+      focusedErrorBorder: InputBorder.none,
+      hintText: hint,
+      hintStyle: AppTextStyles.bodyLarge.copyWith(
+        color: AppColors.textTertiary,
+      ),
+      errorStyle: TextStyle(
+        fontSize: 10,
+        color: AppColors.accent,
+        height: 1.4,
+      ),
+    );
+
+Widget? Function(BuildContext, {required int currentLength, required bool isFocused, required int? maxLength})
+    get _noCounter => (_, {required currentLength, required isFocused, required maxLength}) => null;
+
 // ── Supporting widgets ────────────────────────────────────────────────────────
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.label);
-  final String label;
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({
+    required this.dot,
+    required this.eyebrow,
+    required this.title,
+  });
+
+  final Color dot;
+  final String eyebrow;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label.toUpperCase(),
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.8,
-            color: AppColors.textTertiary,
-          ),
+        Row(
+          children: [
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              eyebrow,
+              style: AppTextStyles.monoSection,
+            ),
+          ],
         ),
-        const SizedBox(width: AppSizes.sm),
-        const Expanded(child: Divider()),
+        const SizedBox(height: 6),
+        Text(title, style: AppTextStyles.displaySmall),
       ],
+    );
+  }
+}
+
+class _FieldCard extends StatelessWidget {
+  const _FieldCard({required this.label, required this.child});
+
+  final String label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: _kCardDecoration,
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: AppTextStyles.monoSection),
+          const SizedBox(height: 4),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _ClimateZoneCard extends StatelessWidget {
+  const _ClimateZoneCard({
+    required this.zoneLabel,
+    required this.zoneSub,
+    required this.onTap,
+  });
+
+  final String zoneLabel;
+  final String zoneSub;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: _kClimateCardDecoration,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.olive.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: const Icon(
+                Icons.thermostat_outlined,
+                size: 18,
+                color: AppColors.olive,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'CLIMATE ZONE',
+                    style: AppTextStyles.monoSection
+                        .copyWith(color: AppColors.olive),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '$zoneLabel · $zoneSub',
+                    style: AppTextStyles.bodyMediumSemibold
+                        .copyWith(color: AppColors.olive),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              'Change',
+              style: AppTextStyles.labelMedium.copyWith(
+                color: AppColors.olive,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SetClimateZoneHint extends StatelessWidget {
+  const _SetClimateZoneHint({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: _kCardDecoration,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.thermostat_outlined,
+              size: 16,
+              color: AppColors.textTertiary,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Set climate zone',
+              style: AppTextStyles.bodyMedium
+                  .copyWith(color: AppColors.textTertiary),
+            ),
+            const Spacer(),
+            const Icon(
+              Icons.keyboard_arrow_right,
+              size: 16,
+              color: AppColors.textTertiary,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -601,11 +950,7 @@ class _CompletionBar extends StatelessWidget {
 }
 
 class _PhotoSlot extends StatelessWidget {
-  const _PhotoSlot({
-    required this.onTap,
-    this.localFile,
-    this.signedUrl,
-  });
+  const _PhotoSlot({required this.onTap, this.localFile, this.signedUrl});
 
   final VoidCallback onTap;
   final File? localFile;
@@ -613,6 +958,8 @@ class _PhotoSlot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasPhoto = localFile != null || signedUrl != null;
+
     Widget image;
     if (localFile != null) {
       image = Image.file(localFile!, fit: BoxFit.cover);
@@ -622,17 +969,13 @@ class _PhotoSlot extends StatelessWidget {
         fit: BoxFit.cover,
         placeholder: (_, _) => const Center(
           child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: AppColors.textSecondary,
-          ),
+              strokeWidth: 2, color: AppColors.textSecondary),
         ),
         errorWidget: (_, _, _) => _placeholder(),
       );
     } else {
       image = _placeholder();
     }
-
-    final hasPhoto = localFile != null || signedUrl != null;
 
     return GestureDetector(
       onTap: onTap,
@@ -641,18 +984,17 @@ class _PhotoSlot extends StatelessWidget {
         child: Stack(
           children: [
             AspectRatio(aspectRatio: 16 / 9, child: image),
-            // Edit overlay
             Positioned.fill(
               child: Container(
                 color: hasPhoto
-                    ? Colors.black.withValues(alpha: 0.25)
+                    ? Colors.black.withValues(alpha: 0.22)
                     : Colors.transparent,
                 child: Center(
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.45),
+                      color: Colors.black.withValues(alpha: 0.42),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -681,16 +1023,11 @@ class _PhotoSlot extends StatelessWidget {
     );
   }
 
-  Widget _placeholder() {
-    return Container(
-      color: AppColors.warmFill,
-      child: const Center(
-        child: Icon(
-          Icons.home_outlined,
-          size: 48,
-          color: AppColors.textTertiary,
+  Widget _placeholder() => Container(
+        color: AppColors.warmFill,
+        child: const Center(
+          child: Icon(Icons.home_outlined,
+              size: 48, color: AppColors.textTertiary),
         ),
-      ),
-    );
-  }
+      );
 }
