@@ -320,7 +320,6 @@ class _BudgetEditorialView extends ConsumerWidget {
                     return _CategoryCard(
                       key: ValueKey(row.category),
                       row: row,
-                      totalActual: summary.actualTotal,
                       items: categoryItems,
                       onItemTap: (item) => ctx.push(
                         '/projects/$projectId/budget/${item.id}/edit',
@@ -721,7 +720,6 @@ class _CategoryCard extends StatefulWidget {
   const _CategoryCard({
     super.key,
     required this.row,
-    required this.totalActual,
     required this.items,
     required this.onItemTap,
     required this.onItemMarkPaid,
@@ -729,7 +727,6 @@ class _CategoryCard extends StatefulWidget {
   });
 
   final BudgetCategoryRow row;
-  final double totalActual;
   final List<ProjectBudgetItem> items;
   final void Function(ProjectBudgetItem) onItemTap;
   final void Function(ProjectBudgetItem) onItemMarkPaid;
@@ -776,8 +773,9 @@ class _CategoryCardState extends State<_CategoryCard> {
     final barFraction = row.estimated > 0
         ? (row.actual / row.estimated).clamp(0.0, 1.0)
         : 0.0;
+    // % of the category's own estimated budget that has been spent
     final pctOfSpent =
-        widget.totalActual > 0 ? (row.actual / widget.totalActual * 100) : 0.0;
+        row.estimated > 0 ? (row.actual / row.estimated * 100).clamp(0.0, 999.0) : 0.0;
     final (pillLabel, pillBg, pillText) = _pill(row);
     final hasItems = widget.items.isNotEmpty;
 
