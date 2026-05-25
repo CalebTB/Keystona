@@ -101,9 +101,10 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
             controller: _scrollController,
             slivers: [
               CupertinoSliverNavigationBar(
-                largeTitle: const Text('Tasks'),
+                middle: Text('Tasks', style: AppTextStyles.headlineSmall),
                 trailing: _HeaderButtons(),
                 backgroundColor: AppColors.warmOffWhite,
+                border: const Border(),
               ),
               CupertinoSliverRefreshControl(
                 onRefresh: () =>
@@ -160,7 +161,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
-          AppSizes.screenPadding, 8, AppSizes.screenPadding, 0,
+          AppSizes.screenPadding, 4, AppSizes.screenPadding, 0,
         ),
         child: _ViewToggle(
           current: _tab,
