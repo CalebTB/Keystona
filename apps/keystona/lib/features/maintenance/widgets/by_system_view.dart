@@ -188,37 +188,49 @@ class BySystemViewSliver extends ConsumerWidget {
 
 // ── System card (has tasks) ────────────────────────────────────────────────────
 
-class _SystemCard extends StatelessWidget {
+const int _kPreviewCount = 3;
+
+class _SystemCard extends StatefulWidget {
   const _SystemCard({required this.system, required this.tasks});
 
   final HomeSystem system;
   final List<MaintenanceTask> tasks;
 
   @override
+  State<_SystemCard> createState() => _SystemCardState();
+}
+
+class _SystemCardState extends State<_SystemCard> {
+  bool _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
     final todayMid = DateTime(today.year, today.month, today.day);
-    final overdueCount = tasks.where((t) {
+    final overdueCount = widget.tasks.where((t) {
       final due = t.dueDate.toLocal();
       final dueMid = DateTime(due.year, due.month, due.day);
       return t.status == TaskStatus.overdue || dueMid.isBefore(todayMid);
     }).length;
 
-    final color = _systemColor(system.category);
-    final icon = _systemIcon(system.category);
-    final health = _healthLabel(system);
-    final healthColor = _healthColor(system);
-    final installed = _installedLabel(system.installationDate);
+    final color = _systemColor(widget.system.category);
+    final icon = _systemIcon(widget.system.category);
+    final health = _healthLabel(widget.system);
+    final healthColor = _healthColor(widget.system);
+    final installed = _installedLabel(widget.system.installationDate);
 
-    // Sort tasks: overdue first, then by due date.
-    final sorted = [...tasks]..sort((a, b) {
-        final aDot = _taskDotColor(a);
-        final bDot = _taskDotColor(b);
-        // accent (overdue) first
-        if (aDot == AppColors.accent && bDot != AppColors.accent) return -1;
-        if (bDot == AppColors.accent && aDot != AppColors.accent) return 1;
+    // Sort: overdue first, then by due date.
+    final sorted = [...widget.tasks]..sort((a, b) {
+        final aOver = _taskDotColor(a) == AppColors.accent;
+        final bOver = _taskDotColor(b) == AppColors.accent;
+        if (aOver && !bOver) return -1;
+        if (bOver && !aOver) return 1;
         return a.dueDate.compareTo(b.dueDate);
       });
+
+    final preview = sorted.take(_kPreviewCount).toList();
+    final hidden = sorted.skip(_kPreviewCount).toList();
+    final hasMore = hidden.isNotEmpty;
 
     return Container(
       decoration: BoxDecoration(
@@ -248,22 +260,16 @@ class _SystemCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        system.brand != null
-                            ? '${system.brand} ${system.name}'
-                            : system.name,
+                        widget.system.brand != null
+                            ? '${widget.system.brand} ${widget.system.name}'
+                            : widget.system.name,
                         style: AppTextStyles.bodyMediumSemibold,
                       ),
                       Row(
                         children: [
                           if (installed.isNotEmpty) ...[
-                            Text(
-                              installed,
-                              style: AppTextStyles.caption,
-                            ),
-                            Text(
-                              '  ·  ',
-                              style: AppTextStyles.caption,
-                            ),
+                            Text(installed, style: AppTextStyles.caption),
+                            Text('  ·  ', style: AppTextStyles.caption),
                           ],
                           Container(
                             width: 6,
@@ -276,8 +282,8 @@ class _SystemCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             health,
-                            style: AppTextStyles.caption
-                                .copyWith(color: healthColor),
+                            style:
+                                AppTextStyles.caption.copyWith(color: healthColor),
                           ),
                         ],
                       ),
@@ -288,7 +294,7 @@ class _SystemCard extends StatelessWidget {
                   Container(
                     width: 24,
                     height: 24,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: AppColors.accent,
                       shape: BoxShape.circle,
                     ),
@@ -305,12 +311,27 @@ class _SystemCard extends StatelessWidget {
               ],
             ),
           ),
-          // Divider
           Divider(height: 1, thickness: 1, color: AppColors.warmFill),
-          // Task rows
-          ...sorted.map((t) => _TaskRow(task: t)),
-          // Footer
-          _CardFooter(tasks: tasks),
+          // Always-visible preview rows
+          ...preview.map((t) => _TaskRow(task: t)),
+          // Animated additional rows
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeInOut,
+            child: _expanded
+                ? Column(
+                    children: hidden
+                        .map((t) => _TaskRow(task: t))
+                        .toList(),
+                  )
+                : const SizedBox.shrink(),
+          ),
+          // Footer toggle
+          if (hasMore) _ExpandFooter(
+            expanded: _expanded,
+            hiddenCount: hidden.length,
+            onTap: () => setState(() => _expanded = !_expanded),
+          ),
         ],
       ),
     );
@@ -392,28 +413,53 @@ class _TaskRow extends StatelessWidget {
   }
 }
 
-// ── Card footer ────────────────────────────────────────────────────────────────
+// ── Expand footer ──────────────────────────────────────────────────────────────
 
-class _CardFooter extends StatelessWidget {
-  const _CardFooter({required this.tasks});
+class _ExpandFooter extends StatelessWidget {
+  const _ExpandFooter({
+    required this.expanded,
+    required this.hiddenCount,
+    required this.onTap,
+  });
 
-  final List<MaintenanceTask> tasks;
+  final bool expanded;
+  final int hiddenCount;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-      child: Row(
-        children: [
-          Text(
-            'View all ${tasks.length} task${tasks.length == 1 ? '' : 's'}',
-            style: AppTextStyles.labelMedium.copyWith(
-              color: AppColors.textSecondary,
-            ),
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(color: AppColors.warmFill, width: 1),
           ),
-          const SizedBox(width: 2),
-          Icon(Icons.chevron_right, size: 14, color: AppColors.textSecondary),
-        ],
+        ),
+        child: Row(
+          children: [
+            Text(
+              expanded
+                  ? 'Show less'
+                  : 'Show $hiddenCount more task${hiddenCount == 1 ? '' : 's'}',
+              style: AppTextStyles.labelMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(width: 4),
+            AnimatedRotation(
+              turns: expanded ? 0.5 : 0,
+              duration: const Duration(milliseconds: 220),
+              child: Icon(
+                Icons.keyboard_arrow_down,
+                size: 16,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -421,15 +467,26 @@ class _CardFooter extends StatelessWidget {
 
 // ── Uncategorized tasks card ───────────────────────────────────────────────────
 
-class _UncategorizedCard extends StatelessWidget {
+class _UncategorizedCard extends StatefulWidget {
   const _UncategorizedCard({required this.tasks});
 
   final List<MaintenanceTask> tasks;
 
   @override
+  State<_UncategorizedCard> createState() => _UncategorizedCardState();
+}
+
+class _UncategorizedCardState extends State<_UncategorizedCard> {
+  bool _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
-    final sorted = [...tasks]
+    final sorted = [...widget.tasks]
       ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+
+    final preview = sorted.take(_kPreviewCount).toList();
+    final hidden = sorted.skip(_kPreviewCount).toList();
+    final hasMore = hidden.isNotEmpty;
 
     return Container(
       decoration: BoxDecoration(
@@ -460,8 +517,7 @@ class _UncategorizedCard extends StatelessWidget {
                     children: [
                       Text('General Tasks',
                           style: AppTextStyles.bodyMediumSemibold),
-                      Text('No system linked',
-                          style: AppTextStyles.caption),
+                      Text('No system linked', style: AppTextStyles.caption),
                     ],
                   ),
                 ),
@@ -469,8 +525,20 @@ class _UncategorizedCard extends StatelessWidget {
             ),
           ),
           Divider(height: 1, thickness: 1, color: AppColors.warmFill),
-          ...sorted.map((t) => _TaskRow(task: t)),
-          _CardFooter(tasks: tasks),
+          ...preview.map((t) => _TaskRow(task: t)),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeInOut,
+            child: _expanded
+                ? Column(children: hidden.map((t) => _TaskRow(task: t)).toList())
+                : const SizedBox.shrink(),
+          ),
+          if (hasMore)
+            _ExpandFooter(
+              expanded: _expanded,
+              hiddenCount: hidden.length,
+              onTap: () => setState(() => _expanded = !_expanded),
+            ),
         ],
       ),
     );
