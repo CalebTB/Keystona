@@ -179,6 +179,10 @@ class BySystemViewSliver extends ConsumerWidget {
     List<MaintenanceTask> uncategorized = [];
 
     for (final t in tasks) {
+      // One-time completed tasks have no future relevance — hide from this view.
+      if (t.status == TaskStatus.completed && t.recurrence == RecurrenceType.none) {
+        continue;
+      }
       if (t.linkedSystemId != null) {
         grouped.putIfAbsent(t.linkedSystemId!, () => []).add(t);
       } else {
