@@ -13,10 +13,17 @@ import '../../../core/widgets/error_view.dart';
 import '../models/maintenance_task.dart';
 import '../providers/maintenance_tasks_provider.dart';
 import '../widgets/agenda_task_card.dart';
+import '../widgets/by_system_view.dart';
 import '../widgets/overdue_banner.dart';
+import '../widgets/plan_view.dart';
+import '../widgets/seasonal_view.dart';
 import '../widgets/tip_card.dart';
 import '../widgets/upcoming_peek.dart';
 import '../widgets/week_strip.dart';
+
+// ── View tab enum ──────────────────────────────────────────────────────────────
+
+enum _TaskViewTab { daily, seasonal, bySystem, plan }
 
 // ── Date helpers ───────────────────────────────────────────────────────────────
 
@@ -44,6 +51,8 @@ class MaintenanceScreen extends ConsumerStatefulWidget {
 class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
   late DateTime _selectedDate;
   late DateTime _weekStart;
+  _TaskViewTab _tab = _TaskViewTab.daily;
+  final _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -51,6 +60,12 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
     final today = DateTime.now();
     _selectedDate = DateTime(today.year, today.month, today.day);
     _weekStart = _mondayOf(_selectedDate);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   void _prevWeek() {
@@ -83,6 +98,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
       child: Stack(
         children: [
           CustomScrollView(
+            controller: _scrollController,
             slivers: [
               CupertinoSliverNavigationBar(
                 largeTitle: const Text('Tasks'),
@@ -93,17 +109,8 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
                 onRefresh: () =>
                     ref.read(maintenanceTasksProvider.notifier).refresh(),
               ),
-              _buildCalendarHeader(),
-              _buildTipSliver(),
-              _buildDayHeaderSliver(),
-              _buildOverdueBannerSliver(),
-              _AgendaSliver(
-                selectedDate: _selectedDate,
-                onQuickComplete: (taskId) => ref
-                    .read(maintenanceTasksProvider.notifier)
-                    .completeTask(taskId),
-              ),
-              _buildUpcomingSliver(),
+              _buildToggleSliver(),
+              ..._currentSlivers(),
               const SliverToBoxAdapter(child: SizedBox(height: 110)),
             ],
           ),
@@ -128,6 +135,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
         onRefresh: () =>
             ref.read(maintenanceTasksProvider.notifier).refresh(),
         child: CustomScrollView(
+          controller: _scrollController,
           slivers: [
             SliverAppBar(
               title: Text('Tasks', style: AppTextStyles.headlineSmall),
@@ -137,22 +145,63 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
               elevation: 0,
               actions: [_HeaderButtons()],
             ),
-            _buildCalendarHeader(),
-            _buildTipSliver(),
-            _buildDayHeaderSliver(),
-            _buildOverdueBannerSliver(),
-            _AgendaSliver(
-              selectedDate: _selectedDate,
-              onQuickComplete: (taskId) => ref
-                  .read(maintenanceTasksProvider.notifier)
-                  .completeTask(taskId),
-            ),
-            _buildUpcomingSliver(),
+            _buildToggleSliver(),
+            ..._currentSlivers(),
             const SliverToBoxAdapter(child: SizedBox(height: 110)),
           ],
         ),
       ),
     );
+  }
+
+  // ── Toggle sliver ────────────────────────────────────────────────────────────
+
+  Widget _buildToggleSliver() {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSizes.screenPadding, 8, AppSizes.screenPadding, 0,
+        ),
+        child: _ViewToggle(
+          current: _tab,
+          onChanged: (t) {
+            setState(() => _tab = t);
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted && _scrollController.hasClients) {
+                _scrollController.jumpTo(0);
+              }
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  // ── Current view slivers ─────────────────────────────────────────────────────
+
+  List<Widget> _currentSlivers() {
+    switch (_tab) {
+      case _TaskViewTab.daily:
+        return [
+          _buildCalendarHeader(),
+          _buildTipSliver(),
+          _buildDayHeaderSliver(),
+          _buildOverdueBannerSliver(),
+          _AgendaSliver(
+            selectedDate: _selectedDate,
+            onQuickComplete: (taskId) => ref
+                .read(maintenanceTasksProvider.notifier)
+                .completeTask(taskId),
+          ),
+          _buildUpcomingSliver(),
+        ];
+      case _TaskViewTab.seasonal:
+        return [const SeasonalViewSliver()];
+      case _TaskViewTab.bySystem:
+        return [const BySystemViewSliver()];
+      case _TaskViewTab.plan:
+        return [const PlanViewSliver()];
+    }
   }
 
   // ── Calendar header sliver ─────────────────────────────────────────────────
@@ -569,6 +618,71 @@ class _SkeletonAgendaCard extends StatelessWidget {
           ),
           const SizedBox(width: 12),
         ],
+      ),
+    );
+  }
+}
+
+// ── View toggle ────────────────────────────────────────────────────────────────
+
+class _ViewToggle extends StatelessWidget {
+  const _ViewToggle({required this.current, required this.onChanged});
+
+  final _TaskViewTab current;
+  final ValueChanged<_TaskViewTab> onChanged;
+
+  static const _labels = {
+    _TaskViewTab.daily: 'Daily',
+    _TaskViewTab.seasonal: 'Season',
+    _TaskViewTab.bySystem: 'By System',
+    _TaskViewTab.plan: 'Plan',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 36,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: AppColors.warmFill,
+        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+      ),
+      child: Row(
+        children: _TaskViewTab.values.map((tab) {
+          final selected = tab == current;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => onChanged(tab),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                decoration: BoxDecoration(
+                  color: selected ? AppColors.surface : Colors.transparent,
+                  borderRadius: BorderRadius.circular(7),
+                  boxShadow: selected
+                      ? const [
+                          BoxShadow(
+                            color: Color(0x12000000),
+                            blurRadius: 4,
+                            offset: Offset(0, 1),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Center(
+                  child: Text(
+                    _labels[tab]!,
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: selected
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }

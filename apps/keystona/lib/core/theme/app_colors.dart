@@ -178,6 +178,14 @@ abstract final class AppColors {
   /// List dividers — slightly lighter than border. #E9E4DC
   static const Color divider = Color(0xFFE9E4DC);
 
+  // ─── Seasonal Hero ──────────────────────────────────────────────────────────
+
+  /// Deep forest green — Seasonal view hero card background. #2A3D28
+  static const Color forestGreen = Color(0xFF2A3D28);
+
+  /// Muted olive — Seasonal hero text/icon overlays. #4A6B3C
+  static const Color forestGreenLight = Color(0xFF4A6B3C);
+
   // ─── Dark Hero Block ────────────────────────────────────────────────────────
 
   /// Dark hero block background (= textPrimary). #2A2420
