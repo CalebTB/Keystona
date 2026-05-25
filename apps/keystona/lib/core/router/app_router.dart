@@ -53,6 +53,12 @@ import '../../features/home_profile/screens/systems_screen.dart';
 import '../../features/onboarding/screens/property_setup_screen.dart';
 import '../../features/onboarding/screens/trial_screen.dart';
 import '../../features/onboarding/screens/welcome_screen.dart';
+import '../../features/settings/screens/settings_screen.dart';
+import '../../features/settings/screens/settings_profile_screen.dart';
+import '../../features/settings/screens/settings_notifications_screen.dart';
+import '../../features/settings/screens/settings_household_screen.dart';
+import '../../features/settings/screens/settings_export_screen.dart';
+import '../../features/settings/screens/settings_delete_account_screen.dart';
 import '../../features/subscription/screens/paywall_screen.dart';
 import '../../features/subscription/screens/subscription_screen.dart';
 import '../widgets/placeholder_screen.dart';
@@ -664,20 +670,20 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: AppRoutes.settings,
-                builder: (_, _) => const PlaceholderScreen(name: 'Settings'),
+                builder: (_, _) => const SettingsScreen(),
                 routes: [
                   GoRoute(
                     path: 'profile',
                     pageBuilder: (_, state) => _buildPage(
                       state,
-                      const PlaceholderScreen(name: 'Edit Profile'),
+                      const SettingsProfileScreen(),
                     ),
                   ),
                   GoRoute(
                     path: 'notifications',
                     pageBuilder: (_, state) => _buildPage(
                       state,
-                      const PlaceholderScreen(name: 'Notifications'),
+                      const SettingsNotificationsScreen(),
                     ),
                   ),
                   GoRoute(
@@ -696,21 +702,21 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: 'household',
                     pageBuilder: (_, state) => _buildPage(
                       state,
-                      const PlaceholderScreen(name: 'Household'),
+                      const SettingsHouseholdScreen(),
                     ),
                   ),
                   GoRoute(
                     path: 'export',
                     pageBuilder: (_, state) => _buildPage(
                       state,
-                      const PlaceholderScreen(name: 'Export Data'),
+                      const SettingsExportScreen(),
                     ),
                   ),
                   GoRoute(
                     path: 'delete-account',
                     pageBuilder: (_, state) => _buildPage(
                       state,
-                      const PlaceholderScreen(name: 'Delete Account'),
+                      const SettingsDeleteAccountScreen(),
                     ),
                   ),
                 ],
