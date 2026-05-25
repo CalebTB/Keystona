@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -54,6 +53,8 @@ Color _healthColor(HomeSystem system) => switch (system.status) {
     };
 
 Color _taskDotColor(MaintenanceTask t) {
+  if (t.status == TaskStatus.completed) return AppColors.olive;
+  if (t.status == TaskStatus.skipped) return AppColors.gray300;
   final today = DateTime.now();
   final todayMid = DateTime(today.year, today.month, today.day);
   final due = t.dueDate.toLocal();
@@ -67,7 +68,17 @@ Color _taskDotColor(MaintenanceTask t) {
   return AppColors.slate;
 }
 
-String _dueDateLabel(MaintenanceTask t) {
+// Semantic context label — answers "what's the status of this task?"
+typedef _Label = ({String text, Color color});
+
+_Label _contextLabel(MaintenanceTask t) {
+  if (t.status == TaskStatus.completed) {
+    return (text: 'Completed', color: AppColors.olive);
+  }
+  if (t.status == TaskStatus.skipped) {
+    return (text: 'Skipped', color: AppColors.gray400);
+  }
+
   final today = DateTime.now();
   final todayMid = DateTime(today.year, today.month, today.day);
   final due = t.dueDate.toLocal();
@@ -76,17 +87,34 @@ String _dueDateLabel(MaintenanceTask t) {
 
   if (t.status == TaskStatus.overdue || dueMid.isBefore(todayMid)) {
     final daysAgo = todayMid.difference(dueMid).inDays;
-    if (daysAgo == 0) return 'Overdue today';
-    final months = (daysAgo / 30).round();
-    if (months >= 2) return '${months}mo overdue';
+    if (daysAgo <= 1) return (text: 'Overdue today', color: AppColors.accent);
+    if (daysAgo <= 14) return (text: '${daysAgo}d overdue', color: AppColors.accent);
     final weeks = (daysAgo / 7).round();
-    if (weeks >= 2) return '${weeks}wk overdue';
-    return '${daysAgo}d overdue';
+    if (weeks <= 8) return (text: '${weeks}wk overdue', color: AppColors.accent);
+    final months = (daysAgo / 30).round();
+    return (text: '${months}mo overdue', color: AppColors.accent);
   }
-  if (diff == 0) return 'Today';
-  if (diff == 1) return 'Tomorrow';
-  if (diff <= 7) return 'Due in $diff days';
-  return 'Due ${DateFormat('MMM d').format(dueMid)}';
+  if (diff == 0) return (text: 'Due today', color: AppColors.sandAmber);
+  if (diff == 1) return (text: 'Due tomorrow', color: AppColors.sandAmber);
+  if (diff <= 7) return (text: 'Due this week', color: AppColors.sandAmber);
+  if (diff <= 31) return (text: 'Due this month', color: AppColors.sand);
+  if (diff <= 60) {
+    final weeks = (diff / 7).round();
+    return (text: 'Good for $weeks wk', color: AppColors.slate);
+  }
+  final months = (diff / 30).round();
+  if (months < 12) return (text: 'Good for $months mo', color: AppColors.slate);
+  return (text: 'Good for ~1 year', color: AppColors.olive);
+}
+
+int _taskSortKey(MaintenanceTask t) {
+  if (t.status == TaskStatus.skipped) return 5;
+  if (t.status == TaskStatus.completed) return 4;
+  final dot = _taskDotColor(t);
+  if (dot == AppColors.accent) return 0;    // overdue
+  if (dot == AppColors.sandAmber) return 1; // today/tomorrow
+  if (dot == AppColors.sand) return 2;      // this week
+  return 3;                                  // upcoming
 }
 
 String _installedLabel(String? date) {
@@ -115,7 +143,7 @@ class BySystemViewSliver extends ConsumerWidget {
       return SliverToBoxAdapter(child: _NoSystemsEmptyState());
     }
 
-    // Group non-completed tasks by linked system id.
+    // Group ALL tasks (including completed/skipped) by linked system id.
     final today = DateTime.now();
     final todayMid = DateTime(today.year, today.month, today.day);
 
@@ -123,9 +151,6 @@ class BySystemViewSliver extends ConsumerWidget {
     List<MaintenanceTask> uncategorized = [];
 
     for (final t in tasks) {
-      if (t.status == TaskStatus.completed || t.status == TaskStatus.skipped) {
-        continue;
-      }
       if (t.linkedSystemId != null) {
         grouped.putIfAbsent(t.linkedSystemId!, () => []).add(t);
       } else {
@@ -219,12 +244,10 @@ class _SystemCardState extends State<_SystemCard> {
     final healthColor = _healthColor(widget.system);
     final installed = _installedLabel(widget.system.installationDate);
 
-    // Sort: overdue first, then by due date.
+    // Sort: overdue → due soon → upcoming → completed → skipped.
     final sorted = [...widget.tasks]..sort((a, b) {
-        final aOver = _taskDotColor(a) == AppColors.accent;
-        final bOver = _taskDotColor(b) == AppColors.accent;
-        if (aOver && !bOver) return -1;
-        if (bOver && !aOver) return 1;
+        final keyCmp = _taskSortKey(a).compareTo(_taskSortKey(b));
+        if (keyCmp != 0) return keyCmp;
         return a.dueDate.compareTo(b.dueDate);
       });
 
@@ -348,65 +371,79 @@ class _TaskRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dot = _taskDotColor(task);
-    final dateLabel = _dueDateLabel(task);
+    final label = _contextLabel(task);
     final recurrence = task.recurrence != RecurrenceType.none
         ? task.recurrence.label.toLowerCase()
         : null;
+    final isDone = task.status == TaskStatus.completed ||
+        task.status == TaskStatus.skipped;
 
     return GestureDetector(
-      onTap: () =>
-          context.push('/maintenance/${task.id}'),
+      onTap: () => context.push('/maintenance/${task.id}'),
       child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: dot,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(task.name, style: AppTextStyles.bodyMedium),
-                      Row(
-                        children: [
-                          Text(
-                            dateLabel,
-                            style: AppTextStyles.caption.copyWith(
-                              color: dot == AppColors.accent
-                                  ? AppColors.accent
-                                  : AppColors.textSecondary,
+            child: Opacity(
+              opacity: isDone ? 0.55 : 1.0,
+              child: Row(
+                children: [
+                  // Dot — checkmark for completed
+                  SizedBox(
+                    width: 18,
+                    child: isDone && task.status == TaskStatus.completed
+                        ? Icon(Icons.check, size: 14, color: AppColors.olive)
+                        : Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: dot,
+                              shape: BoxShape.circle,
                             ),
                           ),
-                          if (recurrence != null) ...[
-                            Text(
-                              ' · ',
-                              style: AppTextStyles.caption
-                                  .copyWith(color: AppColors.textSecondary),
-                            ),
-                            Text(
-                              recurrence,
-                              style: AppTextStyles.caption
-                                  .copyWith(color: AppColors.textSecondary),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          task.name,
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            decoration: isDone
+                                ? TextDecoration.lineThrough
+                                : null,
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            Text(
+                              label.text,
+                              style: AppTextStyles.caption
+                                  .copyWith(color: label.color),
+                            ),
+                            if (recurrence != null && !isDone) ...[
+                              Text(
+                                ' · ',
+                                style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.textSecondary),
+                              ),
+                              Text(
+                                recurrence,
+                                style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.textSecondary),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          Divider(height: 1, thickness: 1, color: AppColors.warmFill, indent: 32),
+          Divider(height: 1, thickness: 1, color: AppColors.warmFill, indent: 36),
         ],
       ),
     );
