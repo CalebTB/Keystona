@@ -30,12 +30,12 @@ Color _systemColor(SystemCategory cat) => switch (cat) {
       SystemCategory.hvac => AppColors.slate,
       SystemCategory.plumbing => AppColors.teal,
       SystemCategory.electrical => AppColors.sandAmber,
-      SystemCategory.roofing => AppColors.deepNavy,
-      SystemCategory.foundation => AppColors.gray600,
+      SystemCategory.roofing => AppColors.sand,
+      SystemCategory.foundation => AppColors.gray500,
       SystemCategory.siding => AppColors.olive,
       SystemCategory.windowsDoors => AppColors.slate,
       SystemCategory.insulation => AppColors.amber,
-      SystemCategory.garage => AppColors.gray500,
+      SystemCategory.garage => AppColors.gray400,
       SystemCategory.other => AppColors.gray400,
     };
 
@@ -47,7 +47,7 @@ String _healthLabel(HomeSystem system) => switch (system.status) {
     };
 
 Color _healthColor(HomeSystem system) => switch (system.status) {
-      ItemStatus.active => AppColors.olive,
+      ItemStatus.active => AppColors.oliveLight,
       ItemStatus.needsRepair => AppColors.sand,
       _ => AppColors.gray400,
     };
@@ -68,7 +68,8 @@ Color _taskDotColor(MaintenanceTask t) {
   return AppColors.slate;
 }
 
-// Semantic context label — answers "what's the status of this task?"
+// ── Context label ──────────────────────────────────────────────────────────────
+
 typedef _Label = ({String text, Color color});
 
 DateTime? _nextDueDate(MaintenanceTask t) {
@@ -93,7 +94,7 @@ _Label _contextLabel(MaintenanceTask t) {
     final nextMid = DateTime(next.year, next.month, next.day);
     final diff = nextMid.difference(todayMid).inDays;
     if (diff <= 0) return (text: 'Due again', color: AppColors.sandAmber);
-    if (diff == 1) return (text: 'Due again tomorrow', color: AppColors.sandAmber);
+    if (diff == 1) return (text: 'Due tomorrow', color: AppColors.sandAmber);
     if (diff <= 7) return (text: 'Good for $diff days', color: AppColors.slate);
     if (diff <= 60) {
       final weeks = (diff / 7).round();
@@ -101,7 +102,7 @@ _Label _contextLabel(MaintenanceTask t) {
     }
     final months = (diff / 30).round();
     if (months < 12) return (text: 'Good for $months mo', color: AppColors.olive);
-    return (text: 'Good for ~1 year', color: AppColors.olive);
+    return (text: '~1 year', color: AppColors.olive);
   }
   if (t.status == TaskStatus.skipped) {
     return (text: 'Skipped', color: AppColors.gray400);
@@ -115,7 +116,7 @@ _Label _contextLabel(MaintenanceTask t) {
 
   if (t.status == TaskStatus.overdue || dueMid.isBefore(todayMid)) {
     final daysAgo = todayMid.difference(dueMid).inDays;
-    if (daysAgo <= 1) return (text: 'Overdue today', color: AppColors.accent);
+    if (daysAgo <= 1) return (text: 'Overdue', color: AppColors.accent);
     if (daysAgo <= 14) return (text: '${daysAgo}d overdue', color: AppColors.accent);
     final weeks = (daysAgo / 7).round();
     if (weeks <= 8) return (text: '${weeks}wk overdue', color: AppColors.accent);
@@ -132,22 +133,22 @@ _Label _contextLabel(MaintenanceTask t) {
   }
   final months = (diff / 30).round();
   if (months < 12) return (text: 'Good for $months mo', color: AppColors.slate);
-  return (text: 'Good for ~1 year', color: AppColors.olive);
+  return (text: '~1 year', color: AppColors.olive);
 }
 
 int _taskSortKey(MaintenanceTask t) {
   if (t.status == TaskStatus.skipped) return 5;
   if (t.status == TaskStatus.completed) return 4;
   final dot = _taskDotColor(t);
-  if (dot == AppColors.accent) return 0;    // overdue
-  if (dot == AppColors.sandAmber) return 1; // today/tomorrow
-  if (dot == AppColors.sand) return 2;      // this week
-  return 3;                                  // upcoming
+  if (dot == AppColors.accent) return 0;
+  if (dot == AppColors.sandAmber) return 1;
+  if (dot == AppColors.sand) return 2;
+  return 3;
 }
 
-String _installedLabel(String? date) {
-  if (date == null || date.length < 4) return '';
-  return 'Installed ${date.substring(0, 4)}';
+String? _installYear(String? date) {
+  if (date == null || date.length < 4) return null;
+  return date.substring(0, 4);
 }
 
 // ── Main sliver widget ─────────────────────────────────────────────────────────
@@ -171,15 +172,13 @@ class BySystemViewSliver extends ConsumerWidget {
       return SliverToBoxAdapter(child: _NoSystemsEmptyState());
     }
 
-    // Group ALL tasks (including completed/skipped) by linked system id.
     final today = DateTime.now();
     final todayMid = DateTime(today.year, today.month, today.day);
 
-    Map<String, List<MaintenanceTask>> grouped = {};
-    List<MaintenanceTask> uncategorized = [];
+    final Map<String, List<MaintenanceTask>> grouped = {};
+    final List<MaintenanceTask> uncategorized = [];
 
     for (final t in tasks) {
-      // One-time completed tasks have no future relevance — hide from this view.
       if (t.status == TaskStatus.completed && t.recurrence == RecurrenceType.none) {
         continue;
       }
@@ -196,7 +195,6 @@ class BySystemViewSliver extends ConsumerWidget {
           return t.status == TaskStatus.overdue || dueMid.isBefore(todayMid);
         }).length;
 
-    // Systems with tasks first, sorted by overdue count desc, then others.
     final withTasks = systems.where((s) => grouped.containsKey(s.id)).toList()
       ..sort((a, b) => overdueCount(grouped[b.id]!)
           .compareTo(overdueCount(grouped[a.id]!)));
@@ -204,40 +202,54 @@ class BySystemViewSliver extends ConsumerWidget {
         systems.where((s) => !grouped.containsKey(s.id)).toList();
 
     return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: AppSizes.md),
-            ...withTasks.map(
-              (system) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSizes.sm),
-                child: _SystemCard(
-                  system: system,
-                  tasks: grouped[system.id]!,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: AppSizes.md),
+          // System cards with tasks
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+            child: Column(
+              children: [
+                ...withTasks.map(
+                  (system) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSizes.sm),
+                    child: _SystemCard(
+                      system: system,
+                      tasks: grouped[system.id]!,
+                    ),
+                  ),
                 ),
+                if (uncategorized.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSizes.sm),
+                    child: _UncategorizedCard(tasks: uncategorized),
+                  ),
+              ],
+            ),
+          ),
+          // All Clear — horizontal chip strip
+          if (withoutTasks.isNotEmpty) ...[
+            const SizedBox(height: AppSizes.xs),
+            Padding(
+              padding: const EdgeInsets.only(left: AppSizes.screenPadding),
+              child: Text('ALL CLEAR', style: AppTextStyles.monoSection),
+            ),
+            const SizedBox(height: AppSizes.sm),
+            SizedBox(
+              height: 90,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSizes.screenPadding),
+                itemCount: withoutTasks.length,
+                separatorBuilder: (_, _) => const SizedBox(width: AppSizes.sm),
+                itemBuilder: (_, i) => _AllClearChip(system: withoutTasks[i]),
               ),
             ),
-            if (uncategorized.isNotEmpty) ...[
-              const SizedBox(height: AppSizes.xs),
-              _UncategorizedCard(tasks: uncategorized),
-              const SizedBox(height: AppSizes.sm),
-            ],
-            if (withoutTasks.isNotEmpty) ...[
-              const SizedBox(height: AppSizes.xs),
-              Text('ALL CLEAR', style: AppTextStyles.monoSection),
-              const SizedBox(height: AppSizes.sm),
-              ...withoutTasks.map(
-                (s) => Padding(
-                  padding: const EdgeInsets.only(bottom: AppSizes.sm),
-                  child: _SystemCardEmpty(system: s),
-                ),
-              ),
-            ],
-            const SizedBox(height: AppSizes.xl),
           ],
-        ),
+          const SizedBox(height: AppSizes.xl),
+        ],
       ),
     );
   }
@@ -264,11 +276,7 @@ class _SystemCardState extends State<_SystemCard> {
   Widget build(BuildContext context) {
     final color = _systemColor(widget.system.category);
     final icon = _systemIcon(widget.system.category);
-    final health = _healthLabel(widget.system);
-    final healthColor = _healthColor(widget.system);
-    final installed = _installedLabel(widget.system.installationDate);
 
-    // Sort: overdue → due soon → upcoming → completed → skipped.
     final sorted = [...widget.tasks]..sort((a, b) {
         final keyCmp = _taskSortKey(a).compareTo(_taskSortKey(b));
         if (keyCmp != 0) return keyCmp;
@@ -279,108 +287,142 @@ class _SystemCardState extends State<_SystemCard> {
     final hidden = sorted.skip(_kPreviewCount).toList();
     final hasMore = hidden.isNotEmpty;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.border, width: 1.5),
-      ),
-      child: Column(
-        children: [
-          // System header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+    final systemName = widget.system.brand != null
+        ? '${widget.system.brand} ${widget.system.name}'
+        : widget.system.name;
+    final year = _installYear(widget.system.installationDate);
+    final location = widget.system.location;
+
+    return ClipRRect(
+      borderRadius: AppRadius.card,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: AppRadius.card,
+          border: Border.all(color: AppColors.border, width: 1.5),
+        ),
+        child: Column(
+          children: [
+            // ── Dark header ──────────────────────────────────────────
+            Container(
+              color: AppColors.deepNavy,
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: Row(
+                children: [
+                  // System icon badge
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(icon, size: 22, color: color),
                   ),
-                  child: Icon(icon, size: 20, color: color),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.system.brand != null
-                            ? '${widget.system.brand} ${widget.system.name}'
-                            : widget.system.name,
-                        style: AppTextStyles.bodyMediumSemibold,
-                      ),
-                      Row(
-                        children: [
-                          if (installed.isNotEmpty) ...[
-                            Text(installed, style: AppTextStyles.caption),
-                            Text('  ·  ', style: AppTextStyles.caption),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          systemName,
+                          style: AppTextStyles.bodyMediumSemibold.copyWith(
+                            color: AppColors.darkText,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            if (location != null && location.isNotEmpty) ...[
+                              Text(
+                                location,
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.darkTextSecondary,
+                                ),
+                              ),
+                              if (year != null)
+                                Text(
+                                  '  ·  ',
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.darkTextTertiary,
+                                  ),
+                                ),
+                            ],
+                            if (year != null)
+                              Text(
+                                year,
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.darkTextSecondary,
+                                ),
+                              ),
                           ],
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: healthColor,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            health,
-                            style:
-                                AppTextStyles.caption.copyWith(color: healthColor),
-                          ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  // Health pill
+                  _HealthPill(system: widget.system),
+                ],
+              ),
             ),
-          ),
-          Divider(height: 1, thickness: 1, color: AppColors.warmFill),
-          // Always-visible preview rows
-          ...preview.map((t) => _TaskRow(task: t)),
-          // Animated additional rows
-          AnimatedSize(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeInOut,
-            child: _expanded
-                ? Column(
-                    children: hidden
-                        .map((t) => _TaskRow(task: t))
-                        .toList(),
-                  )
-                : const SizedBox.shrink(),
-          ),
-          // Footer toggle
-          if (hasMore) _ExpandFooter(
-            expanded: _expanded,
-            hiddenCount: hidden.length,
-            onTap: () => setState(() => _expanded = !_expanded),
-          ),
-        ],
+            // ── Task list ────────────────────────────────────────────
+            ...preview.map((t) => _TaskRow(task: t)),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeInOut,
+              child: _expanded
+                  ? Column(
+                      children: hidden.map((t) => _TaskRow(task: t)).toList(),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            if (hasMore)
+              _ExpandFooter(
+                expanded: _expanded,
+                hiddenCount: hidden.length,
+                onTap: () => setState(() => _expanded = !_expanded),
+              ),
+          ],
+        ),
       ),
     );
   }
 }
 
-// ── Task row inside system card ────────────────────────────────────────────────
+// ── Health pill ────────────────────────────────────────────────────────────────
+
+class _HealthPill extends StatelessWidget {
+  const _HealthPill({required this.system});
+  final HomeSystem system;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = _healthLabel(system);
+    final color = _healthColor(system);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: AppTextStyles.labelSmall.copyWith(color: color),
+      ),
+    );
+  }
+}
+
+// ── Task row ──────────────────────────────────────────────────────────────────
 
 class _TaskRow extends StatelessWidget {
   const _TaskRow({required this.task});
-
   final MaintenanceTask task;
 
   @override
   Widget build(BuildContext context) {
     final dot = _taskDotColor(task);
     final label = _contextLabel(task);
-    final recurrence = task.recurrence != RecurrenceType.none
-        ? task.recurrence.label.toLowerCase()
-        : null;
     final isDone = task.status == TaskStatus.skipped ||
         (task.status == TaskStatus.completed && _nextDueDate(task) == null);
 
@@ -389,67 +431,64 @@ class _TaskRow extends StatelessWidget {
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+            padding: const EdgeInsets.fromLTRB(16, 11, 16, 11),
             child: Opacity(
-              opacity: isDone ? 0.55 : 1.0,
+              opacity: isDone ? 0.5 : 1.0,
               child: Row(
                 children: [
-                  // Dot — checkmark for completed
+                  // Status dot / check icon
                   SizedBox(
-                    width: 18,
+                    width: 16,
                     child: isDone && task.status == TaskStatus.completed
-                        ? Icon(Icons.check, size: 14, color: AppColors.olive)
+                        ? Icon(Icons.check_circle_outline,
+                            size: 14, color: AppColors.olive)
                         : Container(
-                            width: 8,
-                            height: 8,
+                            width: 7,
+                            height: 7,
+                            margin: const EdgeInsets.only(top: 1),
                             decoration: BoxDecoration(
                               color: dot,
                               shape: BoxShape.circle,
                             ),
                           ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 10),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          task.name,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            decoration: isDone
-                                ? TextDecoration.lineThrough
-                                : null,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              label.text,
-                              style: AppTextStyles.caption
-                                  .copyWith(color: label.color),
-                            ),
-                            if (recurrence != null && !isDone) ...[
-                              Text(
-                                ' · ',
-                                style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.textSecondary),
-                              ),
-                              Text(
-                                recurrence,
-                                style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.textSecondary),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ],
+                    child: Text(
+                      task.name,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        decoration:
+                            isDone ? TextDecoration.lineThrough : null,
+                        decorationColor: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // Status label pill
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: label.color.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      label.text,
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: label.color,
+                        fontSize: 11,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          Divider(height: 1, thickness: 1, color: AppColors.warmFill, indent: 36),
+          Divider(
+              height: 1,
+              thickness: 1,
+              color: AppColors.warmFill,
+              indent: 42),
         ],
       ),
     );
@@ -475,29 +514,28 @@ class _ExpandFooter extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(color: AppColors.warmFill, width: 1),
-          ),
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: AppColors.warmFill, width: 1)),
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              expanded
-                  ? 'Show less'
-                  : 'Show $hiddenCount more task${hiddenCount == 1 ? '' : 's'}',
-              style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(width: 4),
             AnimatedRotation(
               turns: expanded ? 0.5 : 0,
               duration: const Duration(milliseconds: 220),
               child: Icon(
-                Icons.keyboard_arrow_down,
+                Icons.keyboard_arrow_down_rounded,
                 size: 16,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              expanded
+                  ? 'Show less'
+                  : 'Show $hiddenCount more task${hiddenCount == 1 ? '' : 's'}',
+              style: AppTextStyles.labelSmall.copyWith(
                 color: AppColors.textSecondary,
               ),
             ),
@@ -512,7 +550,6 @@ class _ExpandFooter extends StatelessWidget {
 
 class _UncategorizedCard extends StatefulWidget {
   const _UncategorizedCard({required this.tasks});
-
   final List<MaintenanceTask> tasks;
 
   @override
@@ -524,117 +561,132 @@ class _UncategorizedCardState extends State<_UncategorizedCard> {
 
   @override
   Widget build(BuildContext context) {
-    final sorted = [...widget.tasks]
-      ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+    final sorted = [...widget.tasks]..sort((a, b) {
+        final keyCmp = _taskSortKey(a).compareTo(_taskSortKey(b));
+        if (keyCmp != 0) return keyCmp;
+        return a.dueDate.compareTo(b.dueDate);
+      });
 
     final preview = sorted.take(_kPreviewCount).toList();
     final hidden = sorted.skip(_kPreviewCount).toList();
     final hasMore = hidden.isNotEmpty;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.border, width: 1.5),
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.warmFill,
-                    borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+    return ClipRRect(
+      borderRadius: AppRadius.card,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: AppRadius.card,
+          border: Border.all(color: AppColors.border, width: 1.5),
+        ),
+        child: Column(
+          children: [
+            // Dark header — neutral tone for uncategorized
+            Container(
+              color: AppColors.gray700,
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.checklist_rounded,
+                        size: 22, color: AppColors.gray300),
                   ),
-                  child: Icon(Icons.checklist_outlined,
-                      size: 20, color: AppColors.textSecondary),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('General Tasks',
-                          style: AppTextStyles.bodyMediumSemibold),
-                      Text('No system linked', style: AppTextStyles.caption),
-                    ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'General Tasks',
+                          style: AppTextStyles.bodyMediumSemibold.copyWith(
+                            color: AppColors.darkText,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'No system linked',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.darkTextSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Divider(height: 1, thickness: 1, color: AppColors.warmFill),
-          ...preview.map((t) => _TaskRow(task: t)),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeInOut,
-            child: _expanded
-                ? Column(children: hidden.map((t) => _TaskRow(task: t)).toList())
-                : const SizedBox.shrink(),
-          ),
-          if (hasMore)
-            _ExpandFooter(
-              expanded: _expanded,
-              hiddenCount: hidden.length,
-              onTap: () => setState(() => _expanded = !_expanded),
+            ...preview.map((t) => _TaskRow(task: t)),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeInOut,
+              child: _expanded
+                  ? Column(
+                      children: hidden.map((t) => _TaskRow(task: t)).toList())
+                  : const SizedBox.shrink(),
             ),
-        ],
+            if (hasMore)
+              _ExpandFooter(
+                expanded: _expanded,
+                hiddenCount: hidden.length,
+                onTap: () => setState(() => _expanded = !_expanded),
+              ),
+          ],
+        ),
       ),
     );
   }
 }
 
-// ── System card (no tasks = all clear) ────────────────────────────────────────
+// ── All Clear chip ─────────────────────────────────────────────────────────────
 
-class _SystemCardEmpty extends StatelessWidget {
-  const _SystemCardEmpty({required this.system});
-
+class _AllClearChip extends StatelessWidget {
+  const _AllClearChip({required this.system});
   final HomeSystem system;
 
   @override
   Widget build(BuildContext context) {
     final color = _systemColor(system.category);
     final icon = _systemIcon(system.category);
-    final installed = _installedLabel(system.installationDate);
+    final name = system.brand != null
+        ? '${system.brand}\n${system.name}'
+        : system.name;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      width: 100,
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadius.card,
         border: Border.all(color: AppColors.border, width: 1.5),
       ),
-      child: Row(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          Icon(icon, size: 22, color: color.withValues(alpha: 0.45)),
+          const SizedBox(height: 6),
+          Text(
+            name,
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: 11,
             ),
-            child: Icon(icon, size: 20, color: color.withValues(alpha: 0.4)),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  system.brand != null
-                      ? '${system.brand} ${system.name}'
-                      : system.name,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                if (installed.isNotEmpty)
-                  Text(installed, style: AppTextStyles.caption),
-              ],
+          const SizedBox(height: 4),
+          Text(
+            'All clear',
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.olive,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -708,11 +760,11 @@ class _BySystemSkeleton extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: AppSizes.md),
-            _SkeletonSystemCard(),
+            const _SkeletonSystemCard(),
             const SizedBox(height: AppSizes.sm),
-            _SkeletonSystemCard(),
+            const _SkeletonSystemCard(),
             const SizedBox(height: AppSizes.sm),
-            _SkeletonSystemCard(),
+            const _SkeletonSystemCard(),
           ],
         ),
       ),
@@ -725,12 +777,58 @@ class _SkeletonSystemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 160,
-      decoration: BoxDecoration(
-        color: AppColors.gray200,
-        borderRadius: AppRadius.card,
+    return ClipRRect(
+      borderRadius: AppRadius.card,
+      child: Column(
+        children: [
+          // Dark header skeleton
+          Container(
+            height: 72,
+            color: AppColors.gray300,
+          ),
+          // Task row skeletons
+          Container(
+            color: AppColors.surface,
+            padding: const EdgeInsets.symmetric(
+                horizontal: 16, vertical: 12),
+            child: Column(
+              children: [
+                _SkeletonTaskRow(),
+                const SizedBox(height: 10),
+                _SkeletonTaskRow(),
+                const SizedBox(height: 10),
+                _SkeletonTaskRow(),
+              ],
+            ),
+          ),
+        ],
       ),
+    );
+  }
+}
+
+class _SkeletonTaskRow extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+            width: 7, height: 7, decoration: const BoxDecoration(
+          color: AppColors.gray200, shape: BoxShape.circle)),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Container(height: 12, color: AppColors.gray200),
+        ),
+        const SizedBox(width: 10),
+        Container(
+          width: 64,
+          height: 20,
+          decoration: BoxDecoration(
+            color: AppColors.gray200,
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ),
+      ],
     );
   }
 }
