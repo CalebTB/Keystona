@@ -377,8 +377,8 @@ class _TaskRow extends StatelessWidget {
     final recurrence = task.recurrence != RecurrenceType.none
         ? task.recurrence.label.toLowerCase()
         : null;
-    final isDone = task.status == TaskStatus.completed ||
-        task.status == TaskStatus.skipped;
+    final isDone = task.status == TaskStatus.skipped ||
+        (task.status == TaskStatus.completed && _nextDueDate(task) == null);
 
     return GestureDetector(
       onTap: () => context.push('/maintenance/${task.id}'),
