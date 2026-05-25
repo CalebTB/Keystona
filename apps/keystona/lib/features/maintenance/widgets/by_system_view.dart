@@ -39,13 +39,6 @@ Color _systemColor(SystemCategory cat) => switch (cat) {
       SystemCategory.other => AppColors.gray400,
     };
 
-String _healthLabel(HomeSystem system) => switch (system.status) {
-      ItemStatus.active => 'Healthy',
-      ItemStatus.needsRepair => 'Aging',
-      ItemStatus.replaced => 'Replaced',
-      ItemStatus.removed => 'Removed',
-    };
-
 Color _healthColor(HomeSystem system) => switch (system.status) {
       ItemStatus.active => AppColors.oliveLight,
       ItemStatus.needsRepair => AppColors.sand,
@@ -330,9 +323,19 @@ class _SystemCardState extends State<_SystemCard> {
                             color: AppColors.darkText,
                           ),
                         ),
-                        const SizedBox(height: 3),
+                        const SizedBox(height: 4),
                         Row(
                           children: [
+                            // Health dot
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: _healthColor(widget.system),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
                             if (location != null && location.isNotEmpty) ...[
                               Text(
                                 location,
@@ -360,8 +363,6 @@ class _SystemCardState extends State<_SystemCard> {
                       ],
                     ),
                   ),
-                  // Health pill
-                  _HealthPill(system: widget.system),
                 ],
               ),
             ),
@@ -384,30 +385,6 @@ class _SystemCardState extends State<_SystemCard> {
               ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// ── Health pill ────────────────────────────────────────────────────────────────
-
-class _HealthPill extends StatelessWidget {
-  const _HealthPill({required this.system});
-  final HomeSystem system;
-
-  @override
-  Widget build(BuildContext context) {
-    final label = _healthLabel(system);
-    final color = _healthColor(system);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: AppTextStyles.labelSmall.copyWith(color: color),
       ),
     );
   }
