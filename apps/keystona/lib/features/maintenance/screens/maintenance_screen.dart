@@ -100,15 +100,23 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
           CustomScrollView(
             controller: _scrollController,
             slivers: [
-              CupertinoSliverNavigationBar(
-                middle: Text('Tasks', style: AppTextStyles.headlineSmall),
-                trailing: _HeaderButtons(),
-                backgroundColor: AppColors.warmOffWhite,
-                border: const Border(),
-              ),
-              CupertinoSliverRefreshControl(
-                onRefresh: () =>
-                    ref.read(maintenanceTasksProvider.notifier).refresh(),
+              SliverToBoxAdapter(
+                child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSizes.screenPadding, 12,
+                      AppSizes.screenPadding, 0,
+                    ),
+                    child: Row(
+                      children: [
+                        Text('Tasks', style: AppTextStyles.headlineMedium),
+                        const Spacer(),
+                        _HeaderButtons(),
+                      ],
+                    ),
+                  ),
+                ),
               ),
               _buildToggleSliver(),
               ..._currentSlivers(),
