@@ -99,27 +99,24 @@ class SeasonalViewSliver extends ConsumerWidget {
 
         final today = DateTime.now();
         final todayMid = DateTime(today.year, today.month, today.day);
-        final urgent = seasonalTasks.firstWhere(
-          (t) =>
-              t.status != TaskStatus.completed &&
-              (t.status == TaskStatus.overdue ||
-                  DateTime(t.dueDate.toLocal().year, t.dueDate.toLocal().month,
-                          t.dueDate.toLocal().day)
-                      .isBefore(todayMid) ||
-                  DateTime(t.dueDate.toLocal().year, t.dueDate.toLocal().month,
-                          t.dueDate.toLocal().day) ==
-                      todayMid),
-          orElse: () => seasonalTasks.firstWhere(
-            (t) => t.status != TaskStatus.completed,
-            orElse: () => seasonalTasks.isEmpty
-                ? seasonalTasks.first
-                : seasonalTasks.first,
-          ),
-        );
 
         final upNext = seasonalTasks
             .where((t) => t.status != TaskStatus.completed)
             .toList();
+
+        // Nullable — only used when upNext is non-empty.
+        final MaintenanceTask? urgent = upNext.isEmpty
+            ? null
+            : upNext.firstWhere(
+                (t) {
+                  final due = t.dueDate.toLocal();
+                  final dueMid = DateTime(due.year, due.month, due.day);
+                  return t.status == TaskStatus.overdue ||
+                      dueMid.isBefore(todayMid) ||
+                      dueMid == todayMid;
+                },
+                orElse: () => upNext.first,
+              );
 
         final city = profileAsync.value?.property.city;
         final zone = profileAsync.value?.property.climateZone;
@@ -139,7 +136,7 @@ class SeasonalViewSliver extends ConsumerWidget {
                   city: city,
                   climateZone: zone,
                 ),
-                if (seasonalTasks.isNotEmpty && upNext.isNotEmpty) ...[
+                if (urgent != null) ...[
                   const SizedBox(height: AppSizes.sm),
                   _SpotlightCard(task: urgent),
                 ],
