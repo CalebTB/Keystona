@@ -71,9 +71,37 @@ Color _taskDotColor(MaintenanceTask t) {
 // Semantic context label — answers "what's the status of this task?"
 typedef _Label = ({String text, Color color});
 
+DateTime? _nextDueDate(MaintenanceTask t) {
+  final base = t.dueDate.toLocal();
+  return switch (t.recurrence) {
+    RecurrenceType.none => null,
+    RecurrenceType.weekly => base.add(const Duration(days: 7)),
+    RecurrenceType.biweekly => base.add(const Duration(days: 14)),
+    RecurrenceType.monthly => DateTime(base.year, base.month + 1, base.day),
+    RecurrenceType.quarterly => DateTime(base.year, base.month + 3, base.day),
+    RecurrenceType.biannual => DateTime(base.year, base.month + 6, base.day),
+    RecurrenceType.annual => DateTime(base.year + 1, base.month, base.day),
+  };
+}
+
 _Label _contextLabel(MaintenanceTask t) {
   if (t.status == TaskStatus.completed) {
-    return (text: 'Completed', color: AppColors.olive);
+    final next = _nextDueDate(t);
+    if (next == null) return (text: 'Done', color: AppColors.olive);
+    final today = DateTime.now();
+    final todayMid = DateTime(today.year, today.month, today.day);
+    final nextMid = DateTime(next.year, next.month, next.day);
+    final diff = nextMid.difference(todayMid).inDays;
+    if (diff <= 0) return (text: 'Due again', color: AppColors.sandAmber);
+    if (diff == 1) return (text: 'Due again tomorrow', color: AppColors.sandAmber);
+    if (diff <= 7) return (text: 'Good for $diff days', color: AppColors.slate);
+    if (diff <= 60) {
+      final weeks = (diff / 7).round();
+      return (text: 'Good for $weeks wk', color: AppColors.slate);
+    }
+    final months = (diff / 30).round();
+    if (months < 12) return (text: 'Good for $months mo', color: AppColors.olive);
+    return (text: 'Good for ~1 year', color: AppColors.olive);
   }
   if (t.status == TaskStatus.skipped) {
     return (text: 'Skipped', color: AppColors.gray400);
@@ -230,14 +258,6 @@ class _SystemCardState extends State<_SystemCard> {
 
   @override
   Widget build(BuildContext context) {
-    final today = DateTime.now();
-    final todayMid = DateTime(today.year, today.month, today.day);
-    final overdueCount = widget.tasks.where((t) {
-      final due = t.dueDate.toLocal();
-      final dueMid = DateTime(due.year, due.month, due.day);
-      return t.status == TaskStatus.overdue || dueMid.isBefore(todayMid);
-    }).length;
-
     final color = _systemColor(widget.system.category);
     final icon = _systemIcon(widget.system.category);
     final health = _healthLabel(widget.system);
@@ -313,24 +333,6 @@ class _SystemCardState extends State<_SystemCard> {
                     ],
                   ),
                 ),
-                if (overdueCount > 0)
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: const BoxDecoration(
-                      color: AppColors.accent,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        '$overdueCount',
-                        style: AppTextStyles.monoSection.copyWith(
-                          color: Colors.white,
-                          letterSpacing: 0,
-                        ),
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),
@@ -629,12 +631,6 @@ class _SystemCardEmpty extends StatelessWidget {
                 if (installed.isNotEmpty)
                   Text(installed, style: AppTextStyles.caption),
               ],
-            ),
-          ),
-          Text(
-            '0',
-            style: AppTextStyles.monoLabel.copyWith(
-              color: AppColors.gray400,
             ),
           ),
         ],
