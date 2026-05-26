@@ -504,8 +504,9 @@ class _ExpandFooter extends StatelessWidget {
               Text(
                 '$hiddenCount more',
                 style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.gray400,
-                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             const SizedBox(width: 3),
@@ -516,7 +517,7 @@ class _ExpandFooter extends StatelessWidget {
               child: Icon(
                 Icons.keyboard_arrow_down_rounded,
                 size: 18,
-                color: AppColors.gray400,
+                color: AppColors.textSecondary,
               ),
             ),
           ],
