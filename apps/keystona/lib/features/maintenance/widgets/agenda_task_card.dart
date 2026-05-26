@@ -5,10 +5,10 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../models/maintenance_task.dart';
 
-/// A single task row in the agenda view for the selected day.
+/// A single task card in the Daily agenda view.
 ///
-/// Shows time column (always "Anytime"), category icon, task name,
-/// meta row, and a quick-complete tap circle.
+/// Left priority stripe communicates urgency at a glance:
+///   critical/overdue → terracotta, high → sand, medium → slate, low → border.
 class AgendaTaskCard extends StatelessWidget {
   const AgendaTaskCard({
     super.key,
@@ -22,9 +22,11 @@ class AgendaTaskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final categoryStyle = _categoryStyle(task.category.toLowerCase());
+    final stripeColor = _stripeColor(task);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
+      clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
@@ -37,144 +39,111 @@ class AgendaTaskCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () {}, // detail navigation handled by screen layer
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // ── Time column ──────────────────────────────────────────────
-              SizedBox(
-                width: 56,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Any',
-                        style: GoogleFonts.ibmPlexMono(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textTertiary,
-                        ),
-                      ),
-                      Text(
-                        'time',
-                        style: GoogleFonts.ibmPlexMono(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ── Priority stripe ───────────────────────────────────────────
+            Container(width: 4, color: stripeColor),
+            // ── Category icon ─────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 13, 0, 13),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: categoryStyle.bgColor,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(
+                  categoryStyle.icon,
+                  size: 18,
+                  color: categoryStyle.iconColor,
                 ),
               ),
-              // ── Vertical divider ──────────────────────────────────────────
-              Container(
-                width: 1.5,
-                height: 56,
-                color: AppColors.warmFill,
-              ),
-              // ── Body ──────────────────────────────────────────────────────
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 14,
-                  ),
-                  child: Row(
-                    children: [
-                      // Category icon container
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: categoryStyle.bgColor,
-                          borderRadius: BorderRadius.circular(9),
-                        ),
-                        child: Icon(
-                          categoryStyle.icon,
-                          size: 18,
-                          color: categoryStyle.iconColor,
-                        ),
+            ),
+            const SizedBox(width: 10),
+            // ── Task info ─────────────────────────────────────────────────
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      task.name,
+                      style: AppTextStyles.bodyMediumSemibold.copyWith(
+                        fontSize: 14,
+                        color: AppColors.textPrimary,
                       ),
-                      const SizedBox(width: 10),
-                      // Info column
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              task.name,
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            task.category,
+                            style: AppTextStyles.monoLabel.copyWith(
+                              color: AppColors.textTertiary,
+                              fontSize: 11,
                             ),
-                            const SizedBox(height: 3),
-                            Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    task.category,
-                                    style: AppTextStyles.monoLabel.copyWith(
-                                      color: AppColors.textTertiary,
-                                      fontSize: 11,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                _DiyProBadge(diyOrPro: task.diyOrPro),
-                                if (task.estimatedMinutes != null) ...[
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    '~${task.estimatedMinutes}min',
-                                    style: AppTextStyles.monoLabel.copyWith(
-                                      color: AppColors.textTertiary,
-                                      fontSize: 10,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Quick-complete circle
-                      GestureDetector(
-                        onTap: onQuickComplete,
-                        child: Container(
-                          width: 26,
-                          height: 26,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: AppColors.border,
-                              width: 2,
-                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 6),
+                        _DiyProBadge(diyOrPro: task.diyOrPro),
+                        if (task.estimatedMinutes != null) ...[
+                          const SizedBox(width: 6),
+                          Text(
+                            '~${task.estimatedMinutes}min',
+                            style: AppTextStyles.monoLabel.copyWith(
+                              color: AppColors.textTertiary,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // ── Quick-complete ────────────────────────────────────────────
+            GestureDetector(
+              onTap: onQuickComplete,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Center(
+                  child: Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.border, width: 2),
+                    ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  static Color _stripeColor(MaintenanceTask task) {
+    if (task.status == TaskStatus.overdue) return AppColors.accent;
+    return switch (task.priority) {
+      TaskPriority.critical => AppColors.accent,
+      TaskPriority.high => AppColors.sand,
+      TaskPriority.medium => AppColors.slate,
+      TaskPriority.low => AppColors.border,
+    };
   }
 
   static _CategoryStyle _categoryStyle(String cat) {
@@ -208,9 +177,7 @@ class AgendaTaskCard extends StatelessWidget {
         iconColor: AppColors.olive,
         bgColor: AppColors.oliveDim,
       );
-    } else if (cat == 'interior' ||
-        cat == 'kitchen' ||
-        cat == 'bathroom') {
+    } else if (cat == 'interior' || cat == 'kitchen' || cat == 'bathroom') {
       return const _CategoryStyle(
         icon: Icons.home_outlined,
         iconColor: AppColors.plum,
@@ -225,7 +192,7 @@ class AgendaTaskCard extends StatelessWidget {
   }
 }
 
-// ── Category style record ──────────────────────────────────────────────────
+// ── Category style record ──────────────────────────────────────────────────────
 
 class _CategoryStyle {
   const _CategoryStyle({
@@ -238,7 +205,7 @@ class _CategoryStyle {
   final Color bgColor;
 }
 
-// ── DIY/PRO badge ──────────────────────────────────────────────────────────
+// ── DIY/PRO badge ──────────────────────────────────────────────────────────────
 
 class _DiyProBadge extends StatelessWidget {
   const _DiyProBadge({required this.diyOrPro});

@@ -164,25 +164,20 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
     );
   }
 
-  // ── Toggle sliver ────────────────────────────────────────────────────────────
+  // ── Tab strip sliver ─────────────────────────────────────────────────────────
 
   Widget _buildToggleSliver() {
     return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSizes.screenPadding, 4, AppSizes.screenPadding, 0,
-        ),
-        child: _ViewToggle(
-          current: _tab,
-          onChanged: (t) {
-            setState(() => _tab = t);
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted && _scrollController.hasClients) {
-                _scrollController.jumpTo(0);
-              }
-            });
-          },
-        ),
+      child: _TabStrip(
+        current: _tab,
+        onChanged: (t) {
+          setState(() => _tab = t);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _scrollController.hasClients) {
+              _scrollController.jumpTo(0);
+            }
+          });
+        },
       ),
     );
   }
@@ -194,7 +189,6 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
       case _TaskViewTab.daily:
         return [
           _buildCalendarHeader(),
-          _buildTipSliver(),
           _buildDayHeaderSliver(),
           _buildOverdueBannerSliver(),
           _AgendaSliver(
@@ -204,6 +198,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
                 .completeTask(taskId),
           ),
           _buildUpcomingSliver(),
+          _buildTipSliver(),
         ];
       case _TaskViewTab.seasonal:
         return [const SeasonalViewSliver()];
@@ -222,47 +217,42 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
     final monthLabel = DateFormat('MMMM yyyy').format(_weekStart);
 
     return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Month nav row
-            Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSizes.screenPadding, 14, AppSizes.screenPadding, 0,
+            ),
+            child: Row(
               children: [
                 Text(
                   monthLabel,
-                  style: AppTextStyles.headlineSmall.copyWith(
-                    fontWeight: FontWeight.w700,
+                  style: AppTextStyles.bodyMediumSemibold.copyWith(
+                    fontSize: 15,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const Spacer(),
-                _NavButton(
-                  icon: Icons.chevron_left,
-                  onTap: _prevWeek,
-                ),
+                _NavButton(icon: Icons.chevron_left, onTap: _prevWeek),
                 const SizedBox(width: 6),
-                _NavButton(
-                  icon: Icons.chevron_right,
-                  onTap: _nextWeek,
-                ),
+                _NavButton(icon: Icons.chevron_right, onTap: _nextWeek),
               ],
             ),
-            const SizedBox(height: 12),
-            WeekStrip(
+          ),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+            child: WeekStrip(
               tasks: tasks,
               weekStart: _weekStart,
               selectedDate: _selectedDate,
               onDaySelected: _selectDay,
             ),
-            const SizedBox(height: 12),
-            const Divider(
-              color: AppColors.border,
-              thickness: 1.5,
-              height: 1.5,
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 14),
+          const Divider(color: AppColors.border, thickness: 1, height: 1),
+        ],
       ),
     );
   }
@@ -304,10 +294,10 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.only(
-          top: 16,
+          top: 14,
           left: AppSizes.screenPadding,
           right: AppSizes.screenPadding,
-          bottom: 12,
+          bottom: 10,
         ),
         child: Row(
           children: [
@@ -540,11 +530,6 @@ class _AgendaSliver extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'SCHEDULED TODAY',
-                  style: AppTextStyles.monoSection,
-                ),
-                const SizedBox(height: 10),
                 if (todayTasks.isEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -633,10 +618,10 @@ class _SkeletonAgendaCard extends StatelessWidget {
   }
 }
 
-// ── View toggle ────────────────────────────────────────────────────────────────
+// ── Tab strip ──────────────────────────────────────────────────────────────────
 
-class _ViewToggle extends StatelessWidget {
-  const _ViewToggle({required this.current, required this.onChanged});
+class _TabStrip extends StatelessWidget {
+  const _TabStrip({required this.current, required this.onChanged});
 
   final _TaskViewTab current;
   final ValueChanged<_TaskViewTab> onChanged;
@@ -651,48 +636,44 @@ class _ViewToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 36,
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: AppColors.warmFill,
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
       ),
-      child: Row(
-        children: _TaskViewTab.values.map((tab) {
-          final selected = tab == current;
-          return Expanded(
-            child: GestureDetector(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+        child: Row(
+          children: _TaskViewTab.values.map((tab) {
+            final selected = tab == current;
+            return GestureDetector(
               onTap: () => onChanged(tab),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                margin: const EdgeInsets.only(right: 28),
+                padding: const EdgeInsets.only(top: 6, bottom: 11),
                 decoration: BoxDecoration(
-                  color: selected ? AppColors.surface : Colors.transparent,
-                  borderRadius: BorderRadius.circular(7),
-                  boxShadow: selected
-                      ? const [
-                          BoxShadow(
-                            color: Color(0x12000000),
-                            blurRadius: 4,
-                            offset: Offset(0, 1),
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Center(
-                  child: Text(
-                    _labels[tab]!,
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: selected
-                          ? AppColors.textPrimary
-                          : AppColors.textSecondary,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: selected ? AppColors.accent : Colors.transparent,
+                      width: 2,
                     ),
                   ),
                 ),
+                child: Text(
+                  _labels[tab]!,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: selected
+                        ? AppColors.textPrimary
+                        : AppColors.textSecondary,
+                    fontWeight:
+                        selected ? FontWeight.w600 : FontWeight.w400,
+                    fontSize: 14,
+                  ),
+                ),
               ),
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
