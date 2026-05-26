@@ -44,6 +44,16 @@ class MaintenanceTasksNotifier extends _$MaintenanceTasksNotifier {
     if (matching.isEmpty) return;
     final task = matching.first;
 
+    // Optimistic update: mark completed in local state immediately.
+    // The agenda filter already hides completed tasks, so the card
+    // vanishes from the list without any network round-trip.
+    state = AsyncData(
+      tasks
+          .map((t) =>
+              t.id == taskId ? t.copyWith(status: TaskStatus.completed) : t)
+          .toList(),
+    );
+
     final today = DateTime.now().toIso8601String().split('T')[0];
 
     await SupabaseService.client.from('task_completions').insert({
@@ -62,9 +72,6 @@ class MaintenanceTasksNotifier extends _$MaintenanceTasksNotifier {
     if (task.recurrence != RecurrenceType.none) {
       await _scheduleNextTask(task);
     }
-
-    // Silent refetch — no AsyncLoading so the screen doesn't flash a skeleton.
-    state = await AsyncValue.guard(_fetchTasks);
   }
 
   /// [#32] Skips a task with an optional [reason].
@@ -73,6 +80,14 @@ class MaintenanceTasksNotifier extends _$MaintenanceTasksNotifier {
     final matching = tasks.where((t) => t.id == taskId);
     if (matching.isEmpty) return;
     final task = matching.first;
+
+    // Optimistic update: mark skipped immediately.
+    state = AsyncData(
+      tasks
+          .map((t) =>
+              t.id == taskId ? t.copyWith(status: TaskStatus.skipped) : t)
+          .toList(),
+    );
 
     await SupabaseService.client
         .from('maintenance_tasks')
@@ -85,8 +100,6 @@ class MaintenanceTasksNotifier extends _$MaintenanceTasksNotifier {
     if (task.recurrence != RecurrenceType.none) {
       await _scheduleNextTask(task);
     }
-
-    state = await AsyncValue.guard(_fetchTasks);
   }
 
   /// Inserts the next scheduled occurrence of a recurring task directly via DB.
