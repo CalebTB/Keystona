@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -24,7 +25,9 @@ class AgendaTaskCard extends StatelessWidget {
     final categoryStyle = _categoryStyle(task.category.toLowerCase());
     final stripeColor = _stripeColor(task);
 
-    return Container(
+    return GestureDetector(
+      onTap: () => context.push('/maintenance/${task.id}'),
+      child: Container(
       margin: const EdgeInsets.only(bottom: 8),
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
@@ -133,6 +136,7 @@ class AgendaTaskCard extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 

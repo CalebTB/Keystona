@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -23,7 +24,9 @@ class OverdueBanner extends StatelessWidget {
         .map((t) => t.name)
         .join(' · ');
 
-    return Container(
+    return GestureDetector(
+      onTap: () => context.push('/maintenance/${overdueTasks.first.id}'),
+      child: Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -82,6 +85,7 @@ class OverdueBanner extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }
