@@ -63,7 +63,7 @@ class MaintenanceTasksNotifier extends _$MaintenanceTasksNotifier {
       await _scheduleNextTask(task);
     }
 
-    state = const AsyncLoading();
+    // Silent refetch — no AsyncLoading so the screen doesn't flash a skeleton.
     state = await AsyncValue.guard(_fetchTasks);
   }
 
@@ -86,7 +86,6 @@ class MaintenanceTasksNotifier extends _$MaintenanceTasksNotifier {
       await _scheduleNextTask(task);
     }
 
-    state = const AsyncLoading();
     state = await AsyncValue.guard(_fetchTasks);
   }
 
