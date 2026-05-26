@@ -123,6 +123,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
               const SliverToBoxAdapter(child: SizedBox(height: 110)),
             ],
           ),
+          if (_tab == _TaskViewTab.daily)
           Positioned(
             bottom: 110,
             right: 22,

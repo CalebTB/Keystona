@@ -369,11 +369,16 @@ class _SystemCardState extends State<_SystemCard> {
             // ── Task list ────────────────────────────────────────────
             ...preview.map((t) => _TaskRow(task: t)),
             AnimatedSize(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeInOut,
+              duration: const Duration(milliseconds: 320),
+              curve: Curves.easeInOutCubic,
               child: _expanded
-                  ? Column(
-                      children: hidden.map((t) => _TaskRow(task: t)).toList(),
+                  ? AnimatedOpacity(
+                      opacity: _expanded ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 240),
+                      curve: Curves.easeIn,
+                      child: Column(
+                        children: hidden.map((t) => _TaskRow(task: t)).toList(),
+                      ),
                     )
                   : const SizedBox.shrink(),
             ),
@@ -491,29 +496,30 @@ class _ExpandFooter extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+        height: 36,
         decoration: const BoxDecoration(
           border: Border(top: BorderSide(color: AppColors.warmFill, width: 1)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            if (!expanded)
+              Text(
+                '$hiddenCount more',
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.gray400,
+                  fontSize: 11,
+                ),
+              ),
+            const SizedBox(width: 3),
             AnimatedRotation(
               turns: expanded ? 0.5 : 0,
-              duration: const Duration(milliseconds: 220),
+              duration: const Duration(milliseconds: 280),
+              curve: Curves.easeInOutCubic,
               child: Icon(
                 Icons.keyboard_arrow_down_rounded,
-                size: 16,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              expanded
-                  ? 'Show less'
-                  : 'Show $hiddenCount more task${hiddenCount == 1 ? '' : 's'}',
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textSecondary,
+                size: 18,
+                color: AppColors.gray400,
               ),
             ),
           ],
@@ -600,11 +606,17 @@ class _UncategorizedCardState extends State<_UncategorizedCard> {
             ),
             ...preview.map((t) => _TaskRow(task: t)),
             AnimatedSize(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeInOut,
+              duration: const Duration(milliseconds: 320),
+              curve: Curves.easeInOutCubic,
               child: _expanded
-                  ? Column(
-                      children: hidden.map((t) => _TaskRow(task: t)).toList())
+                  ? AnimatedOpacity(
+                      opacity: _expanded ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 240),
+                      curve: Curves.easeIn,
+                      child: Column(
+                        children: hidden.map((t) => _TaskRow(task: t)).toList(),
+                      ),
+                    )
                   : const SizedBox.shrink(),
             ),
             if (hasMore)
