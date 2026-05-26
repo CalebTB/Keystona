@@ -368,19 +368,16 @@ class _SystemCardState extends State<_SystemCard> {
             ),
             // ── Task list ────────────────────────────────────────────
             ...preview.map((t) => _TaskRow(task: t)),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 320),
-              curve: Curves.easeInOutCubic,
-              child: _expanded
-                  ? AnimatedOpacity(
-                      opacity: _expanded ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 240),
-                      curve: Curves.easeIn,
-                      child: Column(
-                        children: hidden.map((t) => _TaskRow(task: t)).toList(),
-                      ),
-                    )
-                  : const SizedBox.shrink(),
+            ClipRect(
+              child: AnimatedAlign(
+                alignment: Alignment.topCenter,
+                heightFactor: _expanded ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOutCubic,
+                child: Column(
+                  children: hidden.map((t) => _TaskRow(task: t)).toList(),
+                ),
+              ),
             ),
             if (hasMore)
               _ExpandFooter(
@@ -605,19 +602,16 @@ class _UncategorizedCardState extends State<_UncategorizedCard> {
               ),
             ),
             ...preview.map((t) => _TaskRow(task: t)),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 320),
-              curve: Curves.easeInOutCubic,
-              child: _expanded
-                  ? AnimatedOpacity(
-                      opacity: _expanded ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 240),
-                      curve: Curves.easeIn,
-                      child: Column(
-                        children: hidden.map((t) => _TaskRow(task: t)).toList(),
-                      ),
-                    )
-                  : const SizedBox.shrink(),
+            ClipRect(
+              child: AnimatedAlign(
+                alignment: Alignment.topCenter,
+                heightFactor: _expanded ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOutCubic,
+                child: Column(
+                  children: hidden.map((t) => _TaskRow(task: t)).toList(),
+                ),
+              ),
             ),
             if (hasMore)
               _ExpandFooter(
