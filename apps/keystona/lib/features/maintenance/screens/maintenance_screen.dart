@@ -1,11 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -95,40 +93,30 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
   Widget _buildIOS(BuildContext context) {
     return CupertinoPageScaffold(
       backgroundColor: AppColors.warmOffWhite,
-      child: Stack(
-        children: [
-          CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              SliverToBoxAdapter(
-                child: SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSizes.screenPadding, 12,
-                      AppSizes.screenPadding, 0,
-                    ),
-                    child: Row(
-                      children: [
-                        Text('Tasks', style: AppTextStyles.headlineMedium),
-                        const Spacer(),
-                        _HeaderButtons(),
-                      ],
-                    ),
-                  ),
+      child: CustomScrollView(
+        controller: _scrollController,
+        slivers: [
+          SliverToBoxAdapter(
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSizes.screenPadding, 12,
+                  AppSizes.screenPadding, 0,
+                ),
+                child: Row(
+                  children: [
+                    Text('Tasks', style: AppTextStyles.headlineMedium),
+                    const Spacer(),
+                    _HeaderButtons(),
+                  ],
                 ),
               ),
-              _buildToggleSliver(),
-              ..._currentSlivers(),
-              const SliverToBoxAdapter(child: SizedBox(height: 110)),
-            ],
+            ),
           ),
-          if (_tab == _TaskViewTab.daily)
-          Positioned(
-            bottom: 110,
-            right: 22,
-            child: _AddTaskFAB(),
-          ),
+          _buildToggleSliver(),
+          ..._currentSlivers(),
+          const SliverToBoxAdapter(child: SizedBox(height: 110)),
         ],
       ),
     );
@@ -139,7 +127,6 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
   Widget _buildAndroid(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.warmOffWhite,
-      floatingActionButton: _AddTaskFAB(),
       body: RefreshIndicator(
         color: AppColors.accent,
         onRefresh: () =>
@@ -679,17 +666,3 @@ class _TabStrip extends StatelessWidget {
   }
 }
 
-// ── Add Task FAB ───────────────────────────────────────────────────────────────
-
-class _AddTaskFAB extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return FloatingActionButton(
-      onPressed: () => context.push(AppRoutes.maintenanceCreate),
-      backgroundColor: AppColors.accent,
-      foregroundColor: AppColors.textInverse,
-      elevation: 3,
-      child: const Icon(Icons.add),
-    );
-  }
-}
