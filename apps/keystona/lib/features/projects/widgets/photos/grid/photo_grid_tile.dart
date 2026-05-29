@@ -15,17 +15,20 @@ const Color _kAccent = Color(0xFFB85638);
 ///
 /// Tapping the tile body calls [onTap].
 /// Tapping the chain icon calls [onChainTap] (when paired).
+/// Tapping the add-link icon calls [onLinkTap] (when unpaired before/after).
 class PhotoGridTile extends StatelessWidget {
   const PhotoGridTile({
     super.key,
     required this.photo,
     required this.onTap,
     required this.onChainTap,
+    this.onLinkTap,
   });
 
   final ProjectPhoto photo;
   final VoidCallback onTap;
   final VoidCallback onChainTap;
+  final VoidCallback? onLinkTap;
 
   static final _dateFmt = DateFormat('MMM d');
 
@@ -77,6 +80,31 @@ class PhotoGridTile extends StatelessWidget {
                     color: const Color(0x80000000),
                     child: const Icon(
                       Icons.link,
+                      color: Colors.white,
+                      size: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          )
+        else if (onLinkTap != null &&
+            (photo.photoType == 'before' || photo.photoType == 'after'))
+          Positioned(
+            top: 6,
+            right: 6,
+            child: GestureDetector(
+              onTap: onLinkTap,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.all(Radius.circular(6)),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    color: const Color(0x66000000),
+                    child: const Icon(
+                      Icons.add_link,
                       color: Colors.white,
                       size: 14,
                     ),

@@ -230,7 +230,7 @@ class BySystemViewSliver extends ConsumerWidget {
             ),
             const SizedBox(height: AppSizes.sm),
             SizedBox(
-              height: 90,
+              height: 106,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(
@@ -651,14 +651,16 @@ class _AllClearChip extends StatelessWidget {
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 22, color: color.withValues(alpha: 0.45)),
-          const SizedBox(height: 6),
+          Icon(icon, size: 20, color: color.withValues(alpha: 0.45)),
+          const SizedBox(height: 5),
           Text(
             name,
             style: AppTextStyles.labelSmall.copyWith(
               color: AppColors.textSecondary,
-              fontSize: 11,
+              fontSize: 10.5,
+              height: 1.2,
             ),
             textAlign: TextAlign.center,
             maxLines: 2,

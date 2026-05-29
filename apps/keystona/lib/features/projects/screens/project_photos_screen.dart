@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -111,6 +112,214 @@ class _ProjectPhotosScreenState extends ConsumerState<ProjectPhotosScreen> {
         afterPhoto: after,
       ),
     ));
+  }
+
+  // ── Pair creation ─────────────────────────────────────────────────────────
+
+  void _showPairPicker(ProjectPhoto photo, List<ProjectPhoto> all) {
+    final oppositeType = photo.photoType == 'before' ? 'after' : 'before';
+    final candidates = all
+        .where((p) => p.pairId == null && p.photoType == oppositeType)
+        .toList();
+
+    if (candidates.isEmpty) {
+      SnackbarService.showWarning(
+        context,
+        'No unpaired $oppositeType photos to pair with.',
+      );
+      return;
+    }
+
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    if (isIOS) {
+      showCupertinoModalPopup<void>(
+        context: context,
+        builder: (ctx) => _PairPickerSheet(
+          source: photo,
+          candidates: candidates,
+          onSelected: (candidate) async {
+            Navigator.of(ctx, rootNavigator: true).pop();
+            final beforeId =
+                photo.photoType == 'before' ? photo.id : candidate.id;
+            final afterId =
+                photo.photoType == 'after' ? photo.id : candidate.id;
+            final notifier =
+                ref.read(projectPhotosProvider(widget.projectId).notifier);
+            try {
+              await notifier.pairPhotos(beforeId, afterId);
+              if (!mounted) return;
+              SnackbarService.showSuccess(context, 'Photos paired!');
+            } catch (_) {
+              if (!mounted) return;
+              SnackbarService.showError(context, 'Failed to pair photos.');
+            }
+          },
+        ),
+      );
+    } else {
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (ctx) => _PairPickerSheet(
+          source: photo,
+          candidates: candidates,
+          onSelected: (candidate) async {
+            Navigator.of(ctx).pop();
+            final beforeId =
+                photo.photoType == 'before' ? photo.id : candidate.id;
+            final afterId =
+                photo.photoType == 'after' ? photo.id : candidate.id;
+            final notifier =
+                ref.read(projectPhotosProvider(widget.projectId).notifier);
+            try {
+              await notifier.pairPhotos(beforeId, afterId);
+              if (!mounted) return;
+              SnackbarService.showSuccess(context, 'Photos paired!');
+            } catch (_) {
+              if (!mounted) return;
+              SnackbarService.showError(context, 'Failed to pair photos.');
+            }
+          },
+        ),
+      );
+    }
+  }
+
+  // ── Pair edit / manage ────────────────────────────────────────────────────
+
+  void _showPairEditSheet(ProjectPhoto before, ProjectPhoto after) {
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    final notifier =
+        ref.read(projectPhotosProvider(widget.projectId).notifier);
+
+    if (isIOS) {
+      showCupertinoModalPopup<void>(
+        context: context,
+        builder: (ctx) => CupertinoActionSheet(
+          actions: [
+            CupertinoActionSheetAction(
+              onPressed: () {
+                Navigator.of(ctx, rootNavigator: true).pop();
+                _showPairEditForm(before, after);
+              },
+              child: const Text('Edit Details'),
+            ),
+            CupertinoActionSheetAction(
+              onPressed: () async {
+                Navigator.of(ctx, rootNavigator: true).pop();
+                try {
+                  await notifier.unpairPhotos(before.id, after.id);
+                  if (!mounted) return;
+                  SnackbarService.showSuccess(context, 'Pair removed.');
+                } catch (_) {
+                  if (!mounted) return;
+                  SnackbarService.showError(context, 'Failed to unpair.');
+                }
+              },
+              child: const Text('Unpair Photos'),
+            ),
+            CupertinoActionSheetAction(
+              isDestructiveAction: true,
+              onPressed: () async {
+                Navigator.of(ctx, rootNavigator: true).pop();
+                try {
+                  await notifier.deletePhoto(before.id, before.storagePath);
+                  await notifier.deletePhoto(after.id, after.storagePath);
+                  if (!mounted) return;
+                  SnackbarService.showSuccess(context, 'Pair deleted.');
+                } catch (_) {
+                  if (!mounted) return;
+                  SnackbarService.showError(context, 'Failed to delete pair.');
+                }
+              },
+              child: const Text('Delete Pair'),
+            ),
+          ],
+          cancelButton: CupertinoActionSheetAction(
+            onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(),
+            child: const Text('Cancel'),
+          ),
+        ),
+      );
+    } else {
+      showModalBottomSheet<void>(
+        context: context,
+        builder: (ctx) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.edit_outlined),
+                title: const Text('Edit Details'),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  _showPairEditForm(before, after);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.link_off_outlined),
+                title: const Text('Unpair Photos'),
+                onTap: () async {
+                  Navigator.of(ctx).pop();
+                  try {
+                    await notifier.unpairPhotos(before.id, after.id);
+                    if (!mounted) return;
+                    SnackbarService.showSuccess(context, 'Pair removed.');
+                  } catch (_) {
+                    if (!mounted) return;
+                    SnackbarService.showError(context, 'Failed to unpair.');
+                  }
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.delete_outline, color: AppColors.error),
+                title: Text('Delete Pair',
+                    style: TextStyle(color: AppColors.error)),
+                onTap: () async {
+                  Navigator.of(ctx).pop();
+                  try {
+                    await notifier.deletePhoto(before.id, before.storagePath);
+                    await notifier.deletePhoto(after.id, after.storagePath);
+                    if (!mounted) return;
+                    SnackbarService.showSuccess(context, 'Pair deleted.');
+                  } catch (_) {
+                    if (!mounted) return;
+                    SnackbarService.showError(
+                        context, 'Failed to delete pair.');
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
+  void _showPairEditForm(ProjectPhoto before, ProjectPhoto after) {
+    final notifier =
+        ref.read(projectPhotosProvider(widget.projectId).notifier);
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (ctx) => _PairEditFormSheet(
+        before: before,
+        after: after,
+        onSave: (roomTag, caption) async {
+          Navigator.of(ctx, rootNavigator: true).pop();
+          try {
+            await notifier.updatePhoto(before.id,
+                roomTag: roomTag, caption: caption);
+            await notifier.updatePhoto(after.id,
+                roomTag: roomTag, caption: caption);
+            if (!mounted) return;
+            SnackbarService.showSuccess(context, 'Details updated.');
+          } catch (_) {
+            if (!mounted) return;
+            SnackbarService.showError(context, 'Failed to save changes.');
+          }
+        },
+      ),
+    );
   }
 
   void _showUploadActionSheet(BuildContext ctx) {
@@ -252,12 +461,14 @@ class _ProjectPhotosScreenState extends ConsumerState<ProjectPhotosScreen> {
                     ),
                   ));
                 },
+                onMoreTap: _showPairEditSheet,
               )
             : PhotosCuratedGrid(
                 projectId: widget.projectId,
                 viewSource: _activeSegment,
                 onPhotoTap: _onPhotoTap,
                 onChainTap: _onChainTap,
+                onLinkTap: _showPairPicker,
               );
 
         return Column(
@@ -382,6 +593,315 @@ class _ErrorState extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Pair picker sheet ─────────────────────────────────────────────────────────
+
+/// Bottom sheet showing unpaired photos of the opposite type to pair with.
+class _PairPickerSheet extends StatelessWidget {
+  const _PairPickerSheet({
+    required this.source,
+    required this.candidates,
+    required this.onSelected,
+  });
+
+  final ProjectPhoto source;
+  final List<ProjectPhoto> candidates;
+  final void Function(ProjectPhoto candidate) onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final oppositeType = source.photoType == 'before' ? 'after' : 'before';
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.55,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Padding(
+              padding: const EdgeInsets.only(top: 10, bottom: 4),
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDDD6CC),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Choose $oppositeType photo to pair',
+                      style: GoogleFonts.outfit(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1A2B4A),
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.of(context, rootNavigator: true).pop(),
+                    child: const Icon(Icons.close, size: 20, color: Color(0xFF9B9289)),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: Color(0xFFEDE8E0)),
+            Flexible(
+              child: ListView.separated(
+                shrinkWrap: true,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: candidates.length,
+                separatorBuilder: (_, _) =>
+                    const Divider(height: 1, indent: 72, color: Color(0xFFEDE8E0)),
+                itemBuilder: (context, i) {
+                  final photo = candidates[i];
+                  return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 4),
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: (photo.signedUrl != null &&
+                                photo.signedUrl!.isNotEmpty)
+                            ? CachedNetworkImage(
+                                imageUrl: photo.signedUrl!,
+                                fit: BoxFit.cover,
+                              )
+                            : const ColoredBox(color: Color(0xFFD0C8BC)),
+                      ),
+                    ),
+                    title: Text(
+                      photo.roomTag?.isNotEmpty == true
+                          ? photo.roomTag!
+                          : photo.photoType,
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF2A2420),
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${photo.photoType.toUpperCase()} · ${photo.createdAt.month}/${photo.createdAt.day}/${photo.createdAt.year}',
+                      style: const TextStyle(
+                        fontFamily: 'IBMPlexMono',
+                        fontSize: 10,
+                        color: Color(0xFF9B9289),
+                      ),
+                    ),
+                    trailing: const Icon(Icons.chevron_right,
+                        size: 18, color: Color(0xFF9B9289)),
+                    onTap: () => onSelected(photo),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Pair edit form sheet ───────────────────────────────────────────────────────
+
+/// Modal form for editing room tag and caption on a before/after pair.
+class _PairEditFormSheet extends StatefulWidget {
+  const _PairEditFormSheet({
+    required this.before,
+    required this.after,
+    required this.onSave,
+  });
+
+  final ProjectPhoto before;
+  final ProjectPhoto after;
+  final void Function(String roomTag, String caption) onSave;
+
+  @override
+  State<_PairEditFormSheet> createState() => _PairEditFormSheetState();
+}
+
+class _PairEditFormSheetState extends State<_PairEditFormSheet> {
+  late final TextEditingController _roomTagCtrl;
+  late final TextEditingController _captionCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    final tag = widget.before.roomTag ?? widget.after.roomTag ?? '';
+    final caption = widget.before.caption ?? widget.after.caption ?? '';
+    _roomTagCtrl = TextEditingController(text: tag);
+    _captionCtrl = TextEditingController(text: caption);
+  }
+
+  @override
+  void dispose() {
+    _roomTagCtrl.dispose();
+    _captionCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.6,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Handle + header
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 10, bottom: 4),
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDDD6CC),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Edit pair details',
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF1A2B4A),
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () =>
+                          Navigator.of(context, rootNavigator: true).pop(),
+                      child: const Icon(Icons.close,
+                          size: 20, color: Color(0xFF9B9289)),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: Color(0xFFEDE8E0)),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _FieldLabel('Room / Area'),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _roomTagCtrl,
+                      decoration: _inputDecoration('e.g. Living Room'),
+                      textCapitalization: TextCapitalization.words,
+                    ),
+                    const SizedBox(height: 16),
+                    _FieldLabel('Caption'),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _captionCtrl,
+                      decoration: _inputDecoration(
+                          'Describe the transformation…'),
+                      textCapitalization: TextCapitalization.sentences,
+                      maxLines: 3,
+                      minLines: 2,
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () => widget.onSave(
+                          _roomTagCtrl.text.trim(),
+                          _captionCtrl.text.trim(),
+                        ),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF1A2B4A),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: const Text('Save Changes'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration(String hint) => InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(
+          color: Color(0xFFB0A89E),
+          fontSize: 14,
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFFDDD6CC)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFFDDD6CC)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFF1A2B4A), width: 1.5),
+        ),
+        filled: true,
+        fillColor: const Color(0xFFFAF8F5),
+      );
+}
+
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Text(
+        text,
+        style: const TextStyle(
+          fontFamily: 'IBMPlexMono',
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+          color: Color(0xFF6B6058),
+        ),
+      );
 }
 
 /// Simple full-screen viewer for unpaired / single photos.

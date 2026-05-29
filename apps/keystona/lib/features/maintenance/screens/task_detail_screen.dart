@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router.dart';
@@ -16,16 +17,24 @@ import '../models/task_detail.dart';
 import '../providers/task_detail_provider.dart';
 import '../widgets/task_detail_skeleton.dart';
 
-/// Full Task Detail screen.
+// ─── Palette ──────────────────────────────────────────────────────────────────
+
+const Color _kAccent = Color(0xFFB85638);
+const Color _kAccentDim = Color(0x12B85638);
+const Color _kOlive = Color(0xFF5A7050);
+const Color _kOliveDim = Color(0x125A7050);
+const Color _kSurface = Color(0xFFFFFFFF);
+const Color _kBg = Color(0xFFF3F0EB);
+const Color _kBorder = Color(0xFFDDD7CE);
+const Color _kDivider = Color(0xFFE9E4DC);
+const Color _kTextPrimary = Color(0xFF2A2420);
+const Color _kTextSecondary = Color(0xFF6B6058);
+const Color _kTextMuted = Color(0xFF9E9488);
+const Color _kTimelineOverdueBg = Color(0xFFFCF3F0);
+
+/// Task Detail screen — "Ledger" layout.
 ///
 /// Route: `/maintenance/:taskId`
-///
-/// Adaptive layout:
-/// - iOS: [CupertinoPageScaffold] with [CupertinoNavigationBar]
-/// - Android: [Scaffold] with [AppBar]
-///
-/// Displays all task fields, completion history, and action buttons
-/// (Quick Complete, Detailed Complete [stub for #33], Skip).
 class TaskDetailScreen extends ConsumerWidget {
   const TaskDetailScreen({super.key, required this.taskId});
 
@@ -35,37 +44,35 @@ class TaskDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
     return isIOS
-        ? _IOSDetailLayout(taskId: taskId)
-        : _AndroidDetailLayout(taskId: taskId);
+        ? _IOSLayout(taskId: taskId)
+        : _AndroidLayout(taskId: taskId);
   }
 }
 
 // ── iOS layout ────────────────────────────────────────────────────────────────
 
-class _IOSDetailLayout extends ConsumerWidget {
-  const _IOSDetailLayout({required this.taskId});
-
+class _IOSLayout extends ConsumerWidget {
+  const _IOSLayout({required this.taskId});
   final String taskId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final detailState = ref.watch(taskDetailProvider(taskId));
-
+    final state = ref.watch(taskDetailProvider(taskId));
     return CupertinoPageScaffold(
+      backgroundColor: _kBg,
       navigationBar: CupertinoNavigationBar(
+        backgroundColor: _kBg,
+        border: null,
         previousPageTitle: 'Tasks',
-        middle: detailState.maybeWhen(
-          data: (d) => Text(
-            d.task.name,
-            overflow: TextOverflow.ellipsis,
-          ),
-          orElse: () => const Text('Task'),
-        ),
-        // Edit button — wired by issue #34.
-        trailing: detailState.maybeWhen(
-          data: (_) => CupertinoButton(
+        middle: const SizedBox.shrink(),
+        trailing: state.maybeWhen(
+          data: (detail) => CupertinoButton(
             padding: EdgeInsets.zero,
-            onPressed: null, // TODO(#34): navigate to edit screen
+            onPressed: () => context.push(
+              AppRoutes.maintenanceEditTask
+                  .replaceFirst(':taskId', taskId),
+              extra: detail.task,
+            ),
             child: const Text('Edit'),
           ),
           orElse: () => null,
@@ -73,7 +80,7 @@ class _IOSDetailLayout extends ConsumerWidget {
       ),
       child: SafeArea(
         bottom: false,
-        child: _DetailStateBody(taskId: taskId, detailState: detailState),
+        child: _StateBody(taskId: taskId, state: state),
       ),
     );
   }
@@ -81,439 +88,248 @@ class _IOSDetailLayout extends ConsumerWidget {
 
 // ── Android layout ────────────────────────────────────────────────────────────
 
-class _AndroidDetailLayout extends ConsumerWidget {
-  const _AndroidDetailLayout({required this.taskId});
-
+class _AndroidLayout extends ConsumerWidget {
+  const _AndroidLayout({required this.taskId});
   final String taskId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final detailState = ref.watch(taskDetailProvider(taskId));
-
+    final state = ref.watch(taskDetailProvider(taskId));
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: _kBg,
       appBar: AppBar(
-        title: detailState.maybeWhen(
-          data: (d) => Text(d.task.name, style: AppTextStyles.h3),
-          orElse: () => Text('Task', style: AppTextStyles.h3),
-        ),
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: _kBg,
         elevation: 0,
         scrolledUnderElevation: 0,
+        title: const SizedBox.shrink(),
         actions: [
-          // Edit button — wired by issue #34.
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: null, // TODO(#34): navigate to edit screen
+          state.maybeWhen(
+            data: (detail) => TextButton(
+              onPressed: () => context.push(
+                AppRoutes.maintenanceEditTask
+                    .replaceFirst(':taskId', taskId),
+                extra: detail.task,
+              ),
+              child: Text(
+                'Edit',
+                style: AppTextStyles.labelLarge.copyWith(color: _kAccent),
+              ),
+            ),
+            orElse: () => const SizedBox.shrink(),
           ),
         ],
       ),
-      body: _DetailStateBody(taskId: taskId, detailState: detailState),
+      body: _StateBody(taskId: taskId, state: state),
     );
   }
 }
 
 // ── State switcher ────────────────────────────────────────────────────────────
 
-class _DetailStateBody extends ConsumerWidget {
-  const _DetailStateBody({
-    required this.taskId,
-    required this.detailState,
-  });
-
+class _StateBody extends ConsumerWidget {
+  const _StateBody({required this.taskId, required this.state});
   final String taskId;
-  final AsyncValue<TaskDetail> detailState;
+  final AsyncValue<TaskDetail> state;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return detailState.when(
+    return state.when(
       loading: () => const TaskDetailSkeleton(),
       error: (e, _) => ErrorView(
         message: "Couldn't load task.",
         onRetry: () => ref.invalidate(taskDetailProvider(taskId)),
       ),
-      data: (detail) => _DetailContent(taskId: taskId, detail: detail),
+      data: (detail) => _LedgerBody(taskId: taskId, detail: detail),
     );
   }
 }
 
-// ── Main content ──────────────────────────────────────────────────────────────
+// ── Ledger body ───────────────────────────────────────────────────────────────
 
-class _DetailContent extends StatelessWidget {
-  const _DetailContent({required this.taskId, required this.detail});
-
+class _LedgerBody extends StatelessWidget {
+  const _LedgerBody({required this.taskId, required this.detail});
   final String taskId;
   final TaskDetail detail;
 
   @override
   Widget build(BuildContext context) {
     final task = detail.task;
+    final completions = detail.completions;
     final isDone = task.status == TaskStatus.completed ||
         task.status == TaskStatus.skipped;
+
+    // Only show action bar when the task is actually due — tasks scheduled
+    // far in the future should be view-only so completing them doesn't
+    // create an infinite chain of future occurrences.
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final isActionable = !isDone &&
+        !task.dueDate.toLocal().isAfter(today.add(const Duration(days: 30)));
 
     return Column(
       children: [
         Expanded(
-          child: SingleChildScrollView(
-            padding: AppPadding.screen,
+          child: CustomScrollView(
+            slivers: [
+              // ── Header ────────────────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: _LedgerHeader(task: task),
+              ),
+
+              // ── Stat strip ────────────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: _StatStrip(task: task, completions: completions),
+              ),
+
+              // ── Instructions (collapsed) ──────────────────────────────────
+              SliverToBoxAdapter(
+                child: _InstructionsRow(task: task),
+              ),
+
+              // ── Service history ───────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: _ServiceHistory(task: task, completions: completions),
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            ],
+          ),
+        ),
+
+        // ── Action bar — only for due/overdue tasks ────────────────────────
+        AnimatedSize(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeInOutCubic,
+          child: isActionable
+              ? _BottomActions(taskId: taskId, isDone: isDone)
+              : const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+
+class _LedgerHeader extends StatelessWidget {
+  const _LedgerHeader({required this.task});
+  final MaintenanceTask task;
+
+  String _eyebrow() {
+    final cat = task.category.toUpperCase();
+    final system = task.linkedSystemName;
+    if (system != null && system.isNotEmpty) {
+      return '$cat · ${system.toUpperCase()}';
+    }
+    return cat;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final overdueDays = _overdueDays(task);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Eyebrow + Title ──────────────────────────────────────────────
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: AppSizes.sm),
-
-                // ── Status / Priority / Difficulty badges ───────────────────
-                _BadgeRow(task: task),
-                const SizedBox(height: AppSizes.lg),
-
-                // ── Scheduling metadata ─────────────────────────────────────
-                _MetaRow(
-                  icon: Icons.calendar_today_outlined,
-                  label: 'Due',
-                  value: DateFormat('MMMM d, y').format(task.dueDate.toLocal()),
+                Text(
+                  _eyebrow(),
+                  style: GoogleFonts.ibmPlexMono(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.2,
+                    color: _kTextMuted,
+                  ),
                 ),
-                if (task.recurrence != RecurrenceType.none) ...[
-                  const SizedBox(height: AppSizes.sm),
-                  _MetaRow(
-                    icon: Icons.repeat,
-                    label: 'Recurrence',
-                    value: task.recurrence.label,
+                const SizedBox(height: 7),
+                Text(
+                  task.name.endsWith('.')
+                      ? task.name
+                      : '${task.name}.',
+                  style: GoogleFonts.fraunces(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
+                    height: 1.1,
+                    color: _kTextPrimary,
                   ),
-                ],
-                if (task.estimatedMinutes != null) ...[
-                  const SizedBox(height: AppSizes.sm),
-                  _MetaRow(
-                    icon: Icons.schedule_outlined,
-                    label: 'Estimated',
-                    value: _formatMinutes(task.estimatedMinutes!),
-                  ),
-                ],
-                if (task.climateAdjusted) ...[
-                  const SizedBox(height: AppSizes.sm),
-                  _MetaRow(
-                    icon: Icons.thermostat_outlined,
-                    label: 'Climate',
-                    value: 'Adjusted for your climate zone',
-                  ),
-                ],
-
-                // ── Skip reason ────────────────────────────────────────────
-                if (task.status == TaskStatus.skipped &&
-                    task.skipReason != null &&
-                    task.skipReason!.isNotEmpty) ...[
-                  const SizedBox(height: AppSizes.sm),
-                  _MetaRow(
-                    icon: Icons.skip_next_outlined,
-                    label: 'Skipped',
-                    value: task.skipReason!,
-                    valueColor: AppColors.textSecondary,
-                  ),
-                ],
-
-                const SizedBox(height: AppSizes.lg),
-                const _SectionDivider(),
-                const SizedBox(height: AppSizes.lg),
-
-                // ── DIY vs Pro chip ─────────────────────────────────────────
-                _DiyProChip(diyOrPro: task.diyOrPro),
-                const SizedBox(height: AppSizes.lg),
-
-                // ── Linked system / appliance ───────────────────────────────
-                if (task.linkedSystemId != null) ...[
-                  _LinkedEntityChip(
-                    icon: Icons.home_repair_service_outlined,
-                    label: task.linkedSystemName ?? 'Linked System',
-                    onTap: () {
-                      final path = AppRoutes.homeSystemDetail.replaceFirst(
-                        ':systemId',
-                        task.linkedSystemId!,
-                      );
-                      context.push(path);
-                    },
-                  ),
-                  const SizedBox(height: AppSizes.sm),
-                ],
-                if (task.linkedApplianceId != null) ...[
-                  _LinkedEntityChip(
-                    icon: Icons.kitchen_outlined,
-                    label: task.linkedApplianceName ?? 'Linked Appliance',
-                    onTap: () {
-                      final path = AppRoutes.homeApplianceDetail.replaceFirst(
-                        ':applianceId',
-                        task.linkedApplianceId!,
-                      );
-                      context.push(path);
-                    },
-                  ),
-                  const SizedBox(height: AppSizes.sm),
-                ],
-                if (task.linkedSystemId != null ||
-                    task.linkedApplianceId != null) ...[
-                  const SizedBox(height: AppSizes.sm),
-                  const _SectionDivider(),
-                  const SizedBox(height: AppSizes.lg),
-                ],
-
-                // ── Description ─────────────────────────────────────────────
-                if (task.description != null &&
-                    task.description!.isNotEmpty) ...[
-                  _SectionHeader(title: 'Description'),
-                  const SizedBox(height: AppSizes.sm),
-                  Text(task.description!, style: AppTextStyles.bodyMedium),
-                  const SizedBox(height: AppSizes.lg),
-                  const _SectionDivider(),
-                  const SizedBox(height: AppSizes.lg),
-                ],
-
-                // ── Instructions ─────────────────────────────────────────────
-                if (task.instructions != null &&
-                    task.instructions!.isNotEmpty) ...[
-                  _SectionHeader(
-                    title: task.taskOrigin == TaskOrigin.systemGenerated ||
-                            task.taskOrigin == TaskOrigin.climateTriggered ||
-                            task.taskOrigin == TaskOrigin.seasonal
-                        ? 'How To Do It'
-                        : 'Instructions',
-                  ),
-                  const SizedBox(height: AppSizes.sm),
-                  Text(task.instructions!, style: AppTextStyles.bodyMedium),
-                  const SizedBox(height: AppSizes.lg),
-                  const _SectionDivider(),
-                  const SizedBox(height: AppSizes.lg),
-                ],
-
-                // ── Tools needed ────────────────────────────────────────────
-                if (task.toolsNeeded.isNotEmpty) ...[
-                  _SectionHeader(title: 'Tools Needed'),
-                  const SizedBox(height: AppSizes.sm),
-                  _BulletList(items: task.toolsNeeded),
-                  const SizedBox(height: AppSizes.lg),
-                ],
-
-                // ── Supplies needed ─────────────────────────────────────────
-                if (task.suppliesNeeded.isNotEmpty) ...[
-                  _SectionHeader(title: 'Supplies Needed'),
-                  const SizedBox(height: AppSizes.sm),
-                  _BulletList(items: task.suppliesNeeded),
-                  const SizedBox(height: AppSizes.lg),
-                ],
-
-                if (task.toolsNeeded.isNotEmpty ||
-                    task.suppliesNeeded.isNotEmpty) ...[
-                  const _SectionDivider(),
-                  const SizedBox(height: AppSizes.lg),
-                ],
-
-                // ── Completion history ──────────────────────────────────────
-                _SectionHeader(title: 'Completion History'),
-                const SizedBox(height: AppSizes.md),
-                _CompletionHistorySection(
-                  completions: detail.completions,
                 ),
-                const SizedBox(height: AppSizes.xl),
               ],
             ),
           ),
-        ),
 
-        // ── Sticky action buttons ───────────────────────────────────────────
-        _BottomActions(taskId: taskId, isDone: isDone),
-      ],
+          // ── Status badge ─────────────────────────────────────────────────
+          if (overdueDays != null) ...[
+            const SizedBox(width: 12),
+            _OverdueBadge(days: overdueDays),
+          ] else if (task.status == TaskStatus.completed) ...[
+            const SizedBox(width: 12),
+            _DoneBadge(),
+          ] else if (task.status == TaskStatus.scheduled ||
+              task.status == TaskStatus.due) ...[
+            const SizedBox(width: 12),
+            _DueBadge(task: task),
+          ],
+        ],
+      ),
     );
   }
 
-  String _formatMinutes(int minutes) {
-    if (minutes < 60) return '$minutes min';
-    final hours = minutes ~/ 60;
-    final rem = minutes % 60;
-    return rem == 0 ? '${hours}h' : '${hours}h ${rem}min';
+  static int? _overdueDays(MaintenanceTask task) {
+    if (task.status == TaskStatus.completed ||
+        task.status == TaskStatus.skipped) {
+      return null;
+    }
+    final now = DateTime.now();
+    final dueLocal = task.dueDate.toLocal();
+    if (dueLocal.isBefore(DateTime(now.year, now.month, now.day))) {
+      return now.difference(dueLocal).inDays;
+    }
+    if (task.status == TaskStatus.overdue) return 0;
+    return null;
   }
 }
 
-// ── Badge row ─────────────────────────────────────────────────────────────────
-
-class _BadgeRow extends StatelessWidget {
-  const _BadgeRow({required this.task});
-
-  final MaintenanceTask task;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppSizes.sm,
-      runSpacing: AppSizes.xs,
-      children: [
-        _StatusBadge(status: task.status),
-        _PriorityBadge(priority: task.priority),
-        _DifficultyBadge(difficulty: task.difficulty),
-      ],
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.status});
-
-  final TaskStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    final (label, color) = switch (status) {
-      TaskStatus.scheduled => ('Scheduled', AppColors.statusScheduled),
-      TaskStatus.due => ('Due', AppColors.statusDueToday),
-      TaskStatus.overdue => ('Overdue', AppColors.statusOverdue),
-      TaskStatus.completed => ('Completed', AppColors.statusCompleted),
-      TaskStatus.skipped => ('Skipped', AppColors.textSecondary),
-    };
-    return _Chip(label: label, color: color);
-  }
-}
-
-class _PriorityBadge extends StatelessWidget {
-  const _PriorityBadge({required this.priority});
-
-  final TaskPriority priority;
-
-  @override
-  Widget build(BuildContext context) {
-    final (label, color) = switch (priority) {
-      TaskPriority.critical => ('Critical', AppColors.statusOverdue),
-      TaskPriority.high => ('High Priority', AppColors.statusDueToday),
-      TaskPriority.medium => ('Medium', AppColors.info),
-      TaskPriority.low => ('Low', AppColors.textSecondary),
-    };
-    return _Chip(label: label, color: color);
-  }
-}
-
-class _DifficultyBadge extends StatelessWidget {
-  const _DifficultyBadge({required this.difficulty});
-
-  final TaskDifficulty difficulty;
-
-  @override
-  Widget build(BuildContext context) {
-    final label = switch (difficulty) {
-      TaskDifficulty.easy => 'Easy',
-      TaskDifficulty.moderate => 'Moderate',
-      TaskDifficulty.involved => 'Involved',
-      TaskDifficulty.professional => 'Pro Required',
-    };
-    return _Chip(label: label, color: AppColors.deepNavy);
-  }
-}
-
-class _Chip extends StatelessWidget {
-  const _Chip({required this.label, required this.color});
-
-  final String label;
-  final Color color;
+class _OverdueBadge extends StatelessWidget {
+  const _OverdueBadge({required this.days});
+  final int days;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.sm,
-        vertical: 5,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withAlpha(20),
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-        border: Border.all(color: color.withAlpha(70)),
+        color: _kAccentDim,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _kAccent.withAlpha(60)),
       ),
-      child: Text(
-        label,
-        style: AppTextStyles.labelSmall.copyWith(color: color),
-      ),
-    );
-  }
-}
-
-// ── Metadata row ──────────────────────────────────────────────────────────────
-
-class _MetaRow extends StatelessWidget {
-  const _MetaRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.valueColor,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color? valueColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 16, color: AppColors.textSecondary),
-        const SizedBox(width: AppSizes.sm),
-        Text(
-          '$label:  ',
-          style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: valueColor ?? AppColors.textPrimary,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── DIY vs Pro chip ───────────────────────────────────────────────────────────
-
-class _DiyProChip extends StatelessWidget {
-  const _DiyProChip({required this.diyOrPro});
-
-  final DiyOrPro diyOrPro;
-
-  @override
-  Widget build(BuildContext context) {
-    final (icon, label, color) = switch (diyOrPro) {
-      DiyOrPro.diy => (
-          Icons.handyman_outlined,
-          'DIY Friendly',
-          AppColors.success,
-        ),
-      DiyOrPro.either => (
-          Icons.handshake_outlined,
-          'DIY or Professional',
-          AppColors.info,
-        ),
-      DiyOrPro.professional => (
-          Icons.engineering_outlined,
-          'Hire a Professional',
-          AppColors.warning,
-        ),
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
-      ),
-      decoration: BoxDecoration(
-        color: color.withAlpha(15),
-        borderRadius: AppRadius.md,
-        border: Border.all(color: color.withAlpha(60)),
-      ),
-      child: Row(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: AppSizes.sm),
           Text(
-            label,
-            style: AppTextStyles.bodyMediumSemibold.copyWith(color: color),
+            days == 0 ? 'Due' : '${days}d',
+            style: GoogleFonts.ibmPlexMono(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: _kAccent,
+              height: 1.0,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'OVERDUE',
+            style: GoogleFonts.ibmPlexMono(
+              fontSize: 8,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.0,
+              color: _kAccent,
+            ),
           ),
         ],
       ),
@@ -521,44 +337,168 @@ class _DiyProChip extends StatelessWidget {
   }
 }
 
-// ── Linked entity chip ────────────────────────────────────────────────────────
+class _DoneBadge extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: _kOliveDim,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _kOlive.withAlpha(60)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.check_rounded, color: _kOlive, size: 18),
+          const SizedBox(height: 2),
+          Text(
+            'DONE',
+            style: GoogleFonts.ibmPlexMono(
+              fontSize: 8,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.0,
+              color: _kOlive,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-class _LinkedEntityChip extends StatelessWidget {
-  const _LinkedEntityChip({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
+class _DueBadge extends StatelessWidget {
+  const _DueBadge({required this.task});
+  final MaintenanceTask task;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
+    final daysUntil = task.dueDate
+        .toLocal()
+        .difference(DateTime.now())
+        .inDays
+        .abs();
+    final label = task.status == TaskStatus.due ? 'TODAY' : '${daysUntil}d';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0x14506A80),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFF506A80).withAlpha(60)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.ibmPlexMono(
+              fontSize: task.status == TaskStatus.due ? 12 : 18,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF506A80),
+              height: 1.0,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            task.status == TaskStatus.due ? 'DUE' : 'DAYS',
+            style: GoogleFonts.ibmPlexMono(
+              fontSize: 8,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.0,
+              color: const Color(0xFF506A80),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Stat strip ────────────────────────────────────────────────────────────────
+
+class _StatStrip extends StatelessWidget {
+  const _StatStrip({required this.task, required this.completions});
+  final MaintenanceTask task;
+  final List<TaskCompletion> completions;
+
+  String _spentLabel() {
+    final total = completions.fold<double>(
+      0,
+      (s, c) => s + (c.serviceCost ?? 0) + (c.materialsCost ?? 0),
+    );
+    if (total == 0) return '\$0';
+    if (total >= 1000) return '\$${(total / 1000).toStringAsFixed(1)}k';
+    return '\$${total.toInt()}';
+  }
+
+  String _cycleLabel() => switch (task.recurrence) {
+        RecurrenceType.none => '—',
+        RecurrenceType.weekly => '7d',
+        RecurrenceType.biweekly => '14d',
+        RecurrenceType.monthly => '30d',
+        RecurrenceType.quarterly => '90d',
+        RecurrenceType.biannual => '180d',
+        RecurrenceType.annual => '1yr',
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      child: Row(
+        children: [
+          _StatCell(value: '${completions.length}', label: 'DONE'),
+          const SizedBox(width: 8),
+          _StatCell(value: _spentLabel(), label: 'SPENT'),
+          const SizedBox(width: 8),
+          _StatCell(value: _cycleLabel(), label: 'CYCLE'),
+          const SizedBox(width: 8),
+          _StatCell(
+            value: '${completions.length}',
+            label: 'STREAK',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatCell extends StatelessWidget {
+  const _StatCell({required this.value, required this.label});
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: AppRadius.md,
-          border: Border.all(color: AppColors.border),
+          color: _kSurface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: _kBorder),
         ),
-        child: Row(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: AppColors.textSecondary),
-            const SizedBox(width: AppSizes.sm),
-            Text(label, style: AppTextStyles.bodySmall),
-            const SizedBox(width: AppSizes.xs),
-            const Icon(
-              Icons.chevron_right,
-              size: 16,
-              color: AppColors.textSecondary,
+            Text(
+              value,
+              style: GoogleFonts.ibmPlexMono(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: _kTextPrimary,
+                height: 1.0,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: GoogleFonts.ibmPlexMono(
+                fontSize: 8,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.0,
+                color: _kTextMuted,
+              ),
             ),
           ],
         ),
@@ -567,37 +507,211 @@ class _LinkedEntityChip extends StatelessWidget {
   }
 }
 
-// ── Section helpers ───────────────────────────────────────────────────────────
+// ── Instructions row (collapsible) ────────────────────────────────────────────
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title});
+class _InstructionsRow extends StatefulWidget {
+  const _InstructionsRow({required this.task});
+  final MaintenanceTask task;
 
-  final String title;
+  @override
+  State<_InstructionsRow> createState() => _InstructionsRowState();
+}
+
+class _InstructionsRowState extends State<_InstructionsRow> {
+  bool _expanded = false;
+
+  String _summaryLine() {
+    final parts = <String>[];
+    if (widget.task.estimatedMinutes != null) {
+      final m = widget.task.estimatedMinutes!;
+      parts.add(m < 60 ? '$m min' : '${m ~/ 60}h');
+    }
+    parts.add(switch (widget.task.difficulty) {
+      TaskDifficulty.easy => 'easy',
+      TaskDifficulty.moderate => 'moderate',
+      TaskDifficulty.involved => 'involved',
+      TaskDifficulty.professional => 'pro required',
+    });
+    parts.add(switch (widget.task.diyOrPro) {
+      DiyOrPro.diy => 'DIY',
+      DiyOrPro.either => 'DIY/PRO',
+      DiyOrPro.professional => 'hire PRO',
+    });
+    return parts.join(' · ');
+  }
+
+  String _headerLine() {
+    final parts = <String>['Instructions'];
+    if (widget.task.toolsNeeded.isNotEmpty) parts.add('tools');
+    if (widget.task.suppliesNeeded.isNotEmpty) parts.add('supplies');
+    return parts.join(' · ');
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      title.toUpperCase(),
-      style: AppTextStyles.labelSmall.copyWith(
-        color: AppColors.textSecondary,
-        letterSpacing: 0.8,
+    final hasContent = (widget.task.description != null &&
+            widget.task.description!.isNotEmpty) ||
+        (widget.task.instructions != null &&
+            widget.task.instructions!.isNotEmpty) ||
+        widget.task.toolsNeeded.isNotEmpty ||
+        widget.task.suppliesNeeded.isNotEmpty;
+
+    if (!hasContent) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      child: GestureDetector(
+        onTap: () => setState(() => _expanded = !_expanded),
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          decoration: BoxDecoration(
+            color: _kSurface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: _kBorder),
+          ),
+          clipBehavior: Clip.hardEdge,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Collapsed header row ────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                child: Row(
+                  children: [
+                    // Icon
+                    Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: _kAccentDim,
+                        borderRadius: BorderRadius.circular(7),
+                      ),
+                      child: Icon(
+                        _expanded ? Icons.remove : Icons.add,
+                        size: 16,
+                        color: _kAccent,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    // Text
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _headerLine(),
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: _kTextPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _expanded
+                                ? 'Tap to collapse'
+                                : 'Tap to expand · ${_summaryLine()}',
+                            style: GoogleFonts.ibmPlexMono(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              color: _kTextMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Chevron
+                    AnimatedRotation(
+                      turns: _expanded ? 0.5 : 0.0,
+                      duration: const Duration(milliseconds: 220),
+                      child: const Icon(
+                        Icons.keyboard_arrow_down,
+                        size: 18,
+                        color: _kTextMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // ── Expandable content ──────────────────────────────────────
+              ClipRect(
+                child: AnimatedAlign(
+                  alignment: Alignment.topCenter,
+                  heightFactor: _expanded ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOutCubic,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Divider(height: 1, color: _kDivider),
+                        const SizedBox(height: 12),
+                        if (widget.task.description != null &&
+                            widget.task.description!.isNotEmpty) ...[
+                          Text(
+                            widget.task.description!,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: _kTextSecondary,
+                              height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        if (widget.task.instructions != null &&
+                            widget.task.instructions!.isNotEmpty) ...[
+                          _InstructionLabel('HOW TO DO IT'),
+                          const SizedBox(height: 6),
+                          Text(
+                            widget.task.instructions!,
+                            style: AppTextStyles.bodySmall
+                                .copyWith(height: 1.6),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        if (widget.task.toolsNeeded.isNotEmpty) ...[
+                          _InstructionLabel('TOOLS'),
+                          const SizedBox(height: 6),
+                          _BulletList(items: widget.task.toolsNeeded),
+                          const SizedBox(height: 8),
+                        ],
+                        if (widget.task.suppliesNeeded.isNotEmpty) ...[
+                          _InstructionLabel('SUPPLIES'),
+                          const SizedBox(height: 6),
+                          _BulletList(items: widget.task.suppliesNeeded),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-class _SectionDivider extends StatelessWidget {
-  const _SectionDivider();
+class _InstructionLabel extends StatelessWidget {
+  const _InstructionLabel(this.text);
+  final String text;
 
   @override
-  Widget build(BuildContext context) {
-    return const Divider(height: 1, thickness: 1, color: AppColors.divider);
-  }
+  Widget build(BuildContext context) => Text(
+        text,
+        style: GoogleFonts.ibmPlexMono(
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.2,
+          color: _kTextMuted,
+        ),
+      );
 }
 
 class _BulletList extends StatelessWidget {
   const _BulletList({required this.items});
-
   final List<String> items;
 
   @override
@@ -607,23 +721,27 @@ class _BulletList extends StatelessWidget {
       children: items
           .map(
             (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
+              padding: const EdgeInsets.only(bottom: 3),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(top: 5, right: 8),
+                    padding: const EdgeInsets.only(top: 6, right: 7),
                     child: Container(
-                      width: 5,
-                      height: 5,
+                      width: 4,
+                      height: 4,
                       decoration: const BoxDecoration(
-                        color: AppColors.textSecondary,
+                        color: _kTextMuted,
                         shape: BoxShape.circle,
                       ),
                     ),
                   ),
                   Expanded(
-                    child: Text(item, style: AppTextStyles.bodyMedium),
+                    child: Text(
+                      item,
+                      style:
+                          AppTextStyles.bodySmall.copyWith(color: _kTextSecondary),
+                    ),
                   ),
                 ],
               ),
@@ -634,56 +752,593 @@ class _BulletList extends StatelessWidget {
   }
 }
 
-// ── Completion history ────────────────────────────────────────────────────────
+// ── Service history timeline ───────────────────────────────────────────────────
 
-class _CompletionHistorySection extends StatelessWidget {
-  const _CompletionHistorySection({required this.completions});
-
+class _ServiceHistory extends StatefulWidget {
+  const _ServiceHistory({required this.task, required this.completions});
+  final MaintenanceTask task;
   final List<TaskCompletion> completions;
 
   @override
-  Widget build(BuildContext context) {
-    if (completions.isEmpty) {
-      return _CompletionHistoryEmpty();
-    }
+  State<_ServiceHistory> createState() => _ServiceHistoryState();
+}
 
-    return Column(
-      children: completions
-          .map((c) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSizes.sm),
-                child: _CompletionRow(completion: c),
-              ))
-          .toList(),
+class _ServiceHistoryState extends State<_ServiceHistory>
+    with TickerProviderStateMixin {
+  // Completion entry: slide up + fade in.
+  late final AnimationController _ctrl;
+  late final Animation<double> _fade;
+  late final Animation<Offset> _slide;
+
+  // Next service entry: scale pop + fade in (fires shortly after completion).
+  late final AnimationController _nextCtrl;
+  late final Animation<double> _nextFade;
+  late final Animation<double> _nextScale;
+
+  int _prevCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _prevCount = widget.completions.length;
+
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+    );
+    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.25),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+
+    _nextCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 520),
+    );
+    _nextFade = CurvedAnimation(
+      parent: _nextCtrl,
+      curve: const Interval(0, 0.55, curve: Curves.easeOut),
+    );
+    _nextScale = Tween<double>(begin: 0.78, end: 1.0).animate(
+      CurvedAnimation(parent: _nextCtrl, curve: Curves.easeOutBack),
+    );
+
+    // Completion entries: always start visible (history was already on screen).
+    _ctrl.value = 1.0;
+    // Next-service entry: start invisible only when we're waiting for the
+    // pop-in animation (task is currently overdue/due with no history yet).
+    // Any other case — scheduled future task, or returning to an already
+    // completed task — starts fully visible so it doesn't re-animate.
+    final waitingForFirstCompletion =
+        _isOverdueOrDue(widget.task) && widget.completions.isEmpty;
+    _nextCtrl.value = waitingForFirstCompletion ? 0.0 : 1.0;
+  }
+
+  @override
+  void didUpdateWidget(_ServiceHistory old) {
+    super.didUpdateWidget(old);
+    if (widget.completions.length > _prevCount) {
+      // Completion card slides in immediately.
+      _ctrl.forward(from: 0.0);
+      // Next service card pops in with a short delay for sequencing.
+      if (widget.task.recurrence != RecurrenceType.none) {
+        Future.delayed(const Duration(milliseconds: 180), () {
+          if (mounted) _nextCtrl.forward(from: 0.0);
+        });
+      }
+    }
+    _prevCount = widget.completions.length;
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    _nextCtrl.dispose();
+    super.dispose();
+  }
+
+  static bool _isOverdueOrDue(MaintenanceTask task) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return !task.dueDate.toLocal().isAfter(today);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDone = widget.task.status == TaskStatus.completed ||
+        widget.task.status == TaskStatus.skipped;
+    final completions = widget.completions;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Section label ─────────────────────────────────────────────────
+          Row(
+            children: [
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: isDone ? _kOlive : _kAccent,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 7),
+              Text(
+                'SERVICE HISTORY',
+                style: GoogleFonts.ibmPlexMono(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.4,
+                  color: _kTextMuted,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // ── Timeline entries ─────────────────────────────────────────────
+          // Only show the overdue/due-now entry when the task is actually
+          // past its due date — not for future scheduled tasks.
+          if (!isDone && _isOverdueOrDue(widget.task)) ...[
+            _OverdueEntry(task: widget.task, isLast: completions.isEmpty),
+          ],
+
+          // Scheduled entry — shown whenever the task is not yet done and
+          // not currently overdue/due. Covers both "never completed" (first
+          // service preview) and "just completed a recurring task" (next
+          // occurrence). Hidden for overdue/due tasks where _OverdueEntry
+          // already anchors the timeline.
+          if (!isDone && !_isOverdueOrDue(widget.task))
+            FadeTransition(
+              opacity: _nextFade,
+              child: ScaleTransition(
+                scale: _nextScale,
+                alignment: Alignment.topCenter,
+                child: _ScheduledNextEntry(
+                  task: widget.task,
+                  nextDate: widget.task.dueDate,
+                  isLast: completions.isEmpty,
+                ),
+              ),
+            ),
+
+          ...List.generate(completions.length, (i) {
+            final c = completions[i];
+            final isNextShowing =
+                !isDone && !_isOverdueOrDue(widget.task);
+            final isLast = i == completions.length - 1;
+            final entry = _CompletionEntry(
+              completion: c,
+              isFirst: !isDone && i == 0,
+              isLast: isLast,
+            );
+            // Animate only the newest entry (index 0 — sorted desc).
+            if (i == 0 && !isNextShowing) {
+              return FadeTransition(
+                opacity: _fade,
+                child: SlideTransition(position: _slide, child: entry),
+              );
+            }
+            return entry;
+          }),
+
+          if (isDone && completions.isEmpty) _EmptyHistory(),
+        ],
+      ),
     );
   }
 }
 
-class _CompletionHistoryEmpty extends StatelessWidget {
+// ── Scheduled next entry ──────────────────────────────────────────────────────
+
+const Color _kScheduled = Color(0xFF3D6A8A);
+const Color _kScheduledDim = Color(0x103D6A8A);
+
+class _ScheduledNextEntry extends StatelessWidget {
+  const _ScheduledNextEntry({
+    required this.task,
+    required this.nextDate,
+    required this.isLast,
+  });
+
+  final MaintenanceTask task;
+  final DateTime nextDate;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    final next = nextDate.toLocal();
+    final daysUntil = next.difference(DateTime.now()).inDays.clamp(0, 9999);
+    final dateStr =
+        DateFormat('MMM d').format(next).toUpperCase();
+    final yearStr = next.year.toString();
+
+    return _TimelineRow(
+      isLast: isLast,
+      dot: _ScheduledDot(),
+      content: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: _kScheduledDim,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: _kScheduled.withAlpha(50)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '$dateStr · $yearStr',
+                  style: GoogleFonts.ibmPlexMono(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    color: _kScheduled,
+                  ),
+                ),
+                Text(
+                  'in $daysUntil days',
+                  style: GoogleFonts.ibmPlexMono(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: _kScheduled,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              task.recurrence == RecurrenceType.none
+                  ? 'Scheduled service'
+                  : 'Next service',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: _kTextPrimary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              task.recurrence == RecurrenceType.none
+                  ? 'One-time task'
+                  : 'Auto-scheduled · ${task.recurrence.label}',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: _kScheduled,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ScheduledDot extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: _kScheduledDim,
+          shape: BoxShape.circle,
+          border: Border.all(color: _kScheduled.withAlpha(100)),
+        ),
+        child: const Center(
+          child: Icon(
+            Icons.event_rounded,
+            color: _kScheduled,
+            size: 13,
+          ),
+        ),
+      );
+}
+
+// ── Overdue timeline entry ─────────────────────────────────────────────────────
+
+class _OverdueEntry extends StatelessWidget {
+  const _OverdueEntry({required this.task, required this.isLast});
+  final MaintenanceTask task;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final due = task.dueDate.toLocal();
+    final days = now.difference(due).inDays;
+    final lateLabel = days == 0 ? 'due today' : '${days}d late';
+    final today = DateFormat('MMM d').format(now).toUpperCase();
+    final scheduledLabel =
+        'Was scheduled ${DateFormat('MMM d').format(due)}';
+
+    return _TimelineRow(
+      isLast: isLast,
+      dot: _TerracottaDot(),
+      content: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: _kTimelineOverdueBg,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: _kAccent.withAlpha(40)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '$today · TODAY',
+                  style: GoogleFonts.ibmPlexMono(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    color: _kAccent,
+                  ),
+                ),
+                Text(
+                  lateLabel,
+                  style: GoogleFonts.ibmPlexMono(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: _kAccent,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Due now',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: _kTextPrimary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              scheduledLabel,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: _kAccent,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Completion timeline entry ──────────────────────────────────────────────────
+
+class _CompletionEntry extends StatelessWidget {
+  const _CompletionEntry({
+    required this.completion,
+    required this.isFirst,
+    required this.isLast,
+  });
+
+  final TaskCompletion completion;
+  final bool isFirst;
+  final bool isLast;
+
+  String _completedByLabel() {
+    if (completion.completedBy == 'contractor') {
+      final name = completion.contractorName;
+      return name != null && name.isNotEmpty
+          ? 'Done by $name'
+          : 'Done by contractor';
+    }
+    return 'Done by you';
+  }
+
+  String _metaLine() {
+    final parts = <String>[];
+    parts.add(completion.completedBy == 'diy' ? 'DIY' : 'PRO');
+    if (completion.timeSpentMinutes != null) {
+      parts.add('${completion.timeSpentMinutes} min');
+    }
+    if (completion.notes != null && completion.notes!.isNotEmpty) {
+      parts.add(completion.notes!);
+    }
+    return parts.join(' · ');
+  }
+
+  double get _totalCost =>
+      (completion.serviceCost ?? 0) + (completion.materialsCost ?? 0);
+
+  @override
+  Widget build(BuildContext context) {
+    final dateStr =
+        DateFormat('MMM d').format(completion.completedDate.toLocal()).toUpperCase();
+    final hasCost = _totalCost > 0;
+    final meta = _metaLine();
+
+    return _TimelineRow(
+      isLast: isLast,
+      dot: _OliveDot(),
+      content: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: _kSurface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: _kBorder),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  dateStr,
+                  style: GoogleFonts.ibmPlexMono(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    color: _kTextMuted,
+                  ),
+                ),
+                if (hasCost)
+                  Text(
+                    '\$${_totalCost.toInt()}',
+                    style: GoogleFonts.ibmPlexMono(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: _kTextSecondary,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _completedByLabel(),
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: _kTextPrimary,
+              ),
+            ),
+            if (meta.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(
+                meta,
+                style: GoogleFonts.ibmPlexMono(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: _kTextMuted,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Timeline layout primitives ────────────────────────────────────────────────
+
+class _TimelineRow extends StatelessWidget {
+  const _TimelineRow({
+    required this.dot,
+    required this.content,
+    required this.isLast,
+  });
+
+  final Widget dot;
+  final Widget content;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Left rail: dot + line ─────────────────────────────────────
+          SizedBox(
+            width: 24,
+            child: Column(
+              children: [
+                dot,
+                if (!isLast)
+                  Container(
+                    width: 1.5,
+                    height: 56,
+                    color: _kDivider,
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          // ── Content ───────────────────────────────────────────────────
+          Expanded(child: content),
+        ],
+      ),
+    );
+  }
+}
+
+class _TerracottaDot extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => Container(
+        width: 24,
+        height: 24,
+        decoration: const BoxDecoration(
+          color: _kAccent,
+          shape: BoxShape.circle,
+        ),
+        child: const Center(
+          child: Icon(
+            Icons.priority_high_rounded,
+            color: Colors.white,
+            size: 13,
+          ),
+        ),
+      );
+}
+
+class _OliveDot extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: _kOliveDim,
+          shape: BoxShape.circle,
+          border: Border.all(color: _kOlive.withAlpha(100)),
+        ),
+        child: const Center(
+          child: Icon(
+            Icons.check_rounded,
+            color: _kOlive,
+            size: 13,
+          ),
+        ),
+      );
+}
+
+class _EmptyHistory extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: AppSizes.xl),
+      padding: const EdgeInsets.symmetric(vertical: 28),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.checklist_outlined,
-              size: 40,
-              color: AppColors.textDisabled,
-            ),
-            const SizedBox(height: AppSizes.sm),
+            const Icon(Icons.history, size: 32, color: _kTextMuted),
+            const SizedBox(height: 8),
             Text(
-              'No completions yet',
-              style: AppTextStyles.bodyMediumSemibold.copyWith(
-                color: AppColors.textSecondary,
+              'No history yet',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: _kTextMuted,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Text(
-              'Complete this task to start tracking history.',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
+              'Complete this task to start your service log.',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                color: _kTextMuted,
               ),
               textAlign: TextAlign.center,
             ),
@@ -694,84 +1349,10 @@ class _CompletionHistoryEmpty extends StatelessWidget {
   }
 }
 
-class _CompletionRow extends StatelessWidget {
-  const _CompletionRow({required this.completion});
-
-  final TaskCompletion completion;
-
-  @override
-  Widget build(BuildContext context) {
-    final totalCost = (completion.serviceCost ?? 0) +
-        (completion.materialsCost ?? 0);
-
-    return Container(
-      padding: AppPadding.card,
-      decoration: BoxDecoration(
-        color: AppColors.successLight,
-        borderRadius: AppRadius.md,
-        border: Border.all(color: AppColors.success.withAlpha(40)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.check_circle_outline,
-                size: 16,
-                color: AppColors.success,
-              ),
-              const SizedBox(width: AppSizes.xs),
-              Text(
-                DateFormat('MMMM d, y')
-                    .format(completion.completedDate.toLocal()),
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.success,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Spacer(),
-              if (totalCost > 0)
-                Text(
-                  '\$${totalCost.toStringAsFixed(2)}',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-            ],
-          ),
-          if (completion.completedBy == 'contractor' &&
-              completion.contractorName != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              completion.contractorName!,
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-          if (completion.notes != null && completion.notes!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              completion.notes!,
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textSecondary,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-// ── Bottom action buttons ─────────────────────────────────────────────────────
+// ── Bottom action bar ─────────────────────────────────────────────────────────
 
 class _BottomActions extends ConsumerStatefulWidget {
   const _BottomActions({required this.taskId, required this.isDone});
-
   final String taskId;
   final bool isDone;
 
@@ -785,52 +1366,115 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
 
   @override
   Widget build(BuildContext context) {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Container(
       padding: EdgeInsets.fromLTRB(
         AppSizes.screenPadding,
         AppSizes.md,
         AppSizes.screenPadding,
-        AppSizes.screenPadding +
-            MediaQuery.of(context).padding.bottom,
+        AppSizes.sm + bottomPad,
       ),
-      decoration: BoxDecoration(
-        color: isIOS ? CupertinoColors.systemBackground : AppColors.surface,
-        border: const Border(
-          top: BorderSide(color: AppColors.border, width: 0.5),
-        ),
+      decoration: const BoxDecoration(
+        color: _kBg,
+        border: Border(top: BorderSide(color: _kDivider, width: 1)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Quick Complete — primary CTA.
-          _QuickCompleteButton(
-            isLoading: _isCompleting,
-            isDisabled: widget.isDone,
-            onPressed: widget.isDone ? null : _handleQuickComplete,
+          // ── Mark Complete ───────────────────────────────────────────────
+          SizedBox(
+            height: 52,
+            child: ElevatedButton(
+              onPressed: (_isCompleting || widget.isDone)
+                  ? null
+                  : _handleMarkComplete,
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    widget.isDone ? AppColors.gray300 : _kAccent,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child: _isCompleting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
+                    )
+                  : Text(
+                      widget.isDone ? 'Already Done' : 'Mark Complete',
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+            ),
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: 8),
 
+          // ── Add Details + Skip ─────────────────────────────────────────
           Row(
             children: [
-              // Detailed Complete — opens the full completion form.
               Expanded(
-                child: _OutlinedActionButton(
-                  label: 'Detailed Complete',
-                  isDisabled: widget.isDone,
-                  onPressed: widget.isDone ? null : _handleDetailedComplete,
+                child: SizedBox(
+                  height: 44,
+                  child: OutlinedButton(
+                    onPressed: widget.isDone ? null : _handleAddDetails,
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(
+                        color:
+                            widget.isDone ? _kBorder : _kAccent.withAlpha(140),
+                      ),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: Text(
+                      'Add Details',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: widget.isDone ? _kTextMuted : _kAccent,
+                      ),
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(width: AppSizes.sm),
-
-              // Skip.
+              const SizedBox(width: 8),
               Expanded(
-                child: _SkipButton(
-                  isLoading: _isSkipping,
-                  isDisabled: widget.isDone,
-                  onPressed: widget.isDone ? null : _handleSkip,
+                child: SizedBox(
+                  height: 44,
+                  child: OutlinedButton(
+                    onPressed: (_isSkipping || widget.isDone)
+                        ? null
+                        : _handleSkip,
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: _kBorder),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: _isSkipping
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: _kTextMuted),
+                          )
+                        : Text(
+                            'Skip',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: widget.isDone
+                                  ? _kTextMuted
+                                  : AppColors.error,
+                            ),
+                          ),
+                  ),
                 ),
               ),
             ],
@@ -840,27 +1484,25 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
     );
   }
 
-  Future<void> _handleQuickComplete() async {
+  Future<void> _handleMarkComplete() async {
     if (_isCompleting) return;
     HapticFeedback.mediumImpact();
     setState(() => _isCompleting = true);
 
-    String? completionId;
+    late final ({String completionId, DateTime? originalDueDate}) result;
     try {
-      completionId = await ref
+      result = await ref
           .read(taskDetailProvider(widget.taskId).notifier)
           .quickCompleteTask();
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: const Text("Couldn't complete task. Try again."),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        ..showSnackBar(SnackBar(
+          content: const Text("Couldn't complete task. Try again."),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ));
       setState(() => _isCompleting = false);
       return;
     }
@@ -868,66 +1510,58 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
     if (!mounted) return;
     setState(() => _isCompleting = false);
 
-    // Show undo snackbar — 5 seconds.
-    final capturedId = completionId;
+    final capturedCompletionId = result.completionId;
+    final capturedOriginalDueDate = result.originalDueDate;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: const Text('Task completed!'),
-          duration: const Duration(seconds: 5),
-          behavior: SnackBarBehavior.floating,
-          action: SnackBarAction(
-            label: 'Undo',
-            textColor: AppColors.goldAccent,
-            onPressed: () {
-              ref
-                  .read(taskDetailProvider(widget.taskId).notifier)
-                  .undoQuickComplete(capturedId);
-            },
-          ),
+      ..showSnackBar(SnackBar(
+        content: const Text('Task completed!'),
+        duration: const Duration(seconds: 4),
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'Undo',
+          textColor: AppColors.goldAccent,
+          onPressed: () {
+            ref
+                .read(taskDetailProvider(widget.taskId).notifier)
+                .undoQuickComplete(
+                  capturedCompletionId,
+                  originalDueDate: capturedOriginalDueDate,
+                );
+          },
         ),
-      );
+      ));
   }
 
-  Future<void> _handleDetailedComplete() async {
+  Future<void> _handleAddDetails() async {
     final completionId = await context.push<String>(
-      AppRoutes.maintenanceCompleteTask.replaceFirst(
-        ':taskId',
-        widget.taskId,
-      ),
+      AppRoutes.maintenanceCompleteTask
+          .replaceFirst(':taskId', widget.taskId),
     );
-
     if (completionId == null || !mounted) return;
     HapticFeedback.heavyImpact();
-
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: const Text('Task completed!'),
-          duration: const Duration(seconds: 5),
-          behavior: SnackBarBehavior.floating,
-          action: SnackBarAction(
-            label: 'Undo',
-            textColor: AppColors.goldAccent,
-            onPressed: () {
-              ref
-                  .read(taskDetailProvider(widget.taskId).notifier)
-                  .undoQuickComplete(completionId);
-            },
-          ),
+      ..showSnackBar(SnackBar(
+        content: const Text('Task completed!'),
+        duration: const Duration(seconds: 5),
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'Undo',
+          textColor: AppColors.goldAccent,
+          onPressed: () {
+            ref
+                .read(taskDetailProvider(widget.taskId).notifier)
+                .undoQuickComplete(completionId);
+          },
         ),
-      );
+      ));
   }
 
   Future<void> _handleSkip() async {
     if (_isSkipping) return;
-
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
     final reason = await _SkipReasonSheet.show(context, isIOS: isIOS);
-
-    // null means user cancelled; empty string is a valid "no reason given".
     if (reason == null || !mounted) return;
 
     setState(() => _isSkipping = true);
@@ -939,156 +1573,19 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: const Text("Couldn't skip task. Try again."),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        ..showSnackBar(SnackBar(
+          content: const Text("Couldn't skip task. Try again."),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ));
     } finally {
       if (mounted) setState(() => _isSkipping = false);
     }
   }
 }
 
-// ── Action button variants ─────────────────────────────────────────────────────
+// ── Skip reason sheet (unchanged) ─────────────────────────────────────────────
 
-class _QuickCompleteButton extends StatelessWidget {
-  const _QuickCompleteButton({
-    required this.isLoading,
-    required this.isDisabled,
-    required this.onPressed,
-  });
-
-  final bool isLoading;
-  final bool isDisabled;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 50,
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor:
-              isDisabled ? AppColors.gray300 : AppColors.accent,
-          foregroundColor: AppColors.textInverse,
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.md),
-          elevation: 0,
-        ),
-        child: isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.textInverse,
-                ),
-              )
-            : Text(
-                isDisabled ? 'Already Done' : 'Quick Complete',
-                style: AppTextStyles.bodyMediumSemibold.copyWith(
-                  color: AppColors.textInverse,
-                ),
-              ),
-      ),
-    );
-  }
-}
-
-class _OutlinedActionButton extends StatelessWidget {
-  const _OutlinedActionButton({
-    required this.label,
-    required this.isDisabled,
-    required this.onPressed,
-  });
-
-  final String label;
-  final bool isDisabled;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 44,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          foregroundColor:
-              isDisabled ? AppColors.textDisabled : AppColors.accent,
-          side: BorderSide(
-            color: isDisabled ? AppColors.border : AppColors.accent,
-          ),
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.md),
-        ),
-        child: Text(
-          label,
-          style: AppTextStyles.bodySmall.copyWith(
-            color: isDisabled ? AppColors.textDisabled : AppColors.accent,
-          ),
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
-    );
-  }
-}
-
-class _SkipButton extends StatelessWidget {
-  const _SkipButton({
-    required this.isLoading,
-    required this.isDisabled,
-    required this.onPressed,
-  });
-
-  final bool isLoading;
-  final bool isDisabled;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 44,
-      child: TextButton(
-        onPressed: isLoading || isDisabled ? null : onPressed,
-        style: TextButton.styleFrom(
-          foregroundColor: AppColors.error,
-          shape: RoundedRectangleBorder(
-            borderRadius: AppRadius.md,
-            side: const BorderSide(color: AppColors.border),
-          ),
-        ),
-        child: isLoading
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.error,
-                ),
-              )
-            : Text(
-                'Skip',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: isDisabled ? AppColors.textDisabled : AppColors.error,
-                ),
-              ),
-      ),
-    );
-  }
-}
-
-// ── Skip reason bottom sheet ──────────────────────────────────────────────────
-
-/// Shows a bottom sheet that captures the reason for skipping a task.
-///
-/// Returns:
-/// - `null`  — user cancelled (no skip should occur)
-/// - `""`    — user confirmed with no reason
-/// - `"..."`  — user confirmed with a typed reason
 class _SkipReasonSheet extends ConsumerStatefulWidget {
   const _SkipReasonSheet();
 
@@ -1156,8 +1653,7 @@ class _SkipReasonSheetState extends ConsumerState<_SkipReasonSheet> {
         AppSizes.screenPadding,
         AppSizes.lg,
         AppSizes.screenPadding,
-        AppSizes.screenPadding +
-            MediaQuery.of(context).padding.bottom,
+        AppSizes.screenPadding + MediaQuery.of(context).padding.bottom,
       ),
       decoration: const BoxDecoration(
         color: AppColors.surface,
@@ -1169,7 +1665,6 @@ class _SkipReasonSheetState extends ConsumerState<_SkipReasonSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Handle bar.
           Center(
             child: Container(
               width: 36,
@@ -1181,26 +1676,22 @@ class _SkipReasonSheetState extends ConsumerState<_SkipReasonSheet> {
             ),
           ),
           const SizedBox(height: AppSizes.lg),
-
           Text('Skip Task', style: AppTextStyles.h3),
           const SizedBox(height: AppSizes.xs),
           Text(
             'Reason (optional)',
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: AppTextStyles.bodySmall
+                .copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: AppSizes.md),
-
           TextField(
             controller: _controller,
             maxLines: 3,
             autofocus: true,
             decoration: InputDecoration(
               hintText: 'e.g. Already done by contractor',
-              hintStyle: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textDisabled,
-              ),
+              hintStyle: AppTextStyles.bodyMedium
+                  .copyWith(color: AppColors.textDisabled),
               border: OutlineInputBorder(
                 borderRadius: AppRadius.md,
                 borderSide: const BorderSide(color: AppColors.border),
@@ -1219,7 +1710,6 @@ class _SkipReasonSheetState extends ConsumerState<_SkipReasonSheet> {
             ),
           ),
           const SizedBox(height: AppSizes.md),
-
           if (isIOS) ...[
             CupertinoButton.filled(
               onPressed: _confirm,
@@ -1244,10 +1734,7 @@ class _SkipReasonSheetState extends ConsumerState<_SkipReasonSheet> {
                         borderRadius: AppRadius.md,
                       ),
                     ),
-                    child: Text(
-                      'Cancel',
-                      style: AppTextStyles.bodyMediumSemibold,
-                    ),
+                    child: Text('Cancel', style: AppTextStyles.bodyMediumSemibold),
                   ),
                 ),
                 const SizedBox(width: AppSizes.sm),
@@ -1264,9 +1751,8 @@ class _SkipReasonSheetState extends ConsumerState<_SkipReasonSheet> {
                     ),
                     child: Text(
                       'Skip Task',
-                      style: AppTextStyles.bodyMediumSemibold.copyWith(
-                        color: AppColors.textInverse,
-                      ),
+                      style: AppTextStyles.bodyMediumSemibold
+                          .copyWith(color: AppColors.textInverse),
                     ),
                   ),
                 ),

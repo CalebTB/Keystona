@@ -11,6 +11,7 @@ import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/supabase_service.dart';
 import '../models/maintenance_task.dart';
 import '../providers/maintenance_tasks_provider.dart';
+import '../providers/task_detail_provider.dart';
 import '../providers/task_form_providers.dart';
 
 // ── Task category catalog ─────────────────────────────────────────────────────
@@ -193,6 +194,9 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
           'linked_system_id': _linkedSystemId,
           'linked_appliance_id': _linkedApplianceId,
         });
+        // Invalidate the detail provider so the task detail screen
+        // re-fetches immediately when this form pops back to it.
+        ref.invalidate(taskDetailProvider(widget.existingTask!.id));
       } else {
         final user = SupabaseService.client.auth.currentUser!;
         await notifier.addTask({

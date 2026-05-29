@@ -25,6 +25,7 @@ class PhotosCuratedGrid extends ConsumerStatefulWidget {
     this.viewSource = 'all',
     this.onPhotoTap,
     this.onChainTap,
+    this.onLinkTap,
   });
 
   final String projectId;
@@ -37,6 +38,9 @@ class PhotosCuratedGrid extends ConsumerStatefulWidget {
 
   /// Called when user taps the chain icon on a paired photo.
   final void Function(ProjectPhoto photo, List<ProjectPhoto> all)? onChainTap;
+
+  /// Called when user taps the add-link icon on an unpaired before/after photo.
+  final void Function(ProjectPhoto photo, List<ProjectPhoto> all)? onLinkTap;
 
   @override
   ConsumerState<PhotosCuratedGrid> createState() => _PhotosCuratedGridState();
@@ -182,6 +186,9 @@ class _PhotosCuratedGridState extends ConsumerState<PhotosCuratedGrid> {
                           widget.onPhotoTap?.call(photo, all),
                       onChainTap: () =>
                           widget.onChainTap?.call(photo, all),
+                      onLinkTap: widget.onLinkTap != null
+                          ? () => widget.onLinkTap!.call(photo, all)
+                          : null,
                     );
                   },
                 ),

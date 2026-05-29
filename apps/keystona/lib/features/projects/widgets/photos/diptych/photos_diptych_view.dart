@@ -24,17 +24,20 @@ class _Pair {
 ///
 /// Pass [photos] (all photos for the project) and [projectName] for the eyebrow
 /// header. Call [onCompareTap] when the user taps the slide-compare CTA.
+/// Call [onMoreTap] when the user taps the ••• menu on a pair card.
 class PhotosDiptychView extends StatelessWidget {
   const PhotosDiptychView({
     super.key,
     required this.photos,
     required this.projectName,
     required this.onCompareTap,
+    this.onMoreTap,
   });
 
   final List<ProjectPhoto> photos;
   final String projectName;
   final void Function(ProjectPhoto before, ProjectPhoto after) onCompareTap;
+  final void Function(ProjectPhoto before, ProjectPhoto after)? onMoreTap;
 
   List<_Pair> _buildPairs() {
     // Group by pairId — only photos with a non-null pairId participate.
@@ -167,6 +170,9 @@ class PhotosDiptychView extends StatelessWidget {
                   before: pair.before,
                   after: pair.after,
                   onCompare: () => onCompareTap(pair.before, pair.after),
+                  onMore: onMoreTap != null
+                      ? () => onMoreTap!(pair.before, pair.after)
+                      : null,
                 );
               },
             ),
@@ -182,11 +188,13 @@ class _PairCard extends StatelessWidget {
     required this.before,
     required this.after,
     required this.onCompare,
+    this.onMore,
   });
 
   final ProjectPhoto before;
   final ProjectPhoto after;
   final VoidCallback onCompare;
+  final VoidCallback? onMore;
 
   String _cardTitle() {
     final tag = before.roomTag ?? after.roomTag;
@@ -238,10 +246,17 @@ class _PairCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const Icon(
-                  Icons.more_vert,
-                  size: 18,
-                  color: AppColors.gray400,
+                GestureDetector(
+                  onTap: onMore,
+                  behavior: HitTestBehavior.opaque,
+                  child: const Padding(
+                    padding: EdgeInsets.only(left: 8),
+                    child: Icon(
+                      Icons.more_vert,
+                      size: 18,
+                      color: AppColors.gray400,
+                    ),
+                  ),
                 ),
               ],
             ),

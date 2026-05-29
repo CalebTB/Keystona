@@ -10,6 +10,7 @@ import '../../../core/theme/app_sizes.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../models/maintenance_task.dart';
 import '../providers/maintenance_tasks_provider.dart';
+import '../providers/task_detail_provider.dart';
 
 // ── Month helpers ──────────────────────────────────────────────────────────────
 
@@ -39,8 +40,11 @@ class PlanViewSliver extends ConsumerStatefulWidget {
 }
 
 class _PlanViewSliverState extends ConsumerState<PlanViewSliver> {
-  // Index into the 12-month window (0 = this month).
   int _selectedMonthOffset = 0;
+  // +1 = forward (later month), -1 = backward. Drives slide direction.
+  int _slideDirection = 1;
+  // Task IDs currently fading out before the DB write fires.
+  final Set<String> _hidingTaskIds = {};
   final _monthScrollController = ScrollController();
 
   @override
@@ -53,14 +57,16 @@ class _PlanViewSliverState extends ConsumerState<PlanViewSliver> {
   Widget build(BuildContext context) {
     final tasksAsync = ref.watch(maintenanceTasksProvider);
 
-    if (tasksAsync.isLoading) {
+    // Only show the skeleton on the very first load. After that, keep the
+    // existing list visible while a refresh runs in the background so there's
+    // no skeleton flash on every mutation.
+    if (tasksAsync.isLoading && !tasksAsync.hasValue) {
       return SliverToBoxAdapter(child: _PlanSkeleton());
     }
 
     final allTasks = tasksAsync.value ?? [];
     final selectedMonth = _monthStart(_selectedMonthOffset);
 
-    // Active tasks only (not completed/skipped), due in the selected month.
     final monthTasks = allTasks
         .where((t) =>
             t.status != TaskStatus.completed &&
@@ -68,18 +74,15 @@ class _PlanViewSliverState extends ConsumerState<PlanViewSliver> {
             _sameMonth(t.dueDate.toLocal(), selectedMonth))
         .toList()
       ..sort((a, b) {
-        // Overdue first within the month, then by priority, then by date.
         final aOver = isTaskOverdue(a);
         final bOver = isTaskOverdue(b);
         if (aOver && !bOver) return -1;
         if (bOver && !aOver) return 1;
-        final priComp =
-            b.priority.sortOrder.compareTo(a.priority.sortOrder);
+        final priComp = b.priority.sortOrder.compareTo(a.priority.sortOrder);
         if (priComp != 0) return priComp;
         return a.dueDate.compareTo(b.dueDate);
       });
 
-    // Dot counts per month for the strip indicators.
     final Map<int, int> monthCounts = {};
     for (int i = 0; i < 12; i++) {
       final m = _monthStart(i);
@@ -98,7 +101,7 @@ class _PlanViewSliverState extends ConsumerState<PlanViewSliver> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Month strip
+          // ── Month strip ──────────────────────────────────────────────────
           const SizedBox(height: AppSizes.md),
           SizedBox(
             height: 72,
@@ -108,8 +111,7 @@ class _PlanViewSliverState extends ConsumerState<PlanViewSliver> {
               padding: const EdgeInsets.symmetric(
                   horizontal: AppSizes.screenPadding),
               itemCount: 12,
-              separatorBuilder: (_, _) =>
-                  const SizedBox(width: AppSizes.xs),
+              separatorBuilder: (_, _) => const SizedBox(width: AppSizes.xs),
               itemBuilder: (_, i) {
                 final m = _monthStart(i);
                 final selected = i == _selectedMonthOffset;
@@ -118,13 +120,17 @@ class _PlanViewSliverState extends ConsumerState<PlanViewSliver> {
                   month: m,
                   taskCount: count,
                   selected: selected,
-                  onTap: () => setState(() => _selectedMonthOffset = i),
+                  onTap: () => setState(() {
+                    _slideDirection = i > _selectedMonthOffset ? 1 : -1;
+                    _selectedMonthOffset = i;
+                  }),
                 );
               },
             ),
           ),
           const SizedBox(height: AppSizes.md),
-          // Section header
+
+          // ── Section header ────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(
                 horizontal: AppSizes.screenPadding),
@@ -143,8 +149,8 @@ class _PlanViewSliverState extends ConsumerState<PlanViewSliver> {
                 if (overdueInMonth > 0) ...[
                   const SizedBox(width: AppSizes.sm),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: AppColors.accent.withValues(alpha: 0.12),
                       borderRadius:
@@ -161,39 +167,39 @@ class _PlanViewSliverState extends ConsumerState<PlanViewSliver> {
             ),
           ),
           const SizedBox(height: AppSizes.sm),
-          // Task list
-          if (monthTasks.isEmpty)
-            _EmptyMonthState(month: selectedMonth)
-          else
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.screenPadding),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: AppRadius.card,
-                  border:
-                      Border.all(color: AppColors.border, width: 1.5),
-                ),
-                child: Column(
-                  children: [
-                    for (int i = 0; i < monthTasks.length; i++) ...[
-                      _PlanTaskRow(
-                        task: monthTasks[i],
-                        onReschedule: () =>
-                            _showReschedulePicker(monthTasks[i]),
-                      ),
-                      if (i < monthTasks.length - 1)
-                        Divider(
-                            height: 1,
-                            thickness: 1,
-                            color: AppColors.warmFill,
-                            indent: 38),
-                    ],
-                  ],
-                ),
-              ),
-            ),
+
+          // ── Task list — directional slide when switching months ───────────
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 280),
+            transitionBuilder: (child, animation) {
+              // Incoming child slides in from the direction of travel.
+              // Outgoing child fades out in place (no competing slide).
+              final isIncoming =
+                  (child.key as ValueKey?)?.value == _selectedMonthOffset;
+              if (isIncoming) {
+                return SlideTransition(
+                  position: Tween<Offset>(
+                    begin: Offset(0.12 * _slideDirection, 0),
+                    end: Offset.zero,
+                  ).animate(CurvedAnimation(
+                      parent: animation, curve: Curves.easeOut)),
+                  child: FadeTransition(opacity: animation, child: child),
+                );
+              }
+              return FadeTransition(opacity: animation, child: child);
+            },
+            child: monthTasks.isEmpty
+                ? _EmptyMonthState(
+                    key: ValueKey(_selectedMonthOffset),
+                    month: selectedMonth,
+                  )
+                : _MonthTaskList(
+                    key: ValueKey(_selectedMonthOffset),
+                    tasks: monthTasks,
+                    hidingIds: _hidingTaskIds,
+                    onReschedule: _showReschedulePicker,
+                  ),
+          ),
           const SizedBox(height: AppSizes.xl),
         ],
       ),
@@ -202,6 +208,7 @@ class _PlanViewSliverState extends ConsumerState<PlanViewSliver> {
 
   Future<void> _showReschedulePicker(MaintenanceTask task) async {
     DateTime picked = task.dueDate.toLocal();
+    bool confirmed = false;
 
     await showCupertinoModalPopup<void>(
       context: context,
@@ -218,35 +225,26 @@ class _PlanViewSliverState extends ConsumerState<PlanViewSliver> {
                     horizontal: AppSizes.md, vertical: AppSizes.sm),
                 decoration: BoxDecoration(
                   border: Border(
-                      bottom: BorderSide(
-                          color: AppColors.border, width: 1)),
+                      bottom: BorderSide(color: AppColors.border, width: 1)),
                 ),
                 child: Row(
                   children: [
                     CupertinoButton(
                       padding: EdgeInsets.zero,
                       onPressed: () =>
-                          Navigator.of(context, rootNavigator: true)
-                              .pop(),
+                          Navigator.of(context, rootNavigator: true).pop(),
                       child: Text('Cancel',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.textSecondary)),
+                          style: AppTextStyles.bodyMedium
+                              .copyWith(color: AppColors.textSecondary)),
                     ),
                     const Spacer(),
-                    Text('Reschedule',
-                        style: AppTextStyles.bodyMediumSemibold),
+                    Text('Reschedule', style: AppTextStyles.bodyMediumSemibold),
                     const Spacer(),
                     CupertinoButton(
                       padding: EdgeInsets.zero,
-                      onPressed: () async {
+                      onPressed: () {
+                        confirmed = true;
                         Navigator.of(context, rootNavigator: true).pop();
-                        await ref
-                            .read(maintenanceTasksProvider.notifier)
-                            .updateTask(task.id, {
-                          'due_date': picked
-                              .toIso8601String()
-                              .split('T')[0],
-                        });
                       },
                       child: Text('Done',
                           style: AppTextStyles.bodyMediumSemibold
@@ -265,6 +263,83 @@ class _PlanViewSliverState extends ConsumerState<PlanViewSliver> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+
+    if (!confirmed || !mounted) return;
+
+    // 1. Fade the row out locally before the network write.
+    setState(() => _hidingTaskIds.add(task.id));
+    await Future.delayed(const Duration(milliseconds: 260));
+    if (!mounted) return;
+
+    // 2. Write to DB — provider refresh runs silently (no skeleton flash).
+    final now = DateTime.now();
+    final todayMid = DateTime(now.year, now.month, now.day);
+    final pickedMid = DateTime(picked.year, picked.month, picked.day);
+    final newStatus = pickedMid.isBefore(todayMid)
+        ? 'overdue'
+        : pickedMid.isAtSameMomentAs(todayMid)
+            ? 'due'
+            : 'scheduled';
+
+    await ref.read(maintenanceTasksProvider.notifier).updateTask(task.id, {
+      'due_date': picked.toIso8601String().split('T')[0],
+      'status': newStatus,
+    });
+
+    ref.invalidate(taskDetailProvider(task.id));
+    if (mounted) setState(() => _hidingTaskIds.remove(task.id));
+  }
+}
+
+// ── Month task list ────────────────────────────────────────────────────────────
+
+/// Renders the bordered task list for a single month. Kept as a separate
+/// widget so [AnimatedSwitcher] can diff it cleanly on month change.
+class _MonthTaskList extends StatelessWidget {
+  const _MonthTaskList({
+    super.key,
+    required this.tasks,
+    required this.hidingIds,
+    required this.onReschedule,
+  });
+
+  final List<MaintenanceTask> tasks;
+  final Set<String> hidingIds;
+  final void Function(MaintenanceTask) onReschedule;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: AppRadius.card,
+          border: Border.all(color: AppColors.border, width: 1.5),
+        ),
+        child: Column(
+          children: [
+            for (int i = 0; i < tasks.length; i++) ...[
+              AnimatedOpacity(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOut,
+                opacity: hidingIds.contains(tasks[i].id) ? 0.0 : 1.0,
+                child: _PlanTaskRow(
+                  task: tasks[i],
+                  onReschedule: () => onReschedule(tasks[i]),
+                ),
+              ),
+              if (i < tasks.length - 1)
+                Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: AppColors.warmFill,
+                    indent: 38),
+            ],
+          ],
         ),
       ),
     );
@@ -436,7 +511,7 @@ class _PlanTaskRow extends StatelessWidget {
 // ── Empty month state ──────────────────────────────────────────────────────────
 
 class _EmptyMonthState extends StatelessWidget {
-  const _EmptyMonthState({required this.month});
+  const _EmptyMonthState({super.key, required this.month});
 
   final DateTime month;
 

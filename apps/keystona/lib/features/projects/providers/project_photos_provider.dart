@@ -102,6 +102,36 @@ class ProjectPhotosNotifier extends _$ProjectPhotosNotifier {
     return row['id'] as String;
   }
 
+  /// Updates metadata (room tag, caption) on a single photo.
+  Future<void> updatePhoto(
+    String photoId, {
+    String? roomTag,
+    String? caption,
+  }) async {
+    final fields = <String, dynamic>{};
+    if (roomTag != null) fields['room_tag'] = roomTag.isEmpty ? null : roomTag;
+    if (caption != null) fields['caption'] = caption.isEmpty ? null : caption;
+    if (fields.isEmpty) return;
+
+    await SupabaseService.client
+        .from('project_photos')
+        .update(fields)
+        .eq('id', photoId);
+
+    ref.invalidateSelf();
+    await future;
+  }
+
+  /// Removes the pair_id from both photos, breaking the before/after pair.
+  Future<void> unpairPhotos(String beforeId, String afterId) async {
+    await SupabaseService.client
+        .from('project_photos')
+        .update({'pair_id': null}).inFilter('id', [beforeId, afterId]);
+
+    ref.invalidateSelf();
+    await future;
+  }
+
   /// Links a before and after photo with a shared [pairId].
   Future<void> pairPhotos(String beforeId, String afterId) async {
     final pairId = const Uuid().v4();
