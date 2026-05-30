@@ -41,52 +41,19 @@ class SuggestedTask {
   final int estimatedMinutes;
 }
 
-/// Fetches task suggestions from the edge function and shows a selection sheet.
-/// Returns true if any tasks were added.
-Future<bool> showTaskGenerationSheet({
-  required BuildContext context,
-  required WidgetRef ref,
+/// Fires the edge function and returns suggested tasks.
+///
+/// Call this as soon as the user confirms the scan ("Fill Form") so the result
+/// is ready — or nearly ready — by the time they tap Save.
+Future<List<SuggestedTask>> prefetchItemTasks({
   required String itemName,
   required String brand,
   required String category,
   required String formType,
-  String? linkedSystemId,
-  String? linkedApplianceId,
-  required String propertyId,
 }) async {
-  // Show loading dialog with a Skip button so user is never stuck.
-  var skipped = false;
-  showCupertinoDialog<void>(
-    context: context,
-    barrierDismissible: false,
-    builder: (_) => CupertinoAlertDialog(
-      content: const Padding(
-        padding: EdgeInsets.only(top: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CupertinoActivityIndicator(),
-            SizedBox(height: 10),
-            Text('Generating maintenance tasks…'),
-          ],
-        ),
-      ),
-      actions: [
-        CupertinoDialogAction(
-          onPressed: () {
-            skipped = true;
-            Navigator.of(context, rootNavigator: true).pop();
-          },
-          child: const Text('Skip'),
-        ),
-      ],
-    ),
-  );
-
-  List<SuggestedTask> tasks = [];
   try {
     final session = SupabaseService.client.auth.currentSession;
-    if (session == null) throw StateError('Not authenticated');
+    if (session == null) return [];
 
     final response = await SupabaseService.client.functions
         .invoke(
@@ -104,20 +71,85 @@ Future<bool> showTaskGenerationSheet({
           onTimeout: () => throw Exception('timeout'),
         );
 
-    if (response.data != null) {
-      final list = response.data is List
-          ? response.data as List
-          : jsonDecode(response.data.toString()) as List;
-      tasks = list
-          .map((e) =>
-              SuggestedTask.fromJson(Map<String, dynamic>.from(e as Map)))
-          .toList();
-    }
+    if (response.data == null) return [];
+    final list = response.data is List
+        ? response.data as List
+        : jsonDecode(response.data.toString()) as List;
+    return list
+        .map((e) => SuggestedTask.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  } catch (_) {
+    return [];
+  }
+}
+
+/// Shows a task selection sheet. If [prefetchedFuture] is provided it is
+/// awaited instead of making a fresh network call — the loading dialog only
+/// appears if the future hasn't resolved yet.
+Future<bool> showTaskGenerationSheet({
+  required BuildContext context,
+  required WidgetRef ref,
+  required String itemName,
+  required String brand,
+  required String category,
+  required String formType,
+  String? linkedSystemId,
+  String? linkedApplianceId,
+  required String propertyId,
+  Future<List<SuggestedTask>>? prefetchedFuture,
+}) async {
+  var skipped = false;
+
+  // Only show the loading dialog if the future isn't already done.
+  final bool needsLoading =
+      prefetchedFuture == null || !_isCompleted(prefetchedFuture);
+
+  if (needsLoading) {
+    showCupertinoDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => CupertinoAlertDialog(
+        content: const Padding(
+          padding: EdgeInsets.only(top: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CupertinoActivityIndicator(),
+              SizedBox(height: 10),
+              Text('Generating maintenance tasks…'),
+            ],
+          ),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () {
+              skipped = true;
+              Navigator.of(context, rootNavigator: true).pop();
+            },
+            child: const Text('Skip'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<SuggestedTask> tasks = [];
+  try {
+    tasks = await (prefetchedFuture ??
+        prefetchItemTasks(
+          itemName: itemName,
+          brand: brand,
+          category: category,
+          formType: formType,
+        ));
   } catch (_) {
     tasks = [];
   }
 
   if (!context.mounted || skipped) return false;
+  if (needsLoading) {
+    Navigator.of(context, rootNavigator: true).pop(); // dismiss loading
+  }
   Navigator.of(context, rootNavigator: true).pop(); // dismiss loading
 
   if (tasks.isEmpty) return false;
@@ -370,4 +402,11 @@ class _TaskSelectionSheetState extends State<_TaskSelectionSheet> {
         'annual' => 'Annual',
         _ => 'One-time',
       };
+}
+
+// Checks if a Future has already resolved without awaiting it.
+bool _isCompleted<T>(Future<T> future) {
+  var done = false;
+  future.then((_) => done = true).ignore();
+  return done;
 }

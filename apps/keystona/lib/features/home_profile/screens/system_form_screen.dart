@@ -77,6 +77,10 @@ class _SystemFormScreenState extends ConsumerState<SystemFormScreen> {
   /// Label photo captured during scan — uploaded after save.
   XFile? _labelPhoto;
 
+  /// Task generation started immediately on scan confirm so it runs in
+  /// parallel while the user reviews the pre-filled form.
+  Future<List<SuggestedTask>>? _tasksFuture;
+
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
   bool get _isEditing => widget.existingSystem != null;
@@ -199,7 +203,15 @@ class _SystemFormScreenState extends ConsumerState<SystemFormScreen> {
             onWarrantyExpirationChanged: (v) =>
                 setState(() => _warrantyExpiration = v),
             isIOS: true,
-            onPhotoReady: (photo) => setState(() => _labelPhoto = photo),
+            onPhotoReady: (photo) {
+              setState(() => _labelPhoto = photo);
+              _tasksFuture = prefetchItemTasks(
+                itemName: _nameCtrl.text.trim(),
+                brand: _brandCtrl.text.trim(),
+                category: _category.value,
+                formType: 'system',
+              );
+            },
           ),
         ),
       );
@@ -388,6 +400,7 @@ class _SystemFormScreenState extends ConsumerState<SystemFormScreen> {
             formType: 'system',
             linkedSystemId: systemId,
             propertyId: propertyId,
+            prefetchedFuture: _tasksFuture,
           );
         }
       }

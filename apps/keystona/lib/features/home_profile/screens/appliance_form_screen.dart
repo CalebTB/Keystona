@@ -53,6 +53,7 @@ class _ApplianceFormScreenState extends ConsumerState<ApplianceFormScreen> {
 
   bool _saving = false;
   XFile? _labelPhoto;
+  Future<List<SuggestedTask>>? _tasksFuture;
 
   bool get _isEditing => widget.existingAppliance != null;
 
@@ -213,6 +214,7 @@ class _ApplianceFormScreenState extends ConsumerState<ApplianceFormScreen> {
             formType: 'appliance',
             linkedApplianceId: applianceId,
             propertyId: propertyId,
+            prefetchedFuture: _tasksFuture,
           );
         }
       }
@@ -437,7 +439,15 @@ class _ApplianceFormScreenState extends ConsumerState<ApplianceFormScreen> {
               onPickStatusIOS: () => _pickStatusIOS(context),
               onPurchaseDateFromScan: (date) =>
                   setState(() => _purchaseDate = date),
-              onPhotoReady: (photo) => setState(() => _labelPhoto = photo),
+              onPhotoReady: (photo) {
+                setState(() => _labelPhoto = photo);
+                _tasksFuture = prefetchItemTasks(
+                  itemName: _nameCtrl.text.trim(),
+                  brand: _brandCtrl.text.trim(),
+                  category: _category.value,
+                  formType: 'appliance',
+                );
+              },
             ),
           ),
         ),
