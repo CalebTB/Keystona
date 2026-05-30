@@ -263,6 +263,8 @@ class _ContentState extends ConsumerState<_Content> {
               SystemPhotoStrip(
                 photos: widget.detail.photos,
                 onAddPhoto: _pickPhoto,
+                photoUrlBuilder: (path) =>
+                    widget.detail.photoUrls[path] ?? path,
               ),
               const SizedBox(height: AppSizes.sm),
             ],

@@ -363,6 +363,8 @@ class _DetailContentState extends ConsumerState<_DetailContent> {
                 SystemPhotoStrip(
                   photos: photos,
                   onAddPhoto: _pickPhoto,
+                  photoUrlBuilder: (path) =>
+                      widget.detail.photoUrls[path] ?? path,
                 ),
                 const SizedBox(height: AppSizes.xl),
               ],

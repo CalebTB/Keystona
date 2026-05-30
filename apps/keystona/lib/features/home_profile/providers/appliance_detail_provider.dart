@@ -109,6 +109,21 @@ class ApplianceDetailNotifier extends _$ApplianceDetailNotifier {
     final photoRows =
         (row['photos'] as List<dynamic>? ?? []).cast<Map<String, dynamic>>();
     final photos = photoRows.map(ItemPhoto.fromJson).toList();
-    return ApplianceDetail(appliance: appliance, photos: photos);
+
+    // Generate signed URLs for all photos in parallel (1-hour expiry).
+    final photoUrls = <String, String>{};
+    if (photos.isNotEmpty) {
+      await Future.wait(photos.map((p) async {
+        try {
+          final url = await SupabaseService.client.storage
+              .from('item-photos')
+              .createSignedUrl(p.filePath, 3600);
+          photoUrls[p.filePath] = url;
+        } catch (_) {}
+      }));
+    }
+
+    return ApplianceDetail(
+        appliance: appliance, photos: photos, photoUrls: photoUrls);
   }
 }
