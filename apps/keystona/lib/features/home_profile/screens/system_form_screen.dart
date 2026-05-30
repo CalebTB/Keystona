@@ -384,25 +384,28 @@ class _SystemFormScreenState extends ConsumerState<SystemFormScreen> {
         }
 
         if (!mounted) return;
+
+        // Show task sheet BEFORE popping — context must still be alive.
+        if (_labelPhoto != null) {
+          final propertyId = await _fetchPropertyId();
+          if (mounted && propertyId != null) {
+            await showTaskGenerationSheet(
+              context: context,
+              ref: ref,
+              itemName: _nameCtrl.text.trim(),
+              brand: _brandCtrl.text.trim(),
+              category: _category.value,
+              formType: 'system',
+              linkedSystemId: systemId,
+              propertyId: propertyId,
+              prefetchedFuture: _tasksFuture,
+            );
+          }
+        }
+
+        if (!mounted) return;
         SnackbarService.showSuccess(context, 'System added.');
         context.pop();
-
-        // Offer task generation after navigation (non-blocking).
-        if (_labelPhoto != null && mounted) {
-          final propertyId = await _fetchPropertyId();
-          if (!mounted || propertyId == null) return;
-          await showTaskGenerationSheet(
-            context: context,
-            ref: ref,
-            itemName: _nameCtrl.text.trim(),
-            brand: _brandCtrl.text.trim(),
-            category: _category.value,
-            formType: 'system',
-            linkedSystemId: systemId,
-            propertyId: propertyId,
-            prefetchedFuture: _tasksFuture,
-          );
-        }
       }
     } catch (e) {
       if (!mounted) return;

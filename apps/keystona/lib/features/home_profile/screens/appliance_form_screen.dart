@@ -199,24 +199,28 @@ class _ApplianceFormScreenState extends ConsumerState<ApplianceFormScreen> {
         }
 
         if (!mounted) return;
+
+        // Show task sheet BEFORE popping — context must still be alive.
+        if (_labelPhoto != null) {
+          final propertyId = await _fetchPropertyId();
+          if (mounted && propertyId != null) {
+            await showTaskGenerationSheet(
+              context: context,
+              ref: ref,
+              itemName: _nameCtrl.text.trim(),
+              brand: _brandCtrl.text.trim(),
+              category: _category.value,
+              formType: 'appliance',
+              linkedApplianceId: applianceId,
+              propertyId: propertyId,
+              prefetchedFuture: _tasksFuture,
+            );
+          }
+        }
+
+        if (!mounted) return;
         SnackbarService.showSuccess(context, 'Appliance added.');
         context.pop();
-
-        if (_labelPhoto != null && mounted) {
-          final propertyId = await _fetchPropertyId();
-          if (!mounted || propertyId == null) return;
-          await showTaskGenerationSheet(
-            context: context,
-            ref: ref,
-            itemName: _nameCtrl.text.trim(),
-            brand: _brandCtrl.text.trim(),
-            category: _category.value,
-            formType: 'appliance',
-            linkedApplianceId: applianceId,
-            propertyId: propertyId,
-            prefetchedFuture: _tasksFuture,
-          );
-        }
       }
     } catch (_) {
       if (!mounted) return;
