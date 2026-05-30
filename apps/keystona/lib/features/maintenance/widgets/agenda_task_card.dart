@@ -57,15 +57,14 @@ class _AgendaTaskCardState extends State<AgendaTaskCard>
     setState(() => _completing = true);
     _ctrl.forward();
 
-    // Let the checkmark fully appear before collapsing.
+    // Fire the write at 680ms regardless of mounted state — the DB write must
+    // not be blocked by whether the card is still in the tree (e.g. user
+    // navigates away mid-animation).
     await Future.delayed(const Duration(milliseconds: 680));
+    widget.onQuickComplete();
+
     if (!mounted) return;
     setState(() => _collapsed = true);
-
-    // Wait for AnimatedSize to finish collapsing.
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (!mounted) return;
-    widget.onQuickComplete();
   }
 
   @override

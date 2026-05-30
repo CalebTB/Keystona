@@ -31,30 +31,33 @@ class MaintenanceTasksNotifier extends _$MaintenanceTasksNotifier {
     state = await AsyncValue.guard(_fetchTasks);
   }
 
-  /// [#32] Marks a task as completed and inserts a quick [TaskCompletion] row.
+  /// Marks a task as completed with a quick completion record.
   ///
-  /// Used by the Task Detail screen for one-tap quick complete. The detailed
-  /// completion flow (photos, notes, cost) is handled by issue #33.
+  /// Recurring tasks are rolled forward (same row, new due_date + status reset)
+  /// so history stays centralised and the system dropdown stays clean.
+  /// One-off tasks are marked completed.
   Future<void> completeTask(String taskId) async {
     final user = SupabaseService.client.auth.currentUser;
     if (user == null) return;
 
     final tasks = state.value ?? [];
-    final matching = tasks.where((t) => t.id == taskId);
-    if (matching.isEmpty) return;
-    final task = matching.first;
+    final task = tasks.where((t) => t.id == taskId).firstOrNull;
+    if (task == null) return;
 
-    // Optimistic update: mark completed in local state immediately.
-    // The agenda filter already hides completed tasks, so the card
-    // vanishes from the list without any network round-trip.
-    state = AsyncData(
-      tasks
-          .map((t) =>
-              t.id == taskId ? t.copyWith(status: TaskStatus.completed) : t)
-          .toList(),
-    );
+    final now = DateTime.now();
+    final today = _dateStr(now);
+    final isRecurring = task.recurrence != RecurrenceType.none;
+    final nextDate = isRecurring ? _nextDate(task, base: now) : null;
 
-    final today = DateTime.now().toIso8601String().split('T')[0];
+    // Optimistic update — recurring tasks roll forward in local state so the
+    // agenda (which filters by due_date) reflects the new schedule instantly.
+    state = AsyncData(tasks.map((t) {
+      if (t.id != taskId) return t;
+      if (isRecurring && nextDate != null) {
+        return t.copyWith(status: TaskStatus.scheduled, dueDate: nextDate);
+      }
+      return t.copyWith(status: TaskStatus.completed);
+    }).toList());
 
     await SupabaseService.client.from('task_completions').insert({
       'task_id': taskId,
@@ -64,95 +67,66 @@ class MaintenanceTasksNotifier extends _$MaintenanceTasksNotifier {
       'completed_by': 'diy',
     });
 
-    await SupabaseService.client
-        .from('maintenance_tasks')
-        .update({'status': 'completed'})
-        .eq('id', taskId);
-
-    if (task.recurrence != RecurrenceType.none) {
-      await _scheduleNextTask(task);
+    if (isRecurring && nextDate != null) {
+      await SupabaseService.client.from('maintenance_tasks').update({
+        'due_date': _dateStr(nextDate),
+        'status': 'scheduled',
+      }).eq('id', taskId);
+    } else {
+      await SupabaseService.client
+          .from('maintenance_tasks')
+          .update({'status': 'completed'})
+          .eq('id', taskId);
     }
   }
 
-  /// [#32] Skips a task with an optional [reason].
+  /// Skips a task. Recurring tasks roll forward; one-off tasks are marked skipped.
   Future<void> skipTask(String taskId, {String? reason}) async {
     final tasks = state.value ?? [];
-    final matching = tasks.where((t) => t.id == taskId);
-    if (matching.isEmpty) return;
-    final task = matching.first;
+    final task = tasks.where((t) => t.id == taskId).firstOrNull;
+    if (task == null) return;
 
-    // Optimistic update: mark skipped immediately.
-    state = AsyncData(
-      tasks
-          .map((t) =>
-              t.id == taskId ? t.copyWith(status: TaskStatus.skipped) : t)
-          .toList(),
-    );
+    final isRecurring = task.recurrence != RecurrenceType.none;
+    final nextDate = isRecurring ? _nextDate(task) : null;
 
-    await SupabaseService.client
-        .from('maintenance_tasks')
-        .update({
-          'status': 'skipped',
-          if (reason != null && reason.isNotEmpty) 'skip_reason': reason,
-        })
-        .eq('id', taskId);
+    state = AsyncData(tasks.map((t) {
+      if (t.id != taskId) return t;
+      if (isRecurring && nextDate != null) {
+        return t.copyWith(status: TaskStatus.scheduled, dueDate: nextDate);
+      }
+      return t.copyWith(status: TaskStatus.skipped);
+    }).toList());
 
-    if (task.recurrence != RecurrenceType.none) {
-      await _scheduleNextTask(task);
+    if (isRecurring && nextDate != null) {
+      await SupabaseService.client.from('maintenance_tasks').update({
+        'due_date': _dateStr(nextDate),
+        'status': 'scheduled',
+        if (reason != null && reason.isNotEmpty) 'skip_reason': reason,
+      }).eq('id', taskId);
+    } else {
+      await SupabaseService.client.from('maintenance_tasks').update({
+        'status': 'skipped',
+        if (reason != null && reason.isNotEmpty) 'skip_reason': reason,
+      }).eq('id', taskId);
     }
   }
 
-  /// Inserts the next scheduled occurrence of a recurring task directly via DB.
-  /// Replaces the `schedule-next-task` Edge Function which uses ES256 JWT.
-  Future<void> _scheduleNextTask(MaintenanceTask task) async {
-    final user = SupabaseService.client.auth.currentUser;
-    if (user == null) return;
-
-    final base = task.dueDate.toLocal();
-    final next = switch (task.recurrence) {
-      RecurrenceType.none => null,
-      RecurrenceType.weekly => base.add(const Duration(days: 7)),
-      RecurrenceType.biweekly => base.add(const Duration(days: 14)),
-      RecurrenceType.monthly =>
-        DateTime(base.year, base.month + 1, base.day),
-      RecurrenceType.quarterly =>
-        DateTime(base.year, base.month + 3, base.day),
-      RecurrenceType.biannual =>
-        DateTime(base.year, base.month + 6, base.day),
-      RecurrenceType.annual =>
-        DateTime(base.year + 1, base.month, base.day),
+  static DateTime _nextDate(MaintenanceTask task, {DateTime? base}) {
+    final b = (base ?? task.dueDate).toLocal();
+    return switch (task.recurrence) {
+      RecurrenceType.none => b,
+      RecurrenceType.weekly => b.add(const Duration(days: 7)),
+      RecurrenceType.biweekly => b.add(const Duration(days: 14)),
+      RecurrenceType.monthly => DateTime(b.year, b.month + 1, b.day),
+      RecurrenceType.quarterly => DateTime(b.year, b.month + 3, b.day),
+      RecurrenceType.biannual => DateTime(b.year, b.month + 6, b.day),
+      RecurrenceType.annual => DateTime(b.year + 1, b.month, b.day),
     };
-    if (next == null) return;
+  }
 
-    final nextStr =
-        '${next.year}-${next.month.toString().padLeft(2, '0')}-${next.day.toString().padLeft(2, '0')}';
-
-    await SupabaseService.client.from('maintenance_tasks').insert({
-      'property_id': task.propertyId,
-      'user_id': user.id,
-      if (task.templateId != null) 'template_id': task.templateId,
-      'task_origin': task.taskOrigin.value,
-      'name': task.name,
-      if (task.description != null) 'description': task.description,
-      if (task.instructions != null) 'instructions': task.instructions,
-      'category': task.category,
-      'due_date': nextStr,
-      'recurrence': task.recurrence.value,
-      if (task.season != null) 'season': task.season,
-      'status': 'scheduled',
-      'difficulty': task.difficulty.value,
-      'diy_or_pro': task.diyOrPro.value,
-      'priority': task.priority.value,
-      if (task.estimatedMinutes != null)
-        'estimated_minutes': task.estimatedMinutes,
-      'tools_needed': task.toolsNeeded,
-      'supplies_needed': task.suppliesNeeded,
-      if (task.linkedSystemId != null) 'linked_system_id': task.linkedSystemId,
-      if (task.linkedApplianceId != null)
-        'linked_appliance_id': task.linkedApplianceId,
-      'reminder_days_before': 7,
-      'notifications_enabled': true,
-    });
+  static String _dateStr(DateTime dt) {
+    final d = dt.toLocal();
+    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
   }
 
   /// Creates a new custom task for the user's property.
