@@ -44,9 +44,7 @@ class SystemDetailNotifier extends _$SystemDetailNotifier {
     if (detail == null) throw StateError('System not loaded');
 
     await SupabaseService.client
-        .from('systems')
-        .update({'deleted_at': DateTime.now().toIso8601String()})
-        .eq('id', detail.system.id);
+        .rpc('soft_delete_system', params: {'p_system_id': detail.system.id});
 
     ref.invalidate(systemsProvider);
     ref.invalidate(homeProfileProvider);
