@@ -91,9 +91,7 @@ class ApplianceDetailNotifier extends _$ApplianceDetailNotifier {
 
   Future<void> softDelete() async {
     await SupabaseService.client
-        .from('appliances')
-        .update({'deleted_at': DateTime.now().toIso8601String()})
-        .eq('id', applianceId);
+        .rpc('soft_delete_appliance', params: {'p_appliance_id': applianceId});
     ref.invalidate(appliancesProvider);
     ref.invalidate(homeProfileProvider);
   }
