@@ -255,8 +255,18 @@ class _ScanResultSheet extends StatelessWidget {
                           label: 'Serial', value: result.serialNumber!),
                     if (result.manufactureDate != null)
                       _ResultRow(
-                          label: 'Mfg Date',
-                          value: result.manufactureDate!),
+                          label: 'Mfg Date', value: result.manufactureDate!),
+                    if (result.estimatedLifespanYears != null)
+                      _ResultRow(
+                          label: 'Lifespan',
+                          value: '~${result.estimatedLifespanYears} years'),
+                    if (result.estimatedReplacementCostUsd != null)
+                      _ResultRow(
+                          label: 'Est. Cost',
+                          value:
+                              '\$${result.estimatedReplacementCostUsd}'),
+                    if (result.notes != null)
+                      _ResultRow(label: 'Notes', value: result.notes!),
                   ],
                 ),
               ),

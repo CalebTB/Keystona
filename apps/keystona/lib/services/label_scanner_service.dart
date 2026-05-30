@@ -14,6 +14,9 @@ class LabelScanResult {
     this.manufactureDate,
     this.estimatedYear,
     this.category,
+    this.estimatedLifespanYears,
+    this.estimatedReplacementCostUsd,
+    this.notes,
   });
 
   factory LabelScanResult.fromJson(Map<String, dynamic> json) {
@@ -25,6 +28,9 @@ class LabelScanResult {
       manufactureDate: json['manufactureDate'] as String?,
       estimatedYear: json['estimatedYear'] as int?,
       category: json['category'] as String?,
+      estimatedLifespanYears: json['estimatedLifespanYears'] as int?,
+      estimatedReplacementCostUsd: json['estimatedReplacementCostUsd'] as int?,
+      notes: json['notes'] as String?,
     );
   }
 
@@ -34,9 +40,11 @@ class LabelScanResult {
   final String? name;
   final String? manufactureDate;
   final int? estimatedYear;
-  /// One of: hvac, plumbing, electrical, roofing, foundation, siding,
-  /// windows_doors, insulation, garage, other — or null if unknown.
   final String? category;
+  final int? estimatedLifespanYears;
+  final int? estimatedReplacementCostUsd;
+  /// Key specs found on the label: capacity, voltage, BTU, SEER, Energy Star, etc.
+  final String? notes;
 
   bool get isEmpty =>
       brand == null &&
@@ -53,6 +61,7 @@ class LabelScanResult {
         serialNumber,
         name,
         category,
+        estimatedLifespanYears?.toString(),
         manufactureDate ?? estimatedYear?.toString(),
       ].where((v) => v != null && v.isNotEmpty).length;
 }

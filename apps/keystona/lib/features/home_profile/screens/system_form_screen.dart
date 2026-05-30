@@ -425,6 +425,18 @@ class _FormBody extends StatelessWidget {
                   final cat = _categoryFromString(r.category!);
                   if (cat != null) onCategoryChanged(cat);
                 }
+                if (r.estimatedLifespanYears != null) {
+                  lifespanMinCtrl.text = r.estimatedLifespanYears.toString();
+                  lifespanMaxCtrl.text =
+                      (r.estimatedLifespanYears! + 5).toString();
+                }
+                if (r.estimatedReplacementCostUsd != null) {
+                  replacementCostCtrl.text =
+                      r.estimatedReplacementCostUsd.toString();
+                }
+                if (r.notes != null && notesCtrl.text.isEmpty) {
+                  notesCtrl.text = r.notes!;
+                }
                 if (r.manufactureDate != null) {
                   final parts = r.manufactureDate!.split('-');
                   final normalised = parts.length == 2
