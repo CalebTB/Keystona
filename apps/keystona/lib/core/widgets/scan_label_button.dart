@@ -237,7 +237,9 @@ class _ScanResultSheet extends StatelessWidget {
                     if (result.brand != null)
                       _ResultRow(label: 'Brand', value: result.brand!),
                     if (result.name != null)
-                      _ResultRow(label: 'Name', value: result.name!),
+                      _ResultRow(label: 'Type', value: result.name!),
+                    if (result.category != null)
+                      _ResultRow(label: 'Category', value: result.category!),
                     if (result.modelNumber != null)
                       _ResultRow(label: 'Model', value: result.modelNumber!),
                     if (result.serialNumber != null)

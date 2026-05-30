@@ -380,6 +380,21 @@ class _FormBody extends StatelessWidget {
   final ValueChanged<String?> onWarrantyExpirationChanged;
   final bool isIOS;
 
+  static SystemCategory? _categoryFromString(String raw) {
+    return switch (raw.toLowerCase()) {
+      'hvac' => SystemCategory.hvac,
+      'plumbing' => SystemCategory.plumbing,
+      'electrical' => SystemCategory.electrical,
+      'roofing' => SystemCategory.roofing,
+      'foundation' => SystemCategory.foundation,
+      'siding' => SystemCategory.siding,
+      'windows_doors' || 'windows' || 'doors' => SystemCategory.windowsDoors,
+      'insulation' => SystemCategory.insulation,
+      'garage' => SystemCategory.garage,
+      _ => SystemCategory.other,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -398,13 +413,19 @@ class _FormBody extends StatelessWidget {
             ScanLabelButton(
               onResult: (LabelScanResult r) {
                 if (r.brand != null) brandCtrl.text = r.brand!;
+                // name from the label = system type (e.g. "Central Air Conditioner")
+                if (r.name != null) systemTypeCtrl.text = r.name!;
+                // Only pre-fill the display name if the user hasn't typed one
                 if (r.name != null && nameCtrl.text.isEmpty) {
                   nameCtrl.text = r.name!;
                 }
                 if (r.modelNumber != null) modelCtrl.text = r.modelNumber!;
                 if (r.serialNumber != null) serialCtrl.text = r.serialNumber!;
+                if (r.category != null) {
+                  final cat = _categoryFromString(r.category!);
+                  if (cat != null) onCategoryChanged(cat);
+                }
                 if (r.manufactureDate != null) {
-                  // Normalise to YYYY-MM-DD for the DATE column.
                   final parts = r.manufactureDate!.split('-');
                   final normalised = parts.length == 2
                       ? '${parts[0]}-${parts[1]}-01'

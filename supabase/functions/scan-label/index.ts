@@ -88,10 +88,13 @@ Required fields (use null if not found):
   "brand": "manufacturer or brand name",
   "modelNumber": "model number or part number (look for MOD, MODEL, M/N, M.N.)",
   "serialNumber": "serial number (look for SER, SERIAL, S/N, S.N.)",
-  "name": "product name or type (e.g. 'Water Heater', 'Air Handler', 'Dishwasher')",
+  "name": "product name or type (e.g. 'Central Air Conditioner', 'Water Heater', 'Dishwasher')",
   "manufactureDate": "manufacture date as YYYY-MM if month is available, or YYYY if only year (look for MFG DATE, DATE, DOM)",
-  "estimatedYear": year as integer or null
+  "estimatedYear": year as integer or null,
+  "category": "one of exactly: hvac, plumbing, electrical, roofing, foundation, siding, windows_doors, insulation, garage, other"
 }
+
+For category: hvac = any heating/cooling/ventilation equipment; plumbing = water heaters, pumps, pipes; electrical = panels, generators; roofing = roof, gutters; garage = garage doors, openers; other = anything else.
 
 Be precise with model and serial numbers — copy them exactly as printed.`,
               },

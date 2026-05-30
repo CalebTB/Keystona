@@ -13,6 +13,7 @@ class LabelScanResult {
     this.name,
     this.manufactureDate,
     this.estimatedYear,
+    this.category,
   });
 
   factory LabelScanResult.fromJson(Map<String, dynamic> json) {
@@ -23,6 +24,7 @@ class LabelScanResult {
       name: json['name'] as String?,
       manufactureDate: json['manufactureDate'] as String?,
       estimatedYear: json['estimatedYear'] as int?,
+      category: json['category'] as String?,
     );
   }
 
@@ -32,6 +34,9 @@ class LabelScanResult {
   final String? name;
   final String? manufactureDate;
   final int? estimatedYear;
+  /// One of: hvac, plumbing, electrical, roofing, foundation, siding,
+  /// windows_doors, insulation, garage, other — or null if unknown.
+  final String? category;
 
   bool get isEmpty =>
       brand == null &&
@@ -39,13 +44,15 @@ class LabelScanResult {
       serialNumber == null &&
       name == null &&
       manufactureDate == null &&
-      estimatedYear == null;
+      estimatedYear == null &&
+      category == null;
 
   int get fieldCount => [
         brand,
         modelNumber,
         serialNumber,
         name,
+        category,
         manufactureDate ?? estimatedYear?.toString(),
       ].where((v) => v != null && v.isNotEmpty).length;
 }
