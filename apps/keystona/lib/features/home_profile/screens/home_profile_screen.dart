@@ -301,7 +301,7 @@ class _IOSLayout extends ConsumerWidget {
             bottom: 110,
             right: 22,
             child: _AddFab(
-              onPressed: () => context.push(AppRoutes.homeSystemsAdd),
+              onPressed: () => _showAddSheet(context),
             ),
           ),
         ],
@@ -320,7 +320,7 @@ class _AndroidLayout extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.warmOffWhite,
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(AppRoutes.homeSystemsAdd),
+        onPressed: () => _showAddSheet(context),
         backgroundColor: AppColors.accent,
         child: const Icon(Icons.add, color: AppColors.textInverse),
       ),
@@ -1361,6 +1361,38 @@ class _ApplianceCard extends StatelessWidget {
   }
 }
 
+
+// ── Add choice sheet ──────────────────────────────────────────────────────────
+
+void _showAddSheet(BuildContext context) {
+  showCupertinoModalPopup<void>(
+    context: context,
+    builder: (_) => CupertinoActionSheet(
+      title: const Text('Add to Home Profile'),
+      actions: [
+        CupertinoActionSheetAction(
+          onPressed: () {
+            Navigator.of(context, rootNavigator: true).pop();
+            context.push(AppRoutes.homeSystemsAdd);
+          },
+          child: const Text('Add System'),
+        ),
+        CupertinoActionSheetAction(
+          onPressed: () {
+            Navigator.of(context, rootNavigator: true).pop();
+            context.push(AppRoutes.homeAppliancesAdd);
+          },
+          child: const Text('Add Appliance'),
+        ),
+      ],
+      cancelButton: CupertinoActionSheetAction(
+        onPressed: () =>
+            Navigator.of(context, rootNavigator: true).pop(),
+        child: const Text('Cancel'),
+      ),
+    ),
+  );
+}
 
 // ── FAB ───────────────────────────────────────────────────────────────────────
 
