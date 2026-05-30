@@ -183,30 +183,38 @@ class _TaskSelectionSheetState extends State<_TaskSelectionSheet> {
     final user = SupabaseService.client.auth.currentUser;
     if (user == null) return;
 
-    for (int i = 0; i < widget.tasks.length; i++) {
-      if (!_selected[i]) continue;
-      final t = widget.tasks[i];
-      await widget.ref.read(maintenanceTasksProvider.notifier).addTask({
-        'property_id': widget.propertyId,
-        'user_id': user.id,
-        'task_origin': 'system_generated',
-        'name': t.name,
-        'description': t.description,
-        'category': t.category,
-        'due_date': _nextDueDate(t.recurrence),
-        'recurrence': t.recurrence,
-        'status': 'scheduled',
-        'priority': t.priority,
-        'difficulty': 'easy',
-        'diy_or_pro': t.diyOrPro,
-        'estimated_minutes': t.estimatedMinutes,
-        if (widget.linkedSystemId != null)
-          'linked_system_id': widget.linkedSystemId,
-        if (widget.linkedApplianceId != null)
-          'linked_appliance_id': widget.linkedApplianceId,
-        'reminder_days_before': 7,
-        'notifications_enabled': true,
-      });
+    // Batch insert — one round-trip, and avoids using the notifier's
+    // addTask() which calls refresh() on the possibly-disposed provider.
+    final rows = [
+      for (int i = 0; i < widget.tasks.length; i++)
+        if (_selected[i])
+          {
+            'property_id': widget.propertyId,
+            'user_id': user.id,
+            'task_origin': 'system_generated',
+            'name': widget.tasks[i].name,
+            'description': widget.tasks[i].description,
+            'category': widget.tasks[i].category,
+            'due_date': _nextDueDate(widget.tasks[i].recurrence),
+            'recurrence': widget.tasks[i].recurrence,
+            'status': 'scheduled',
+            'priority': widget.tasks[i].priority,
+            'difficulty': 'easy',
+            'diy_or_pro': widget.tasks[i].diyOrPro,
+            'estimated_minutes': widget.tasks[i].estimatedMinutes,
+            if (widget.linkedSystemId != null)
+              'linked_system_id': widget.linkedSystemId,
+            if (widget.linkedApplianceId != null)
+              'linked_appliance_id': widget.linkedApplianceId,
+            'reminder_days_before': 7,
+            'notifications_enabled': true,
+          },
+    ];
+
+    if (rows.isNotEmpty) {
+      await SupabaseService.client.from('maintenance_tasks').insert(rows);
+      // Safe to invalidate even if the provider is disposed — no-op in that case.
+      widget.ref.invalidate(maintenanceTasksProvider);
     }
 
     if (mounted) Navigator.of(context, rootNavigator: true).pop(true);

@@ -66,16 +66,16 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 256,
+        max_tokens: 512,
         messages: [
           {
             role: "user",
-            content: `Generate exactly 1 maintenance task for a home ${body.formType}: "${itemDesc}" (category: ${body.category}).
+            content: `Generate up to 3 realistic maintenance tasks for a home ${body.formType}: "${itemDesc}" (category: ${body.category}).
 
-Return ONLY a JSON array with 1 item — no explanation, no markdown:
-[{"name":"...","description":"...","category":"${body.category}","recurrence":"monthly|quarterly|biannual|annual|none","priority":"low|medium|high|critical","diyOrPro":"diy|professional","estimatedMinutes":30}]
+Return ONLY a valid JSON array — no explanation, no markdown. Each task:
+{"name":"...","description":"...","category":"${body.category}","recurrence":"monthly|quarterly|biannual|annual|none","priority":"low|medium|high|critical","diyOrPro":"diy|professional","estimatedMinutes":30}
 
-Pick the single most important recurring maintenance task for this ${body.formType}.`,
+Pick the most important recurring maintenance tasks. Only include genuinely useful ones.`,
           },
         ],
       }),
@@ -94,7 +94,7 @@ Pick the single most important recurring maintenance task for this ${body.formTy
     const cleaned = rawText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
     const tasks: SuggestedTask[] = JSON.parse(cleaned);
 
-    return new Response(JSON.stringify(tasks.slice(0, 1)), {
+    return new Response(JSON.stringify(tasks.slice(0, 3)), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
