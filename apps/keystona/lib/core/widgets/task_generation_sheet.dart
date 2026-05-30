@@ -54,12 +54,13 @@ Future<bool> showTaskGenerationSheet({
   String? linkedApplianceId,
   required String propertyId,
 }) async {
-  // Show loading while fetching
+  // Show loading dialog with a Skip button so user is never stuck.
+  var skipped = false;
   showCupertinoDialog<void>(
     context: context,
     barrierDismissible: false,
-    builder: (_) => const CupertinoAlertDialog(
-      content: Padding(
+    builder: (_) => CupertinoAlertDialog(
+      content: const Padding(
         padding: EdgeInsets.only(top: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -70,6 +71,15 @@ Future<bool> showTaskGenerationSheet({
           ],
         ),
       ),
+      actions: [
+        CupertinoDialogAction(
+          onPressed: () {
+            skipped = true;
+            Navigator.of(context, rootNavigator: true).pop();
+          },
+          child: const Text('Skip'),
+        ),
+      ],
     ),
   );
 
@@ -78,30 +88,36 @@ Future<bool> showTaskGenerationSheet({
     final session = SupabaseService.client.auth.currentSession;
     if (session == null) throw StateError('Not authenticated');
 
-    final response = await SupabaseService.client.functions.invoke(
-      'generate-item-tasks',
-      body: {
-        'name': itemName,
-        'brand': brand,
-        'category': category,
-        'formType': formType,
-      },
-      headers: {'Authorization': 'Bearer ${session.accessToken}'},
-    );
+    final response = await SupabaseService.client.functions
+        .invoke(
+          'generate-item-tasks',
+          body: {
+            'name': itemName,
+            'brand': brand,
+            'category': category,
+            'formType': formType,
+          },
+          headers: {'Authorization': 'Bearer ${session.accessToken}'},
+        )
+        .timeout(
+          const Duration(seconds: 12),
+          onTimeout: () => throw Exception('timeout'),
+        );
 
     if (response.data != null) {
       final list = response.data is List
           ? response.data as List
           : jsonDecode(response.data.toString()) as List;
       tasks = list
-          .map((e) => SuggestedTask.fromJson(Map<String, dynamic>.from(e as Map)))
+          .map((e) =>
+              SuggestedTask.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList();
     }
   } catch (_) {
     tasks = [];
   }
 
-  if (!context.mounted) return false;
+  if (!context.mounted || skipped) return false;
   Navigator.of(context, rootNavigator: true).pop(); // dismiss loading
 
   if (tasks.isEmpty) return false;
