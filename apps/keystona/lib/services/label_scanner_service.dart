@@ -26,10 +26,12 @@ class LabelScanResult {
       serialNumber: json['serialNumber'] as String?,
       name: json['name'] as String?,
       manufactureDate: json['manufactureDate'] as String?,
-      estimatedYear: json['estimatedYear'] as int?,
+      estimatedYear: (json['estimatedYear'] as num?)?.toInt(),
       category: json['category'] as String?,
-      estimatedLifespanYears: json['estimatedLifespanYears'] as int?,
-      estimatedReplacementCostUsd: json['estimatedReplacementCostUsd'] as int?,
+      estimatedLifespanYears:
+          (json['estimatedLifespanYears'] as num?)?.toInt(),
+      estimatedReplacementCostUsd:
+          (json['estimatedReplacementCostUsd'] as num?)?.toInt(),
       notes: json['notes'] as String?,
     );
   }
