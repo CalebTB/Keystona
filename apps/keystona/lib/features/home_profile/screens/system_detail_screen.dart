@@ -423,9 +423,9 @@ class _DetailContentState extends ConsumerState<_DetailContent> {
           .deleteSystem();
       if (!mounted) return;
       context.pop();
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      SnackbarService.showError(context, "Couldn't delete system. Try again.");
+      SnackbarService.showError(context, e.toString());
       setState(() => _deleting = false);
     }
   }
