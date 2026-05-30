@@ -83,9 +83,9 @@ Future<List<SuggestedTask>> prefetchItemTasks({
   }
 }
 
-/// Shows a task selection sheet. If [prefetchedFuture] is provided it is
-/// awaited instead of making a fresh network call — the loading dialog only
-/// appears if the future hasn't resolved yet.
+/// Shows a task selection sheet. No blocking dialog — tasks are awaited
+/// silently. If [prefetchedFuture] resolves in time the sheet appears
+/// immediately; if it times out or fails the call returns false silently.
 Future<bool> showTaskGenerationSheet({
   required BuildContext context,
   required WidgetRef ref,
@@ -98,61 +98,22 @@ Future<bool> showTaskGenerationSheet({
   required String propertyId,
   Future<List<SuggestedTask>>? prefetchedFuture,
 }) async {
-  var skipped = false;
-
-  // Only show the loading dialog if the future isn't already done.
-  final bool needsLoading =
-      prefetchedFuture == null || !_isCompleted(prefetchedFuture);
-
-  if (needsLoading) {
-    showCupertinoDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => CupertinoAlertDialog(
-        content: const Padding(
-          padding: EdgeInsets.only(top: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CupertinoActivityIndicator(),
-              SizedBox(height: 10),
-              Text('Generating maintenance tasks…'),
-            ],
-          ),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () {
-              skipped = true;
-              Navigator.of(context, rootNavigator: true).pop();
-            },
-            child: const Text('Skip'),
-          ),
-        ],
-      ),
-    );
-  }
-
+  // Await silently — no dialog, no Navigator interactions.
   List<SuggestedTask> tasks = [];
   try {
     tasks = await (prefetchedFuture ??
-        prefetchItemTasks(
-          itemName: itemName,
-          brand: brand,
-          category: category,
-          formType: formType,
-        ));
+            prefetchItemTasks(
+              itemName: itemName,
+              brand: brand,
+              category: category,
+              formType: formType,
+            ))
+        .timeout(const Duration(seconds: 12), onTimeout: () => []);
   } catch (_) {
     tasks = [];
   }
 
-  if (!context.mounted || skipped) return false;
-  if (needsLoading) {
-    Navigator.of(context, rootNavigator: true).pop(); // dismiss loading
-  }
-  Navigator.of(context, rootNavigator: true).pop(); // dismiss loading
-
-  if (tasks.isEmpty) return false;
+  if (!context.mounted || tasks.isEmpty) return false;
 
   final result = await showCupertinoModalPopup<bool>(
     context: context,
@@ -404,9 +365,3 @@ class _TaskSelectionSheetState extends State<_TaskSelectionSheet> {
       };
 }
 
-// Checks if a Future has already resolved without awaiting it.
-bool _isCompleted<T>(Future<T> future) {
-  var done = false;
-  future.then((_) => done = true).ignore();
-  return done;
-}
