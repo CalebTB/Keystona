@@ -21,7 +21,7 @@ import '../widgets/week_strip.dart';
 
 // ── View tab enum ──────────────────────────────────────────────────────────────
 
-enum _TaskViewTab { daily, seasonal, bySystem, plan }
+enum _TaskViewTab { today, plan, systems, seasonal }
 
 // ── Date helpers ───────────────────────────────────────────────────────────────
 
@@ -49,7 +49,7 @@ class MaintenanceScreen extends ConsumerStatefulWidget {
 class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
   late DateTime _selectedDate;
   late DateTime _weekStart;
-  _TaskViewTab _tab = _TaskViewTab.daily;
+  _TaskViewTab _tab = _TaskViewTab.today;
   final _scrollController = ScrollController();
 
   @override
@@ -173,7 +173,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
 
   List<Widget> _currentSlivers() {
     switch (_tab) {
-      case _TaskViewTab.daily:
+      case _TaskViewTab.today:
         return [
           _buildCalendarHeader(),
           _buildDayHeaderSliver(),
@@ -187,12 +187,12 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
           _buildUpcomingSliver(),
           _buildTipSliver(),
         ];
-      case _TaskViewTab.seasonal:
-        return [const SeasonalViewSliver()];
-      case _TaskViewTab.bySystem:
-        return [const BySystemViewSliver()];
       case _TaskViewTab.plan:
         return [const PlanViewSliver()];
+      case _TaskViewTab.systems:
+        return [const BySystemViewSliver()];
+      case _TaskViewTab.seasonal:
+        return [const SeasonalViewSliver()];
     }
   }
 
@@ -533,6 +533,10 @@ class _AgendaSliver extends ConsumerWidget {
                       key: ValueKey(task.id),
                       task: task,
                       onQuickComplete: () => onQuickComplete(task.id),
+                      showDate: !_sameDay(
+                        selectedDate,
+                        DateTime.now(),
+                      ),
                     ),
                   ),
               ],
@@ -614,10 +618,10 @@ class _TabStrip extends StatelessWidget {
   final ValueChanged<_TaskViewTab> onChanged;
 
   static const _labels = {
-    _TaskViewTab.daily: 'Daily',
-    _TaskViewTab.seasonal: 'Season',
-    _TaskViewTab.bySystem: 'By System',
+    _TaskViewTab.today: 'Today',
     _TaskViewTab.plan: 'Plan',
+    _TaskViewTab.systems: 'Systems',
+    _TaskViewTab.seasonal: 'Seasonal',
   };
 
   @override

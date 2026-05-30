@@ -84,14 +84,17 @@ class _PlanViewSliverState extends ConsumerState<PlanViewSliver> {
       });
 
     final Map<int, int> monthCounts = {};
+    final Map<int, int> monthOverdueCounts = {};
     for (int i = 0; i < 12; i++) {
       final m = _monthStart(i);
-      monthCounts[i] = allTasks
+      final list = allTasks
           .where((t) =>
               t.status != TaskStatus.completed &&
               t.status != TaskStatus.skipped &&
               _sameMonth(t.dueDate.toLocal(), m))
-          .length;
+          .toList();
+      monthCounts[i] = list.length;
+      monthOverdueCounts[i] = list.where(isTaskOverdue).length;
     }
 
     final totalForMonth = monthTasks.length;
@@ -116,14 +119,19 @@ class _PlanViewSliverState extends ConsumerState<PlanViewSliver> {
                 final m = _monthStart(i);
                 final selected = i == _selectedMonthOffset;
                 final count = monthCounts[i] ?? 0;
-                return _MonthChip(
-                  month: m,
-                  taskCount: count,
-                  selected: selected,
-                  onTap: () => setState(() {
-                    _slideDirection = i > _selectedMonthOffset ? 1 : -1;
-                    _selectedMonthOffset = i;
-                  }),
+                final overdueCount = monthOverdueCounts[i] ?? 0;
+                return Opacity(
+                  opacity: count == 0 ? 0.5 : 1.0,
+                  child: _MonthChip(
+                    month: m,
+                    taskCount: count,
+                    overdueCount: overdueCount,
+                    selected: selected,
+                    onTap: () => setState(() {
+                      _slideDirection = i > _selectedMonthOffset ? 1 : -1;
+                      _selectedMonthOffset = i;
+                    }),
+                  ),
                 );
               },
             ),
@@ -360,12 +368,14 @@ class _MonthChip extends StatelessWidget {
   const _MonthChip({
     required this.month,
     required this.taskCount,
+    required this.overdueCount,
     required this.selected,
     required this.onTap,
   });
 
   final DateTime month;
   final int taskCount;
+  final int overdueCount;
   final bool selected;
   final VoidCallback onTap;
 
@@ -408,7 +418,9 @@ class _MonthChip extends StatelessWidget {
                 style: AppTextStyles.monoTiny.copyWith(
                   color: selected
                       ? AppColors.darkTextSecondary
-                      : AppColors.textSecondary,
+                      : overdueCount > 0
+                          ? AppColors.accent
+                          : AppColors.textSecondary,
                 ),
               )
             else
@@ -449,9 +461,19 @@ class _PlanTaskRow extends StatelessWidget {
     return GestureDetector(
       onTap: () => context.push('/maintenance/${task.id}'),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        padding: const EdgeInsets.fromLTRB(0, 12, 14, 12),
         child: Row(
           children: [
+            // Overdue left stripe — always present but transparent when not overdue.
+            Container(
+              width: 3,
+              height: 36,
+              margin: const EdgeInsets.only(right: 11),
+              decoration: BoxDecoration(
+                color: isOver ? AppColors.accent : Colors.transparent,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
             Container(
               width: 8,
               height: 8,
@@ -468,27 +490,43 @@ class _PlanTaskRow extends StatelessWidget {
                   Text(task.name, style: AppTextStyles.bodyMedium),
                   Row(
                     children: [
-                      Text(
-                        task.category,
-                        style: AppTextStyles.caption,
-                      ),
+                      Text(task.category, style: AppTextStyles.caption),
                       Text(' · ', style: AppTextStyles.caption),
                       Text(
                         dueFmt,
                         style: AppTextStyles.caption.copyWith(
-                          color:
-                              isOver ? AppColors.accent : AppColors.textSecondary,
+                          color: isOver
+                              ? AppColors.accent
+                              : AppColors.textSecondary,
                         ),
                       ),
                     ],
                   ),
+                  if (task.recurrence != RecurrenceType.none) ...[
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Icon(Icons.repeat_rounded,
+                            size: 10, color: AppColors.textTertiary),
+                        const SizedBox(width: 3),
+                        Text(
+                          task.recurrence.label,
+                          style: AppTextStyles.monoLabel.copyWith(
+                            color: AppColors.textTertiary,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
             GestureDetector(
               onTap: onReschedule,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.warmFill,
                   borderRadius: BorderRadius.circular(AppSizes.radiusXs),

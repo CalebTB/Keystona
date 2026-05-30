@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -182,29 +183,62 @@ class BySystemViewSliver extends ConsumerWidget {
       }
     }
 
+    final thirtyDaysOut = todayMid.add(const Duration(days: 30));
+
+    // A system is "all clear" when every active task is 30+ days out.
+    // Systems with no tasks at all also qualify as all clear.
+    bool isAllClear(String systemId) {
+      final list = grouped[systemId] ?? [];
+      for (final t in list) {
+        if (t.status == TaskStatus.completed ||
+            t.status == TaskStatus.skipped) {
+          continue;
+        }
+        final due = t.dueDate.toLocal();
+        final dueMid = DateTime(due.year, due.month, due.day);
+        if (t.status == TaskStatus.overdue ||
+            dueMid.isBefore(thirtyDaysOut)) {
+          return false;
+        }
+      }
+      return true;
+    }
+
     int overdueCount(List<MaintenanceTask> list) => list.where((t) {
           final due = t.dueDate.toLocal();
           final dueMid = DateTime(due.year, due.month, due.day);
           return t.status == TaskStatus.overdue || dueMid.isBefore(todayMid);
         }).length;
 
-    final withTasks = systems.where((s) => grouped.containsKey(s.id)).toList()
+    // Systems needing attention: have tasks due within 30 days or overdue.
+    final attentionSystems = systems
+        .where((s) => grouped.containsKey(s.id) && !isAllClear(s.id))
+        .toList()
       ..sort((a, b) => overdueCount(grouped[b.id]!)
           .compareTo(overdueCount(grouped[a.id]!)));
-    final withoutTasks =
-        systems.where((s) => !grouped.containsKey(s.id)).toList();
+
+    // All-clear systems: no tasks linked, or all tasks are 30+ days out.
+    final clearSystems =
+        systems.where((s) => isAllClear(s.id)).toList();
+
+    // Tasks keyed by system ID for the all-clear card's next-due hints.
+    final Map<String, List<MaintenanceTask>> clearSystemTasks = {
+      for (final s in clearSystems)
+        if (grouped.containsKey(s.id)) s.id: grouped[s.id]!,
+    };
 
     return SliverToBoxAdapter(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: AppSizes.md),
-          // System cards with tasks
+          // Systems needing attention
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.screenPadding),
             child: Column(
               children: [
-                ...withTasks.map(
+                ...attentionSystems.map(
                   (system) => Padding(
                     padding: const EdgeInsets.only(bottom: AppSizes.sm),
                     child: _SystemCard(
@@ -221,23 +255,15 @@ class BySystemViewSliver extends ConsumerWidget {
               ],
             ),
           ),
-          // All Clear — horizontal chip strip
-          if (withoutTasks.isNotEmpty) ...[
+          // All Clear
+          if (clearSystems.isNotEmpty) ...[
             const SizedBox(height: AppSizes.xs),
             Padding(
-              padding: const EdgeInsets.only(left: AppSizes.screenPadding),
-              child: Text('ALL CLEAR', style: AppTextStyles.monoSection),
-            ),
-            const SizedBox(height: AppSizes.sm),
-            SizedBox(
-              height: 106,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppSizes.screenPadding),
-                itemCount: withoutTasks.length,
-                separatorBuilder: (_, _) => const SizedBox(width: AppSizes.sm),
-                itemBuilder: (_, i) => _AllClearChip(system: withoutTasks[i]),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.screenPadding),
+              child: _AllClearCard(
+                systems: clearSystems,
+                tasksBySystem: clearSystemTasks,
               ),
             ),
           ],
@@ -250,7 +276,6 @@ class BySystemViewSliver extends ConsumerWidget {
 
 // ── System card (has tasks) ────────────────────────────────────────────────────
 
-const int _kPreviewCount = 3;
 
 class _SystemCard extends StatefulWidget {
   const _SystemCard({required this.system, required this.tasks});
@@ -263,7 +288,7 @@ class _SystemCard extends StatefulWidget {
 }
 
 class _SystemCardState extends State<_SystemCard> {
-  bool _expanded = false;
+  bool _collapsed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -276,115 +301,151 @@ class _SystemCardState extends State<_SystemCard> {
         return a.dueDate.compareTo(b.dueDate);
       });
 
-    final preview = sorted.take(_kPreviewCount).toList();
-    final hidden = sorted.skip(_kPreviewCount).toList();
-    final hasMore = hidden.isNotEmpty;
-
     final systemName = widget.system.brand != null
         ? '${widget.system.brand} ${widget.system.name}'
         : widget.system.name;
     final year = _installYear(widget.system.installationDate);
     final location = widget.system.location;
+    final count = sorted.length;
 
-    return ClipRRect(
-      borderRadius: AppRadius.card,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: AppRadius.card,
-          border: Border.all(color: AppColors.border, width: 1.5),
-        ),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.card,
+        border: Border.all(color: AppColors.border, width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A1A2B4A),
+            blurRadius: 4,
+            offset: Offset(0, 1),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: AppRadius.card,
         child: Column(
           children: [
-            // ── Dark header ──────────────────────────────────────────
-            Container(
-              color: AppColors.deepNavy,
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-              child: Row(
-                children: [
-                  // System icon badge
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(icon, size: 22, color: color),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          systemName,
-                          style: AppTextStyles.bodyMediumSemibold.copyWith(
-                            color: AppColors.darkText,
-                          ),
+            // ── Header — tap to collapse/expand ──────────────────────
+            GestureDetector(
+              onTap: () => setState(() => _collapsed = !_collapsed),
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+                child: Row(
+                  children: [
+                    // Icon badge — tap to open system detail
+                    GestureDetector(
+                      onTap: () =>
+                          context.push('/home/systems/${widget.system.id}'),
+                      child: Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            // Health dot
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: BoxDecoration(
-                                color: _healthColor(widget.system),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 5),
-                            if (location != null && location.isNotEmpty) ...[
-                              Text(
-                                location,
-                                style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.darkTextSecondary,
+                        child: Icon(icon, size: 20, color: color),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            systemName,
+                            style: AppTextStyles.bodyMediumSemibold,
+                          ),
+                          const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: _healthColor(widget.system),
+                                  shape: BoxShape.circle,
                                 ),
                               ),
+                              const SizedBox(width: 5),
+                              if (location != null &&
+                                  location.isNotEmpty) ...[
+                                Text(
+                                  location,
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                                if (year != null)
+                                  Text(
+                                    '  ·  ',
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: AppColors.textTertiary,
+                                    ),
+                                  ),
+                              ],
                               if (year != null)
                                 Text(
-                                  '  ·  ',
+                                  year,
                                   style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.darkTextTertiary,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                             ],
-                            if (year != null)
-                              Text(
-                                year,
-                                style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.darkTextSecondary,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            // ── Task list ────────────────────────────────────────────
-            ...preview.map((t) => _TaskRow(task: t)),
-            ClipRect(
-              child: AnimatedAlign(
-                alignment: Alignment.topCenter,
-                heightFactor: _expanded ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOutCubic,
-                child: Column(
-                  children: hidden.map((t) => _TaskRow(task: t)).toList(),
+                    // Task count — always visible
+                    Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.warmFill,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                            color: AppColors.border, width: 1),
+                      ),
+                      child: Text(
+                        '$count',
+                        style: AppTextStyles.monoTiny.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: _collapsed ? 0.25 : 0,
+                      duration: const Duration(milliseconds: 260),
+                      curve: Curves.easeInOutCubic,
+                      child: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: 20,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            if (hasMore)
-              _ExpandFooter(
-                expanded: _expanded,
-                hiddenCount: hidden.length,
-                onTap: () => setState(() => _expanded = !_expanded),
+            // ── Task list — collapses on header tap ───────────────────
+            ClipRect(
+              child: AnimatedAlign(
+                alignment: Alignment.topCenter,
+                heightFactor: _collapsed ? 0.0 : 1.0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOutCubic,
+                child: Column(
+                  children: [
+                    const Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: AppColors.border),
+                    ...sorted.map((t) => _TaskRow(task: t)),
+                  ],
+                ),
               ),
+            ),
           ],
         ),
       ),
@@ -400,7 +461,6 @@ class _TaskRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dot = _taskDotColor(task);
     final label = _contextLabel(task);
     final isDone = task.status == TaskStatus.skipped ||
         (task.status == TaskStatus.completed && _nextDueDate(task) == null);
@@ -415,23 +475,11 @@ class _TaskRow extends StatelessWidget {
               opacity: isDone ? 0.5 : 1.0,
               child: Row(
                 children: [
-                  // Status dot / check icon
-                  SizedBox(
-                    width: 16,
-                    child: isDone && task.status == TaskStatus.completed
-                        ? Icon(Icons.check_circle_outline,
-                            size: 14, color: AppColors.olive)
-                        : Container(
-                            width: 7,
-                            height: 7,
-                            margin: const EdgeInsets.only(top: 1),
-                            decoration: BoxDecoration(
-                              color: dot,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                  ),
-                  const SizedBox(width: 10),
+                  if (isDone && task.status == TaskStatus.completed) ...[
+                    Icon(Icons.check_circle_outline,
+                        size: 14, color: AppColors.olive),
+                    const SizedBox(width: 10),
+                  ],
                   Expanded(
                     child: Text(
                       task.name,
@@ -474,58 +522,6 @@ class _TaskRow extends StatelessWidget {
   }
 }
 
-// ── Expand footer ──────────────────────────────────────────────────────────────
-
-class _ExpandFooter extends StatelessWidget {
-  const _ExpandFooter({
-    required this.expanded,
-    required this.hiddenCount,
-    required this.onTap,
-  });
-
-  final bool expanded;
-  final int hiddenCount;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        height: 36,
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: AppColors.warmFill, width: 1)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (!expanded)
-              Text(
-                '$hiddenCount more',
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            const SizedBox(width: 3),
-            AnimatedRotation(
-              turns: expanded ? 0.5 : 0,
-              duration: const Duration(milliseconds: 280),
-              curve: Curves.easeInOutCubic,
-              child: Icon(
-                Icons.keyboard_arrow_down_rounded,
-                size: 18,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ── Uncategorized tasks card ───────────────────────────────────────────────────
 
@@ -538,7 +534,7 @@ class _UncategorizedCard extends StatefulWidget {
 }
 
 class _UncategorizedCardState extends State<_UncategorizedCard> {
-  bool _expanded = false;
+  bool _collapsed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -548,78 +544,110 @@ class _UncategorizedCardState extends State<_UncategorizedCard> {
         return a.dueDate.compareTo(b.dueDate);
       });
 
-    final preview = sorted.take(_kPreviewCount).toList();
-    final hidden = sorted.skip(_kPreviewCount).toList();
-    final hasMore = hidden.isNotEmpty;
+    final count = sorted.length;
 
-    return ClipRRect(
-      borderRadius: AppRadius.card,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: AppRadius.card,
-          border: Border.all(color: AppColors.border, width: 1.5),
-        ),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.card,
+        border: Border.all(color: AppColors.border, width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A1A2B4A),
+            blurRadius: 4,
+            offset: Offset(0, 1),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: AppRadius.card,
         child: Column(
           children: [
-            // Dark header — neutral tone for uncategorized
-            Container(
-              color: AppColors.gray700,
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-              child: Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(10),
+            // Header — tap to collapse/expand
+            GestureDetector(
+              onTap: () => setState(() => _collapsed = !_collapsed),
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: AppColors.warmFill,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(Icons.checklist_rounded,
+                          size: 20, color: AppColors.gray400),
                     ),
-                    child: Icon(Icons.checklist_rounded,
-                        size: 22, color: AppColors.gray300),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'General Tasks',
-                          style: AppTextStyles.bodyMediumSemibold.copyWith(
-                            color: AppColors.darkText,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'General Tasks',
+                            style: AppTextStyles.bodyMediumSemibold,
                           ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          'No system linked',
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.darkTextSecondary,
+                          const SizedBox(height: 3),
+                          Text(
+                            'No system linked',
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            ...preview.map((t) => _TaskRow(task: t)),
-            ClipRect(
-              child: AnimatedAlign(
-                alignment: Alignment.topCenter,
-                heightFactor: _expanded ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOutCubic,
-                child: Column(
-                  children: hidden.map((t) => _TaskRow(task: t)).toList(),
+                    Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.warmFill,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                            color: AppColors.border, width: 1),
+                      ),
+                      child: Text(
+                        '$count',
+                        style: AppTextStyles.monoTiny.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: _collapsed ? 0.25 : 0,
+                      duration: const Duration(milliseconds: 260),
+                      curve: Curves.easeInOutCubic,
+                      child: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: 20,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            if (hasMore)
-              _ExpandFooter(
-                expanded: _expanded,
-                hiddenCount: hidden.length,
-                onTap: () => setState(() => _expanded = !_expanded),
+            ClipRect(
+              child: AnimatedAlign(
+                alignment: Alignment.topCenter,
+                heightFactor: _collapsed ? 0.0 : 1.0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOutCubic,
+                child: Column(
+                  children: [
+                    const Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: AppColors.border),
+                    ...sorted.map((t) => _TaskRow(task: t)),
+                  ],
+                ),
               ),
+            ),
           ],
         ),
       ),
@@ -627,53 +655,142 @@ class _UncategorizedCardState extends State<_UncategorizedCard> {
   }
 }
 
-// ── All Clear chip ─────────────────────────────────────────────────────────────
+// ── All Clear card ─────────────────────────────────────────────────────────────
 
-class _AllClearChip extends StatelessWidget {
-  const _AllClearChip({required this.system});
-  final HomeSystem system;
+class _AllClearCard extends StatelessWidget {
+  const _AllClearCard({
+    required this.systems,
+    required this.tasksBySystem,
+  });
+
+  final List<HomeSystem> systems;
+  /// Tasks keyed by system ID — used to show the next upcoming due date.
+  final Map<String, List<MaintenanceTask>> tasksBySystem;
 
   @override
   Widget build(BuildContext context) {
-    final color = _systemColor(system.category);
-    final icon = _systemIcon(system.category);
-    final name = system.brand != null
-        ? '${system.brand}\n${system.name}'
-        : system.name;
-
     return Container(
-      width: 100,
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSizes.md),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.oliveDim,
         borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.border, width: 1.5),
+        border: Border.all(
+          color: AppColors.olive.withValues(alpha: 0.2),
+          width: 1.5,
+        ),
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: color.withValues(alpha: 0.45)),
-          const SizedBox(height: 5),
-          Text(
-            name,
-            style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.textSecondary,
-              fontSize: 10.5,
-              height: 1.2,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.olive.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_rounded,
+                  size: 18,
+                  color: AppColors.olive,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${systems.length} system${systems.length > 1 ? 's' : ''} in good standing',
+                    style: AppTextStyles.bodyMediumSemibold.copyWith(
+                      color: AppColors.olive,
+                    ),
+                  ),
+                  Text(
+                    'All tasks 30+ days out',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            'All clear',
-            style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.olive,
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-            ),
+          const SizedBox(height: AppSizes.sm),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: systems.map((s) {
+              final color = _systemColor(s.category);
+              final icon = _systemIcon(s.category);
+
+              // Find the soonest upcoming task for this system.
+              final sysTasks = tasksBySystem[s.id] ?? [];
+              final pending = sysTasks
+                  .where((t) =>
+                      t.status != TaskStatus.completed &&
+                      t.status != TaskStatus.skipped)
+                  .toList()
+                ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+              final nextDue = pending.isEmpty ? null : pending.first.dueDate.toLocal();
+
+              return GestureDetector(
+                onTap: () => context.push('/home/systems/${s.id}'),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.border, width: 1),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(icon, size: 13, color: color.withValues(alpha: 0.7)),
+                      const SizedBox(width: 6),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            s.name,
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.textPrimary,
+                              fontSize: 11,
+                            ),
+                          ),
+                          if (nextDue != null)
+                            Text(
+                              'Next ${DateFormat('MMM d').format(nextDue)}',
+                              style: AppTextStyles.monoLabel.copyWith(
+                                color: AppColors.textTertiary,
+                                fontSize: 10,
+                              ),
+                            )
+                          else
+                            Text(
+                              'No tasks yet',
+                              style: AppTextStyles.monoLabel.copyWith(
+                                color: AppColors.textTertiary,
+                                fontSize: 10,
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 13,
+                        color: AppColors.textTertiary,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ],
       ),

@@ -5,9 +5,10 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../models/maintenance_task.dart';
 
-/// Overdue tasks banner displayed below the day header when overdue tasks exist.
+/// Compact overdue strip shown below the day header when overdue tasks exist.
 ///
-/// Shows count, first 3 task names, and a chevron. Tapping is a no-op for now.
+/// Replaced the tall card with a slim 1-line strip to reduce visual interruption
+/// while keeping the count and task names visible.
 class OverdueBanner extends StatelessWidget {
   const OverdueBanner({super.key, required this.overdueTasks});
 
@@ -18,74 +19,54 @@ class OverdueBanner extends StatelessWidget {
     if (overdueTasks.isEmpty) return const SizedBox.shrink();
 
     final count = overdueTasks.length;
-    final title = '$count task${count > 1 ? 's' : ''} overdue';
-    final names = overdueTasks
-        .take(3)
-        .map((t) => t.name)
-        .join(' · ');
+    final names = overdueTasks.take(3).map((t) => t.name).join(' · ');
 
     return GestureDetector(
       onTap: () => context.push('/maintenance/${overdueTasks.first.id}'),
       child: Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.accentDim,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0x1FB85638), width: 1),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: const BoxDecoration(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.accentDim,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0x20C9A84C), width: 1),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.warning_amber_rounded,
+              size: 14,
               color: AppColors.accent,
-              shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.info_outline,
-              color: Colors.white,
-              size: 18,
+            const SizedBox(width: 6),
+            Text(
+              '$count overdue',
+              style: AppTextStyles.monoLabel.copyWith(
+                color: AppColors.accent,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTextStyles.labelLarge.copyWith(
-                    color: AppColors.accent,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                  ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                names,
+                style: AppTextStyles.monoLabel.copyWith(
+                  color: AppColors.textTertiary,
+                  fontSize: 11,
                 ),
-                if (names.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    names,
-                    style: AppTextStyles.monoLabel.copyWith(
-                      color: AppColors.textTertiary,
-                      fontSize: 11,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ],
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          const Icon(
-            Icons.chevron_right,
-            size: 18,
-            color: AppColors.accent,
-          ),
-        ],
+            const Icon(
+              Icons.chevron_right,
+              size: 14,
+              color: AppColors.accent,
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 }

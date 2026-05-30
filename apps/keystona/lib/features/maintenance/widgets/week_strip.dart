@@ -70,7 +70,7 @@ class _DayCol extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color bg;
     final Color textColor;
-    if (isToday && !isSelected) {
+    if (isToday) {
       bg = AppColors.deepNavy;
       textColor = Colors.white;
     } else if (isSelected) {

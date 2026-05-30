@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -19,10 +20,14 @@ class AgendaTaskCard extends StatefulWidget {
     super.key,
     required this.task,
     required this.onQuickComplete,
+    this.showDate = false,
   });
 
   final MaintenanceTask task;
   final VoidCallback onQuickComplete;
+  /// When true, shows the task's due date below the category line.
+  /// Pass true when displaying cards for a non-today date.
+  final bool showDate;
 
   @override
   State<AgendaTaskCard> createState() => _AgendaTaskCardState();
@@ -71,6 +76,12 @@ class _AgendaTaskCardState extends State<AgendaTaskCard>
   Widget build(BuildContext context) {
     final categoryStyle = _categoryStyle(widget.task.category.toLowerCase());
     final stripeColor = _stripeColor(widget.task);
+    final isOverdue = widget.task.status == TaskStatus.overdue ||
+        widget.task.dueDate.toLocal().isBefore(DateTime(
+          DateTime.now().year,
+          DateTime.now().month,
+          DateTime.now().day,
+        ));
 
     return ClipRect(
       child: AnimatedSize(
@@ -88,10 +99,16 @@ class _AgendaTaskCardState extends State<AgendaTaskCard>
                     margin: const EdgeInsets.only(bottom: 8),
                     clipBehavior: Clip.hardEdge,
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: isOverdue
+                          ? const Color(0x0EC9A84C)
+                          : AppColors.surface,
                       borderRadius: BorderRadius.circular(12),
-                      border:
-                          Border.all(color: AppColors.border, width: 1.5),
+                      border: Border.all(
+                        color: isOverdue
+                            ? const Color(0x30C9A84C)
+                            : AppColors.border,
+                        width: 1.5,
+                      ),
                       boxShadow: const [
                         BoxShadow(
                           color: Color(0x0D2A2420),
@@ -181,6 +198,17 @@ class _AgendaTaskCardState extends State<AgendaTaskCard>
                                       ],
                                     ],
                                   ),
+                                  if (widget.showDate) ...[
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      DateFormat('MMM d').format(
+                                          widget.task.dueDate.toLocal()),
+                                      style: AppTextStyles.monoLabel.copyWith(
+                                        color: AppColors.textTertiary,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),
@@ -197,8 +225,8 @@ class _AgendaTaskCardState extends State<AgendaTaskCard>
                                   duration:
                                       const Duration(milliseconds: 240),
                                   curve: Curves.easeOut,
-                                  width: 28,
-                                  height: 28,
+                                  width: 32,
+                                  height: 32,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: _completing
