@@ -8,9 +8,14 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
 import '../../../core/theme/app_text_styles.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../core/widgets/scan_label_button.dart';
 import '../../../core/widgets/snackbar_service.dart';
+import '../../../core/widgets/task_generation_sheet.dart';
 import '../../../services/label_scanner_service.dart';
+import '../../../services/supabase_service.dart';
 import '../models/system.dart';
 import '../providers/system_detail_provider.dart';
 import '../providers/systems_provider.dart';
@@ -68,6 +73,9 @@ class _SystemFormScreenState extends ConsumerState<SystemFormScreen> {
   String? _warrantyExpiration;
 
   bool _saving = false;
+
+  /// Label photo captured during scan — uploaded after save.
+  XFile? _labelPhoto;
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -191,6 +199,7 @@ class _SystemFormScreenState extends ConsumerState<SystemFormScreen> {
             onWarrantyExpirationChanged: (v) =>
                 setState(() => _warrantyExpiration = v),
             isIOS: true,
+            onPhotoReady: (photo) => setState(() => _labelPhoto = photo),
           ),
         ),
       );
@@ -252,8 +261,58 @@ class _SystemFormScreenState extends ConsumerState<SystemFormScreen> {
         onWarrantyExpirationChanged: (v) =>
             setState(() => _warrantyExpiration = v),
         isIOS: false,
+        onPhotoReady: (photo) => setState(() => _labelPhoto = photo),
       ),
     );
+  }
+
+  // ── Label photo + property helpers ───────────────────────────────────────────
+
+  Future<void> _uploadLabelPhoto(String systemId, XFile photo) async {
+    try {
+      final user = SupabaseService.client.auth.currentUser;
+      if (user == null) return;
+      final propertyId = await _fetchPropertyId();
+      if (propertyId == null) return;
+
+      final bytes = await photo.readAsBytes();
+      final ext = photo.name.split('.').last.toLowerCase();
+      final path =
+          '${user.id}/$propertyId/$systemId/${DateTime.now().millisecondsSinceEpoch}_label.$ext';
+      final mime = switch (ext) {
+        'jpg' || 'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'heic' => 'image/heic',
+        _ => 'image/jpeg',
+      };
+
+      await SupabaseService.client.storage
+          .from('item-photos')
+          .uploadBinary(path, bytes, fileOptions: FileOptions(contentType: mime));
+
+      await SupabaseService.client.from('item_photos').insert({
+        'user_id': user.id,
+        'system_id': systemId,
+        'file_path': path,
+        'photo_type': 'model_label',
+      });
+    } catch (_) {
+      // Non-fatal — photo upload failure should not block form completion.
+    }
+  }
+
+  Future<String?> _fetchPropertyId() async {
+    final user = SupabaseService.client.auth.currentUser;
+    if (user == null) return null;
+    final row = await SupabaseService.client
+        .from('properties')
+        .select('id')
+        .eq('user_id', user.id)
+        .isFilter('deleted_at', null)
+        .order('created_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+    return row?['id'] as String?;
   }
 
   // ── Save handler ─────────────────────────────────────────────────────────────
@@ -298,20 +357,40 @@ class _SystemFormScreenState extends ConsumerState<SystemFormScreen> {
     try {
       if (_isEditing) {
         await ref
-            .read(
-              systemDetailProvider(widget.existingSystem!.id).notifier,
-            )
+            .read(systemDetailProvider(widget.existingSystem!.id).notifier)
             .updateSystem(data);
+        if (!mounted) return;
+        SnackbarService.showSuccess(context, 'System updated.');
+        context.pop();
       } else {
-        await ref.read(systemsProvider.notifier).addSystem(data);
-      }
+        final systemId =
+            await ref.read(systemsProvider.notifier).addSystem(data);
 
-      if (!mounted) return;
-      SnackbarService.showSuccess(
-        context,
-        _isEditing ? 'System updated.' : 'System added.',
-      );
-      context.pop();
+        // Upload label photo if captured during scan.
+        if (_labelPhoto != null) {
+          _uploadLabelPhoto(systemId, _labelPhoto!).ignore();
+        }
+
+        if (!mounted) return;
+        SnackbarService.showSuccess(context, 'System added.');
+        context.pop();
+
+        // Offer task generation after navigation (non-blocking).
+        if (_labelPhoto != null && mounted) {
+          final propertyId = await _fetchPropertyId();
+          if (!mounted || propertyId == null) return;
+          await showTaskGenerationSheet(
+            context: context,
+            ref: ref,
+            itemName: _nameCtrl.text.trim(),
+            brand: _brandCtrl.text.trim(),
+            category: _category.value,
+            formType: 'system',
+            linkedSystemId: systemId,
+            propertyId: propertyId,
+          );
+        }
+      }
     } catch (e) {
       if (!mounted) return;
       SnackbarService.showError(
@@ -353,6 +432,7 @@ class _FormBody extends StatelessWidget {
     required this.onInstallationDateChanged,
     required this.onWarrantyExpirationChanged,
     required this.isIOS,
+    this.onPhotoReady,
   });
 
   final GlobalKey<FormState> formKey;
@@ -379,6 +459,7 @@ class _FormBody extends StatelessWidget {
   final ValueChanged<String?> onInstallationDateChanged;
   final ValueChanged<String?> onWarrantyExpirationChanged;
   final bool isIOS;
+  final void Function(XFile)? onPhotoReady;
 
   static SystemCategory? _categoryFromString(String raw) {
     return switch (raw.toLowerCase()) {
@@ -445,6 +526,7 @@ class _FormBody extends StatelessWidget {
                   onInstallationDateChanged('${r.estimatedYear}-01-01');
                 }
               },
+              onPhotoReady: onPhotoReady,
             ),
             const SizedBox(height: AppSizes.md),
 

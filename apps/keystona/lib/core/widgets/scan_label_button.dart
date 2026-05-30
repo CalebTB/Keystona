@@ -16,10 +16,14 @@ class ScanLabelButton extends StatefulWidget {
     super.key,
     required this.onResult,
     this.isAppliance = false,
+    this.onPhotoReady,
   });
 
   final void Function(LabelScanResult result) onResult;
   final bool isAppliance;
+  /// Called with the captured photo when the user confirms the scan result.
+  /// Use this to upload the label photo after the form is saved.
+  final void Function(XFile photo)? onPhotoReady;
 
   @override
   State<ScanLabelButton> createState() => _ScanLabelButtonState();
@@ -50,7 +54,7 @@ class _ScanLabelButtonState extends State<ScanLabelButton> {
         return;
       }
 
-      await _showConfirmationSheet(result);
+      await _showConfirmationSheet(result, photo);
     } catch (_) {
       if (mounted) {
         _showError("Something went wrong. Check your connection and try again.");
@@ -60,13 +64,15 @@ class _ScanLabelButtonState extends State<ScanLabelButton> {
     }
   }
 
-  Future<void> _showConfirmationSheet(LabelScanResult result) async {
+  Future<void> _showConfirmationSheet(
+      LabelScanResult result, XFile photo) async {
     final confirmed = await showCupertinoModalPopup<bool>(
       context: context,
       builder: (_) => _ScanResultSheet(result: result),
     );
     if (confirmed == true && mounted) {
       widget.onResult(result);
+      widget.onPhotoReady?.call(photo);
     }
   }
 

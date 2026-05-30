@@ -33,7 +33,7 @@ class SystemsNotifier extends _$SystemsNotifier {
   ///
   /// The Edge Function call is NON-FATAL: if it fails the system is still
   /// added and the list is refreshed. The user can generate tasks later.
-  Future<void> addSystem(Map<String, dynamic> data) async {
+  Future<String> addSystem(Map<String, dynamic> data) async {
     final user = SupabaseService.client.auth.currentUser;
     if (user == null) throw StateError('Not authenticated');
 
@@ -83,6 +83,8 @@ class SystemsNotifier extends _$SystemsNotifier {
     ref.invalidate(homeProfileProvider);
     state = const AsyncLoading();
     state = await AsyncValue.guard(_fetchSystems);
+
+    return systemId;
   }
 
   /// Updates an existing system row.

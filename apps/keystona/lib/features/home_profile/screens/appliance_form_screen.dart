@@ -6,9 +6,14 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
 import '../../../core/theme/app_text_styles.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../core/widgets/scan_label_button.dart';
 import '../../../core/widgets/snackbar_service.dart';
+import '../../../core/widgets/task_generation_sheet.dart';
 import '../../../services/label_scanner_service.dart';
+import '../../../services/supabase_service.dart';
 import '../models/appliance.dart';
 import '../providers/appliance_detail_provider.dart';
 import '../providers/appliances_provider.dart';
@@ -47,6 +52,7 @@ class _ApplianceFormScreenState extends ConsumerState<ApplianceFormScreen> {
   String? _warrantyExpiration;
 
   bool _saving = false;
+  XFile? _labelPhoto;
 
   bool get _isEditing => widget.existingAppliance != null;
 
@@ -98,6 +104,48 @@ class _ApplianceFormScreenState extends ConsumerState<ApplianceFormScreen> {
     super.dispose();
   }
 
+  Future<void> _uploadLabelPhoto(String applianceId, XFile photo) async {
+    try {
+      final user = SupabaseService.client.auth.currentUser;
+      if (user == null) return;
+      final propertyId = await _fetchPropertyId();
+      if (propertyId == null) return;
+      final bytes = await photo.readAsBytes();
+      final ext = photo.name.split('.').last.toLowerCase();
+      final path =
+          '${user.id}/$propertyId/$applianceId/${DateTime.now().millisecondsSinceEpoch}_label.$ext';
+      final mime = switch (ext) {
+        'jpg' || 'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'heic' => 'image/heic',
+        _ => 'image/jpeg',
+      };
+      await SupabaseService.client.storage
+          .from('item-photos')
+          .uploadBinary(path, bytes, fileOptions: FileOptions(contentType: mime));
+      await SupabaseService.client.from('item_photos').insert({
+        'user_id': user.id,
+        'appliance_id': applianceId,
+        'file_path': path,
+        'photo_type': 'model_label',
+      });
+    } catch (_) {}
+  }
+
+  Future<String?> _fetchPropertyId() async {
+    final user = SupabaseService.client.auth.currentUser;
+    if (user == null) return null;
+    final row = await SupabaseService.client
+        .from('properties')
+        .select('id')
+        .eq('user_id', user.id)
+        .isFilter('deleted_at', null)
+        .order('created_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+    return row?['id'] as String?;
+  }
+
   Map<String, dynamic> _buildFields() {
     return {
       'category': _category.value,
@@ -138,15 +186,36 @@ class _ApplianceFormScreenState extends ConsumerState<ApplianceFormScreen> {
           applianceDetailProvider(widget.existingAppliance!.id).notifier,
         );
         await notifier.updateAppliance(fields);
+        if (!mounted) return;
+        SnackbarService.showSuccess(context, 'Appliance updated.');
+        context.pop();
       } else {
-        await ref.read(appliancesProvider.notifier).addAppliance(fields);
+        final applianceId =
+            await ref.read(appliancesProvider.notifier).addAppliance(fields);
+
+        if (_labelPhoto != null) {
+          _uploadLabelPhoto(applianceId, _labelPhoto!).ignore();
+        }
+
+        if (!mounted) return;
+        SnackbarService.showSuccess(context, 'Appliance added.');
+        context.pop();
+
+        if (_labelPhoto != null && mounted) {
+          final propertyId = await _fetchPropertyId();
+          if (!mounted || propertyId == null) return;
+          await showTaskGenerationSheet(
+            context: context,
+            ref: ref,
+            itemName: _nameCtrl.text.trim(),
+            brand: _brandCtrl.text.trim(),
+            category: _category.value,
+            formType: 'appliance',
+            linkedApplianceId: applianceId,
+            propertyId: propertyId,
+          );
+        }
       }
-      if (!mounted) return;
-      SnackbarService.showSuccess(
-        context,
-        _isEditing ? 'Appliance updated.' : 'Appliance added.',
-      );
-      context.pop();
     } catch (_) {
       if (!mounted) return;
       SnackbarService.showError(
@@ -368,6 +437,7 @@ class _ApplianceFormScreenState extends ConsumerState<ApplianceFormScreen> {
               onPickStatusIOS: () => _pickStatusIOS(context),
               onPurchaseDateFromScan: (date) =>
                   setState(() => _purchaseDate = date),
+              onPhotoReady: (photo) => setState(() => _labelPhoto = photo),
             ),
           ),
         ),
@@ -463,6 +533,7 @@ class _FormBody extends StatelessWidget {
     required this.onPickCategoryIOS,
     required this.onPickStatusIOS,
     this.onPurchaseDateFromScan,
+    this.onPhotoReady,
   });
 
   final bool isIOS;
@@ -490,6 +561,7 @@ class _FormBody extends StatelessWidget {
   final VoidCallback onPickCategoryIOS;
   final VoidCallback onPickStatusIOS;
   final void Function(String date)? onPurchaseDateFromScan;
+  final void Function(XFile)? onPhotoReady;
 
   static ApplianceCategory? _applianceCategoryFromString(String raw) {
     return switch (raw.trim().toLowerCase()) {
@@ -572,6 +644,7 @@ class _FormBody extends StatelessWidget {
               onPurchaseDateFromScan?.call('${r.estimatedYear}-01-01');
             }
           },
+          onPhotoReady: onPhotoReady,
         ),
         const SizedBox(height: AppSizes.md),
 
