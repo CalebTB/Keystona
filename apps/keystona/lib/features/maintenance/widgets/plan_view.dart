@@ -32,14 +32,14 @@ Color _priorityDot(TaskPriority p) => switch (p) {
 
 // ── Main sliver widget ─────────────────────────────────────────────────────────
 
-class PlanViewSliver extends ConsumerStatefulWidget {
-  const PlanViewSliver({super.key});
+class PlanView extends ConsumerStatefulWidget {
+  const PlanView({super.key});
 
   @override
-  ConsumerState<PlanViewSliver> createState() => _PlanViewSliverState();
+  ConsumerState<PlanView> createState() => _PlanViewState();
 }
 
-class _PlanViewSliverState extends ConsumerState<PlanViewSliver> {
+class _PlanViewState extends ConsumerState<PlanView> {
   int _selectedMonthOffset = 0;
   // +1 = forward (later month), -1 = backward. Drives slide direction.
   int _slideDirection = 1;
@@ -61,7 +61,7 @@ class _PlanViewSliverState extends ConsumerState<PlanViewSliver> {
     // existing list visible while a refresh runs in the background so there's
     // no skeleton flash on every mutation.
     if (tasksAsync.isLoading && !tasksAsync.hasValue) {
-      return SliverToBoxAdapter(child: _PlanSkeleton());
+      return _PlanSkeleton();
     }
 
     final allTasks = tasksAsync.value ?? [];
@@ -100,8 +100,7 @@ class _PlanViewSliverState extends ConsumerState<PlanViewSliver> {
     final totalForMonth = monthTasks.length;
     final overdueInMonth = monthTasks.where(isTaskOverdue).length;
 
-    return SliverToBoxAdapter(
-      child: Column(
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Month strip ──────────────────────────────────────────────────
@@ -210,8 +209,7 @@ class _PlanViewSliverState extends ConsumerState<PlanViewSliver> {
           ),
           const SizedBox(height: AppSizes.xl),
         ],
-      ),
-    );
+      );
   }
 
   Future<void> _showReschedulePicker(MaintenanceTask task) async {

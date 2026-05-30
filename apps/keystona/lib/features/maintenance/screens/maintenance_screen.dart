@@ -15,7 +15,7 @@ import '../widgets/by_system_view.dart';
 import '../widgets/overdue_banner.dart';
 import '../widgets/plan_view.dart';
 import '../widgets/seasonal_view.dart';
-import '../widgets/tip_card.dart';
+
 import '../widgets/upcoming_peek.dart';
 import '../widgets/week_strip.dart';
 
@@ -50,6 +50,8 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
   late DateTime _selectedDate;
   late DateTime _weekStart;
   _TaskViewTab _tab = _TaskViewTab.today;
+  int _tabIndex = 0;
+  int _slideDirection = 1;
   final _scrollController = ScrollController();
 
   @override
@@ -115,7 +117,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
             ),
           ),
           _buildToggleSliver(),
-          ..._currentSlivers(),
+          _buildAnimatedTabSliver(),
           const SliverToBoxAdapter(child: SizedBox(height: 110)),
         ],
       ),
@@ -143,7 +145,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
               actions: [_HeaderButtons()],
             ),
             _buildToggleSliver(),
-            ..._currentSlivers(),
+            _buildAnimatedTabSliver(),
             const SliverToBoxAdapter(child: SizedBox(height: 110)),
           ],
         ),
@@ -158,7 +160,12 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
       child: _TabStrip(
         current: _tab,
         onChanged: (t) {
-          setState(() => _tab = t);
+          final newIndex = _TaskViewTab.values.indexOf(t);
+          setState(() {
+            _slideDirection = newIndex > _tabIndex ? 1 : -1;
+            _tabIndex = newIndex;
+            _tab = t;
+          });
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted && _scrollController.hasClients) {
               _scrollController.jumpTo(0);
@@ -169,48 +176,75 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
     );
   }
 
-  // ── Current view slivers ─────────────────────────────────────────────────────
+  // ── Animated tab content ──────────────────────────────────────────────────────
 
-  List<Widget> _currentSlivers() {
-    switch (_tab) {
-      case _TaskViewTab.today:
-        return [
-          _buildCalendarHeader(),
-          _buildDayHeaderSliver(),
-          _buildOverdueBannerSliver(),
-          _AgendaSliver(
-            selectedDate: _selectedDate,
-            onQuickComplete: (taskId) => ref
-                .read(maintenanceTasksProvider.notifier)
-                .completeTask(taskId),
-          ),
-          _buildUpcomingSliver(),
-          _buildTipSliver(),
-        ];
-      case _TaskViewTab.plan:
-        return [const PlanViewSliver()];
-      case _TaskViewTab.systems:
-        return [const BySystemViewSliver()];
-      case _TaskViewTab.seasonal:
-        return [const SeasonalViewSliver()];
-    }
+  Widget _buildTabContent() {
+    return switch (_tab) {
+      _TaskViewTab.today => _buildDailyContent(),
+      _TaskViewTab.plan => const PlanView(),
+      _TaskViewTab.systems => const BySystemView(),
+      _TaskViewTab.seasonal => const SeasonalView(),
+    };
   }
 
-  // ── Calendar header sliver ─────────────────────────────────────────────────
+  Widget _buildDailyContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildCalendarHeader(),
+        _buildDayHeader(),
+        _buildOverdueBanner(),
+        _AgendaWidget(
+          selectedDate: _selectedDate,
+          onQuickComplete: (taskId) =>
+              ref.read(maintenanceTasksProvider.notifier).completeTask(taskId),
+        ),
+        _buildUpcoming(),
+      ],
+    );
+  }
+
+  SliverToBoxAdapter _buildAnimatedTabSliver() {
+    return SliverToBoxAdapter(
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 280),
+        transitionBuilder: (child, animation) {
+          final isIncoming =
+              (child.key as ValueKey?)?.value == _tabIndex;
+          if (isIncoming) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: Offset(0.06 * _slideDirection, 0),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                  parent: animation, curve: Curves.easeOut)),
+              child: FadeTransition(opacity: animation, child: child),
+            );
+          }
+          return FadeTransition(opacity: animation, child: child);
+        },
+        child: KeyedSubtree(
+          key: ValueKey(_tabIndex),
+          child: _buildTabContent(),
+        ),
+      ),
+    );
+  }
+
+  // ── Daily tab content helpers ──────────────────────────────────────────────
 
   Widget _buildCalendarHeader() {
     final tasksAsync = ref.watch(maintenanceTasksProvider);
     final tasks = tasksAsync.value ?? const <MaintenanceTask>[];
     final monthLabel = DateFormat('MMMM yyyy').format(_weekStart);
 
-    return SliverToBoxAdapter(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSizes.screenPadding, 14, AppSizes.screenPadding, 0,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSizes.screenPadding, 14, AppSizes.screenPadding, 0,
+          ),
             child: Row(
               children: [
                 Text(
@@ -240,13 +274,10 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
           const SizedBox(height: 14),
           const Divider(color: AppColors.border, thickness: 1, height: 1),
         ],
-      ),
-    );
+      );
   }
 
-  // ── Day header sliver ──────────────────────────────────────────────────────
-
-  Widget _buildDayHeaderSliver() {
+  Widget _buildDayHeader() {
     final tasksAsync = ref.watch(maintenanceTasksProvider);
     final tasks = tasksAsync.value ?? const <MaintenanceTask>[];
     final today = DateTime.now();
@@ -278,39 +309,32 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
     if (dueSel > 0) { subParts.add('$dueSel due'); }
     final sub = subParts.join(' · ');
 
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.only(
-          top: 14,
-          left: AppSizes.screenPadding,
-          right: AppSizes.screenPadding,
-          bottom: 10,
-        ),
-        child: Row(
-          children: [
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: 14,
+        left: AppSizes.screenPadding,
+        right: AppSizes.screenPadding,
+        bottom: 10,
+      ),
+      child: Row(
+        children: [
+          Text(dayLabel, style: AppTextStyles.headlineMedium),
+          if (sub.isNotEmpty) ...[
+            const SizedBox(width: 8),
             Text(
-              dayLabel,
-              style: AppTextStyles.headlineMedium,
-            ),
-            if (sub.isNotEmpty) ...[
-              const SizedBox(width: 8),
-              Text(
-                sub,
-                style: AppTextStyles.monoLabel.copyWith(
-                  color: AppColors.textTertiary,
-                  fontSize: 11,
-                ),
+              sub,
+              style: AppTextStyles.monoLabel.copyWith(
+                color: AppColors.textTertiary,
+                fontSize: 11,
               ),
-            ],
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
 
-  // ── Overdue banner sliver ──────────────────────────────────────────────────
-
-  Widget _buildOverdueBannerSliver() {
+  Widget _buildOverdueBanner() {
     final tasksAsync = ref.watch(maintenanceTasksProvider);
     final tasks = tasksAsync.value ?? const <MaintenanceTask>[];
     final today = DateTime.now();
@@ -325,38 +349,15 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
           dueMidnight.isBefore(todayMidnight);
     }).toList();
 
-    if (overdueTasks.isEmpty) {
-      return const SliverToBoxAdapter(child: SizedBox.shrink());
-    }
+    if (overdueTasks.isEmpty) return const SizedBox.shrink();
 
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.screenPadding,
-        ),
-        child: OverdueBanner(overdueTasks: overdueTasks),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+      child: OverdueBanner(overdueTasks: overdueTasks),
     );
   }
 
-  // ── Tip card sliver ────────────────────────────────────────────────────────
-
-  Widget _buildTipSliver() {
-    return const SliverToBoxAdapter(
-      child: Padding(
-        padding: EdgeInsets.only(
-          top: 20,
-          left: AppSizes.screenPadding,
-          right: AppSizes.screenPadding,
-        ),
-        child: TipCard(),
-      ),
-    );
-  }
-
-  // ── Upcoming peek sliver ───────────────────────────────────────────────────
-
-  Widget _buildUpcomingSliver() {
+  Widget _buildUpcoming() {
     final tasksAsync = ref.watch(maintenanceTasksProvider);
     final tasks = tasksAsync.value ?? const <MaintenanceTask>[];
     final today = DateTime.now();
@@ -373,19 +374,15 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
     }).toList()
       ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
 
-    if (upcoming.isEmpty) {
-      return const SliverToBoxAdapter(child: SizedBox.shrink());
-    }
+    if (upcoming.isEmpty) return const SizedBox.shrink();
 
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.only(
-          top: 18,
-          left: AppSizes.screenPadding,
-          right: AppSizes.screenPadding,
-        ),
-        child: UpcomingPeek(tasks: upcoming),
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: 18,
+        left: AppSizes.screenPadding,
+        right: AppSizes.screenPadding,
       ),
+      child: UpcomingPeek(tasks: upcoming),
     );
   }
 }
@@ -469,11 +466,10 @@ class _NavButton extends StatelessWidget {
   }
 }
 
-// ── Agenda sliver ──────────────────────────────────────────────────────────────
+// ── Agenda widget ──────────────────────────────────────────────────────────────
 
-/// Watches [maintenanceTasksProvider] and renders the agenda for [selectedDate].
-class _AgendaSliver extends ConsumerWidget {
-  const _AgendaSliver({
+class _AgendaWidget extends ConsumerWidget {
+  const _AgendaWidget({
     required this.selectedDate,
     required this.onQuickComplete,
   });
@@ -486,61 +482,53 @@ class _AgendaSliver extends ConsumerWidget {
     final tasksAsync = ref.watch(maintenanceTasksProvider);
 
     return tasksAsync.when(
-      loading: () => const SliverToBoxAdapter(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
-          child: _AgendaSkeleton(),
-        ),
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+        child: _AgendaSkeleton(),
       ),
-      error: (e, _) => SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
-          child: ErrorView(
-            message: "Couldn't load tasks.",
-            onRetry: () =>
-                ref.read(maintenanceTasksProvider.notifier).refresh(),
-          ),
+      error: (e, _) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+        child: ErrorView(
+          message: "Couldn't load tasks.",
+          onRetry: () =>
+              ref.read(maintenanceTasksProvider.notifier).refresh(),
         ),
       ),
       data: (tasks) {
         final todayTasks = tasks.where((t) {
           if (t.status == TaskStatus.completed ||
-              t.status == TaskStatus.skipped) { return false; }
+              t.status == TaskStatus.skipped) {
+            return false;
+          }
           return _sameDay(t.dueDate.toLocal(), selectedDate);
         }).toList();
 
-        return SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.screenPadding,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (todayTasks.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: Text(
-                      'Nothing scheduled for this day',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textTertiary,
-                      ),
-                    ),
-                  )
-                else
-                  ...todayTasks.map(
-                    (task) => AgendaTaskCard(
-                      key: ValueKey(task.id),
-                      task: task,
-                      onQuickComplete: () => onQuickComplete(task.id),
-                      showDate: !_sameDay(
-                        selectedDate,
-                        DateTime.now(),
-                      ),
+        return Padding(
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.screenPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (todayTasks.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Text(
+                    'Nothing scheduled for this day',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textTertiary,
                     ),
                   ),
-              ],
-            ),
+                )
+              else
+                ...todayTasks.map(
+                  (task) => AgendaTaskCard(
+                    key: ValueKey(task.id),
+                    task: task,
+                    onQuickComplete: () => onQuickComplete(task.id),
+                    showDate: !_sameDay(selectedDate, DateTime.now()),
+                  ),
+                ),
+            ],
           ),
         );
       },

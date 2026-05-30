@@ -72,8 +72,8 @@ String _timeLabel(int? minutes) {
 
 // ── Main sliver widget ─────────────────────────────────────────────────────────
 
-class SeasonalViewSliver extends ConsumerWidget {
-  const SeasonalViewSliver({super.key});
+class SeasonalView extends ConsumerWidget {
+  const SeasonalView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -81,8 +81,8 @@ class SeasonalViewSliver extends ConsumerWidget {
     final profileAsync = ref.watch(homeProfileProvider);
 
     return tasksAsync.when(
-      loading: () => SliverToBoxAdapter(child: _SeasonalSkeleton()),
-      error: (_, _) => const SliverToBoxAdapter(child: SizedBox.shrink()),
+      loading: () => _SeasonalSkeleton(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (allTasks) {
         final season = _currentSeason();
         final seasonalTasks = allTasks
@@ -121,8 +121,7 @@ class SeasonalViewSliver extends ConsumerWidget {
         final city = profileAsync.value?.property.city;
         final zone = profileAsync.value?.property.climateZone;
 
-        return SliverToBoxAdapter(
-          child: Padding(
+        return Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,8 +179,7 @@ class SeasonalViewSliver extends ConsumerWidget {
                 const SizedBox(height: AppSizes.xl),
               ],
             ),
-          ),
-        );
+          );
       },
     );
   }

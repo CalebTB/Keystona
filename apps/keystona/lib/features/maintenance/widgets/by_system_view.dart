@@ -147,8 +147,8 @@ String? _installYear(String? date) {
 
 // ── Main sliver widget ─────────────────────────────────────────────────────────
 
-class BySystemViewSliver extends ConsumerWidget {
-  const BySystemViewSliver({super.key});
+class BySystemView extends ConsumerWidget {
+  const BySystemView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -156,14 +156,14 @@ class BySystemViewSliver extends ConsumerWidget {
     final tasksAsync = ref.watch(maintenanceTasksProvider);
 
     if (systemsAsync.isLoading || tasksAsync.isLoading) {
-      return SliverToBoxAdapter(child: _BySystemSkeleton());
+      return _BySystemSkeleton();
     }
 
     final systems = systemsAsync.value ?? [];
     final tasks = tasksAsync.value ?? [];
 
     if (systems.isEmpty) {
-      return SliverToBoxAdapter(child: _NoSystemsEmptyState());
+      return _NoSystemsEmptyState();
     }
 
     final today = DateTime.now();
@@ -227,8 +227,7 @@ class BySystemViewSliver extends ConsumerWidget {
         if (grouped.containsKey(s.id)) s.id: grouped[s.id]!,
     };
 
-    return SliverToBoxAdapter(
-      child: Column(
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: AppSizes.md),
@@ -269,8 +268,7 @@ class BySystemViewSliver extends ConsumerWidget {
           ],
           const SizedBox(height: AppSizes.xl),
         ],
-      ),
-    );
+      );
   }
 }
 
