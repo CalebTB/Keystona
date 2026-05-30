@@ -8,7 +8,9 @@ import 'package:shimmer/shimmer.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../home_profile/models/appliance.dart' hide ItemStatus;
 import '../../home_profile/models/system.dart';
+import '../../home_profile/providers/appliances_provider.dart';
 import '../../home_profile/providers/systems_provider.dart';
 import '../models/maintenance_task.dart';
 import '../providers/maintenance_tasks_provider.dart';
@@ -45,6 +47,26 @@ Color _healthColor(HomeSystem system) => switch (system.status) {
       ItemStatus.active => AppColors.oliveLight,
       ItemStatus.needsRepair => AppColors.sand,
       _ => AppColors.gray400,
+    };
+
+IconData _applianceIcon(ApplianceCategory cat) => switch (cat) {
+      ApplianceCategory.kitchen => Icons.kitchen_outlined,
+      ApplianceCategory.laundry => Icons.local_laundry_service_outlined,
+      ApplianceCategory.climate => Icons.air_outlined,
+      ApplianceCategory.cleaning => Icons.cleaning_services_outlined,
+      ApplianceCategory.outdoor => Icons.yard_outlined,
+      ApplianceCategory.bathroom => Icons.shower_outlined,
+      ApplianceCategory.other => Icons.devices_other_outlined,
+    };
+
+Color _applianceColor(ApplianceCategory cat) => switch (cat) {
+      ApplianceCategory.kitchen => AppColors.teal,
+      ApplianceCategory.laundry => AppColors.slate,
+      ApplianceCategory.climate => AppColors.sandAmber,
+      ApplianceCategory.cleaning => AppColors.olive,
+      ApplianceCategory.outdoor => AppColors.sand,
+      ApplianceCategory.bathroom => AppColors.amber,
+      ApplianceCategory.other => AppColors.gray400,
     };
 
 Color _taskDotColor(MaintenanceTask t) {
@@ -154,6 +176,7 @@ class BySystemView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final systemsAsync = ref.watch(systemsProvider);
+    final appliancesAsync = ref.watch(appliancesProvider);
     final tasksAsync = ref.watch(maintenanceTasksProvider);
 
     if (systemsAsync.isLoading || tasksAsync.isLoading) {
@@ -161,16 +184,16 @@ class BySystemView extends ConsumerWidget {
     }
 
     final systems = systemsAsync.value ?? [];
+    final appliances = appliancesAsync.value ?? [];
     final tasks = tasksAsync.value ?? [];
-
-    if (systems.isEmpty) {
-      return _NoSystemsEmptyState();
-    }
 
     final today = DateTime.now();
     final todayMid = DateTime(today.year, today.month, today.day);
+    final thirtyDaysOut = todayMid.add(const Duration(days: 30));
 
-    final Map<String, List<MaintenanceTask>> grouped = {};
+    // Group tasks by system, appliance, or uncategorized.
+    final Map<String, List<MaintenanceTask>> systemGrouped = {};
+    final Map<String, List<MaintenanceTask>> applianceGrouped = {};
     final List<MaintenanceTask> uncategorized = [];
 
     for (final t in tasks) {
@@ -178,18 +201,15 @@ class BySystemView extends ConsumerWidget {
         continue;
       }
       if (t.linkedSystemId != null) {
-        grouped.putIfAbsent(t.linkedSystemId!, () => []).add(t);
+        systemGrouped.putIfAbsent(t.linkedSystemId!, () => []).add(t);
+      } else if (t.linkedApplianceId != null) {
+        applianceGrouped.putIfAbsent(t.linkedApplianceId!, () => []).add(t);
       } else {
         uncategorized.add(t);
       }
     }
 
-    final thirtyDaysOut = todayMid.add(const Duration(days: 30));
-
-    // A system is "all clear" when every active task is 30+ days out.
-    // Systems with no tasks at all also qualify as all clear.
-    bool isAllClear(String systemId) {
-      final list = grouped[systemId] ?? [];
+    bool isAllClear(List<MaintenanceTask> list) {
       for (final t in list) {
         if (t.status == TaskStatus.completed ||
             t.status == TaskStatus.skipped) {
@@ -211,42 +231,66 @@ class BySystemView extends ConsumerWidget {
           return t.status == TaskStatus.overdue || dueMid.isBefore(todayMid);
         }).length;
 
-    // Systems needing attention: have tasks due within 30 days or overdue.
+    // Systems and appliances needing attention (tasks due within 30 days).
     final attentionSystems = systems
-        .where((s) => grouped.containsKey(s.id) && !isAllClear(s.id))
+        .where((s) => systemGrouped.containsKey(s.id) && !isAllClear(systemGrouped[s.id]!))
         .toList()
-      ..sort((a, b) => overdueCount(grouped[b.id]!)
-          .compareTo(overdueCount(grouped[a.id]!)));
+      ..sort((a, b) => overdueCount(systemGrouped[b.id]!)
+          .compareTo(overdueCount(systemGrouped[a.id]!)));
 
-    // All-clear systems: no tasks linked, or all tasks are 30+ days out.
-    final clearSystems =
-        systems.where((s) => isAllClear(s.id)).toList();
+    final attentionAppliances = appliances
+        .where((a) => applianceGrouped.containsKey(a.id) && !isAllClear(applianceGrouped[a.id]!))
+        .toList()
+      ..sort((a, b) => overdueCount(applianceGrouped[b.id]!)
+          .compareTo(overdueCount(applianceGrouped[a.id]!)));
 
-    // Tasks keyed by system ID for the all-clear card's next-due hints.
+    // All-clear: systems/appliances with no tasks or all tasks 30+ days out.
+    final clearSystems = systems.where((s) =>
+        isAllClear(systemGrouped[s.id] ?? [])).toList();
+    final clearAppliances = appliances.where((a) =>
+        applianceGrouped.containsKey(a.id) &&
+        isAllClear(applianceGrouped[a.id]!)).toList();
+
     final Map<String, List<MaintenanceTask>> clearSystemTasks = {
       for (final s in clearSystems)
-        if (grouped.containsKey(s.id)) s.id: grouped[s.id]!,
+        if (systemGrouped.containsKey(s.id)) s.id: systemGrouped[s.id]!,
     };
+
+    // Only show "no systems" empty state when truly nothing to show.
+    if (systems.isEmpty && appliances.isEmpty) {
+      return _NoSystemsEmptyState();
+    }
 
     return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: AppSizes.md),
-          // Systems needing attention
           Padding(
             padding: const EdgeInsets.symmetric(
                 horizontal: AppSizes.screenPadding),
             child: Column(
               children: [
+                // Systems needing attention
                 ...attentionSystems.map(
                   (system) => Padding(
                     padding: const EdgeInsets.only(bottom: AppSizes.sm),
                     child: _SystemCard(
                       system: system,
-                      tasks: grouped[system.id]!,
+                      tasks: systemGrouped[system.id]!,
                     ),
                   ),
                 ),
+                // Appliances needing attention
+                ...attentionAppliances.map(
+                  (appliance) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSizes.sm),
+                    child: _ApplianceCard(
+                      appliance: appliance,
+                      tasks: applianceGrouped[appliance.id]!,
+                    ),
+                  ),
+                ),
+                // Truly uncategorized tasks (no system, no appliance link)
                 if (uncategorized.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: AppSizes.sm),
@@ -255,8 +299,8 @@ class BySystemView extends ConsumerWidget {
               ],
             ),
           ),
-          // All Clear
-          if (clearSystems.isNotEmpty) ...[
+          // All Clear — systems + appliances with all tasks 30+ days out
+          if (clearSystems.isNotEmpty || clearAppliances.isNotEmpty) ...[
             const SizedBox(height: AppSizes.xs),
             Padding(
               padding: const EdgeInsets.symmetric(
@@ -443,6 +487,128 @@ class _SystemCardState extends State<_SystemCard> {
                         height: 1,
                         thickness: 1,
                         color: AppColors.border),
+                    ...sorted.map((t) => _TaskRow(task: t)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Appliance card (has tasks) ────────────────────────────────────────────────
+
+class _ApplianceCard extends StatefulWidget {
+  const _ApplianceCard({required this.appliance, required this.tasks});
+  final Appliance appliance;
+  final List<MaintenanceTask> tasks;
+  @override
+  State<_ApplianceCard> createState() => _ApplianceCardState();
+}
+
+class _ApplianceCardState extends State<_ApplianceCard> {
+  bool _collapsed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _applianceColor(widget.appliance.category);
+    final icon = _applianceIcon(widget.appliance.category);
+    final sorted = [...widget.tasks]..sort((a, b) {
+        final keyCmp = _taskSortKey(a).compareTo(_taskSortKey(b));
+        if (keyCmp != 0) return keyCmp;
+        return a.dueDate.compareTo(b.dueDate);
+      });
+    final name = widget.appliance.brand != null
+        ? '${widget.appliance.brand} ${widget.appliance.name}'
+        : widget.appliance.name;
+    final count = sorted.length;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.card,
+        border: Border.all(color: AppColors.border, width: 1.5),
+        boxShadow: const [
+          BoxShadow(color: Color(0x0A1A2B4A), blurRadius: 4, offset: Offset(0, 1)),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: AppRadius.card,
+        child: Column(
+          children: [
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                setState(() => _collapsed = !_collapsed);
+              },
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => context.push(
+                          '/home/appliances/${widget.appliance.id}'),
+                      child: Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(icon, size: 20, color: color),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(name, style: AppTextStyles.bodyMediumSemibold),
+                          const SizedBox(height: 3),
+                          Text(
+                            widget.appliance.category.label,
+                            style: AppTextStyles.caption.copyWith(
+                                color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.warmFill,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.border, width: 1),
+                      ),
+                      child: Text('$count',
+                          style: AppTextStyles.monoTiny.copyWith(
+                              color: AppColors.textSecondary)),
+                    ),
+                    AnimatedRotation(
+                      turns: _collapsed ? 0.25 : 0,
+                      duration: const Duration(milliseconds: 260),
+                      curve: Curves.easeInOutCubic,
+                      child: Icon(Icons.keyboard_arrow_down_rounded,
+                          size: 20, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            ClipRect(
+              child: AnimatedAlign(
+                alignment: Alignment.topCenter,
+                heightFactor: _collapsed ? 0.0 : 1.0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOutCubic,
+                child: Column(
+                  children: [
+                    const Divider(height: 1, thickness: 1, color: AppColors.border),
                     ...sorted.map((t) => _TaskRow(task: t)),
                   ],
                 ),
