@@ -434,9 +434,7 @@ class _FormBody extends StatelessWidget {
                   replacementCostCtrl.text =
                       r.estimatedReplacementCostUsd.toString();
                 }
-                if (r.notes != null && notesCtrl.text.isEmpty) {
-                  notesCtrl.text = r.notes!;
-                }
+                if (r.notes != null) notesCtrl.text = r.notes!;
                 if (r.manufactureDate != null) {
                   final parts = r.manufactureDate!.split('-');
                   final normalised = parts.length == 2

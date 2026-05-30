@@ -492,7 +492,7 @@ class _FormBody extends StatelessWidget {
   final void Function(String date)? onPurchaseDateFromScan;
 
   static ApplianceCategory? _applianceCategoryFromString(String raw) {
-    return switch (raw.toLowerCase()) {
+    return switch (raw.trim().toLowerCase()) {
       'kitchen' => ApplianceCategory.kitchen,
       'laundry' => ApplianceCategory.laundry,
       'climate' => ApplianceCategory.climate,
@@ -501,6 +501,37 @@ class _FormBody extends StatelessWidget {
       'bathroom' => ApplianceCategory.bathroom,
       _ => ApplianceCategory.other,
     };
+  }
+
+  /// Infers a category string from the product name when Claude doesn't
+  /// return one. Returns null if no match — caller falls back to default.
+  static String? _inferApplianceCategory(String? name) {
+    if (name == null) return null;
+    final n = name.toLowerCase();
+    if (n.contains('fridge') ||
+        n.contains('refrigerator') ||
+        n.contains('dishwasher') ||
+        n.contains('oven') ||
+        n.contains('microwave') ||
+        n.contains('range') ||
+        n.contains('freezer') ||
+        n.contains('cooktop')) { return 'kitchen'; }
+    if (n.contains('washer') ||
+        n.contains('dryer') ||
+        n.contains('laundry')) { return 'laundry'; }
+    if (n.contains('air conditioner') ||
+        n.contains('heater') ||
+        n.contains('air purifier') ||
+        n.contains('dehumidifier') ||
+        n.contains('humidifier')) { return 'climate'; }
+    if (n.contains('vacuum') || n.contains('steam cleaner')) { return 'cleaning'; }
+    if (n.contains('mower') ||
+        n.contains('generator') ||
+        n.contains('pressure washer')) { return 'outdoor'; }
+    if (n.contains('toilet') ||
+        n.contains('shower') ||
+        n.contains('hair dryer')) { return 'bathroom'; }
+    return null;
   }
 
   @override
@@ -518,9 +549,10 @@ class _FormBody extends StatelessWidget {
             }
             if (r.modelNumber != null) modelCtrl.text = r.modelNumber!;
             if (r.serialNumber != null) serialCtrl.text = r.serialNumber!;
-            if (r.category != null) {
-              final cat = _applianceCategoryFromString(r.category!);
-              if (cat != null) onCategoryChanged(cat);
+            // Use category from Claude, or infer from product name as fallback.
+            final rawCat = r.category ?? _inferApplianceCategory(r.name);
+            if (rawCat != null) {
+              onCategoryChanged(_applianceCategoryFromString(rawCat)!);
             }
             if (r.estimatedLifespanYears != null) {
               lifespanCtrl.text = r.estimatedLifespanYears.toString();
@@ -529,9 +561,7 @@ class _FormBody extends StatelessWidget {
               replacementCostCtrl.text =
                   r.estimatedReplacementCostUsd.toString();
             }
-            if (r.notes != null && notesCtrl.text.isEmpty) {
-              notesCtrl.text = r.notes!;
-            }
+            if (r.notes != null) notesCtrl.text = r.notes!;
             if (r.manufactureDate != null) {
               final parts = r.manufactureDate!.split('-');
               final normalised = parts.length == 2
