@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
   "category": "one of exactly: kitchen, laundry, climate, cleaning, outdoor, bathroom, other",
   "estimatedLifespanYears": typical lifespan in years as integer (e.g. fridge=13, washer=11, dishwasher=10, dryer=13),
   "estimatedReplacementCostUsd": rough mid-range replacement cost in USD as integer (e.g. fridge=1200, washer=800, dishwasher=700),
-  "notes": "key specs from the label: capacity, voltage, amperage, Energy Star rating, refrigerant type, etc. — one concise sentence, or null if nothing notable"
+  "notes": "key specs as clean lines in format 'Label: Value', one per line, e.g. 'Capacity: 25.6 cu ft\\nVoltage: 115V\\nEnergy Star: Yes\\nRefrigerant: R-600a' — only include what is actually on the label, or null if nothing notable"
 }
 
 Categories: kitchen=fridge/freezer/dishwasher/oven/microwave; laundry=washer/dryer; climate=AC/heater/air purifier; cleaning=vacuum; outdoor=mower/generator; bathroom=personal care appliances.
