@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -66,6 +67,7 @@ class _AgendaTaskCardState extends State<AgendaTaskCard>
     // not be blocked by whether the card is still in the tree (e.g. user
     // navigates away mid-animation).
     await Future.delayed(const Duration(milliseconds: 680));
+    HapticFeedback.mediumImpact();
     widget.onQuickComplete();
 
     if (!mounted) return;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -325,7 +326,10 @@ class _SystemCardState extends State<_SystemCard> {
           children: [
             // ── Header — tap to collapse/expand ──────────────────────
             GestureDetector(
-              onTap: () => setState(() => _collapsed = !_collapsed),
+              onTap: () {
+                HapticFeedback.lightImpact();
+                setState(() => _collapsed = !_collapsed);
+              },
               behavior: HitTestBehavior.opaque,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
@@ -563,7 +567,10 @@ class _UncategorizedCardState extends State<_UncategorizedCard> {
           children: [
             // Header — tap to collapse/expand
             GestureDetector(
-              onTap: () => setState(() => _collapsed = !_collapsed),
+              onTap: () {
+                HapticFeedback.lightImpact();
+                setState(() => _collapsed = !_collapsed);
+              },
               behavior: HitTestBehavior.opaque,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),

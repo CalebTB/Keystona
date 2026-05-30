@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -126,10 +127,13 @@ class _PlanViewState extends ConsumerState<PlanView> {
                     taskCount: count,
                     overdueCount: overdueCount,
                     selected: selected,
-                    onTap: () => setState(() {
-                      _slideDirection = i > _selectedMonthOffset ? 1 : -1;
-                      _selectedMonthOffset = i;
-                    }),
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() {
+                        _slideDirection = i > _selectedMonthOffset ? 1 : -1;
+                        _selectedMonthOffset = i;
+                      });
+                    },
                   ),
                 );
               },
@@ -250,6 +254,7 @@ class _PlanViewState extends ConsumerState<PlanView> {
                       padding: EdgeInsets.zero,
                       onPressed: () {
                         confirmed = true;
+                        HapticFeedback.mediumImpact();
                         Navigator.of(context, rootNavigator: true).pop();
                       },
                       child: Text('Done',

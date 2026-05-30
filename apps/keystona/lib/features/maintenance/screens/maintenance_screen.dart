@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
@@ -160,16 +161,15 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
       child: _TabStrip(
         current: _tab,
         onChanged: (t) {
+          HapticFeedback.selectionClick();
+          if (_scrollController.hasClients) {
+            _scrollController.jumpTo(0);
+          }
           final newIndex = _TaskViewTab.values.indexOf(t);
           setState(() {
             _slideDirection = newIndex > _tabIndex ? 1 : -1;
             _tabIndex = newIndex;
             _tab = t;
-          });
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted && _scrollController.hasClients) {
-              _scrollController.jumpTo(0);
-            }
           });
         },
       ),
@@ -208,6 +208,15 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
     return SliverToBoxAdapter(
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 280),
+        // Top-align children so the incoming tab never appears vertically
+        // centered inside a taller outgoing tab's layout box.
+        layoutBuilder: (currentChild, previousChildren) => Stack(
+          alignment: Alignment.topCenter,
+          children: [
+            ...previousChildren,
+            ?currentChild,
+          ],
+        ),
         transitionBuilder: (child, animation) {
           final isIncoming =
               (child.key as ValueKey?)?.value == _tabIndex;
