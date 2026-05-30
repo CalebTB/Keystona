@@ -16,6 +16,8 @@ import '../models/task_completion.dart';
 import '../models/task_detail.dart';
 import '../providers/task_detail_provider.dart';
 import '../widgets/task_detail_skeleton.dart';
+import '../../documents/models/document.dart';
+import '../../documents/providers/documents_provider.dart';
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
 
@@ -1122,7 +1124,7 @@ class _OverdueEntry extends StatelessWidget {
 
 // ── Completion timeline entry ──────────────────────────────────────────────────
 
-class _CompletionEntry extends StatelessWidget {
+class _CompletionEntry extends ConsumerWidget {
   const _CompletionEntry({
     required this.completion,
     required this.isFirst,
@@ -1159,11 +1161,20 @@ class _CompletionEntry extends StatelessWidget {
       (completion.serviceCost ?? 0) + (completion.materialsCost ?? 0);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final dateStr =
         DateFormat('MMM d').format(completion.completedDate.toLocal()).toUpperCase();
     final hasCost = _totalCost > 0;
     final meta = _metaLine();
+
+    // Resolve linked receipt names from the already-loaded documents provider.
+    // No extra Supabase query — falls back to "Receipt" if docs aren't loaded yet.
+    final allDocs = ref.watch(documentsProvider).value ?? const <Document>[];
+    final linkedDocs = completion.linkedDocumentIds.isEmpty
+        ? const <Document>[]
+        : allDocs
+            .where((d) => completion.linkedDocumentIds.contains(d.id))
+            .toList();
 
     return _TimelineRow(
       isLast: isLast,
@@ -1222,6 +1233,57 @@ class _CompletionEntry extends StatelessWidget {
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
+              ),
+            ],
+            // Linked receipt chips
+            if (completion.linkedDocumentIds.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: completion.linkedDocumentIds.map((docId) {
+                  final doc = linkedDocs
+                      .where((d) => d.id == docId)
+                      .firstOrNull;
+                  final label = doc?.name ?? 'Receipt';
+                  return GestureDetector(
+                    onTap: () => context.push('/documents/$docId'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.warmFill,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: _kBorder),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.receipt_outlined,
+                            size: 11,
+                            color: _kTextMuted,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            label,
+                            style: GoogleFonts.ibmPlexMono(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              color: _kTextSecondary,
+                            ),
+                          ),
+                          const SizedBox(width: 3),
+                          Icon(
+                            Icons.chevron_right,
+                            size: 11,
+                            color: _kTextMuted,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
             ],
           ],
