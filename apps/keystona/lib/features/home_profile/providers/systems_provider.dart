@@ -8,13 +8,17 @@ part 'systems_provider.g.dart';
 
 /// Manages the list of home systems for the authenticated user's property.
 ///
-/// Auto-disposed when the Systems screen is not active.
+/// Kept alive (ref.keepAlive) so fast scrolling on the Home Profile screen
+/// does not dispose and re-fetch the list.
 /// Invalidates [homeProfileProvider] after any mutation so the overview
 /// system count stays in sync.
 @riverpod
 class SystemsNotifier extends _$SystemsNotifier {
   @override
-  Future<List<HomeSystem>> build() => _fetchSystems();
+  Future<List<HomeSystem>> build() {
+    ref.keepAlive();
+    return _fetchSystems();
+  }
 
   // ── Public interface ───────────────────────────────────────────────────────
 

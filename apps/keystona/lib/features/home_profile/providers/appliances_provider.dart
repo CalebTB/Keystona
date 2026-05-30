@@ -16,7 +16,10 @@ const _kColumns =
 @riverpod
 class AppliancesNotifier extends _$AppliancesNotifier {
   @override
-  Future<List<Appliance>> build() => _fetchAppliances();
+  Future<List<Appliance>> build() {
+    ref.keepAlive();
+    return _fetchAppliances();
+  }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
