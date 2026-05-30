@@ -9,6 +9,7 @@ const corsHeaders = {
 interface ScanRequest {
   imageBase64: string;
   mimeType: "image/jpeg" | "image/png" | "image/heic" | "image/webp";
+  formType?: "system" | "appliance"; // determines which category list to use
 }
 
 interface LabelScanResult {
@@ -81,14 +82,31 @@ Deno.serve(async (req) => {
               },
               {
                 type: "text",
-                text: `You are reading an appliance or home system label. Extract the following information and return ONLY a valid JSON object — no explanation, no markdown, just the JSON.
+                text: body.formType === "appliance"
+  ? `You are reading a home appliance label. Extract the following information and return ONLY a valid JSON object — no explanation, no markdown, just the JSON.
 
 Required fields (use null if not found):
 {
   "brand": "manufacturer or brand name",
   "modelNumber": "model number or part number (look for MOD, MODEL, M/N, M.N.)",
   "serialNumber": "serial number (look for SER, SERIAL, S/N, S.N.)",
-  "name": "product name or type (e.g. 'Central Air Conditioner', 'Water Heater', 'Dishwasher')",
+  "name": "product name or type (e.g. 'Refrigerator', 'Washing Machine', 'Dishwasher', 'Dryer')",
+  "manufactureDate": "manufacture date as YYYY-MM if month is available, or YYYY if only year (look for MFG DATE, DATE, DOM)",
+  "estimatedYear": year as integer or null,
+  "category": "one of exactly: kitchen, laundry, climate, cleaning, outdoor, bathroom, other"
+}
+
+For category: kitchen = fridge, freezer, dishwasher, oven, microwave, range, cooktop; laundry = washer, dryer; climate = window AC, space heater, air purifier, dehumidifier, humidifier; cleaning = vacuum, steam cleaner; outdoor = lawn mower, pressure washer, generator; bathroom = water flosser, electric toothbrush, hair dryer; other = anything else.
+
+Be precise with model and serial numbers — copy them exactly as printed.`
+  : `You are reading a home system label. Extract the following information and return ONLY a valid JSON object — no explanation, no markdown, just the JSON.
+
+Required fields (use null if not found):
+{
+  "brand": "manufacturer or brand name",
+  "modelNumber": "model number or part number (look for MOD, MODEL, M/N, M.N.)",
+  "serialNumber": "serial number (look for SER, SERIAL, S/N, S.N.)",
+  "name": "product name or type (e.g. 'Central Air Conditioner', 'Water Heater', 'Electrical Panel')",
   "manufactureDate": "manufacture date as YYYY-MM if month is available, or YYYY if only year (look for MFG DATE, DATE, DOM)",
   "estimatedYear": year as integer or null,
   "category": "one of exactly: hvac, plumbing, electrical, roofing, foundation, siding, windows_doors, insulation, garage, other"

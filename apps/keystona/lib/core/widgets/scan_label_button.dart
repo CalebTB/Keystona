@@ -12,9 +12,14 @@ import '../theme/app_text_styles.dart';
 ///
 /// Drop this widget anywhere in a form and wire [onResult] to fill controllers.
 class ScanLabelButton extends StatefulWidget {
-  const ScanLabelButton({super.key, required this.onResult});
+  const ScanLabelButton({
+    super.key,
+    required this.onResult,
+    this.isAppliance = false,
+  });
 
   final void Function(LabelScanResult result) onResult;
+  final bool isAppliance;
 
   @override
   State<ScanLabelButton> createState() => _ScanLabelButtonState();
@@ -34,7 +39,10 @@ class _ScanLabelButtonState extends State<ScanLabelButton> {
 
     setState(() => _scanning = true);
     try {
-      final result = await LabelScannerService.scanImage(photo);
+      final result = await LabelScannerService.scanImage(
+        photo,
+        isAppliance: widget.isAppliance,
+      );
       if (!mounted) return;
 
       if (result.isEmpty) {

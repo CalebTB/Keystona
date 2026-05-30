@@ -491,6 +491,18 @@ class _FormBody extends StatelessWidget {
   final VoidCallback onPickStatusIOS;
   final void Function(String date)? onPurchaseDateFromScan;
 
+  static ApplianceCategory? _applianceCategoryFromString(String raw) {
+    return switch (raw.toLowerCase()) {
+      'kitchen' => ApplianceCategory.kitchen,
+      'laundry' => ApplianceCategory.laundry,
+      'climate' => ApplianceCategory.climate,
+      'cleaning' => ApplianceCategory.cleaning,
+      'outdoor' => ApplianceCategory.outdoor,
+      'bathroom' => ApplianceCategory.bathroom,
+      _ => ApplianceCategory.other,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -498,6 +510,7 @@ class _FormBody extends StatelessWidget {
       children: [
         // ── Label scanner ──────────────────────────────────────────────────
         ScanLabelButton(
+          isAppliance: true,
           onResult: (LabelScanResult r) {
             if (r.brand != null) brandCtrl.text = r.brand!;
             if (r.name != null && nameCtrl.text.isEmpty) {
@@ -505,6 +518,10 @@ class _FormBody extends StatelessWidget {
             }
             if (r.modelNumber != null) modelCtrl.text = r.modelNumber!;
             if (r.serialNumber != null) serialCtrl.text = r.serialNumber!;
+            if (r.category != null) {
+              final cat = _applianceCategoryFromString(r.category!);
+              if (cat != null) onCategoryChanged(cat);
+            }
             if (r.manufactureDate != null) {
               final parts = r.manufactureDate!.split('-');
               final normalised = parts.length == 2

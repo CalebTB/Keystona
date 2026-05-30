@@ -60,7 +60,10 @@ class LabelScanResult {
 /// Sends a label photo to the scan-label Edge Function and returns
 /// the extracted appliance/system data.
 abstract final class LabelScannerService {
-  static Future<LabelScanResult> scanImage(XFile photo) async {
+  static Future<LabelScanResult> scanImage(
+    XFile photo, {
+    bool isAppliance = false,
+  }) async {
     final session = SupabaseService.client.auth.currentSession;
     if (session == null) throw StateError('Not authenticated');
 
@@ -78,7 +81,11 @@ abstract final class LabelScannerService {
 
     final response = await SupabaseService.client.functions.invoke(
       'scan-label',
-      body: {'imageBase64': base64Image, 'mimeType': mimeType},
+      body: {
+        'imageBase64': base64Image,
+        'mimeType': mimeType,
+        'formType': isAppliance ? 'appliance' : 'system',
+      },
       headers: {'Authorization': 'Bearer ${session.accessToken}'},
     );
 
