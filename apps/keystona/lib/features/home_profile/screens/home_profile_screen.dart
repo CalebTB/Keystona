@@ -417,9 +417,6 @@ class _ContentSliver extends ConsumerWidget {
             _AppliancesSection(),
             const SizedBox(height: AppSizes.md),
 
-            // 5. Scan CTA.
-            const _ScanCtaCard(),
-            const SizedBox(height: AppSizes.md),
           ],
         ),
       ),
@@ -1364,59 +1361,6 @@ class _ApplianceCard extends StatelessWidget {
   }
 }
 
-// ── 5. Scan CTA card ──────────────────────────────────────────────────────────
-
-class _ScanCtaCard extends StatelessWidget {
-  const _ScanCtaCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(AppSizes.radiusCard),
-        border: Border.all(
-          color: AppColors.border,
-          width: 1.5,
-          // Dashed border via custom paint would require a CustomPainter;
-          // using a standard border here that reads as a CTA card.
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      child: Column(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: AppColors.warmFill,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.document_scanner_outlined,
-              size: 22,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Scan an appliance label',
-            style: AppTextStyles.titleSmall,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Auto-fill model, serial, and lifespan from a photo',
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.textTertiary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 // ── FAB ───────────────────────────────────────────────────────────────────────
 
