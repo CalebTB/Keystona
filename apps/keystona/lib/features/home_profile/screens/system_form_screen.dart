@@ -8,7 +8,9 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/scan_label_button.dart';
 import '../../../core/widgets/snackbar_service.dart';
+import '../../../services/label_scanner_service.dart';
 import '../models/system.dart';
 import '../providers/system_detail_provider.dart';
 import '../providers/systems_provider.dart';
@@ -392,6 +394,29 @@ class _FormBody extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ── Label scanner ─────────────────────────────────────────────────
+            ScanLabelButton(
+              onResult: (LabelScanResult r) {
+                if (r.brand != null) brandCtrl.text = r.brand!;
+                if (r.name != null && nameCtrl.text.isEmpty) {
+                  nameCtrl.text = r.name!;
+                }
+                if (r.modelNumber != null) modelCtrl.text = r.modelNumber!;
+                if (r.serialNumber != null) serialCtrl.text = r.serialNumber!;
+                if (r.manufactureDate != null) {
+                  // Normalise to YYYY-MM-DD for the DATE column.
+                  final parts = r.manufactureDate!.split('-');
+                  final normalised = parts.length == 2
+                      ? '${parts[0]}-${parts[1]}-01'
+                      : '${parts[0]}-01-01';
+                  onInstallationDateChanged(normalised);
+                } else if (r.estimatedYear != null) {
+                  onInstallationDateChanged('${r.estimatedYear}-01-01');
+                }
+              },
+            ),
+            const SizedBox(height: AppSizes.md),
+
             // ── Required fields ───────────────────────────────────────────────
             _FormSectionLabel(label: 'Required'),
 

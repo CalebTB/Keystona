@@ -6,7 +6,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/scan_label_button.dart';
 import '../../../core/widgets/snackbar_service.dart';
+import '../../../services/label_scanner_service.dart';
 import '../models/appliance.dart';
 import '../providers/appliance_detail_provider.dart';
 import '../providers/appliances_provider.dart';
@@ -364,6 +366,8 @@ class _ApplianceFormScreenState extends ConsumerState<ApplianceFormScreen> {
                   setState(() => _warrantyExpiration = null),
               onPickCategoryIOS: () => _pickCategoryIOS(context),
               onPickStatusIOS: () => _pickStatusIOS(context),
+              onPurchaseDateFromScan: (date) =>
+                  setState(() => _purchaseDate = date),
             ),
           ),
         ),
@@ -458,6 +462,7 @@ class _FormBody extends StatelessWidget {
     required this.onClearWarrantyExpiration,
     required this.onPickCategoryIOS,
     required this.onPickStatusIOS,
+    this.onPurchaseDateFromScan,
   });
 
   final bool isIOS;
@@ -484,12 +489,35 @@ class _FormBody extends StatelessWidget {
   final VoidCallback onClearWarrantyExpiration;
   final VoidCallback onPickCategoryIOS;
   final VoidCallback onPickStatusIOS;
+  final void Function(String date)? onPurchaseDateFromScan;
 
   @override
   Widget build(BuildContext context) {
     return ListView(
       padding: AppPadding.screen,
       children: [
+        // ── Label scanner ──────────────────────────────────────────────────
+        ScanLabelButton(
+          onResult: (LabelScanResult r) {
+            if (r.brand != null) brandCtrl.text = r.brand!;
+            if (r.name != null && nameCtrl.text.isEmpty) {
+              nameCtrl.text = r.name!;
+            }
+            if (r.modelNumber != null) modelCtrl.text = r.modelNumber!;
+            if (r.serialNumber != null) serialCtrl.text = r.serialNumber!;
+            if (r.manufactureDate != null) {
+              final parts = r.manufactureDate!.split('-');
+              final normalised = parts.length == 2
+                  ? '${parts[0]}-${parts[1]}-01'
+                  : '${parts[0]}-01-01';
+              onPurchaseDateFromScan?.call(normalised);
+            } else if (r.estimatedYear != null) {
+              onPurchaseDateFromScan?.call('${r.estimatedYear}-01-01');
+            }
+          },
+        ),
+        const SizedBox(height: AppSizes.md),
+
         // ── Category & Identity ────────────────────────────────────────────
         const _SectionLabel(label: 'Category & Identity'),
         _PickerField(
