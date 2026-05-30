@@ -308,6 +308,12 @@ class BySystemView extends ConsumerWidget {
               child: _AllClearCard(
                 systems: clearSystems,
                 tasksBySystem: clearSystemTasks,
+                appliances: clearAppliances,
+                tasksByAppliance: {
+                  for (final a in clearAppliances)
+                    if (applianceGrouped.containsKey(a.id))
+                      a.id: applianceGrouped[a.id]!,
+                },
               ),
             ),
           ],
@@ -832,11 +838,14 @@ class _AllClearCard extends StatelessWidget {
   const _AllClearCard({
     required this.systems,
     required this.tasksBySystem,
+    this.appliances = const [],
+    this.tasksByAppliance = const {},
   });
 
   final List<HomeSystem> systems;
-  /// Tasks keyed by system ID — used to show the next upcoming due date.
   final Map<String, List<MaintenanceTask>> tasksBySystem;
+  final List<Appliance> appliances;
+  final Map<String, List<MaintenanceTask>> tasksByAppliance;
 
   @override
   Widget build(BuildContext context) {
@@ -874,7 +883,7 @@ class _AllClearCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${systems.length} system${systems.length > 1 ? 's' : ''} in good standing',
+                    '${systems.length + appliances.length} item${systems.length + appliances.length == 1 ? '' : 's'} in good standing',
                     style: AppTextStyles.bodyMediumSemibold.copyWith(
                       color: AppColors.olive,
                     ),
@@ -893,7 +902,8 @@ class _AllClearCard extends StatelessWidget {
           Wrap(
             spacing: 6,
             runSpacing: 6,
-            children: systems.map((s) {
+            children: [
+              ...systems.map((s) {
               final color = _systemColor(s.category);
               final icon = _systemIcon(s.category);
 
@@ -961,7 +971,63 @@ class _AllClearCard extends StatelessWidget {
                   ),
                 ),
               );
-            }).toList(),
+              }),
+              ...appliances.map((a) {
+                final color = _applianceColor(a.category);
+                final icon = _applianceIcon(a.category);
+                final appTasks = tasksByAppliance[a.id] ?? [];
+                final pending = appTasks
+                    .where((t) =>
+                        t.status != TaskStatus.completed &&
+                        t.status != TaskStatus.skipped)
+                    .toList()
+                  ..sort((x, y) => x.dueDate.compareTo(y.dueDate));
+                final nextDue =
+                    pending.isEmpty ? null : pending.first.dueDate.toLocal();
+                return GestureDetector(
+                  onTap: () => context.push('/home/appliances/${a.id}'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.border, width: 1),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(icon, size: 13, color: color.withValues(alpha: 0.7)),
+                        const SizedBox(width: 6),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              a.name,
+                              style: AppTextStyles.labelSmall.copyWith(
+                                color: AppColors.textPrimary,
+                                fontSize: 11,
+                              ),
+                            ),
+                            Text(
+                              nextDue != null
+                                  ? 'Next ${DateFormat('MMM d').format(nextDue)}'
+                                  : 'No tasks yet',
+                              style: AppTextStyles.monoLabel.copyWith(
+                                color: AppColors.textTertiary,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(Icons.chevron_right, size: 13, color: AppColors.textTertiary),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ],
           ),
         ],
       ),
