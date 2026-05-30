@@ -1,6 +1,6 @@
-import 'dart:io';
-
+import 'package:image_picker/image_picker.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../services/supabase_service.dart';
 import '../models/appliance.dart';
@@ -43,11 +43,7 @@ class ApplianceDetailNotifier extends _$ApplianceDetailNotifier {
     await future;
   }
 
-  Future<void> uploadPhoto(
-    File file,
-    String photoType, {
-    String? caption,
-  }) async {
+  Future<void> uploadPhoto(XFile photo, {String photoType = 'overview'}) async {
     final user = SupabaseService.client.auth.currentUser;
     if (user == null) throw Exception('Not authenticated');
     final propertyRow = await SupabaseService.client
@@ -60,18 +56,25 @@ class ApplianceDetailNotifier extends _$ApplianceDetailNotifier {
         .maybeSingle();
     if (propertyRow == null) throw Exception('No property found');
     final propertyId = propertyRow['id'] as String;
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final filePath =
-        '${user.id}/$propertyId/appliances/$applianceId/$timestamp.jpg';
+    final bytes = await photo.readAsBytes();
+    final ext = photo.name.split('.').last.toLowerCase();
+    final fileName = '${DateTime.now().millisecondsSinceEpoch}_${photo.name}';
+    final filePath = '${user.id}/$propertyId/$applianceId/$fileName';
+    final mime = switch (ext) {
+      'jpg' || 'jpeg' => 'image/jpeg',
+      'png' => 'image/png',
+      'heic' => 'image/heic',
+      'webp' => 'image/webp',
+      _ => 'image/jpeg',
+    };
     await SupabaseService.client.storage
         .from('item-photos')
-        .upload(filePath, file);
+        .uploadBinary(filePath, bytes, fileOptions: FileOptions(contentType: mime));
     await SupabaseService.client.from('item_photos').insert({
       'user_id': user.id,
       'appliance_id': applianceId,
       'file_path': filePath,
       'photo_type': photoType,
-      'caption': caption,
     });
     ref.invalidateSelf();
     await future;

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -10,8 +11,8 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../models/appliance_detail.dart';
-import '../models/item_photo.dart';
 import '../providers/appliance_detail_provider.dart';
+import '../widgets/system_photo_strip.dart';
 
 class ApplianceDetailScreen extends ConsumerWidget {
   const ApplianceDetailScreen({super.key, required this.applianceId});
@@ -129,6 +130,55 @@ class _Content extends ConsumerStatefulWidget {
 class _ContentState extends ConsumerState<_Content> {
   bool _deleting = false;
 
+  Future<void> _pickPhoto() async {
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    ImageSource? source;
+    if (isIOS) {
+      source = await showCupertinoModalPopup<ImageSource>(
+        context: context,
+        builder: (_) => CupertinoActionSheet(
+          title: const Text('Add Photo'),
+          actions: [
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.of(context, rootNavigator: true)
+                  .pop(ImageSource.camera),
+              child: const Text('Take Photo'),
+            ),
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.of(context, rootNavigator: true)
+                  .pop(ImageSource.gallery),
+              child: const Text('Choose from Library'),
+            ),
+          ],
+          cancelButton: CupertinoActionSheetAction(
+            isDestructiveAction: false,
+            onPressed: () =>
+                Navigator.of(context, rootNavigator: true).pop(null),
+            child: const Text('Cancel'),
+          ),
+        ),
+      );
+    } else {
+      source = ImageSource.gallery;
+    }
+    if (source == null || !mounted) return;
+
+    final picker = ImagePicker();
+    final notifier =
+        ref.read(applianceDetailProvider(widget.detail.appliance.id).notifier);
+    final photo = await picker.pickImage(source: source, imageQuality: 85);
+    if (photo == null || !mounted) return;
+
+    try {
+      await notifier.uploadPhoto(photo);
+      if (mounted) SnackbarService.showSuccess(context, 'Photo added.');
+    } catch (_) {
+      if (mounted) {
+        SnackbarService.showError(context, "Couldn't upload photo. Try again.");
+      }
+    }
+  }
+
   Future<void> _confirmDelete() async {
     bool confirmed = false;
     if (widget.isIOS) {
@@ -200,10 +250,24 @@ class _ContentState extends ConsumerState<_Content> {
     final a = widget.detail.appliance;
     return CustomScrollView(
       slivers: [
-        if (widget.detail.photos.isNotEmpty)
-          SliverToBoxAdapter(
-            child: _PhotoStrip(photos: widget.detail.photos),
+        SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    AppSizes.screenPadding, AppSizes.md,
+                    AppSizes.screenPadding, AppSizes.sm),
+                child: Text('PHOTOS', style: AppTextStyles.monoSection),
+              ),
+              SystemPhotoStrip(
+                photos: widget.detail.photos,
+                onAddPhoto: _pickPhoto,
+              ),
+              const SizedBox(height: AppSizes.sm),
+            ],
           ),
+        ),
         SliverPadding(
           padding: AppPadding.screen,
           sliver: SliverList.list(
@@ -441,33 +505,3 @@ class _LinkedDocRow extends StatelessWidget {
   }
 }
 
-class _PhotoStrip extends StatelessWidget {
-  const _PhotoStrip({required this.photos});
-  final List<ItemPhoto> photos;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 120,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: AppPadding.screenHorizontal,
-        itemCount: photos.length,
-        itemBuilder: (context, _) => Container(
-          width: 120,
-          height: 120,
-          margin: const EdgeInsets.only(right: AppSizes.sm),
-          decoration: BoxDecoration(
-            color: AppColors.gray200,
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          ),
-          child: Icon(
-            Icons.image_outlined,
-            color: AppColors.gray400,
-            size: 36,
-          ),
-        ),
-      ),
-    );
-  }
-}
