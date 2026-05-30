@@ -66,29 +66,16 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 1024,
+        max_tokens: 256,
         messages: [
           {
             role: "user",
-            content: `Generate up to 5 realistic maintenance tasks for a home ${body.formType}: "${itemDesc}" (category: ${body.category}).
+            content: `Generate exactly 1 maintenance task for a home ${body.formType}: "${itemDesc}" (category: ${body.category}).
 
-Return ONLY a valid JSON array — no explanation, no markdown. Each task:
-{
-  "name": "short task name (max 50 chars)",
-  "description": "one sentence explaining what to do and why",
-  "category": "${body.category}",
-  "recurrence": "one of: monthly, quarterly, biannual, annual, none",
-  "priority": "one of: low, medium, high, critical",
-  "diyOrPro": "one of: diy, professional",
-  "estimatedMinutes": integer (realistic time to complete)
-}
+Return ONLY a JSON array with 1 item — no explanation, no markdown:
+[{"name":"...","description":"...","category":"${body.category}","recurrence":"monthly|quarterly|biannual|annual|none","priority":"low|medium|high|critical","diyOrPro":"diy|professional","estimatedMinutes":30}]
 
-Rules:
-- Max 5 tasks, only include genuinely useful recurring maintenance
-- Use "professional" only when truly unsafe for DIY (refrigerant, electrical panels)
-- Recurrence should match real maintenance schedules (e.g. fridge coils = biannual)
-- estimatedMinutes should be realistic (cleaning coils = 30, filter change = 15)
-- Do not invent tasks that don't apply to this specific ${body.formType} type`,
+Pick the single most important recurring maintenance task for this ${body.formType}.`,
           },
         ],
       }),
@@ -107,8 +94,7 @@ Rules:
     const cleaned = rawText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
     const tasks: SuggestedTask[] = JSON.parse(cleaned);
 
-    // Cap at 5 just in case Claude returns more.
-    return new Response(JSON.stringify(tasks.slice(0, 5)), {
+    return new Response(JSON.stringify(tasks.slice(0, 1)), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
