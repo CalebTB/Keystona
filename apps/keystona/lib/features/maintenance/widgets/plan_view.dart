@@ -70,6 +70,7 @@ class _PlanViewState extends ConsumerState<PlanView> {
 
     final monthTasks = allTasks
         .where((t) =>
+            t.notificationsEnabled &&
             t.status != TaskStatus.completed &&
             t.status != TaskStatus.skipped &&
             _sameMonth(t.dueDate.toLocal(), selectedMonth))

@@ -306,6 +306,7 @@ class MaintenanceTasksNotifier extends _$MaintenanceTasksNotifier {
           'climate_adjusted, status, difficulty, diy_or_pro, priority, '
           'estimated_minutes, tools_needed, supplies_needed, '
           'linked_system_id, linked_appliance_id, '
+          'notifications_enabled, skip_reason, '
           'created_at, updated_at, '
           'systems(id, name)',
         )
@@ -342,7 +343,10 @@ List<MaintenanceTask> filteredTasks(Ref ref) {
   final tasksAsync = ref.watch(maintenanceTasksProvider);
   final filter = ref.watch(taskFilterProvider);
 
-  final tasks = tasksAsync.value ?? [];
+  // Exclude tasks explicitly disabled from the main Tasks tab.
+  final tasks = (tasksAsync.value ?? [])
+      .where((t) => t.notificationsEnabled)
+      .toList();
 
   final now = DateTime.now().toLocal();
   final todayMidnight = DateTime(now.year, now.month, now.day);

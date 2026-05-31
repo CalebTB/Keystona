@@ -191,6 +191,12 @@ abstract class MaintenanceTask with _$MaintenanceTask {
     /// Reason user provided when skipping. [#32] shown on detail screen.
     String? skipReason,
 
+    // ── Visibility ───────────────────────────────────────────────────────────
+
+    /// When false the task is hidden from the main Tasks tab views.
+    /// Toggled from the item tasks management screen per system/appliance.
+    @Default(true) bool notificationsEnabled,
+
     // ── Audit ─────────────────────────────────────────────────────────────────
 
     /// Timestamp of row creation. [#31] sort fallback.

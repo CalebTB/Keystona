@@ -69,6 +69,13 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
+  Future<void> _toggleTask(MaintenanceTask task, bool enabled) async {
+    await ref.read(maintenanceTasksProvider.notifier).updateTask(
+      task.id,
+      {'notifications_enabled': enabled},
+    );
+  }
+
   Future<void> _confirmDelete(MaintenanceTask task) async {
     HapticFeedback.lightImpact();
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
@@ -265,6 +272,7 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
             onDelete: () => _confirmDelete(tasks[index]),
             onEdit: () =>
                 context.push('/maintenance/${tasks[index].id}'),
+            onToggle: (enabled) => _toggleTask(tasks[index], enabled),
           ),
         ),
         if (isIOS)
@@ -348,11 +356,13 @@ class _ItemTaskRow extends StatelessWidget {
     required this.task,
     required this.onDelete,
     required this.onEdit,
+    required this.onToggle,
   });
 
   final MaintenanceTask task;
   final VoidCallback onDelete;
   final VoidCallback onEdit;
+  final ValueChanged<bool> onToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -360,77 +370,108 @@ class _ItemTaskRow extends StatelessWidget {
     final today = DateTime(now.year, now.month, now.day);
     final accentColor = _accentColor(task, today);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.border, width: 1.5),
-      ),
-      child: ClipRRect(
-        borderRadius: AppRadius.card,
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Left accent stripe
-              Container(width: 4, color: accentColor),
-              // Content
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        task.name,
-                        style: AppTextStyles.bodyMediumSemibold,
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          _StatusBadge(status: task.status),
-                          if (task.recurrence != RecurrenceType.none) ...[
-                            const SizedBox(width: 6),
-                            _RecurrenceBadge(recurrence: task.recurrence),
-                          ],
-                          const SizedBox(width: 8),
+    final enabled = task.notificationsEnabled;
+
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.5,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: AppRadius.card,
+          border: Border.all(color: AppColors.border, width: 1.5),
+        ),
+        child: ClipRRect(
+          borderRadius: AppRadius.card,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Left accent stripe (grey when disabled)
+                Container(
+                    width: 4,
+                    color: enabled ? accentColor : AppColors.gray300),
+                // Content
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          task.name,
+                          style: AppTextStyles.bodyMediumSemibold,
+                        ),
+                        const SizedBox(height: 4),
+                        if (!enabled)
                           Text(
-                            DateFormat('MMM d').format(task.dueDate),
+                            'Hidden from Tasks tab',
                             style: AppTextStyles.caption.copyWith(
-                              color: AppColors.textSecondary,
+                              color: AppColors.textTertiary,
+                              fontStyle: FontStyle.italic,
                             ),
+                          )
+                        else
+                          Row(
+                            children: [
+                              _StatusBadge(status: task.status),
+                              if (task.recurrence != RecurrenceType.none) ...[
+                                const SizedBox(width: 6),
+                                _RecurrenceBadge(
+                                    recurrence: task.recurrence),
+                              ],
+                              const SizedBox(width: 8),
+                              Text(
+                                DateFormat('MMM d').format(task.dueDate),
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Right: toggle + action buttons
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 6, vertical: 8),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Transform.scale(
+                        scale: 0.75,
+                        child: CupertinoSwitch(
+                          value: enabled,
+                          activeTrackColor: AppColors.olive,
+                          onChanged: onToggle,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _IconBtn(
+                            icon: Icons.edit_outlined,
+                            color: AppColors.textSecondary,
+                            onTap: onEdit,
+                          ),
+                          _IconBtn(
+                            icon: Icons.delete_outline,
+                            color: AppColors.error,
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              onDelete();
+                            },
                           ),
                         ],
                       ),
                     ],
                   ),
                 ),
-              ),
-              // Right: action buttons
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 4, vertical: 8),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _IconBtn(
-                      icon: Icons.edit_outlined,
-                      color: AppColors.textSecondary,
-                      onTap: onEdit,
-                    ),
-                    _IconBtn(
-                      icon: Icons.delete_outline,
-                      color: AppColors.error,
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        onDelete();
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

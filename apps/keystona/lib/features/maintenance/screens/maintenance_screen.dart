@@ -505,6 +505,7 @@ class _AgendaWidget extends ConsumerWidget {
       ),
       data: (tasks) {
         final todayTasks = tasks.where((t) {
+          if (!t.notificationsEnabled) return false;
           if (t.status == TaskStatus.completed ||
               t.status == TaskStatus.skipped) {
             return false;
