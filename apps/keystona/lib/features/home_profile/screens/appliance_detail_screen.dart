@@ -2,7 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -10,6 +12,9 @@ import '../../../core/theme/app_sizes.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/snackbar_service.dart';
+import '../../maintenance/models/maintenance_task.dart';
+import '../../maintenance/providers/maintenance_tasks_provider.dart';
+import '../models/appliance.dart';
 import '../models/appliance_detail.dart';
 import '../providers/appliance_detail_provider.dart';
 import '../widgets/system_photo_strip.dart';
@@ -248,136 +253,142 @@ class _ContentState extends ConsumerState<_Content> {
   @override
   Widget build(BuildContext context) {
     final a = widget.detail.appliance;
+    final tasksAsync = ref.watch(maintenanceTasksProvider);
+
+    // Derive task counts for the quick-action row.
+    final allTasks = tasksAsync.value ?? <MaintenanceTask>[];
+    final linkedTasks = allTasks
+        .where((t) =>
+            t.linkedApplianceId == a.id &&
+            t.status != TaskStatus.completed &&
+            t.status != TaskStatus.skipped)
+        .toList();
+    final taskCount = linkedTasks.length;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dueCount = linkedTasks
+        .where((t) =>
+            !t.dueDate.isAfter(today) ||
+            t.status == TaskStatus.overdue ||
+            t.status == TaskStatus.due)
+        .length;
+
+    final photoCount = widget.detail.photos.length;
+
+    // Parse notes into spec rows (lines containing ":").
+    final specRows = _parseSpecRows(a.notes);
+
+    final icon = _applianceIcon(a.category);
+    final categoryColor = _applianceCategoryColor(a.category);
+
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                    AppSizes.screenPadding, AppSizes.md,
-                    AppSizes.screenPadding, AppSizes.sm),
-                child: Text('PHOTOS', style: AppTextStyles.monoSection),
+              // ── 1. Dark Hero Card ──────────────────────────────────────────
+              _HeroCard(
+                icon: icon,
+                categoryColor: categoryColor,
+                name: a.name,
+                brand: a.brand,
+                modelNumber: a.modelNumber,
+                purchaseDateStr: a.purchaseDate,
+                lifespanYears: a.lifespanOverride,
+                purchasePrice: a.purchasePrice,
               ),
+
+              // ── 2. Warranty Callout Card ───────────────────────────────────
+              if (a.warrantyExpiration != null || a.warrantyProvider != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                  child: _WarrantyCalloutCard(
+                    warrantyExpiration: a.warrantyExpiration,
+                    warrantyProvider: a.warrantyProvider,
+                    linkedWarrantyDocId: a.linkedWarrantyDocId,
+                  ),
+                ),
+
+              // ── 3. Quick-Action Row ────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: _QuickActionRow(
+                  taskCount: taskCount,
+                  dueCount: dueCount,
+                  docCount: a.linkedWarrantyDocId != null ? 1 : 0,
+                  photoCount: photoCount,
+                  linkedWarrantyDocId: a.linkedWarrantyDocId,
+                  onAddPhoto: _pickPhoto,
+                ),
+              ),
+
+              // ── 4 + 5. Identification Card ─────────────────────────────────
+              _SectionLabel2('IDENTIFICATION'),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: _InfoCard2(rows: [
+                  if (a.brand != null) _InfoRow2Data('Brand', a.brand!),
+                  if (a.modelNumber != null)
+                    _InfoRow2Data('Model', a.modelNumber!),
+                  if (a.serialNumber != null)
+                    _InfoRow2Data('Serial', a.serialNumber!),
+                  if (a.location != null)
+                    _InfoRow2Data('Location', a.location!),
+                  if (a.color != null) _InfoRow2Data('Color', a.color!),
+                ]),
+              ),
+
+              // ── 6. Specifications Card (parsed notes) ──────────────────────
+              if (specRows.isNotEmpty) ...[
+                _SectionLabel2('SPECIFICATIONS'),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                  child: _InfoCard2(
+                    rows: specRows
+                        .map((r) => _InfoRow2Data(r.$1, r.$2))
+                        .toList(),
+                  ),
+                ),
+              ],
+
+              // ── 7. Photos section ──────────────────────────────────────────
+              _SectionLabel2('PHOTOS'),
               SystemPhotoStrip(
                 photos: widget.detail.photos,
                 onAddPhoto: _pickPhoto,
                 photoUrlBuilder: (path) =>
                     widget.detail.photoUrls[path] ?? path,
               ),
-              const SizedBox(height: AppSizes.sm),
-            ],
-          ),
-        ),
-        SliverPadding(
-          padding: AppPadding.screen,
-          sliver: SliverList.list(
-            children: [
-              _Section(
-                title: 'Appliance Info',
-                children: [
-                  _InfoRow(label: 'Category', value: a.category.label),
-                  _InfoRow(label: 'Name', value: a.name),
-                  if (a.brand != null)
-                    _InfoRow(label: 'Brand', value: a.brand!),
-                  if (a.modelNumber != null)
-                    _InfoRow(label: 'Model', value: a.modelNumber!),
-                  if (a.serialNumber != null)
-                    _InfoRow(label: 'Serial Number', value: a.serialNumber!),
-                  if (a.location != null)
-                    _InfoRow(label: 'Location', value: a.location!),
-                  if (a.color != null)
-                    _InfoRow(label: 'Color', value: a.color!),
-                  _InfoRow(label: 'Status', value: a.status.label),
-                ],
-              ),
-              if (a.purchaseDate != null || a.purchasePrice != null) ...[
-                const SizedBox(height: AppSizes.md),
-                _Section(
-                  title: 'Purchase',
-                  children: [
-                    if (a.purchaseDate != null)
-                      _InfoRow(label: 'Date', value: a.purchaseDate!),
-                    if (a.purchasePrice != null)
-                      _InfoRow(
-                        label: 'Price',
-                        value:
-                            '\$${a.purchasePrice!.toStringAsFixed(2)}',
-                      ),
-                  ],
-                ),
-              ],
-              if (a.lifespanOverride != null) ...[
-                const SizedBox(height: AppSizes.md),
-                _Section(
-                  title: 'Lifespan',
-                  children: [
-                    _InfoRow(
-                      label: 'Expected Lifespan',
-                      value: '${a.lifespanOverride} years',
-                    ),
-                  ],
-                ),
-              ],
-              if (a.warrantyExpiration != null ||
-                  a.warrantyProvider != null ||
-                  a.linkedWarrantyDocId != null) ...[
-                const SizedBox(height: AppSizes.md),
-                _Section(
-                  title: 'Warranty',
-                  children: [
-                    if (a.warrantyExpiration != null)
-                      _InfoRow(
-                        label: 'Expires',
-                        value: a.warrantyExpiration!,
-                      ),
-                    if (a.warrantyProvider != null)
-                      _InfoRow(
-                        label: 'Provider',
-                        value: a.warrantyProvider!,
-                      ),
-                    if (a.linkedWarrantyDocId != null)
-                      _LinkedDocRow(documentId: a.linkedWarrantyDocId!),
-                  ],
-                ),
-              ],
-              if (a.notes != null && a.notes!.isNotEmpty) ...[
-                const SizedBox(height: AppSizes.md),
-                _Section(
-                  title: 'Notes',
-                  children: [
-                    Text(
-                      a.notes!,
-                      style: AppTextStyles.bodyMedium
-                          .copyWith(color: AppColors.textSecondary),
-                    ),
-                  ],
-                ),
-              ],
               const SizedBox(height: AppSizes.xl),
-              OutlinedButton(
-                onPressed: _deleting ? null : _confirmDelete,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.error,
-                  side: const BorderSide(color: AppColors.error),
-                  minimumSize:
-                      const Size.fromHeight(AppSizes.buttonHeight),
-                  shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppSizes.radiusSm),
+
+              // ── 8. Delete button ───────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSizes.screenPadding),
+                child: OutlinedButton(
+                  onPressed: _deleting ? null : _confirmDelete,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    side: const BorderSide(color: AppColors.error),
+                    minimumSize:
+                        const Size.fromHeight(AppSizes.buttonHeight),
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(AppSizes.radiusSm),
+                    ),
                   ),
+                  child: _deleting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.error,
+                          ),
+                        )
+                      : const Text('Delete Appliance'),
                 ),
-                child: _deleting
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.error,
-                        ),
-                      )
-                    : const Text('Delete Appliance'),
               ),
               const SizedBox(height: AppSizes.xl),
             ],
@@ -388,37 +399,180 @@ class _ContentState extends ConsumerState<_Content> {
   }
 }
 
-class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.children});
-  final String title;
-  final List<Widget> children;
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+IconData _applianceIcon(ApplianceCategory cat) => switch (cat) {
+      ApplianceCategory.kitchen => Icons.kitchen_outlined,
+      ApplianceCategory.laundry => Icons.local_laundry_service_outlined,
+      ApplianceCategory.climate => Icons.ac_unit_outlined,
+      ApplianceCategory.cleaning => Icons.cleaning_services_outlined,
+      ApplianceCategory.outdoor => Icons.yard_outlined,
+      ApplianceCategory.bathroom => Icons.bathtub_outlined,
+      ApplianceCategory.other => Icons.devices_other_outlined,
+    };
+
+Color _applianceCategoryColor(ApplianceCategory cat) => switch (cat) {
+      ApplianceCategory.kitchen => AppColors.teal,
+      ApplianceCategory.laundry => AppColors.slate,
+      ApplianceCategory.climate => AppColors.sandAmber,
+      ApplianceCategory.cleaning => AppColors.olive,
+      ApplianceCategory.outdoor => AppColors.sand,
+      ApplianceCategory.bathroom => AppColors.amber,
+      ApplianceCategory.other => AppColors.gray400,
+    };
+
+/// Parse notes into (label, value) pairs by splitting lines on first ":".
+List<(String, String)> _parseSpecRows(String? notes) {
+  if (notes == null || notes.isEmpty) return const [];
+  final rows = <(String, String)>[];
+  for (final line in notes.split('\n')) {
+    final idx = line.indexOf(':');
+    if (idx <= 0) continue;
+    final label = line.substring(0, idx).trim();
+    final value = line.substring(idx + 1).trim();
+    if (label.isNotEmpty && value.isNotEmpty) {
+      rows.add((label, value));
+    }
+  }
+  return rows;
+}
+
+// ── Private Widgets ────────────────────────────────────────────────────────────
+
+/// Dark hero card — stats header for the detail screen.
+class _HeroCard extends StatelessWidget {
+  const _HeroCard({
+    required this.icon,
+    required this.categoryColor,
+    required this.name,
+    this.brand,
+    this.modelNumber,
+    this.purchaseDateStr,
+    this.lifespanYears,
+    this.purchasePrice,
+  });
+
+  final IconData icon;
+  final Color categoryColor;
+  final String name;
+  final String? brand;
+  final String? modelNumber;
+  final String? purchaseDateStr;
+  final int? lifespanYears;
+  final double? purchasePrice;
 
   @override
   Widget build(BuildContext context) {
+    final (healthLabel, healthColor, ageLabel) =
+        _computeHealth(purchaseDateStr, lifespanYears);
+    final eyebrow =
+        '${healthLabel.toUpperCase()} · $ageLabel'.toUpperCase();
+
+    // Stat values
+    final boughtVal = purchasePrice != null
+        ? NumberFormat.currency(symbol: '\$', decimalDigits: 0)
+            .format(purchasePrice!)
+        : '—';
+
+    final pctVal = _lifespanPct(purchaseDateStr, lifespanYears);
+    final pctStr = pctVal != null ? '${pctVal.round()}%' : '—';
+
+    final yearsLeft = _yearsLeft(purchaseDateStr, lifespanYears);
+    final untilEndStr = yearsLeft != null
+        ? '${yearsLeft.toStringAsFixed(0)} yr'
+        : '—';
+
+    final subtitle = [?brand, ?modelNumber].join(' · ');
+
     return Container(
+      margin: const EdgeInsets.fromLTRB(0, 0, 0, 12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.border),
+        color: AppColors.deepNavy,
+        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
       ),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSizes.md,
-              AppSizes.md,
-              AppSizes.md,
-              AppSizes.xs,
-            ),
-            child: Text(title, style: AppTextStyles.h4),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Category icon container
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: categoryColor.withAlpha(38), // 0.15 opacity
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: categoryColor, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      eyebrow,
+                      style: GoogleFonts.ibmPlexMono(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2,
+                        color: healthColor,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      name,
+                      style: AppTextStyles.headlineMedium.copyWith(
+                        color: AppColors.darkText,
+                        fontSize: 22,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (subtitle.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: GoogleFonts.ibmPlexMono(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          color: AppColors.darkTextSecondary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
-          const Divider(height: 1),
-          Padding(
-            padding: AppPadding.card,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: children,
+          const SizedBox(height: 16),
+          Divider(color: AppColors.darkBorder, height: 1),
+          const SizedBox(height: 12),
+          IntrinsicHeight(
+            child: Row(
+              children: [
+                Expanded(
+                  child: _StatCell(label: 'BOUGHT', value: boughtVal),
+                ),
+                VerticalDivider(
+                  color: AppColors.darkBorder,
+                  width: 1,
+                  thickness: 1,
+                ),
+                Expanded(
+                  child: _StatCell(label: 'LIFESPAN', value: pctStr),
+                ),
+                VerticalDivider(
+                  color: AppColors.darkBorder,
+                  width: 1,
+                  thickness: 1,
+                ),
+                Expanded(
+                  child: _StatCell(label: 'UNTIL END', value: untilEndStr),
+                ),
+              ],
             ),
           ),
         ],
@@ -427,28 +581,34 @@ class _Section extends StatelessWidget {
   }
 }
 
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
+class _StatCell extends StatelessWidget {
+  const _StatCell({required this.label, required this.value});
   final String label;
   final String value;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.sm),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Column(
         children: [
-          SizedBox(
-            width: 140,
-            child: Text(
-              label,
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textSecondary),
+          Text(
+            label,
+            style: GoogleFonts.ibmPlexMono(
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
+              color: AppColors.darkTextTertiary,
             ),
+            textAlign: TextAlign.center,
           ),
-          Expanded(
-            child: Text(value, style: AppTextStyles.bodyMediumSemibold),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: AppTextStyles.bodyMediumSemibold.copyWith(
+              color: AppColors.darkText,
+            ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -456,48 +616,164 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-/// Tappable row that opens the linked warranty document in the Document Vault.
-class _LinkedDocRow extends StatelessWidget {
-  const _LinkedDocRow({required this.documentId});
-
-  final String documentId;
+class _WarrantyCalloutCard extends StatelessWidget {
+  const _WarrantyCalloutCard({
+    this.warrantyExpiration,
+    this.warrantyProvider,
+    this.linkedWarrantyDocId,
+  });
+  final String? warrantyExpiration;
+  final String? warrantyProvider;
+  final String? linkedWarrantyDocId;
 
   @override
   Widget build(BuildContext context) {
+    final (statusLabel, expiryCaption) =
+        _warrantyStatus(warrantyExpiration);
     return GestureDetector(
-      onTap: () => context.push(
-        AppRoutes.documentDetail.replaceFirst(':documentId', documentId),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: AppSizes.sm),
+      onTap: linkedWarrantyDocId != null
+          ? () => context.push(
+                AppRoutes.documentDetail
+                    .replaceFirst(':documentId', linkedWarrantyDocId!),
+              )
+          : null,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.oliveDim,
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          border: Border.all(
+            color: AppColors.olive.withAlpha(51), // 0.2 opacity
+          ),
+        ),
+        padding: const EdgeInsets.all(14),
         child: Row(
           children: [
-            SizedBox(
-              width: 140,
-              child: Text(
-                'Document',
-                style: AppTextStyles.bodyMedium
-                    .copyWith(color: AppColors.textSecondary),
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppColors.olive.withAlpha(38),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.shield_outlined,
+                color: AppColors.olive,
+                size: 18,
               ),
             ),
+            const SizedBox(width: 10),
             Expanded(
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(
-                    Icons.description_outlined,
-                    size: 16,
-                    color: AppColors.deepNavy,
-                  ),
-                  const SizedBox(width: 4),
                   Text(
-                    'View warranty doc',
-                    style: AppTextStyles.bodyMediumSemibold.copyWith(
-                      color: AppColors.deepNavy,
-                      decoration: TextDecoration.underline,
-                      decorationColor: AppColors.deepNavy,
+                    'MANUFACTURER WARRANTY',
+                    style: GoogleFonts.ibmPlexMono(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.8,
+                      color: AppColors.textTertiary,
                     ),
                   ),
+                  const SizedBox(height: 2),
+                  Text(
+                    statusLabel,
+                    style: AppTextStyles.bodyMediumSemibold,
+                  ),
+                  if (expiryCaption.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      expiryCaption,
+                      style: AppTextStyles.caption,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ],
+              ),
+            ),
+            if (linkedWarrantyDocId != null)
+              const Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: AppColors.textTertiary,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickActionRow extends StatelessWidget {
+  const _QuickActionRow({
+    required this.taskCount,
+    required this.dueCount,
+    required this.docCount,
+    required this.photoCount,
+    required this.onAddPhoto,
+    this.linkedWarrantyDocId,
+  });
+  final int taskCount;
+  final int dueCount;
+  final int docCount;
+  final int photoCount;
+  final VoidCallback onAddPhoto;
+  final String? linkedWarrantyDocId;
+
+  @override
+  Widget build(BuildContext context) {
+    final taskSub = dueCount > 0
+        ? '$taskCount · $dueCount due'
+        : '$taskCount';
+    final docSub = '$docCount linked';
+    final photoSub = '$photoCount · Add';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.card,
+        border: Border.all(color: AppColors.border, width: 1.5),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            Expanded(
+              child: _QuickActionCell(
+                icon: Icons.task_alt_outlined,
+                label: 'Tasks',
+                subtitle: taskSub,
+                onTap: () => context.push(AppRoutes.maintenance),
+              ),
+            ),
+            VerticalDivider(
+              color: AppColors.border,
+              width: 1,
+              thickness: 1,
+            ),
+            Expanded(
+              child: _QuickActionCell(
+                icon: Icons.description_outlined,
+                label: 'Docs',
+                subtitle: docSub,
+                onTap: linkedWarrantyDocId != null
+                    ? () => context.push(
+                          AppRoutes.documentDetail.replaceFirst(
+                              ':documentId', linkedWarrantyDocId!),
+                        )
+                    : null,
+              ),
+            ),
+            VerticalDivider(
+              color: AppColors.border,
+              width: 1,
+              thickness: 1,
+            ),
+            Expanded(
+              child: _QuickActionCell(
+                icon: Icons.photo_camera_outlined,
+                label: 'Photos',
+                subtitle: photoSub,
+                onTap: onAddPhoto,
               ),
             ),
           ],
@@ -507,3 +783,219 @@ class _LinkedDocRow extends StatelessWidget {
   }
 }
 
+class _QuickActionCell extends StatelessWidget {
+  const _QuickActionCell({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    this.onTap,
+  });
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 24, color: AppColors.deepNavy),
+            const SizedBox(height: 6),
+            Text(label, style: AppTextStyles.labelSmall),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: GoogleFonts.ibmPlexMono(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textTertiary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Section label with dot prefix.
+class _SectionLabel2 extends StatelessWidget {
+  const _SectionLabel2(this.title);
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      child: Row(
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              color: AppColors.deepNavy,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            title,
+            style: AppTextStyles.monoSection,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Data holder for an info card row.
+class _InfoRow2Data {
+  const _InfoRow2Data(this.label, this.value);
+  final String label;
+  final String value;
+}
+
+/// iOS-style bordered info card with label/value rows.
+class _InfoCard2 extends StatelessWidget {
+  const _InfoCard2({required this.rows});
+  final List<_InfoRow2Data> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    if (rows.isEmpty) return const SizedBox.shrink();
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.card,
+        border: Border.all(color: AppColors.border, width: 1.5),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < rows.length; i++) ...[
+            if (i > 0)
+              const Divider(height: 1, thickness: 0.5, indent: 0),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 14, vertical: 11),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 110,
+                    child: Text(
+                      rows[i].label,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      rows[i].value,
+                      style: AppTextStyles.bodyMediumSemibold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ── Pure helper functions ──────────────────────────────────────────────────────
+
+/// Returns (healthLabel, healthColor, ageLabel).
+(String, Color, String) _computeHealth(
+    String? purchaseDateStr, int? lifespanYears) {
+  if (purchaseDateStr == null) {
+    return ('Good', AppColors.darkTextSecondary, '—');
+  }
+  final DateTime purchase;
+  try {
+    purchase = DateTime.parse(purchaseDateStr);
+  } catch (_) {
+    return ('Good', AppColors.darkTextSecondary, '—');
+  }
+  final ageYears =
+      DateTime.now().difference(purchase).inDays / 365.25;
+  final ageLabel =
+      '${ageYears.toStringAsFixed(1)} yr old';
+
+  if (lifespanYears == null || lifespanYears <= 0) {
+    return ('Good', AppColors.darkTextSecondary, ageLabel);
+  }
+  final pct = ageYears / lifespanYears * 100;
+  if (pct < 50) {
+    return ('Healthy', AppColors.oliveLight, ageLabel);
+  } else if (pct <= 75) {
+    return ('Aging', AppColors.sandAmber, ageLabel);
+  } else {
+    return ('Near End', AppColors.accent, ageLabel);
+  }
+}
+
+double? _lifespanPct(String? purchaseDateStr, int? lifespanYears) {
+  if (purchaseDateStr == null || lifespanYears == null || lifespanYears <= 0) {
+    return null;
+  }
+  try {
+    final purchase = DateTime.parse(purchaseDateStr);
+    final ageYears =
+        DateTime.now().difference(purchase).inDays / 365.25;
+    return (ageYears / lifespanYears * 100).clamp(0, 999);
+  } catch (_) {
+    return null;
+  }
+}
+
+double? _yearsLeft(String? purchaseDateStr, int? lifespanYears) {
+  if (purchaseDateStr == null || lifespanYears == null || lifespanYears <= 0) {
+    return null;
+  }
+  try {
+    final purchase = DateTime.parse(purchaseDateStr);
+    final ageYears =
+        DateTime.now().difference(purchase).inDays / 365.25;
+    final left = lifespanYears - ageYears;
+    return left < 0 ? 0 : left;
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Returns (statusLabel, caption) for the warranty callout.
+(String, String) _warrantyStatus(String? warrantyExpirationStr) {
+  if (warrantyExpirationStr == null) {
+    return ('Warranty on file', '');
+  }
+  final DateTime expiry;
+  try {
+    expiry = DateTime.parse(warrantyExpirationStr);
+  } catch (_) {
+    return ('Warranty on file', warrantyExpirationStr);
+  }
+  final now = DateTime.now();
+  final diff = expiry.difference(now);
+  final fmt = DateFormat('MMM d, yyyy').format(expiry);
+  if (diff.isNegative) {
+    final yearsAgo = (diff.inDays.abs() / 365.25).round();
+    final label = yearsAgo == 1 ? '1 yr ago' : '$yearsAgo yrs ago';
+    return ('Expired · $label', 'Expired $fmt');
+  } else {
+    final yearsLeft = (diff.inDays / 365.25);
+    final label = yearsLeft < 1
+        ? '< 1 yr remaining'
+        : '${yearsLeft.round()} yrs remaining';
+    return ('Active · $label', 'Expires $fmt');
+  }
+}
