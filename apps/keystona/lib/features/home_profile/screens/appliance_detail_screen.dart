@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -330,9 +331,9 @@ class _ContentState extends ConsumerState<_Content> {
                 child: _InfoCard2(rows: [
                   if (a.brand != null) _InfoRow2Data('Brand', a.brand!),
                   if (a.modelNumber != null)
-                    _InfoRow2Data('Model', a.modelNumber!),
+                    _InfoRow2Data('Model', a.modelNumber!, copyable: true),
                   if (a.serialNumber != null)
-                    _InfoRow2Data('Serial', a.serialNumber!),
+                    _InfoRow2Data('Serial', a.serialNumber!, copyable: true),
                   if (a.location != null)
                     _InfoRow2Data('Location', a.location!),
                   if (a.color != null) _InfoRow2Data('Color', a.color!),
@@ -485,7 +486,8 @@ class _HeroCard extends StatelessWidget {
     final subtitle = [?brand, ?modelNumber].join(' · ');
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(0, 0, 0, 12),
+      margin: const EdgeInsets.fromLTRB(
+          AppSizes.screenPadding, 0, AppSizes.screenPadding, 12),
       decoration: BoxDecoration(
         color: AppColors.deepNavy,
         borderRadius: BorderRadius.circular(AppSizes.radiusLg),
@@ -553,22 +555,19 @@ class _HeroCard extends StatelessWidget {
           IntrinsicHeight(
             child: Row(
               children: [
-                Expanded(
-                  child: _StatCell(label: 'BOUGHT', value: boughtVal),
-                ),
-                VerticalDivider(
-                  color: AppColors.darkBorder,
-                  width: 1,
-                  thickness: 1,
-                ),
+                // Only show Bought if a price exists.
+                if (purchasePrice != null) ...[
+                  Expanded(
+                    child: _StatCell(label: 'BOUGHT', value: boughtVal),
+                  ),
+                  VerticalDivider(
+                      color: AppColors.darkBorder, width: 1, thickness: 1),
+                ],
                 Expanded(
                   child: _StatCell(label: 'LIFESPAN', value: pctStr),
                 ),
                 VerticalDivider(
-                  color: AppColors.darkBorder,
-                  width: 1,
-                  thickness: 1,
-                ),
+                    color: AppColors.darkBorder, width: 1, thickness: 1),
                 Expanded(
                   child: _StatCell(label: 'UNTIL END', value: untilEndStr),
                 ),
@@ -725,8 +724,8 @@ class _QuickActionRow extends StatelessWidget {
     final taskSub = dueCount > 0
         ? '$taskCount · $dueCount due'
         : '$taskCount';
-    final docSub = '$docCount linked';
-    final photoSub = '$photoCount · Add';
+    final docSub = docCount > 0 ? '$docCount linked' : 'None';
+    final photoSub = photoCount > 0 ? '$photoCount photo${photoCount == 1 ? '' : 's'}' : '+ Add';
 
     return Container(
       decoration: BoxDecoration(
@@ -857,9 +856,10 @@ class _SectionLabel2 extends StatelessWidget {
 
 /// Data holder for an info card row.
 class _InfoRow2Data {
-  const _InfoRow2Data(this.label, this.value);
+  const _InfoRow2Data(this.label, this.value, {this.copyable = false});
   final String label;
   final String value;
+  final bool copyable;
 }
 
 /// iOS-style bordered info card with label/value rows.
@@ -881,28 +881,44 @@ class _InfoCard2 extends StatelessWidget {
           for (var i = 0; i < rows.length; i++) ...[
             if (i > 0)
               const Divider(height: 1, thickness: 0.5, indent: 0),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 14, vertical: 11),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 110,
-                    child: Text(
-                      rows[i].label,
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textSecondary,
+            GestureDetector(
+              onTap: rows[i].copyable
+                  ? () {
+                      Clipboard.setData(ClipboardData(text: rows[i].value));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${rows[i].label} copied'),
+                          behavior: SnackBarBehavior.floating,
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  : null,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 110,
+                      child: Text(
+                        rows[i].label,
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      rows[i].value,
-                      style: AppTextStyles.bodyMediumSemibold,
+                    Expanded(
+                      child: Text(
+                        rows[i].value,
+                        style: AppTextStyles.bodyMediumSemibold,
+                      ),
                     ),
-                  ),
-                ],
+                    if (rows[i].copyable)
+                      const Icon(Icons.copy_outlined,
+                          size: 14, color: AppColors.textTertiary),
+                  ],
+                ),
               ),
             ),
           ],

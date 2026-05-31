@@ -313,7 +313,9 @@ class _DetailContentState extends ConsumerState<_DetailContent> {
                   children: [
                     // ── 1. Dark Hero Card ──────────────────────────────────
                     Container(
-                      margin: const EdgeInsets.fromLTRB(0, 0, 0, 12),
+                      margin: const EdgeInsets.fromLTRB(
+                          AppSizes.screenPadding, 0,
+                          AppSizes.screenPadding, 12),
                       decoration: BoxDecoration(
                         color: AppColors.deepNavy,
                         borderRadius:
@@ -386,16 +388,18 @@ class _DetailContentState extends ConsumerState<_DetailContent> {
                           IntrinsicHeight(
                             child: Row(
                               children: [
-                                Expanded(
-                                  child: _StatCell2(
-                                      label: 'INSTALLED',
-                                      value: installedVal),
-                                ),
-                                VerticalDivider(
-                                  color: AppColors.darkBorder,
-                                  width: 1,
-                                  thickness: 1,
-                                ),
+                                if (system.installationDate != null) ...[
+                                  Expanded(
+                                    child: _StatCell2(
+                                        label: 'INSTALLED',
+                                        value: installedVal),
+                                  ),
+                                  VerticalDivider(
+                                    color: AppColors.darkBorder,
+                                    width: 1,
+                                    thickness: 1,
+                                  ),
+                                ],
                                 Expanded(
                                   child: _StatCell2(
                                       label: 'LIFESPAN',
@@ -857,8 +861,8 @@ class _QuickActionRow2 extends StatelessWidget {
   Widget build(BuildContext context) {
     final taskSub =
         dueCount > 0 ? '$taskCount · $dueCount due' : '$taskCount';
-    const docSub = '0 linked';
-    final photoSub = '$photoCount · Add';
+    const docSub = 'None';
+    final photoSub = photoCount > 0 ? '$photoCount photo${photoCount == 1 ? '' : 's'}' : '+ Add';
 
     return Container(
       decoration: BoxDecoration(
