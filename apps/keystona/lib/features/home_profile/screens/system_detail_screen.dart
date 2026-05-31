@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -311,114 +312,140 @@ class _DetailContentState extends ConsumerState<_DetailContent> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ── 1. Dark Hero Card ──────────────────────────────────
+                    // ── 1. Hero Card (white + category accent) ────────────
                     Container(
                       margin: const EdgeInsets.fromLTRB(
                           AppSizes.screenPadding, 0,
                           AppSizes.screenPadding, 12),
                       decoration: BoxDecoration(
-                        color: AppColors.deepNavy,
+                        color: AppColors.surface,
                         borderRadius:
                             BorderRadius.circular(AppSizes.radiusLg),
+                        border: Border.all(
+                            color: AppColors.border, width: 1.5),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x0A1A2B4A),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 42,
-                                height: 42,
-                                decoration: BoxDecoration(
-                                  color: categoryColor.withAlpha(38),
-                                  borderRadius: BorderRadius.circular(10),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(
+                            AppSizes.radiusLg - 1.5),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Colored top accent strip
+                            Container(height: 3, color: categoryColor),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 46,
+                                  height: 46,
+                                  decoration: BoxDecoration(
+                                    color: categoryColor.withAlpha(28),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(icon, color: categoryColor, size: 24),
                                 ),
-                                child: Icon(icon,
-                                    color: categoryColor, size: 22),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      eyebrow,
-                                      style: GoogleFonts.ibmPlexMono(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 1.2,
-                                        color: healthColor,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      system.name,
-                                      style: AppTextStyles.headlineMedium
-                                          .copyWith(
-                                        color: AppColors.darkText,
-                                        fontSize: 22,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    if (subtitle.isNotEmpty) ...[
-                                      const SizedBox(height: 2),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
                                       Text(
-                                        subtitle,
+                                        eyebrow,
                                         style: GoogleFonts.ibmPlexMono(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w400,
-                                          color:
-                                              AppColors.darkTextSecondary,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 1.2,
+                                          color: healthColor,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        system.name,
+                                        style: AppTextStyles.headlineMedium
+                                            .copyWith(
+                                          color: AppColors.textPrimary,
+                                          fontSize: 21,
                                         ),
                                         overflow: TextOverflow.ellipsis,
                                       ),
+                                      if (subtitle.isNotEmpty) ...[
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          subtitle,
+                                          style: GoogleFonts.ibmPlexMono(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w400,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
                                     ],
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Divider(
-                              color: AppColors.darkBorder, height: 1),
-                          const SizedBox(height: 12),
-                          IntrinsicHeight(
-                            child: Row(
-                              children: [
-                                if (system.installationDate != null) ...[
-                                  Expanded(
-                                    child: _StatCell2(
-                                        label: 'INSTALLED',
-                                        value: installedVal),
                                   ),
-                                  VerticalDivider(
-                                    color: AppColors.darkBorder,
-                                    width: 1,
-                                    thickness: 1,
-                                  ),
-                                ],
-                                Expanded(
-                                  child: _StatCell2(
-                                      label: 'LIFESPAN',
-                                      value: pctStr),
-                                ),
-                                VerticalDivider(
-                                  color: AppColors.darkBorder,
-                                  width: 1,
-                                  thickness: 1,
-                                ),
-                                Expanded(
-                                  child: _StatCell2(
-                                      label: 'UNTIL END',
-                                      value: untilEndStr),
                                 ),
                               ],
                             ),
                           ),
-                        ],
+                          // Stats row with subtle category tint
+                          Container(
+                            decoration: BoxDecoration(
+                              color: categoryColor.withAlpha(14),
+                              borderRadius: const BorderRadius.vertical(
+                                bottom: Radius.circular(AppSizes.radiusLg - 1.5),
+                              ),
+                              border: Border(
+                                top: BorderSide(
+                                  color: categoryColor.withAlpha(40),
+                                  width: 1,
+                                ),
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: IntrinsicHeight(
+                              child: Row(
+                                children: [
+                                  if (system.installationDate != null) ...[
+                                    Expanded(
+                                      child: _StatCell2(
+                                          label: 'INSTALLED',
+                                          value: installedVal),
+                                    ),
+                                    VerticalDivider(
+                                      color: categoryColor.withAlpha(50),
+                                      width: 1,
+                                      thickness: 1,
+                                    ),
+                                  ],
+                                  Expanded(
+                                    child: _StatCell2(
+                                        label: 'LIFESPAN',
+                                        value: pctStr),
+                                  ),
+                                  VerticalDivider(
+                                    color: categoryColor.withAlpha(50),
+                                    width: 1,
+                                    thickness: 1,
+                                  ),
+                                  Expanded(
+                                    child: _StatCell2(
+                                        label: 'UNTIL END',
+                                        value: untilEndStr),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          ],
+                        ),
                       ),
                     ),
 
@@ -443,6 +470,8 @@ class _DetailContentState extends ConsumerState<_DetailContent> {
                         dueCount: dueCount,
                         photoCount: photoCount,
                         onAddPhoto: _pickPhoto,
+                        systemId: system.id,
+                        systemName: system.name,
                       ),
                     ),
 
@@ -455,9 +484,11 @@ class _DetailContentState extends ConsumerState<_DetailContent> {
                         if (system.brand != null)
                           _InfoRow2Data('Brand', system.brand!),
                         if (system.modelNumber != null)
-                          _InfoRow2Data('Model', system.modelNumber!),
+                          _InfoRow2Data('Model', system.modelNumber!,
+                              copyable: true),
                         if (system.serialNumber != null)
-                          _InfoRow2Data('Serial', system.serialNumber!),
+                          _InfoRow2Data('Serial', system.serialNumber!,
+                              copyable: true),
                         if (system.location != null)
                           _InfoRow2Data('Location', system.location!),
                         if (system.installer != null)
@@ -754,7 +785,7 @@ class _StatCell2 extends StatelessWidget {
               fontSize: 9,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
-              color: AppColors.darkTextTertiary,
+              color: AppColors.textTertiary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -762,7 +793,7 @@ class _StatCell2 extends StatelessWidget {
           Text(
             value,
             style: AppTextStyles.bodyMediumSemibold.copyWith(
-              color: AppColors.darkText,
+              color: AppColors.textPrimary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -851,11 +882,15 @@ class _QuickActionRow2 extends StatelessWidget {
     required this.dueCount,
     required this.photoCount,
     required this.onAddPhoto,
+    required this.systemId,
+    required this.systemName,
   });
   final int taskCount;
   final int dueCount;
   final int photoCount;
   final VoidCallback onAddPhoto;
+  final String systemId;
+  final String systemName;
 
   @override
   Widget build(BuildContext context) {
@@ -878,7 +913,10 @@ class _QuickActionRow2 extends StatelessWidget {
                 icon: Icons.task_alt_outlined,
                 label: 'Tasks',
                 subtitle: taskSub,
-                onTap: () => context.push(AppRoutes.maintenance),
+                onTap: () => context.push(
+                  '/home/systems/$systemId/tasks',
+                  extra: systemName,
+                ),
               ),
             ),
             VerticalDivider(
@@ -983,18 +1021,34 @@ class _SectionLabel2 extends StatelessWidget {
 }
 
 class _InfoRow2Data {
-  const _InfoRow2Data(this.label, this.value);
+  const _InfoRow2Data(this.label, this.value, {this.copyable = false});
   final String label;
   final String value;
+  final bool copyable;
 }
 
-class _InfoCard2 extends StatelessWidget {
+class _InfoCard2 extends StatefulWidget {
   const _InfoCard2({required this.rows});
   final List<_InfoRow2Data> rows;
 
   @override
+  State<_InfoCard2> createState() => _InfoCard2State();
+}
+
+class _InfoCard2State extends State<_InfoCard2> {
+  int? _copiedIndex;
+
+  void _handleCopy(int i) {
+    Clipboard.setData(ClipboardData(text: widget.rows[i].value));
+    setState(() => _copiedIndex = i);
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted) setState(() => _copiedIndex = null);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (rows.isEmpty) return const SizedBox.shrink();
+    if (widget.rows.isEmpty) return const SizedBox.shrink();
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -1003,31 +1057,51 @@ class _InfoCard2 extends StatelessWidget {
       ),
       child: Column(
         children: [
-          for (var i = 0; i < rows.length; i++) ...[
+          for (var i = 0; i < widget.rows.length; i++) ...[
             if (i > 0)
               const Divider(height: 1, thickness: 0.5, indent: 0),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 14, vertical: 11),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 110,
-                    child: Text(
-                      rows[i].label,
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textSecondary,
+            GestureDetector(
+              onTap: widget.rows[i].copyable ? () => _handleCopy(i) : null,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 11),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 110,
+                      child: Text(
+                        widget.rows[i].label,
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      rows[i].value,
-                      style: AppTextStyles.bodyMediumSemibold,
+                    Expanded(
+                      child: Text(
+                        widget.rows[i].value,
+                        style: AppTextStyles.bodyMediumSemibold,
+                      ),
                     ),
-                  ),
-                ],
+                    if (widget.rows[i].copyable)
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: _copiedIndex == i
+                            ? const Icon(
+                                Icons.check_circle,
+                                key: ValueKey('check'),
+                                size: 14,
+                                color: AppColors.olive,
+                              )
+                            : const Icon(
+                                Icons.copy_outlined,
+                                key: ValueKey('copy'),
+                                size: 14,
+                                color: AppColors.textTertiary,
+                              ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -1083,23 +1157,23 @@ List<(String, String)> _parseSpecRows(String? notes) {
 (String, Color, String) _computeSystemHealth(
     String? installDateStr, int? lifespanYears) {
   if (installDateStr == null) {
-    return ('Good', AppColors.darkTextSecondary, '—');
+    return ('Good', AppColors.textSecondary, '—');
   }
   final DateTime install;
   try {
     install = DateTime.parse(installDateStr);
   } catch (_) {
-    return ('Good', AppColors.darkTextSecondary, '—');
+    return ('Good', AppColors.textSecondary, '—');
   }
   final ageYears = DateTime.now().difference(install).inDays / 365.25;
   final ageLabel = '${ageYears.toStringAsFixed(1)} yr old';
 
   if (lifespanYears == null || lifespanYears <= 0) {
-    return ('Good', AppColors.darkTextSecondary, ageLabel);
+    return ('Good', AppColors.textTertiary, ageLabel);
   }
   final pct = ageYears / lifespanYears * 100;
   if (pct < 50) {
-    return ('Healthy', AppColors.oliveLight, ageLabel);
+    return ('Healthy', AppColors.olive, ageLabel);
   } else if (pct <= 75) {
     return ('Aging', AppColors.sandAmber, ageLabel);
   } else {

@@ -29,6 +29,7 @@ import '../../features/home_profile/screens/appliance_detail_screen.dart';
 import '../../features/home_profile/screens/appliance_form_screen.dart';
 import '../../features/home_profile/screens/appliances_screen.dart';
 import '../../features/home_profile/screens/home_profile_screen.dart';
+import '../../features/home_profile/screens/item_tasks_screen.dart';
 import '../../features/home_profile/screens/lifespan_screen.dart';
 import '../../features/home_profile/screens/property_edit_screen.dart';
 import '../../features/home_profile/screens/system_detail_screen.dart';
@@ -86,9 +87,11 @@ abstract final class AppRoutes {
   static const homeSystems = '/home/systems';
   static const homeSystemsAdd = '/home/systems/add';
   static const homeSystemDetail = '/home/systems/:systemId';
+  static const homeSystemTasks = '/home/systems/:systemId/tasks';
   static const homeAppliances = '/home/appliances';
   static const homeAppliancesAdd = '/home/appliances/add';
   static const homeApplianceDetail = '/home/appliances/:applianceId';
+  static const homeApplianceTasks = '/home/appliances/:applianceId/tasks';
   static const homeEdit = '/home/edit';
   static const homeLifespan = '/home/lifespan';
   static const emergency = '/emergency';
@@ -284,6 +287,18 @@ final routerProvider = Provider<GoRouter>((ref) {
                             systemId: state.pathParameters['systemId']!,
                           ),
                         ),
+                        routes: [
+                          GoRoute(
+                            path: 'tasks',
+                            pageBuilder: (_, state) => _buildPage(
+                              state,
+                              ItemTasksScreen(
+                                systemId: state.pathParameters['systemId']!,
+                                itemName: state.extra as String? ?? 'System',
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -311,6 +326,20 @@ final routerProvider = Provider<GoRouter>((ref) {
                                 state.pathParameters['applianceId']!,
                           ),
                         ),
+                        routes: [
+                          GoRoute(
+                            path: 'tasks',
+                            pageBuilder: (_, state) => _buildPage(
+                              state,
+                              ItemTasksScreen(
+                                applianceId:
+                                    state.pathParameters['applianceId']!,
+                                itemName:
+                                    state.extra as String? ?? 'Appliance',
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

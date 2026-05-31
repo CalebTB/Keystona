@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show Clipboard, ClipboardData;
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -321,6 +321,8 @@ class _ContentState extends ConsumerState<_Content> {
                   photoCount: photoCount,
                   linkedWarrantyDocId: a.linkedWarrantyDocId,
                   onAddPhoto: _pickPhoto,
+                  applianceId: a.id,
+                  applianceName: a.name,
                 ),
               ),
 
@@ -489,92 +491,123 @@ class _HeroCard extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(
           AppSizes.screenPadding, 0, AppSizes.screenPadding, 12),
       decoration: BoxDecoration(
-        color: AppColors.deepNavy,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        border: Border.all(color: AppColors.border, width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A1A2B4A),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Category icon container
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: categoryColor.withAlpha(38), // 0.15 opacity
-                  borderRadius: BorderRadius.circular(10),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppSizes.radiusLg - 1.5),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Colored top accent strip
+            Container(height: 3, color: categoryColor),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Category icon container
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: categoryColor.withAlpha(28),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: categoryColor, size: 24),
                 ),
-                child: Icon(icon, color: categoryColor, size: 22),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      eyebrow,
-                      style: GoogleFonts.ibmPlexMono(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.2,
-                        color: healthColor,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      name,
-                      style: AppTextStyles.headlineMedium.copyWith(
-                        color: AppColors.darkText,
-                        fontSize: 22,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (subtitle.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        subtitle,
+                        eyebrow,
                         style: GoogleFonts.ibmPlexMono(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.darkTextSecondary,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.2,
+                          color: healthColor,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        name,
+                        style: AppTextStyles.headlineMedium.copyWith(
+                          color: AppColors.textPrimary,
+                          fontSize: 21,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
+                      if (subtitle.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: GoogleFonts.ibmPlexMono(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.textSecondary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Divider(color: AppColors.darkBorder, height: 1),
-          const SizedBox(height: 12),
-          IntrinsicHeight(
-            child: Row(
-              children: [
-                // Only show Bought if a price exists.
-                if (purchasePrice != null) ...[
-                  Expanded(
-                    child: _StatCell(label: 'BOUGHT', value: boughtVal),
                   ),
-                  VerticalDivider(
-                      color: AppColors.darkBorder, width: 1, thickness: 1),
-                ],
-                Expanded(
-                  child: _StatCell(label: 'LIFESPAN', value: pctStr),
-                ),
-                VerticalDivider(
-                    color: AppColors.darkBorder, width: 1, thickness: 1),
-                Expanded(
-                  child: _StatCell(label: 'UNTIL END', value: untilEndStr),
                 ),
               ],
             ),
           ),
-        ],
+          // Stats row — subtle category tint separates it from the info above
+          Container(
+            decoration: BoxDecoration(
+              color: categoryColor.withAlpha(14),
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(AppSizes.radiusLg - 1.5),
+              ),
+              border: Border(
+                top: BorderSide(
+                  color: categoryColor.withAlpha(40),
+                  width: 1,
+                ),
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: IntrinsicHeight(
+              child: Row(
+                children: [
+                  if (purchasePrice != null) ...[
+                    Expanded(
+                      child: _StatCell(label: 'BOUGHT', value: boughtVal),
+                    ),
+                    VerticalDivider(
+                        color: categoryColor.withAlpha(50),
+                        width: 1,
+                        thickness: 1),
+                  ],
+                  Expanded(
+                    child: _StatCell(label: 'LIFESPAN', value: pctStr),
+                  ),
+                  VerticalDivider(
+                      color: categoryColor.withAlpha(50),
+                      width: 1,
+                      thickness: 1),
+                  Expanded(
+                    child: _StatCell(label: 'UNTIL END', value: untilEndStr),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          ],
+        ),
       ),
     );
   }
@@ -597,7 +630,7 @@ class _StatCell extends StatelessWidget {
               fontSize: 9,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
-              color: AppColors.darkTextTertiary,
+              color: AppColors.textTertiary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -605,7 +638,7 @@ class _StatCell extends StatelessWidget {
           Text(
             value,
             style: AppTextStyles.bodyMediumSemibold.copyWith(
-              color: AppColors.darkText,
+              color: AppColors.textPrimary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -710,6 +743,8 @@ class _QuickActionRow extends StatelessWidget {
     required this.docCount,
     required this.photoCount,
     required this.onAddPhoto,
+    required this.applianceId,
+    required this.applianceName,
     this.linkedWarrantyDocId,
   });
   final int taskCount;
@@ -717,6 +752,8 @@ class _QuickActionRow extends StatelessWidget {
   final int docCount;
   final int photoCount;
   final VoidCallback onAddPhoto;
+  final String applianceId;
+  final String applianceName;
   final String? linkedWarrantyDocId;
 
   @override
@@ -741,7 +778,10 @@ class _QuickActionRow extends StatelessWidget {
                 icon: Icons.task_alt_outlined,
                 label: 'Tasks',
                 subtitle: taskSub,
-                onTap: () => context.push(AppRoutes.maintenance),
+                onTap: () => context.push(
+                  '/home/appliances/$applianceId/tasks',
+                  extra: applianceName,
+                ),
               ),
             ),
             VerticalDivider(
@@ -862,14 +902,29 @@ class _InfoRow2Data {
   final bool copyable;
 }
 
-/// iOS-style bordered info card with label/value rows.
-class _InfoCard2 extends StatelessWidget {
+/// iOS-style bordered info card with label/value rows and animated copy feedback.
+class _InfoCard2 extends StatefulWidget {
   const _InfoCard2({required this.rows});
   final List<_InfoRow2Data> rows;
 
   @override
+  State<_InfoCard2> createState() => _InfoCard2State();
+}
+
+class _InfoCard2State extends State<_InfoCard2> {
+  int? _copiedIndex;
+
+  void _handleCopy(int i) {
+    Clipboard.setData(ClipboardData(text: widget.rows[i].value));
+    setState(() => _copiedIndex = i);
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted) setState(() => _copiedIndex = null);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (rows.isEmpty) return const SizedBox.shrink();
+    if (widget.rows.isEmpty) return const SizedBox.shrink();
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -878,22 +933,11 @@ class _InfoCard2 extends StatelessWidget {
       ),
       child: Column(
         children: [
-          for (var i = 0; i < rows.length; i++) ...[
+          for (var i = 0; i < widget.rows.length; i++) ...[
             if (i > 0)
               const Divider(height: 1, thickness: 0.5, indent: 0),
             GestureDetector(
-              onTap: rows[i].copyable
-                  ? () {
-                      Clipboard.setData(ClipboardData(text: rows[i].value));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('${rows[i].label} copied'),
-                          behavior: SnackBarBehavior.floating,
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
-                    }
-                  : null,
+              onTap: widget.rows[i].copyable ? () => _handleCopy(i) : null,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                 child: Row(
@@ -902,7 +946,7 @@ class _InfoCard2 extends StatelessWidget {
                     SizedBox(
                       width: 110,
                       child: Text(
-                        rows[i].label,
+                        widget.rows[i].label,
                         style: AppTextStyles.caption.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -910,13 +954,27 @@ class _InfoCard2 extends StatelessWidget {
                     ),
                     Expanded(
                       child: Text(
-                        rows[i].value,
+                        widget.rows[i].value,
                         style: AppTextStyles.bodyMediumSemibold,
                       ),
                     ),
-                    if (rows[i].copyable)
-                      const Icon(Icons.copy_outlined,
-                          size: 14, color: AppColors.textTertiary),
+                    if (widget.rows[i].copyable)
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: _copiedIndex == i
+                            ? const Icon(
+                                Icons.check_circle,
+                                key: ValueKey('check'),
+                                size: 14,
+                                color: AppColors.olive,
+                              )
+                            : const Icon(
+                                Icons.copy_outlined,
+                                key: ValueKey('copy'),
+                                size: 14,
+                                color: AppColors.textTertiary,
+                              ),
+                      ),
                   ],
                 ),
               ),
@@ -952,7 +1010,7 @@ class _InfoCard2 extends StatelessWidget {
   }
   final pct = ageYears / lifespanYears * 100;
   if (pct < 50) {
-    return ('Healthy', AppColors.oliveLight, ageLabel);
+    return ('Healthy', AppColors.olive, ageLabel);
   } else if (pct <= 75) {
     return ('Aging', AppColors.sandAmber, ageLabel);
   } else {
