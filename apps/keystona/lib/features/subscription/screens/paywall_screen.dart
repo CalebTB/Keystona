@@ -201,7 +201,7 @@ class _GradientBackground extends StatelessWidget {
           stops: [0.0, 0.45, 1.0],
           colors: [
             AppColors.deepNavy,
-            Color(0xFF2C3E60), // Mid-blend between navy and off-white.
+            AppColors.paywallGradientMid,
             AppColors.warmOffWhite,
           ],
         ),
@@ -232,7 +232,7 @@ class _CloseButton extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(30),
+              color: AppColors.textInverse.withAlpha(30),
               borderRadius: BorderRadius.circular(AppSizes.radiusFull),
             ),
             child: const Icon(
@@ -261,7 +261,7 @@ class _HeroSection extends StatelessWidget {
           width: 80,
           height: 80,
           decoration: BoxDecoration(
-            color: Colors.white.withAlpha(20),
+            color: AppColors.textInverse.withAlpha(20),
             borderRadius: BorderRadius.circular(AppSizes.radiusFull),
             border: Border.all(
               color: AppColors.goldAccent.withAlpha(100),
@@ -287,7 +287,7 @@ class _HeroSection extends StatelessWidget {
           'The smart way to manage your home,\nunlocked in full.',
           textAlign: TextAlign.center,
           style: AppTextStyles.bodyLarge.copyWith(
-            color: Colors.white.withAlpha(200),
+            color: AppColors.textInverse.withAlpha(200),
             height: 1.5,
           ),
         ),
@@ -315,10 +315,10 @@ class _FeatureList extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSizes.md),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(18),
+        color: AppColors.textInverse.withAlpha(18),
         borderRadius: BorderRadius.circular(AppSizes.radiusMd),
         border: Border.all(
-          color: Colors.white.withAlpha(30),
+          color: AppColors.textInverse.withAlpha(30),
         ),
       ),
       child: Column(
@@ -445,7 +445,7 @@ class _PackageError extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSizes.md),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(18),
+        color: AppColors.textInverse.withAlpha(18),
         borderRadius: BorderRadius.circular(AppSizes.radiusMd),
         border: Border.all(color: AppColors.error.withAlpha(100)),
       ),

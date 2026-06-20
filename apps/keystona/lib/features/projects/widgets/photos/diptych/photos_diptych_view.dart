@@ -8,10 +8,10 @@ import '../../../../../core/theme/app_text_styles.dart';
 import '../../../models/project_photo.dart';
 import '../shared/photo_type_tag.dart';
 
-const Color _kCardSurface = Color(0xFFF5F2EC);
-const Color _kCardBorder = Color(0xFFDDD6CC);
-const Color _kRoomTagText = Color(0xFF6B7E6D);
-const Color _kCaptionColor = Color(0xFF6B6560);
+const Color _kCardSurface = AppColors.warmOffWhite;
+const Color _kCardBorder = AppColors.border;
+const Color _kRoomTagText = AppColors.contractorStatLabel;
+const Color _kCaptionColor = AppColors.textSecondary;
 
 /// A before/after pair resolved from grouped photos.
 class _Pair {
@@ -362,11 +362,11 @@ class _PhotoTile extends StatelessWidget {
                   imageUrl: photo.signedUrl!,
                   fit: BoxFit.cover,
                   placeholder: (_, _) =>
-                      const ColoredBox(color: Color(0xFFD0C8BC)),
+                      const ColoredBox(color: AppColors.photoPlaceholder),
                   errorWidget: (_, _, _) =>
-                      const ColoredBox(color: Color(0xFFD0C8BC)),
+                      const ColoredBox(color: AppColors.photoPlaceholder),
                 )
-              : const ColoredBox(color: Color(0xFFD0C8BC)),
+              : const ColoredBox(color: AppColors.photoPlaceholder),
 
           // Type badge — top-left
           Positioned(
@@ -385,7 +385,7 @@ class _PhotoTile extends StatelessWidget {
                 fontFamily: 'IBMPlexMono',
                 fontSize: 9,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: AppColors.textInverse,
               ),
             ),
           ),
@@ -406,7 +406,7 @@ class _RoomTagChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFEDEAE2),
+        color: AppColors.warmFill,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(

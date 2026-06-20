@@ -28,34 +28,47 @@ class SubscriptionScreen extends ConsumerWidget {
       navigationBar: const CupertinoNavigationBar(
         middle: Text('Subscription'),
       ),
-      child: SafeArea(
-        child: ListView(
-          padding: AppPadding.screen,
-          children: [
-            const SizedBox(height: AppSizes.md),
-            _TierCard(tier: tier, isPremium: isPremium),
-            const SizedBox(height: AppSizes.lg),
-            if (!isPremium) ...[
-              _ActionButton(
-                label: 'Upgrade to Pro',
-                color: AppColors.deepNavy,
-                onTap: () => context.push(AppRoutes.settingsPaywall),
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          CupertinoSliverRefreshControl(
+            onRefresh: () async => ref.invalidate(isPremiumProvider),
+          ),
+          SliverSafeArea(
+            sliver: SliverToBoxAdapter(
+              child: Padding(
+                padding: AppPadding.screen,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: AppSizes.md),
+                    _TierCard(tier: tier, isPremium: isPremium),
+                    const SizedBox(height: AppSizes.lg),
+                    if (!isPremium) ...[
+                      _ActionButton(
+                        label: 'Upgrade to Pro',
+                        color: AppColors.deepNavy,
+                        onTap: () => context.push(AppRoutes.settingsPaywall),
+                      ),
+                      const SizedBox(height: AppSizes.sm),
+                    ],
+                    _ActionButton(
+                      label: 'Restore Purchases',
+                      color: AppColors.textSecondary,
+                      onTap: () => _restore(context),
+                    ),
+                    const SizedBox(height: AppSizes.sm),
+                    _ActionButton(
+                      label: 'Manage Subscription',
+                      color: AppColors.textSecondary,
+                      onTap: () => RevenueCatUI.presentCustomerCenter(),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: AppSizes.sm),
-            ],
-            _ActionButton(
-              label: 'Restore Purchases',
-              color: AppColors.textSecondary,
-              onTap: () => _restore(context),
             ),
-            const SizedBox(height: AppSizes.sm),
-            _ActionButton(
-              label: 'Manage Subscription',
-              color: AppColors.textSecondary,
-              onTap: () => RevenueCatUI.presentCustomerCenter(),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

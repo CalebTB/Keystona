@@ -16,29 +16,29 @@ class FileTypeIconBlock extends StatelessWidget {
     final lower = mime.toLowerCase();
     if (lower == 'application/pdf' || lower.endsWith('/pdf')) {
       return (
-        bg: const Color(0xFFF0E0DC),
-        fg: const Color(0xFFB85638),
+        bg: AppColors.fileTypePdfBg,
+        fg: AppColors.accent,
         label: 'PDF',
       );
     }
     if (lower.contains('jpeg') || lower.contains('jpg')) {
       return (
-        bg: const Color(0xFFE0E8D8),
-        fg: const Color(0xFF5A7050),
+        bg: AppColors.fileTypeImageBg,
+        fg: AppColors.olive,
         label: 'JPG',
       );
     }
     if (lower.contains('png')) {
       return (
-        bg: const Color(0xFFE0E8D8),
-        fg: const Color(0xFF5A7050),
+        bg: AppColors.fileTypeImageBg,
+        fg: AppColors.olive,
         label: 'PNG',
       );
     }
     if (lower.contains('heic') || lower.contains('heif')) {
       return (
-        bg: const Color(0xFFE8D8E0),
-        fg: const Color(0xFF7B5E7B),
+        bg: AppColors.fileTypeHeicBg,
+        fg: AppColors.plum,
         label: 'HEIC',
       );
     }
@@ -47,8 +47,8 @@ class FileTypeIconBlock extends StatelessWidget {
         lower.contains('docx') ||
         lower.contains('officedocument')) {
       return (
-        bg: const Color(0xFFD8E0E8),
-        fg: const Color(0xFF506A80),
+        bg: AppColors.fileTypeDocBg,
+        fg: AppColors.slate,
         label: 'DOCX',
       );
     }
@@ -118,7 +118,7 @@ class _CornerPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.10)
+      ..color = AppColors.deepNavy.withValues(alpha: 0.10)
       ..style = PaintingStyle.fill;
 
     final path = Path()

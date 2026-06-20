@@ -67,6 +67,8 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
     return t.status == TaskStatus.overdue || t.dueDate.toLocal().isBefore(today);
   }
 
+  Future<void> _onRefresh() async => ref.invalidate(maintenanceTasksProvider);
+
   // ── Actions ────────────────────────────────────────────────────────────────
 
   Future<void> _toggleTask(MaintenanceTask task, bool enabled) async {
@@ -202,10 +204,13 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
           ? FloatingActionButton(
               onPressed: _addTask,
               backgroundColor: AppColors.deepNavy,
-              child: const Icon(Icons.add, color: Colors.white),
+              child: const Icon(Icons.add, color: AppColors.textInverse),
             )
           : null,
-      body: _buildBody(context, tasks, isIOS: false),
+      body: RefreshIndicator(
+        onRefresh: _onRefresh,
+        child: _buildBody(context, tasks, isIOS: false),
+      ),
     );
   }
 
@@ -239,7 +244,7 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
                     borderRadius: BorderRadius.circular(AppSizes.radiusFull),
                     boxShadow: const [
                       BoxShadow(
-                        color: Color(0x331A2B4A),
+                        color: AppColors.fabShadow,
                         blurRadius: 12,
                         offset: Offset(0, 4),
                       ),
@@ -247,7 +252,7 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
                   ),
                   child: const Icon(
                     Icons.add,
-                    color: Colors.white,
+                    color: AppColors.textInverse,
                     size: 26,
                   ),
                 ),
@@ -257,54 +262,79 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
       );
     }
 
-    return Stack(
-      children: [
-        ListView.builder(
-          padding: EdgeInsets.fromLTRB(
-            AppSizes.screenPadding,
-            AppSizes.md,
-            AppSizes.screenPadding,
-            AppSizes.xxl + MediaQuery.of(context).padding.bottom,
+    final fab = Positioned(
+      bottom: AppSizes.lg + MediaQuery.of(context).padding.bottom,
+      right: AppSizes.md,
+      child: CupertinoButton(
+        padding: EdgeInsets.zero,
+        onPressed: _addTask,
+        child: Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            color: AppColors.deepNavy,
+            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+            boxShadow: const [
+              BoxShadow(
+                color: AppColors.fabShadow,
+                blurRadius: 12,
+                offset: Offset(0, 4),
+              ),
+            ],
           ),
-          itemCount: tasks.length,
-          itemBuilder: (context, index) => _ItemTaskRow(
-            task: tasks[index],
-            onDelete: () => _confirmDelete(tasks[index]),
-            onEdit: () =>
-                context.push('/maintenance/${tasks[index].id}'),
-            onToggle: (enabled) => _toggleTask(tasks[index], enabled),
-          ),
+          child: const Icon(Icons.add, color: AppColors.textInverse, size: 26),
         ),
-        if (isIOS)
-          Positioned(
-            bottom: AppSizes.lg + MediaQuery.of(context).padding.bottom,
-            right: AppSizes.md,
-            child: CupertinoButton(
-              padding: EdgeInsets.zero,
-              onPressed: _addTask,
-              child: Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: AppColors.deepNavy,
-                  borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x331A2B4A),
-                      blurRadius: 12,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
+      ),
+    );
+
+    if (isIOS) {
+      return Stack(
+        children: [
+          CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              CupertinoSliverRefreshControl(onRefresh: _onRefresh),
+              SliverPadding(
+                padding: EdgeInsets.fromLTRB(
+                  AppSizes.screenPadding,
+                  AppSizes.md,
+                  AppSizes.screenPadding,
+                  AppSizes.xxl + MediaQuery.of(context).padding.bottom,
                 ),
-                child: const Icon(
-                  Icons.add,
-                  color: Colors.white,
-                  size: 26,
+                sliver: SliverList.builder(
+                  itemCount: tasks.length,
+                  itemBuilder: (context, index) => _ItemTaskRow(
+                    task: tasks[index],
+                    onDelete: () => _confirmDelete(tasks[index]),
+                    onEdit: () =>
+                        context.push('/maintenance/${tasks[index].id}'),
+                    onToggle: (enabled) =>
+                        _toggleTask(tasks[index], enabled),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
-      ],
+          fab,
+        ],
+      );
+    }
+
+    return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.fromLTRB(
+        AppSizes.screenPadding,
+        AppSizes.md,
+        AppSizes.screenPadding,
+        AppSizes.xxl + MediaQuery.of(context).padding.bottom,
+      ),
+      itemCount: tasks.length,
+      itemBuilder: (context, index) => _ItemTaskRow(
+        task: tasks[index],
+        onDelete: () => _confirmDelete(tasks[index]),
+        onEdit: () => context.push('/maintenance/${tasks[index].id}'),
+        onToggle: (enabled) => _toggleTask(tasks[index], enabled),
+      ),
     );
   }
 }

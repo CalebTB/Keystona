@@ -58,11 +58,11 @@ const BoxDecoration _kCardDecoration = BoxDecoration(
   ),
 );
 
-const BoxDecoration _kClimateCardDecoration = BoxDecoration(
+final BoxDecoration _kClimateCardDecoration = BoxDecoration(
   color: AppColors.oliveDim,
-  borderRadius: BorderRadius.all(Radius.circular(AppSizes.radiusMd)),
+  borderRadius: const BorderRadius.all(Radius.circular(AppSizes.radiusMd)),
   border: Border.fromBorderSide(
-    BorderSide(color: Color(0x225A7050), width: 1.5),
+    BorderSide(color: AppColors.olive.withValues(alpha: 0.13), width: 1.5),
   ),
 );
 
@@ -432,6 +432,8 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
     }
   }
 
+  Future<void> _onRefresh() async => ref.invalidate(homeProfileProvider);
+
   // ── Build ─────────────────────────────────────────────────────────────────────
 
   @override
@@ -510,7 +512,9 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
       ),
       child: SafeArea(
         bottom: false,
-        child: _initialized ? _formBody() : _loadingBody(),
+        child: _initialized
+            ? RefreshIndicator(onRefresh: _onRefresh, child: _formBody())
+            : _loadingBody(),
       ),
     );
   }
@@ -548,7 +552,9 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
             TextButton(onPressed: _save, child: const Text('Save')),
         ],
       ),
-      body: _initialized ? _formBody() : _loadingBody(),
+      body: _initialized
+          ? RefreshIndicator(onRefresh: _onRefresh, child: _formBody())
+          : _loadingBody(),
     );
   }
 
@@ -563,6 +569,7 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
 
     return ListView(
       controller: _scrollController,
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: AppPadding.screen.copyWith(top: AppSizes.md),
       children: [
         _PhotoSlot(
@@ -1266,26 +1273,26 @@ class _PhotoSlot extends StatelessWidget {
             Positioned.fill(
               child: Container(
                 color: hasPhoto
-                    ? Colors.black.withValues(alpha: 0.22)
+                    ? AppColors.textPrimary.withValues(alpha: 0.22)
                     : Colors.transparent,
                 child: Center(
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.42),
+                      color: AppColors.textPrimary.withValues(alpha: 0.42),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.camera_alt_outlined,
-                            size: 16, color: Colors.white),
+                            size: 16, color: AppColors.textInverse),
                         const SizedBox(width: 6),
                         Text(
                           hasPhoto ? 'Change Photo' : 'Add Cover Photo',
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppColors.textInverse,
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),

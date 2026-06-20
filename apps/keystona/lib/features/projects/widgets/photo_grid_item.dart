@@ -84,7 +84,7 @@ class PhotoGridItem extends StatelessWidget {
                   color: AppColors.success.withValues(alpha: 0.9),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.compare, size: 10, color: Colors.white),
+                child: const Icon(Icons.compare, size: 10, color: AppColors.textInverse),
               ),
             ),
 
@@ -106,7 +106,7 @@ class PhotoGridItem extends StatelessWidget {
                   child: Text(
                     'Add after →',
                     style: AppTextStyles.labelSmall
-                        .copyWith(color: Colors.white, fontSize: 9),
+                        .copyWith(color: AppColors.textInverse, fontSize: 9),
                     textAlign: TextAlign.center,
                   ),
                 ),

@@ -35,7 +35,7 @@ const BoxDecoration _kCardDecoration = BoxDecoration(
   ),
   boxShadow: [
     BoxShadow(
-      color: Color(0x0D2A2420),
+      color: AppColors.shadowSm,
       blurRadius: 4,
       offset: Offset(0, 1),
     ),

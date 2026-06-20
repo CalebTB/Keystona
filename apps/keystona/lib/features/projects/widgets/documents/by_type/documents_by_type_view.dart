@@ -76,7 +76,7 @@ class DocumentsByTypeView extends StatelessWidget {
                       width: 6,
                       height: 6,
                       decoration: const BoxDecoration(
-                        color: Color(0xFF7A8C56),
+                        color: AppColors.oliveLight,
                         shape: BoxShape.circle,
                       ),
                     ),

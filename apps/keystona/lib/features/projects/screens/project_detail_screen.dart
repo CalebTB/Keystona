@@ -366,7 +366,7 @@ class _ProjectHeaderCard extends StatelessWidget {
         border: Border.all(color: AppColors.border),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x0D2A2420),
+            color: AppColors.shadowSm,
             blurRadius: 16,
             offset: Offset(0, 4),
           ),
@@ -1146,7 +1146,7 @@ class _NoteTimelineCard extends StatelessWidget {
                 border: Border.all(color: AppColors.border),
                 boxShadow: const [
                   BoxShadow(
-                    color: Color(0x062A2420),
+                    color: AppColors.shadowXs,
                     blurRadius: 4,
                     offset: Offset(0, 1),
                   ),

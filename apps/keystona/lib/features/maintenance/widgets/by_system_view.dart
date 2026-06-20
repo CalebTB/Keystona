@@ -364,7 +364,7 @@ class _SystemCardState extends State<_SystemCard> {
         border: Border.all(color: AppColors.border, width: 1.5),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x0A1A2B4A),
+            color: AppColors.shadowXs,
             blurRadius: 4,
             offset: Offset(0, 1),
           ),
@@ -538,7 +538,7 @@ class _ApplianceCardState extends State<_ApplianceCard> {
         borderRadius: AppRadius.card,
         border: Border.all(color: AppColors.border, width: 1.5),
         boxShadow: const [
-          BoxShadow(color: Color(0x0A1A2B4A), blurRadius: 4, offset: Offset(0, 1)),
+          BoxShadow(color: AppColors.shadowXs, blurRadius: 4, offset: Offset(0, 1)),
         ],
       ),
       child: ClipRRect(
@@ -727,7 +727,7 @@ class _UncategorizedCardState extends State<_UncategorizedCard> {
         border: Border.all(color: AppColors.border, width: 1.5),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x0A1A2B4A),
+            color: AppColors.shadowXs,
             blurRadius: 4,
             offset: Offset(0, 1),
           ),

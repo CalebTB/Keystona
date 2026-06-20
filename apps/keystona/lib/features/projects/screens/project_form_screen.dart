@@ -852,7 +852,7 @@ class _CoverPhotoField extends StatelessWidget {
                 vertical: 4,
               ),
               decoration: BoxDecoration(
-                color: Colors.black54,
+                color: AppColors.textSecondary,
                 borderRadius: BorderRadius.circular(AppSizes.radiusSm),
               ),
               child: Text(
@@ -882,7 +882,7 @@ class _CoverPhotoField extends StatelessWidget {
               vertical: 4,
             ),
             decoration: BoxDecoration(
-              color: Colors.black54,
+              color: AppColors.textSecondary,
               borderRadius: BorderRadius.circular(AppSizes.radiusSm),
             ),
             child: Text(

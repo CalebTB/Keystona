@@ -71,7 +71,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen> {
               left: _divider * w - 1.5,
               top: 0,
               bottom: 0,
-              child: Container(width: 3, color: Colors.white),
+              child: Container(width: 3, color: AppColors.surface),
             ),
 
             // Drag hit area around the divider.
@@ -94,7 +94,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen> {
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.surface,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
@@ -124,7 +124,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen> {
         backgroundColor: Colors.black,
         navigationBar: const CupertinoNavigationBar(
           backgroundColor: Colors.black,
-          middle: Text('Compare', style: TextStyle(color: Colors.white)),
+          middle: Text('Compare', style: TextStyle(color: AppColors.textInverse)),
         ),
         child: SafeArea(bottom: false, child: content),
       );
@@ -134,7 +134,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.textInverse,
         title: const Text('Compare'),
       ),
       body: content,
@@ -157,7 +157,7 @@ class _Label extends StatelessWidget {
       child: Text(
         text,
         style: AppTextStyles.labelSmall
-            .copyWith(color: Colors.white, fontSize: 10),
+            .copyWith(color: AppColors.textInverse, fontSize: 10),
       ),
     );
   }

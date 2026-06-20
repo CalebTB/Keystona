@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -93,12 +92,12 @@ class _SettingsExportScreenState extends State<SettingsExportScreen> {
                   child: _exporting
                       ? const Center(
                           child: CupertinoActivityIndicator(
-                              color: Colors.white))
+                              color: AppColors.textInverse))
                       : Text(
                           'Request export',
                           textAlign: TextAlign.center,
                           style: AppTextStyles.bodyMediumSemibold
-                              .copyWith(color: Colors.white),
+                              .copyWith(color: AppColors.textInverse),
                         ),
                 ),
               ),

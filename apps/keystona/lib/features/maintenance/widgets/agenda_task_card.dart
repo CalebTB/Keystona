@@ -8,7 +8,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../models/maintenance_task.dart';
 
-const _kSuccessGreen = Color(0xFF34C759);
+const _kSuccessGreen = AppColors.iosSuccessGreen;
 
 /// A single task card in the Daily agenda view.
 ///
@@ -102,18 +102,18 @@ class _AgendaTaskCardState extends State<AgendaTaskCard>
                     clipBehavior: Clip.hardEdge,
                     decoration: BoxDecoration(
                       color: isOverdue
-                          ? const Color(0x0EC9A84C)
+                          ? AppColors.overdueTaskBg
                           : AppColors.surface,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isOverdue
-                            ? const Color(0x30C9A84C)
+                            ? AppColors.overdueTaskBorder
                             : AppColors.border,
                         width: 1.5,
                       ),
                       boxShadow: const [
                         BoxShadow(
-                          color: Color(0x0D2A2420),
+                          color: AppColors.shadowSm,
                           blurRadius: 4,
                           offset: Offset(0, 1),
                         ),
@@ -247,7 +247,7 @@ class _AgendaTaskCardState extends State<AgendaTaskCard>
                                       child: const Icon(
                                         Icons.check_rounded,
                                         size: 15,
-                                        color: Colors.white,
+                                        color: AppColors.textInverse,
                                       ),
                                     ),
                                   ),

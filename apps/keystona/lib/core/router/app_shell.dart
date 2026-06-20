@@ -57,9 +57,9 @@ class _AppTabBar extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
         child: DecoratedBox(
           decoration: const BoxDecoration(
-            color: Color(0xEBF6F2ED), // rgba(246,242,237,0.92)
+            color: AppColors.navBarBg,
             border: Border(
-              top: BorderSide(color: Color(0x0F000000), width: 0.5),
+              top: BorderSide(color: AppColors.navHairline, width: 0.5),
             ),
           ),
           child: Column(

@@ -226,7 +226,7 @@ class _TaskSelectionSheetState extends State<_TaskSelectionSheet> {
       type: MaterialType.transparency,
       child: Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         ),
         child: SafeArea(
@@ -241,7 +241,7 @@ class _TaskSelectionSheetState extends State<_TaskSelectionSheet> {
                   width: 36,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: AppColors.gray300,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -344,12 +344,12 @@ class _TaskSelectionSheetState extends State<_TaskSelectionSheet> {
                             _selectedCount == 0 || _adding ? null : _addTasks,
                         child: _adding
                             ? const CupertinoActivityIndicator(
-                                color: Colors.white)
+                                color: AppColors.textInverse)
                             : Text(
                                 'Add $_selectedCount Task${_selectedCount == 1 ? '' : 's'}',
                                 style:
                                     AppTextStyles.bodyMediumSemibold.copyWith(
-                                  color: Colors.white,
+                                  color: AppColors.textInverse,
                                 ),
                               ),
                       ),

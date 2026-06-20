@@ -186,6 +186,127 @@ abstract final class AppColors {
   /// Muted olive — Seasonal hero text/icon overlays. #4A6B3C
   static const Color forestGreenLight = Color(0xFF4A6B3C);
 
+  // ─── Contractor Story Card ───────────────────────────────────────────────────
+
+  /// Dark sage green — Contractor story card hero section background. #3D5040
+  static const Color contractorCardBg = Color(0xFF3D5040);
+
+  /// Contractor skeleton inner block bg — slightly lighter sage. #2E3D30
+  static const Color contractorBlockBg = Color(0xFF2E3D30);
+
+  /// Darker sage — Contractor story card border. #2A3830
+  static const Color contractorCardBorder = Color(0xFF2A3830);
+
+  /// Mid sage — Contractor avatar circle background. #4E6452
+  static const Color contractorAvatarBg = Color(0xFF4E6452);
+
+  /// Light sage — LEAD badge fill. #B8C9B0
+  static const Color contractorLeadBg = Color(0xFFB8C9B0);
+
+  /// Green-tinted label text inside stat cells. #6B7E6D
+  static const Color contractorStatLabel = Color(0xFF6B7E6D);
+
+  /// Muted sage — subtitle metadata on dark green header. #8CA88E
+  static const Color contractorMuted = Color(0xFF8CA88E);
+
+  // ─── Photo / Media Overlays ─────────────────────────────────────────────────
+
+  /// Near-black darken tint for cover photo overlays (80% opacity). #CC1A1410
+  static const Color photoOverlayTint = Color(0xCC1A1410);
+
+  // ─── Const Shadows / Overlays ───────────────────────────────────────────────
+
+  /// Card box shadow — deepNavy at 4% opacity. Use in const BoxShadow. #0A2A2420
+  static const Color shadowXs = Color(0x0A2A2420);
+
+  /// Card hover shadow — deepNavy at 5% opacity. Use in const BoxShadow. #0D2A2420
+  static const Color shadowSm = Color(0x0D2A2420);
+
+  /// Elevated card shadow — neutral black at 8% opacity. #14000000
+  static const Color shadowMd = Color(0x14000000);
+
+  /// Progress track on dark backgrounds — white at 8% opacity. #14FFFFFF
+  static const Color darkTrack = Color(0x14FFFFFF);
+
+  /// Accent surface overlay — accent at 15% opacity (upgrade button bg). #26B85638
+  static const Color accentOverlay = Color(0x26B85638);
+
+  // ─── Photo Type Badges ───────────────────────────────────────────────────────
+
+  /// "Before" badge bg — light steel-blue tint. #E3EAF5
+  static const Color photoBadgeBeforeBg    = Color(0xFFE3EAF5);
+  /// "Before" badge fg — pre-rebrand steel navy (intentionally blue). #1A2B4A
+  static const Color photoBadgeBeforeFg    = Color(0xFF1A2B4A);
+  /// "After" badge bg — light green tint. #E8F5E9
+  static const Color photoBadgeAfterBg     = Color(0xFFE8F5E9);
+  /// "After" badge fg — forest green. #2E7D32
+  static const Color photoBadgeAfterFg     = Color(0xFF2E7D32);
+  /// "Progress" badge bg — warm amber tint. #FFF8E1
+  static const Color photoBadgeProgressBg  = Color(0xFFFFF8E1);
+  /// "Inspiration" badge bg — lavender tint. #F3E5F5
+  static const Color photoBadgeInspirationBg = Color(0xFFF3E5F5);
+  /// "Inspiration" badge fg — vivid purple. #7B1FA2
+  static const Color photoBadgeInspirationFg = Color(0xFF7B1FA2);
+  /// Fallback badge bg — neutral light gray. #F5F5F5
+  static const Color photoBadgeOtherBg     = Color(0xFFF5F5F5);
+  /// Fallback badge fg — neutral gray text. #616161
+  static const Color photoBadgeOtherFg     = Color(0xFF616161);
+
+  // ─── File Type Icon Backgrounds ──────────────────────────────────────────────
+
+  /// PDF icon bg — light terracotta tint. #F0E0DC
+  static const Color fileTypePdfBg   = Color(0xFFF0E0DC);
+  /// JPG/PNG icon bg — light olive tint. #E0E8D8
+  static const Color fileTypeImageBg = Color(0xFFE0E8D8);
+  /// HEIC icon bg — light plum tint. #E8D8E0
+  static const Color fileTypeHeicBg  = Color(0xFFE8D8E0);
+  /// DOCX icon bg — light slate tint. #D8E0E8
+  static const Color fileTypeDocBg   = Color(0xFFD8E0E8);
+
+  // ─── Photo Grid / Image Overlays ─────────────────────────────────────────────
+
+  /// Photo grid pair-link icon bg — black 50%. #80000000
+  static const Color photoGridOverlayPair     = Color(0x80000000);
+  /// Photo grid add-link icon bg — black 40%. #66000000
+  static const Color photoGridOverlayLink     = Color(0x66000000);
+  /// Photo grid caption gradient bottom stop — black 80%. #CC000000
+  static const Color photoGridOverlayGradient = Color(0xCC000000);
+  /// Photo grid caption text — white 92%. #EBFFFFFF
+  static const Color photoGridCaptionText     = Color(0xEBFFFFFF);
+  /// Loading placeholder for photo tiles. #D0C8BC
+  static const Color photoPlaceholder         = Color(0xFFD0C8BC);
+
+  // ─── App-specific Unique Colors ───────────────────────────────────────────────
+
+  /// Paywall gradient midpoint — blue-navy blend. #2C3E60
+  static const Color paywallGradientMid = Color(0xFF2C3E60);
+  /// Account avatar gradient start — warm terracotta-salmon. #D4715A
+  static const Color avatarGradientStart = Color(0xFFD4715A);
+  /// iOS system success green — completion animations only. #34C759
+  static const Color iosSuccessGreen = Color(0xFF34C759);
+  /// Overdue task card background — sand at 6% opacity. #0EC9A84C
+  static const Color overdueTaskBg = Color(0x0EC9A84C);
+  /// Overdue task card border — sand at 19% opacity. #30C9A84C
+  static const Color overdueTaskBorder = Color(0x30C9A84C);
+
+  /// FAB box shadow — navy at 20% opacity for floating action buttons. #331A2B4A
+  static const Color fabShadow = Color(0x331A2B4A);
+
+  /// Trial banner background — soft golden yellow. #FFF3CD
+  static const Color trialBannerBg = Color(0xFFFFF3CD);
+
+  /// Trial banner text/icon — dark golden. #856404
+  static const Color trialBannerText = Color(0xFF856404);
+
+  /// Upload success icon circle background — warm amber tint. #FFF8E7
+  static const Color uploadSuccessBg = Color(0xFFFFF8E7);
+
+  /// Hairline border on frosted nav bar — pure black at 6% opacity. #0F000000
+  static const Color navHairline = Color(0x0F000000);
+
+  /// Frosted nav bar background — warm off-white at 92% opacity. #EBF6F2ED
+  static const Color navBarBg = Color(0xEBF6F2ED);
+
   // ─── Dark Hero Block ────────────────────────────────────────────────────────
 
   /// Dark hero block background (= textPrimary). #2A2420

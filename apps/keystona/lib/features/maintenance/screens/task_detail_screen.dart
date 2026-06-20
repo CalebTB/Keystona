@@ -19,20 +19,6 @@ import '../widgets/task_detail_skeleton.dart';
 import '../../documents/models/document.dart';
 import '../../documents/providers/documents_provider.dart';
 
-// ─── Palette ──────────────────────────────────────────────────────────────────
-
-const Color _kAccent = Color(0xFFB85638);
-const Color _kAccentDim = Color(0x12B85638);
-const Color _kOlive = Color(0xFF5A7050);
-const Color _kOliveDim = Color(0x125A7050);
-const Color _kSurface = Color(0xFFFFFFFF);
-const Color _kBg = Color(0xFFF3F0EB);
-const Color _kBorder = Color(0xFFDDD7CE);
-const Color _kDivider = Color(0xFFE9E4DC);
-const Color _kTextPrimary = Color(0xFF2A2420);
-const Color _kTextSecondary = Color(0xFF6B6058);
-const Color _kTextMuted = Color(0xFF9E9488);
-const Color _kTimelineOverdueBg = Color(0xFFFCF3F0);
 
 /// Task Detail screen — "Ledger" layout.
 ///
@@ -61,9 +47,9 @@ class _IOSLayout extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(taskDetailProvider(taskId));
     return CupertinoPageScaffold(
-      backgroundColor: _kBg,
+      backgroundColor: AppColors.warmOffWhite,
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: _kBg,
+        backgroundColor: AppColors.warmOffWhite,
         border: null,
         previousPageTitle: 'Tasks',
         middle: const SizedBox.shrink(),
@@ -98,9 +84,9 @@ class _AndroidLayout extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(taskDetailProvider(taskId));
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: AppColors.warmOffWhite,
       appBar: AppBar(
-        backgroundColor: _kBg,
+        backgroundColor: AppColors.warmOffWhite,
         elevation: 0,
         scrolledUnderElevation: 0,
         title: const SizedBox.shrink(),
@@ -114,7 +100,7 @@ class _AndroidLayout extends ConsumerWidget {
               ),
               child: Text(
                 'Edit',
-                style: AppTextStyles.labelLarge.copyWith(color: _kAccent),
+                style: AppTextStyles.labelLarge.copyWith(color: AppColors.accent),
               ),
             ),
             orElse: () => const SizedBox.shrink(),
@@ -246,7 +232,7 @@ class _LedgerHeader extends StatelessWidget {
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.2,
-                    color: _kTextMuted,
+                    color: AppColors.gray500,
                   ),
                 ),
                 const SizedBox(height: 7),
@@ -259,7 +245,7 @@ class _LedgerHeader extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.5,
                     height: 1.1,
-                    color: _kTextPrimary,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ],
@@ -307,9 +293,9 @@ class _OverdueBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: _kAccentDim,
+        color: AppColors.accentDim,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _kAccent.withAlpha(60)),
+        border: Border.all(color: AppColors.accent.withAlpha(60)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -319,7 +305,7 @@ class _OverdueBadge extends StatelessWidget {
             style: GoogleFonts.ibmPlexMono(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: _kAccent,
+              color: AppColors.accent,
               height: 1.0,
             ),
           ),
@@ -330,7 +316,7 @@ class _OverdueBadge extends StatelessWidget {
               fontSize: 8,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.0,
-              color: _kAccent,
+              color: AppColors.accent,
             ),
           ),
         ],
@@ -345,14 +331,14 @@ class _DoneBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: _kOliveDim,
+        color: AppColors.oliveDim,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _kOlive.withAlpha(60)),
+        border: Border.all(color: AppColors.olive.withAlpha(60)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.check_rounded, color: _kOlive, size: 18),
+          const Icon(Icons.check_rounded, color: AppColors.olive, size: 18),
           const SizedBox(height: 2),
           Text(
             'DONE',
@@ -360,7 +346,7 @@ class _DoneBadge extends StatelessWidget {
               fontSize: 8,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.0,
-              color: _kOlive,
+              color: AppColors.olive,
             ),
           ),
         ],
@@ -384,9 +370,9 @@ class _DueBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0x14506A80),
+        color: AppColors.slateDim,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF506A80).withAlpha(60)),
+        border: Border.all(color: AppColors.slate.withAlpha(60)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -396,7 +382,7 @@ class _DueBadge extends StatelessWidget {
             style: GoogleFonts.ibmPlexMono(
               fontSize: task.status == TaskStatus.due ? 12 : 18,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF506A80),
+              color: AppColors.slate,
               height: 1.0,
             ),
           ),
@@ -407,7 +393,7 @@ class _DueBadge extends StatelessWidget {
               fontSize: 8,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.0,
-              color: const Color(0xFF506A80),
+              color: AppColors.slate,
             ),
           ),
         ],
@@ -476,9 +462,9 @@ class _StatCell extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: _kSurface,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: _kBorder),
+          border: Border.all(color: AppColors.border),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -488,7 +474,7 @@ class _StatCell extends StatelessWidget {
               style: GoogleFonts.ibmPlexMono(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: _kTextPrimary,
+                color: AppColors.textPrimary,
                 height: 1.0,
               ),
             ),
@@ -499,7 +485,7 @@ class _StatCell extends StatelessWidget {
                 fontSize: 8,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.0,
-                color: _kTextMuted,
+                color: AppColors.gray500,
               ),
             ),
           ],
@@ -567,9 +553,9 @@ class _InstructionsRowState extends State<_InstructionsRow> {
         behavior: HitTestBehavior.opaque,
         child: Container(
           decoration: BoxDecoration(
-            color: _kSurface,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _kBorder),
+            border: Border.all(color: AppColors.border),
           ),
           clipBehavior: Clip.hardEdge,
           child: Column(
@@ -585,13 +571,13 @@ class _InstructionsRowState extends State<_InstructionsRow> {
                       width: 30,
                       height: 30,
                       decoration: BoxDecoration(
-                        color: _kAccentDim,
+                        color: AppColors.accentDim,
                         borderRadius: BorderRadius.circular(7),
                       ),
                       child: Icon(
                         _expanded ? Icons.remove : Icons.add,
                         size: 16,
-                        color: _kAccent,
+                        color: AppColors.accent,
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -605,7 +591,7 @@ class _InstructionsRowState extends State<_InstructionsRow> {
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: _kTextPrimary,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -616,7 +602,7 @@ class _InstructionsRowState extends State<_InstructionsRow> {
                             style: GoogleFonts.ibmPlexMono(
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
-                              color: _kTextMuted,
+                              color: AppColors.gray500,
                             ),
                           ),
                         ],
@@ -629,7 +615,7 @@ class _InstructionsRowState extends State<_InstructionsRow> {
                       child: const Icon(
                         Icons.keyboard_arrow_down,
                         size: 18,
-                        color: _kTextMuted,
+                        color: AppColors.gray500,
                       ),
                     ),
                   ],
@@ -648,14 +634,14 @@ class _InstructionsRowState extends State<_InstructionsRow> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Divider(height: 1, color: _kDivider),
+                        const Divider(height: 1, color: AppColors.divider),
                         const SizedBox(height: 12),
                         if (widget.task.description != null &&
                             widget.task.description!.isNotEmpty) ...[
                           Text(
                             widget.task.description!,
                             style: AppTextStyles.bodySmall.copyWith(
-                              color: _kTextSecondary,
+                              color: AppColors.textSecondary,
                               height: 1.5,
                             ),
                           ),
@@ -707,7 +693,7 @@ class _InstructionLabel extends StatelessWidget {
           fontSize: 9,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.2,
-          color: _kTextMuted,
+          color: AppColors.gray500,
         ),
       );
 }
@@ -733,7 +719,7 @@ class _BulletList extends StatelessWidget {
                       width: 4,
                       height: 4,
                       decoration: const BoxDecoration(
-                        color: _kTextMuted,
+                        color: AppColors.gray500,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -742,7 +728,7 @@ class _BulletList extends StatelessWidget {
                     child: Text(
                       item,
                       style:
-                          AppTextStyles.bodySmall.copyWith(color: _kTextSecondary),
+                          AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                     ),
                   ),
                 ],
@@ -864,7 +850,7 @@ class _ServiceHistoryState extends State<_ServiceHistory>
                 width: 7,
                 height: 7,
                 decoration: BoxDecoration(
-                  color: isDone ? _kOlive : _kAccent,
+                  color: isDone ? AppColors.olive : AppColors.accent,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -875,7 +861,7 @@ class _ServiceHistoryState extends State<_ServiceHistory>
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.4,
-                  color: _kTextMuted,
+                  color: AppColors.gray500,
                 ),
               ),
             ],
@@ -937,8 +923,6 @@ class _ServiceHistoryState extends State<_ServiceHistory>
 
 // ── Scheduled next entry ──────────────────────────────────────────────────────
 
-const Color _kScheduled = Color(0xFF3D6A8A);
-const Color _kScheduledDim = Color(0x103D6A8A);
 
 class _ScheduledNextEntry extends StatelessWidget {
   const _ScheduledNextEntry({
@@ -966,9 +950,9 @@ class _ScheduledNextEntry extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: _kScheduledDim,
+          color: AppColors.slateDim,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: _kScheduled.withAlpha(50)),
+          border: Border.all(color: AppColors.slate.withAlpha(50)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -982,7 +966,7 @@ class _ScheduledNextEntry extends StatelessWidget {
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
-                    color: _kScheduled,
+                    color: AppColors.slate,
                   ),
                 ),
                 Text(
@@ -990,7 +974,7 @@ class _ScheduledNextEntry extends StatelessWidget {
                   style: GoogleFonts.ibmPlexMono(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: _kScheduled,
+                    color: AppColors.slate,
                   ),
                 ),
               ],
@@ -1003,7 +987,7 @@ class _ScheduledNextEntry extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: _kTextPrimary,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 2),
@@ -1014,7 +998,7 @@ class _ScheduledNextEntry extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w400,
-                color: _kScheduled,
+                color: AppColors.slate,
               ),
             ),
           ],
@@ -1030,14 +1014,14 @@ class _ScheduledDot extends StatelessWidget {
         width: 24,
         height: 24,
         decoration: BoxDecoration(
-          color: _kScheduledDim,
+          color: AppColors.slateDim,
           shape: BoxShape.circle,
-          border: Border.all(color: _kScheduled.withAlpha(100)),
+          border: Border.all(color: AppColors.slate.withAlpha(100)),
         ),
         child: const Center(
           child: Icon(
             Icons.event_rounded,
-            color: _kScheduled,
+            color: AppColors.slate,
             size: 13,
           ),
         ),
@@ -1068,9 +1052,9 @@ class _OverdueEntry extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: _kTimelineOverdueBg,
+          color: AppColors.accentDim,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: _kAccent.withAlpha(40)),
+          border: Border.all(color: AppColors.accent.withAlpha(40)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1084,7 +1068,7 @@ class _OverdueEntry extends StatelessWidget {
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
-                    color: _kAccent,
+                    color: AppColors.accent,
                   ),
                 ),
                 Text(
@@ -1092,7 +1076,7 @@ class _OverdueEntry extends StatelessWidget {
                   style: GoogleFonts.ibmPlexMono(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: _kAccent,
+                    color: AppColors.accent,
                   ),
                 ),
               ],
@@ -1103,7 +1087,7 @@ class _OverdueEntry extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: _kTextPrimary,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 2),
@@ -1112,7 +1096,7 @@ class _OverdueEntry extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w400,
-                color: _kAccent,
+                color: AppColors.accent,
               ),
             ),
           ],
@@ -1183,9 +1167,9 @@ class _CompletionEntry extends ConsumerWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: _kSurface,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: _kBorder),
+          border: Border.all(color: AppColors.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1199,7 +1183,7 @@ class _CompletionEntry extends ConsumerWidget {
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
-                    color: _kTextMuted,
+                    color: AppColors.gray500,
                   ),
                 ),
                 if (hasCost)
@@ -1208,7 +1192,7 @@ class _CompletionEntry extends ConsumerWidget {
                     style: GoogleFonts.ibmPlexMono(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: _kTextSecondary,
+                      color: AppColors.textSecondary,
                     ),
                   ),
               ],
@@ -1219,7 +1203,7 @@ class _CompletionEntry extends ConsumerWidget {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: _kTextPrimary,
+                color: AppColors.textPrimary,
               ),
             ),
             if (meta.isNotEmpty) ...[
@@ -1229,7 +1213,7 @@ class _CompletionEntry extends ConsumerWidget {
                 style: GoogleFonts.ibmPlexMono(
                   fontSize: 10,
                   fontWeight: FontWeight.w500,
-                  color: _kTextMuted,
+                  color: AppColors.gray500,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -1254,7 +1238,7 @@ class _CompletionEntry extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: AppColors.warmFill,
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: _kBorder),
+                        border: Border.all(color: AppColors.border),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -1262,7 +1246,7 @@ class _CompletionEntry extends ConsumerWidget {
                           Icon(
                             Icons.receipt_outlined,
                             size: 11,
-                            color: _kTextMuted,
+                            color: AppColors.gray500,
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -1270,14 +1254,14 @@ class _CompletionEntry extends ConsumerWidget {
                             style: GoogleFonts.ibmPlexMono(
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
-                              color: _kTextSecondary,
+                              color: AppColors.textSecondary,
                             ),
                           ),
                           const SizedBox(width: 3),
                           Icon(
                             Icons.chevron_right,
                             size: 11,
-                            color: _kTextMuted,
+                            color: AppColors.gray500,
                           ),
                         ],
                       ),
@@ -1323,7 +1307,7 @@ class _TimelineRow extends StatelessWidget {
                   Container(
                     width: 1.5,
                     height: 56,
-                    color: _kDivider,
+                    color: AppColors.divider,
                   ),
               ],
             ),
@@ -1343,13 +1327,13 @@ class _TerracottaDot extends StatelessWidget {
         width: 24,
         height: 24,
         decoration: const BoxDecoration(
-          color: _kAccent,
+          color: AppColors.accent,
           shape: BoxShape.circle,
         ),
         child: const Center(
           child: Icon(
             Icons.priority_high_rounded,
-            color: Colors.white,
+            color: AppColors.textInverse,
             size: 13,
           ),
         ),
@@ -1362,14 +1346,14 @@ class _OliveDot extends StatelessWidget {
         width: 24,
         height: 24,
         decoration: BoxDecoration(
-          color: _kOliveDim,
+          color: AppColors.oliveDim,
           shape: BoxShape.circle,
-          border: Border.all(color: _kOlive.withAlpha(100)),
+          border: Border.all(color: AppColors.olive.withAlpha(100)),
         ),
         child: const Center(
           child: Icon(
             Icons.check_rounded,
-            color: _kOlive,
+            color: AppColors.olive,
             size: 13,
           ),
         ),
@@ -1385,14 +1369,14 @@ class _EmptyHistory extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.history, size: 32, color: _kTextMuted),
+            const Icon(Icons.history, size: 32, color: AppColors.gray500),
             const SizedBox(height: 8),
             Text(
               'No history yet',
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: _kTextMuted,
+                color: AppColors.gray500,
               ),
             ),
             const SizedBox(height: 3),
@@ -1400,7 +1384,7 @@ class _EmptyHistory extends StatelessWidget {
               'Complete this task to start your service log.',
               style: GoogleFonts.inter(
                 fontSize: 11,
-                color: _kTextMuted,
+                color: AppColors.gray500,
               ),
               textAlign: TextAlign.center,
             ),
@@ -1438,8 +1422,8 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
         AppSizes.sm + bottomPad,
       ),
       decoration: const BoxDecoration(
-        color: _kBg,
-        border: Border(top: BorderSide(color: _kDivider, width: 1)),
+        color: AppColors.warmOffWhite,
+        border: Border(top: BorderSide(color: AppColors.divider, width: 1)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1454,8 +1438,8 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
                   : _handleMarkComplete,
               style: ElevatedButton.styleFrom(
                 backgroundColor:
-                    widget.isDone ? AppColors.gray300 : _kAccent,
-                foregroundColor: Colors.white,
+                    widget.isDone ? AppColors.gray300 : AppColors.accent,
+                foregroundColor: AppColors.textInverse,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
@@ -1465,14 +1449,14 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
+                          strokeWidth: 2, color: AppColors.textInverse),
                     )
                   : Text(
                       widget.isDone ? 'Already Done' : 'Mark Complete',
                       style: GoogleFonts.inter(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: AppColors.textInverse,
                       ),
                     ),
             ),
@@ -1490,7 +1474,7 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(
                         color:
-                            widget.isDone ? _kBorder : _kAccent.withAlpha(140),
+                            widget.isDone ? AppColors.border : AppColors.accent.withAlpha(140),
                       ),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10)),
@@ -1500,7 +1484,7 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: widget.isDone ? _kTextMuted : _kAccent,
+                        color: widget.isDone ? AppColors.gray500 : AppColors.accent,
                       ),
                     ),
                   ),
@@ -1515,7 +1499,7 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
                         ? null
                         : _handleSkip,
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: _kBorder),
+                      side: const BorderSide(color: AppColors.border),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10)),
                     ),
@@ -1524,7 +1508,7 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
                             width: 14,
                             height: 14,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: _kTextMuted),
+                                strokeWidth: 2, color: AppColors.gray500),
                           )
                         : Text(
                             'Skip',
@@ -1532,7 +1516,7 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                               color: widget.isDone
-                                  ? _kTextMuted
+                                  ? AppColors.gray500
                                   : AppColors.error,
                             ),
                           ),

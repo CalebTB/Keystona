@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../../../../core/theme/app_colors.dart';
+
 /// Colored badge shown at the top-left of each photo tile.
 ///
 /// Uses a backdrop blur so the badge reads well over any image content.
@@ -11,15 +13,15 @@ class PhotoTypeTag extends StatelessWidget {
 
   final String photoType;
 
-  static const Map<String, Color> _colors = {
-    'before':      Color(0x80506A80),
-    'after':       Color(0x805A7050),
-    'progress':    Color(0x80B8A060),
-    'inspiration': Color(0x807B5E7B),
-    'issue':       Color(0xE5B85638),
+  static final Map<String, Color> _colors = {
+    'before':      AppColors.slate.withValues(alpha: 0.5),
+    'after':       AppColors.olive.withValues(alpha: 0.5),
+    'progress':    AppColors.goldAccent.withValues(alpha: 0.5),
+    'inspiration': AppColors.plum.withValues(alpha: 0.5),
+    'issue':       AppColors.accent.withValues(alpha: 0.9),
   };
 
-  static const Color _fallback = Color(0x80808080);
+  static final Color _fallback = AppColors.gray500.withValues(alpha: 0.5);
 
   String get _label {
     if (photoType.isEmpty) return photoType;
@@ -44,7 +46,7 @@ class PhotoTypeTag extends StatelessWidget {
               fontSize: 8.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.6,
-              color: Colors.white,
+              color: AppColors.textInverse,
               height: 1.2,
             ),
           ),

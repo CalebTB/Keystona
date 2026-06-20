@@ -190,7 +190,7 @@ class _ScanResultSheet extends StatelessWidget {
       type: MaterialType.transparency,
       child: Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         ),
         child: SafeArea(
@@ -206,7 +206,7 @@ class _ScanResultSheet extends StatelessWidget {
                   width: 36,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: AppColors.gray300,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -308,7 +308,7 @@ class _ScanResultSheet extends StatelessWidget {
                         child: Text(
                           'Fill Form',
                           style: AppTextStyles.bodyMediumSemibold.copyWith(
-                            color: Colors.white,
+                            color: AppColors.textInverse,
                           ),
                         ),
                       ),

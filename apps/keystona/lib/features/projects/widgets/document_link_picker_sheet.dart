@@ -53,7 +53,7 @@ class _DocumentLinkPickerSheetState
       ),
       child: Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppColors.textInverse,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         padding: AppPadding.screen,
@@ -184,7 +184,7 @@ class _DocumentLinkPickerSheetState
                       t.label,
                       style: AppTextStyles.labelSmall.copyWith(
                         color: selected
-                            ? Colors.white
+                            ? AppColors.textInverse
                             : AppColors.textPrimary,
                       ),
                     ),

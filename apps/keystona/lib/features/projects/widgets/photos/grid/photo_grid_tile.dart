@@ -3,13 +3,11 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_sizes.dart';
 import '../../../models/project_photo.dart';
 import '../shared/photo_thumb.dart';
 import '../shared/photo_type_tag.dart';
-
-// accent: #B85638
-const Color _kAccent = Color(0xFFB85638);
 
 /// Single tile in the curated photo grid.
 ///
@@ -77,10 +75,10 @@ class PhotoGridTile extends StatelessWidget {
                   child: Container(
                     width: 24,
                     height: 24,
-                    color: const Color(0x80000000),
+                    color: AppColors.photoGridOverlayPair,
                     child: const Icon(
                       Icons.link,
-                      color: Colors.white,
+                      color: AppColors.textInverse,
                       size: 14,
                     ),
                   ),
@@ -102,10 +100,10 @@ class PhotoGridTile extends StatelessWidget {
                   child: Container(
                     width: 24,
                     height: 24,
-                    color: const Color(0x66000000),
+                    color: AppColors.photoGridOverlayLink,
                     child: const Icon(
                       Icons.add_link,
-                      color: Colors.white,
+                      color: AppColors.textInverse,
                       size: 14,
                     ),
                   ),
@@ -124,7 +122,7 @@ class PhotoGridTile extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
-                colors: [Color(0xCC000000), Colors.transparent],
+                colors: [AppColors.photoGridOverlayGradient, Colors.transparent],
                 stops: [0.0, 1.0],
               ),
             ),
@@ -139,7 +137,7 @@ class PhotoGridTile extends StatelessWidget {
                   fontSize: 9,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.3,
-                  color: Color(0xEBFFFFFF),
+                  color: AppColors.photoGridCaptionText,
                   height: 1.3,
                 ),
               ),
@@ -159,7 +157,7 @@ class PhotoGridTile extends StatelessWidget {
       clipped = Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: _kAccent, width: 2),
+          border: Border.all(color: AppColors.accent, width: 2),
         ),
         child: clipped,
       );

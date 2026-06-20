@@ -200,7 +200,7 @@ class _FreeTierErrorView extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: const BoxDecoration(
-                color: Color(0xFFFFF8E7),
+                color: AppColors.uploadSuccessBg,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -342,7 +342,7 @@ class _AnimatedUploadIconState extends State<_AnimatedUploadIcon>
         ),
         child: const Icon(
           Icons.upload_rounded,
-          color: Colors.white,
+          color: AppColors.textInverse,
           size: AppSizes.iconLg,
         ),
       ),

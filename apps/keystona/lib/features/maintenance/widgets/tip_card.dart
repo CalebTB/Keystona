@@ -15,7 +15,7 @@ class TipCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.oliveDim,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0x1A5A7050), width: 1),
+        border: Border.all(color: AppColors.olive.withValues(alpha: 0.10), width: 1),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

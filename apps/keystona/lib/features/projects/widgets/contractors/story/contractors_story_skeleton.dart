@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../core/theme/app_colors.dart';
+
 /// Skeleton for [ContractorsStoryView].
 ///
 /// Mimics the card-stack layout — dark olive card with shimmer bars where
@@ -49,7 +51,7 @@ class _ContractorsStorySkeletonState extends State<ContractorsStorySkeleton>
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF3D5040),
+              color: AppColors.contractorCardBg,
               borderRadius: BorderRadius.circular(16),
             ),
             padding: const EdgeInsets.all(24),
@@ -84,7 +86,7 @@ class _ContractorsStorySkeletonState extends State<ContractorsStorySkeleton>
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2E3D30),
+                    color: AppColors.contractorBlockBg,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -129,7 +131,7 @@ class _ContractorsStorySkeletonState extends State<ContractorsStorySkeleton>
                 Container(
                   height: 56,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2E3D30),
+                    color: AppColors.contractorBlockBg,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -201,7 +203,7 @@ class _StatCell extends StatelessWidget {
       height: 56,
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: const Color(0xFF2E3D30),
+        color: AppColors.contractorBlockBg,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(

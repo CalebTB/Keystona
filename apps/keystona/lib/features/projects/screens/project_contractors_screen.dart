@@ -64,7 +64,7 @@ class ProjectContractorsScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _onAdd(context, ref),
         backgroundColor: AppColors.deepNavy,
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add, color: AppColors.textInverse),
       ),
     );
   }

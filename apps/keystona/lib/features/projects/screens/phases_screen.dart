@@ -64,7 +64,7 @@ class PhasesScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: onAddTap,
         backgroundColor: AppColors.accent,
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add, color: AppColors.textInverse),
       ),
     );
   }
@@ -386,7 +386,7 @@ class _DeleteBackground extends StatelessWidget {
         color: AppColors.error,
         borderRadius: BorderRadius.circular(AppSizes.radiusMd),
       ),
-      child: const Icon(Icons.delete_outline, color: Colors.white),
+      child: const Icon(Icons.delete_outline, color: AppColors.textInverse),
     );
   }
 }

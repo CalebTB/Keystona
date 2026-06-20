@@ -29,7 +29,7 @@ class OverdueBanner extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.accentDim,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0x20C9A84C), width: 1),
+          border: Border.all(color: AppColors.goldAccent.withValues(alpha: 0.125), width: 1),
         ),
         child: Row(
           children: [

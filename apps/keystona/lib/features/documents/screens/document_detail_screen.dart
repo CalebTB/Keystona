@@ -504,7 +504,7 @@ class _PreviewCardState extends State<_PreviewCard> {
                       : 'Tap to preview',
                   style: AppTextStyles.monoTiny.copyWith(
                     color: _thumbnailUrl != null
-                        ? Colors.white.withValues(alpha: 0.85)
+                        ? AppColors.textInverse.withValues(alpha: 0.85)
                         : AppColors.gray500,
                   ),
                 ),
@@ -527,7 +527,7 @@ class _PreviewCardState extends State<_PreviewCard> {
                     Icons.open_in_full_rounded,
                     size: 16,
                     color: _thumbnailUrl != null
-                        ? Colors.white
+                        ? AppColors.textInverse
                         : AppColors.textSecondary,
                   ),
                 ),

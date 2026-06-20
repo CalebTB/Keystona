@@ -37,72 +37,85 @@ class SettingsProfileScreen extends ConsumerWidget {
           child: const Text('Back'),
         ),
       ),
-      child: SafeArea(
-        bottom: false,
-        child: ListView(
-          padding: AppPadding.screen.copyWith(top: AppSizes.md),
-          children: [
-            _SectionLabel('ACCOUNT'),
-            const SizedBox(height: AppSizes.sm),
-            _InfoGroup(rows: [
-              _InfoRow(label: 'Name', value: fullName.isEmpty ? '—' : fullName),
-              _InfoRow(label: 'Email', value: email.isEmpty ? '—' : email),
-            ]),
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          CupertinoSliverRefreshControl(
+            onRefresh: () async => ref.invalidate(homeProfileProvider),
+          ),
+          SliverSafeArea(
+            sliver: SliverToBoxAdapter(
+              child: Padding(
+                padding: AppPadding.screen.copyWith(top: AppSizes.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _SectionLabel('ACCOUNT'),
+                    const SizedBox(height: AppSizes.sm),
+                    _InfoGroup(rows: [
+                      _InfoRow(
+                          label: 'Name',
+                          value: fullName.isEmpty ? '—' : fullName),
+                      _InfoRow(
+                          label: 'Email',
+                          value: email.isEmpty ? '—' : email),
+                    ]),
 
-            const SizedBox(height: AppSizes.xl),
+                    const SizedBox(height: AppSizes.xl),
 
-            _SectionLabel('HOME'),
-            const SizedBox(height: AppSizes.sm),
-            _InfoGroup(rows: [
-              _InfoRow(
-                  label: 'Address',
-                  value: property?.addressLine1 ?? '—'),
-              _InfoRow(
-                  label: 'City',
-                  value: property?.city ?? '—'),
-              _InfoRow(
-                  label: 'State',
-                  value: property?.state ?? '—'),
-              _InfoRow(
-                  label: 'ZIP',
-                  value: property?.zipCode ?? '—'),
-              _InfoRow(
-                  label: 'Type',
-                  value: property?.propertyType ?? '—'),
-              _InfoRow(
-                  label: 'Year built',
-                  value: property?.yearBuilt?.toString() ?? '—'),
-              _InfoRow(
-                  label: 'Sq ft',
-                  value: property?.squareFeet?.toString() ?? '—'),
-              _InfoRow(
-                  label: 'Climate zone',
-                  value: property?.climateZone != null
-                      ? 'Zone ${property!.climateZone}'
-                      : '—'),
-            ]),
+                    _SectionLabel('HOME'),
+                    const SizedBox(height: AppSizes.sm),
+                    _InfoGroup(rows: [
+                      _InfoRow(
+                          label: 'Address',
+                          value: property?.addressLine1 ?? '—'),
+                      _InfoRow(label: 'City', value: property?.city ?? '—'),
+                      _InfoRow(label: 'State', value: property?.state ?? '—'),
+                      _InfoRow(
+                          label: 'ZIP', value: property?.zipCode ?? '—'),
+                      _InfoRow(
+                          label: 'Type',
+                          value: property?.propertyType ?? '—'),
+                      _InfoRow(
+                          label: 'Year built',
+                          value: property?.yearBuilt?.toString() ?? '—'),
+                      _InfoRow(
+                          label: 'Sq ft',
+                          value: property?.squareFeet?.toString() ?? '—'),
+                      _InfoRow(
+                          label: 'Climate zone',
+                          value: property?.climateZone != null
+                              ? 'Zone ${property!.climateZone}'
+                              : '—'),
+                    ]),
 
-            const SizedBox(height: AppSizes.xl),
+                    const SizedBox(height: AppSizes.xl),
 
-            GestureDetector(
-              onTap: () => context.push(AppRoutes.homeEdit),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  color: AppColors.deepNavy,
-                  borderRadius: BorderRadius.circular(AppSizes.radiusCard),
-                ),
-                child: Text(
-                  'Edit home details',
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.bodyMediumSemibold
-                      .copyWith(color: Colors.white),
+                    GestureDetector(
+                      onTap: () => context.push(AppRoutes.homeEdit),
+                      child: Container(
+                        width: double.infinity,
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          color: AppColors.deepNavy,
+                          borderRadius:
+                              BorderRadius.circular(AppSizes.radiusCard),
+                        ),
+                        child: Text(
+                          'Edit home details',
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.bodyMediumSemibold
+                              .copyWith(color: AppColors.textInverse),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

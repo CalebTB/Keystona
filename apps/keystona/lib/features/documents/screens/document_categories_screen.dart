@@ -47,13 +47,27 @@ class _IOSCategoriesLayout extends ConsumerWidget {
         ),
       ),
       child: SafeArea(
-        child: categoriesState.when(
-          loading: () => const CategoryListSkeleton(),
-          error: (e, _) => ErrorView(
-            message: "Couldn't load categories.",
-            onRetry: () => ref.invalidate(documentCategoriesProvider),
-          ),
-          data: (categories) => _CategoryList(categories: categories),
+        bottom: false,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            CupertinoSliverRefreshControl(
+              onRefresh: () async => ref.invalidate(documentCategoriesProvider),
+            ),
+            if (categoriesState.isLoading)
+              const SliverFillRemaining(child: CategoryListSkeleton())
+            else if (categoriesState.hasError)
+              SliverFillRemaining(
+                child: ErrorView(
+                  message: "Couldn't load categories.",
+                  onRetry: () => ref.invalidate(documentCategoriesProvider),
+                ),
+              )
+            else
+              SliverToBoxAdapter(
+                child: _CategoryList(categories: categoriesState.value ?? []),
+              ),
+          ],
         ),
       ),
     );
@@ -86,13 +100,16 @@ class _AndroidCategoriesLayout extends ConsumerWidget {
         onPressed: () => showCategoryFormSheet(context),
         child: const Icon(Icons.add),
       ),
-      body: categoriesState.when(
-        loading: () => const CategoryListSkeleton(),
-        error: (e, _) => ErrorView(
-          message: "Couldn't load categories.",
-          onRetry: () => ref.invalidate(documentCategoriesProvider),
+      body: RefreshIndicator(
+        onRefresh: () async => ref.invalidate(documentCategoriesProvider),
+        child: categoriesState.when(
+          loading: () => const CategoryListSkeleton(),
+          error: (e, _) => ErrorView(
+            message: "Couldn't load categories.",
+            onRetry: () => ref.invalidate(documentCategoriesProvider),
+          ),
+          data: (categories) => _CategoryList(categories: categories),
         ),
-        data: (categories) => _CategoryList(categories: categories),
       ),
     );
   }
@@ -112,6 +129,7 @@ class _CategoryList extends StatelessWidget {
 
     return ListView(
       padding: AppPadding.screen,
+      physics: const AlwaysScrollableScrollPhysics(),
       children: [
         // ── System categories (read-only) ──────────────────────────────────
         _SectionHeader(label: 'System'),
@@ -223,7 +241,7 @@ class _CategoryRow extends ConsumerWidget {
               child: Icon(
                 CategoryIcons.forKey(category.icon),
                 size: AppSizes.iconSm,
-                color: Colors.white,
+                color: AppColors.textInverse,
               ),
             ),
 

@@ -89,7 +89,7 @@ class _Segment extends StatelessWidget {
             boxShadow: active
                 ? [
                     BoxShadow(
-                      color: const Color(0xFF2A2420).withValues(alpha: 0.08),
+                      color: AppColors.deepNavy.withValues(alpha: 0.08),
                       blurRadius: 3,
                       offset: const Offset(0, 1),
                     ),

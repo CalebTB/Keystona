@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-// accent: #B85638
-const Color _kAccent = Color(0xFFB85638);
+import '../../../../../core/theme/app_colors.dart';
 
 /// Floating camera button — 56px circle, accent background.
 ///
@@ -17,7 +16,7 @@ class PhotoCameraFAB extends StatelessWidget {
   Widget build(BuildContext context) {
     return FloatingActionButton(
       onPressed: onTap,
-      backgroundColor: _kAccent,
+      backgroundColor: AppColors.accent,
       elevation: 0,
       shape: const CircleBorder(),
       child: Container(
@@ -25,10 +24,10 @@ class PhotoCameraFAB extends StatelessWidget {
         height: 56,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: _kAccent,
+          color: AppColors.accent,
           boxShadow: [
             BoxShadow(
-              color: _kAccent.withValues(alpha: 0.35),
+              color: AppColors.accent.withValues(alpha: 0.35),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -36,7 +35,7 @@ class PhotoCameraFAB extends StatelessWidget {
         ),
         child: const Icon(
           Icons.camera_alt_outlined,
-          color: Colors.white,
+          color: AppColors.textInverse,
           size: 22,
         ),
       ),

@@ -143,14 +143,14 @@ class _CardShell extends StatelessWidget {
           // Hero header — cover photo or solid color
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF352C24),
+              color: AppColors.gray800,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
               image: project.coverPhotoPath != null
                   ? DecorationImage(
                       image: CachedNetworkImageProvider(project.coverPhotoPath!),
                       fit: BoxFit.cover,
                       colorFilter: const ColorFilter.mode(
-                        Color(0xCC1A1410),
+                        AppColors.photoOverlayTint,
                         BlendMode.darken,
                       ),
                     )
@@ -322,13 +322,13 @@ class _InCardFooter extends StatelessWidget {
                   Text(
                     'Open',
                     style: AppTextStyles.labelSmall.copyWith(
-                      color: Colors.white,
+                      color: AppColors.textInverse,
                       fontWeight: FontWeight.w600,
                       fontSize: 11,
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const Icon(Icons.arrow_forward_ios, size: 9, color: Colors.white),
+                  const Icon(Icons.arrow_forward_ios, size: 9, color: AppColors.textInverse),
                 ],
               ),
             ),
@@ -349,7 +349,7 @@ class _Stat extends StatelessWidget {
       text,
       style: AppTextStyles.monoLabel.copyWith(
         fontSize: 11,
-        color: Colors.white.withValues(alpha: 0.75),
+        color: AppColors.darkText.withValues(alpha: 0.75),
       ),
     );
   }
@@ -424,7 +424,7 @@ class _PhaseRow extends StatelessWidget {
   Color get _connectorColor => switch (state) {
         _DotState.done     => AppColors.oliveLight,
         _DotState.current  => AppColors.accent,
-        _DotState.upcoming => const Color(0xFFCEC8BF),
+        _DotState.upcoming => AppColors.borderStrong,
       };
 
   // Right-side label: "DONE · JAN 15" / "NOW · 12D LEFT" / "APR 20"
@@ -565,7 +565,7 @@ class _Dot extends StatelessWidget {
             shape: BoxShape.circle,
             color: AppColors.oliveLight,
           ),
-          child: const Icon(Icons.check, size: 13, color: Colors.white),
+          child: const Icon(Icons.check, size: 13, color: AppColors.textInverse),
         ),
       _DotState.current => Container(
           width: 22,
@@ -586,7 +586,7 @@ class _Dot extends StatelessWidget {
               '$number',
               style: AppTextStyles.monoSection.copyWith(
                 fontSize: 10,
-                color: Colors.white,
+                color: AppColors.textInverse,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -597,15 +597,15 @@ class _Dot extends StatelessWidget {
           height: 22,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: const Color(0xFFE8E3DA),
-            border: Border.all(color: const Color(0xFFCEC8BF), width: 1.5),
+            color: AppColors.warmFill,
+            border: Border.all(color: AppColors.borderStrong, width: 1.5),
           ),
           child: Center(
             child: Text(
               '$number',
               style: AppTextStyles.monoSection.copyWith(
                 fontSize: 10,
-                color: const Color(0xFFADA89F),
+                color: AppColors.gray500,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -657,7 +657,7 @@ class _PhasesSkeleton extends StatelessWidget {
                   height: 22,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.12),
+                    color: AppColors.textInverse.withValues(alpha: 0.12),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -665,7 +665,7 @@ class _PhasesSkeleton extends StatelessWidget {
                   child: Container(
                     height: 14,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.10),
+                      color: AppColors.textInverse.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),

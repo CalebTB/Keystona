@@ -496,7 +496,7 @@ class _HeroCard extends StatelessWidget {
         border: Border.all(color: AppColors.border, width: 1.5),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x0A1A2B4A),
+            color: AppColors.shadowXs,
             blurRadius: 8,
             offset: Offset(0, 2),
           ),

@@ -437,7 +437,7 @@ class _CircleIconButton extends StatelessWidget {
           border: Border.all(color: AppColors.border, width: 1.5),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x0A2A2420),
+              color: AppColors.shadowXs,
               blurRadius: 4,
               offset: Offset(0, 1),
             ),

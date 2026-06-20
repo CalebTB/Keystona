@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_sizes.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_scaffold.dart';
@@ -398,7 +399,7 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: AppColors.textInverse,
                         ),
                       )
                     : const Text('Save & Continue'),

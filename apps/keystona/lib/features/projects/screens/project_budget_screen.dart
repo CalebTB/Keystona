@@ -60,7 +60,7 @@ class ProjectBudgetScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: onAdd,
         backgroundColor: AppColors.accent,
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add, color: AppColors.textInverse),
       ),
     );
   }
@@ -477,7 +477,7 @@ class _EditorialHero extends StatelessWidget {
                       : 'NO BUDGET SET · TAP TO SET',
                   style: AppTextStyles.monoTiny.copyWith(
                     color: estimated > 0
-                        ? Colors.white.withValues(alpha: 0.5)
+                        ? AppColors.darkText.withValues(alpha: 0.5)
                         : AppColors.sand.withValues(alpha: 0.85),
                     letterSpacing: 1.4,
                   ),
@@ -487,7 +487,7 @@ class _EditorialHero extends StatelessWidget {
                   Icons.edit_outlined,
                   size: 12,
                   color: estimated > 0
-                      ? Colors.white.withValues(alpha: 0.35)
+                      ? AppColors.darkText.withValues(alpha: 0.35)
                       : AppColors.sand.withValues(alpha: 0.6),
                 ),
               ],
@@ -512,7 +512,7 @@ class _EditorialHero extends StatelessWidget {
           Text.rich(
             TextSpan(
               style: AppTextStyles.monoLabel.copyWith(
-                color: Colors.white.withValues(alpha: 0.55),
+                color: AppColors.darkText.withValues(alpha: 0.55),
                 fontSize: 11,
               ),
               children: [
@@ -606,7 +606,7 @@ class _HeroProgressBar extends StatelessWidget {
                 height: 8,
                 child: Stack(
                   children: [
-                    Container(color: Colors.white.withValues(alpha: 0.08)),
+                    Container(color: AppColors.darkTrack),
                     FractionallySizedBox(
                       widthFactor: spentFraction,
                       child: Container(
@@ -629,7 +629,7 @@ class _HeroProgressBar extends StatelessWidget {
                 width: 2,
                 height: 14,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.4),
+                  color: AppColors.darkText.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(1),
                 ),
               ),
@@ -663,7 +663,7 @@ class _MiniStat extends StatelessWidget {
           Text(
             label,
             style: AppTextStyles.monoTiny.copyWith(
-              color: Colors.white.withValues(alpha: 0.4),
+              color: AppColors.darkText.withValues(alpha: 0.4),
               letterSpacing: 0.6,
               fontSize: 9,
             ),
@@ -690,7 +690,7 @@ class _MiniDivider extends StatelessWidget {
       width: 1,
       height: 28,
       margin: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
-      color: Colors.white.withValues(alpha: 0.1),
+      color: AppColors.textInverse.withValues(alpha: 0.1),
     );
   }
 }
@@ -1149,7 +1149,7 @@ class _PaidBackground extends StatelessWidget {
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.only(left: AppSizes.lg),
       color: AppColors.olive,
-      child: const Icon(Icons.check_circle_outline, color: Colors.white),
+      child: const Icon(Icons.check_circle_outline, color: AppColors.textInverse),
     );
   }
 }
@@ -1161,7 +1161,7 @@ class _DeleteBackground extends StatelessWidget {
       alignment: Alignment.centerRight,
       padding: const EdgeInsets.only(right: AppSizes.lg),
       color: AppColors.error,
-      child: const Icon(Icons.delete_outline, color: Colors.white),
+      child: const Icon(Icons.delete_outline, color: AppColors.textInverse),
     );
   }
 }

@@ -72,10 +72,10 @@ class _DayCol extends StatelessWidget {
     final Color textColor;
     if (isToday) {
       bg = AppColors.deepNavy;
-      textColor = Colors.white;
+      textColor = AppColors.textInverse;
     } else if (isSelected) {
       bg = AppColors.accent;
-      textColor = Colors.white;
+      textColor = AppColors.textInverse;
     } else {
       bg = Colors.transparent;
       textColor = AppColors.textPrimary;
@@ -103,7 +103,7 @@ class _DayCol extends StatelessWidget {
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.2,
                 color: (isToday || isSelected)
-                    ? Colors.white.withValues(alpha: 0.7)
+                    ? AppColors.textInverse.withValues(alpha: 0.7)
                     : AppColors.textTertiary,
               ),
             ),

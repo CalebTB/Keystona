@@ -7,21 +7,6 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../models/project.dart';
 import '../../../models/project_contractor.dart';
 
-// ── Color constants ────────────────────────────────────────────────────────────
-
-const _kCardBg     = Color(0xFF3D5040);
-const _kAvatarBg   = Color(0xFF4E6452);
-const _kSageBg     = Color(0xFFB8C9B0);
-const _kSageText   = Color(0xFF3D5040);
-const _kBottomBg   = Color(0xFFF5F2EC); // warm off-white bottom section
-const _kStatBg     = Color(0xFFE0D8CC);
-const _kStatBorder = Color(0xFFCEC5B8);
-const _kStatLabel  = Color(0xFF6B7E6D);
-const _kStatValue  = Color(0xFF2A2420);
-const _kMutedGreen = Color(0xFF8CA88E);
-const _kWhite55    = Color(0x8CFFFFFF);
-const _kWhite80    = Color(0xCCFFFFFF);
-
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 String _fmtAmount(double v) =>
@@ -85,9 +70,9 @@ class ContractorStoryCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: _kCardBg,
+          color: AppColors.contractorCardBg,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Color(0xFF2A3830), width: 1.5),
+          border: Border.all(color: AppColors.contractorCardBorder, width: 1.5),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,7 +92,7 @@ class ContractorStoryCard extends StatelessWidget {
                     style: GoogleFonts.fraunces(
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
-                      color: Colors.white,
+                      color: AppColors.textInverse,
                       height: 1.05,
                       letterSpacing: -0.3,
                     ),
@@ -128,7 +113,7 @@ class ContractorStoryCard extends StatelessWidget {
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
-                  color: _kBottomBg,
+                  color: AppColors.gray100,
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(16),
                     bottomRight: Radius.circular(16),
@@ -187,7 +172,7 @@ class _TopRow extends StatelessWidget {
           width: 52,
           height: 52,
           decoration: const BoxDecoration(
-            color: _kAvatarBg,
+            color: AppColors.contractorAvatarBg,
             shape: BoxShape.circle,
           ),
           alignment: Alignment.center,
@@ -196,7 +181,7 @@ class _TopRow extends StatelessWidget {
             style: GoogleFonts.fraunces(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: Colors.white,
+              color: AppColors.textInverse,
               height: 1,
             ),
           ),
@@ -206,7 +191,7 @@ class _TopRow extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: _kSageBg,
+              color: AppColors.contractorLeadBg,
               borderRadius: BorderRadius.circular(5),
             ),
             child: const Text(
@@ -216,7 +201,7 @@ class _TopRow extends StatelessWidget {
                 fontSize: 9,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.0,
-                color: _kSageText,
+                color: AppColors.contractorCardBg,
               ),
             ),
           ),
@@ -248,7 +233,7 @@ class _Subtitle extends StatelessWidget {
         fontSize: 10,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.6,
-        color: _kMutedGreen,
+        color: AppColors.contractorMuted,
       ),
       overflow: TextOverflow.ellipsis,
     );
@@ -274,7 +259,7 @@ class _QuoteBlock extends StatelessWidget {
         style: GoogleFonts.inter(
           fontSize: 13,
           fontStyle: FontStyle.italic,
-          color: Colors.white.withValues(alpha: 0.35),
+          color: AppColors.textInverse.withValues(alpha: 0.35),
         ),
       );
     }
@@ -292,7 +277,7 @@ class _QuoteBlock extends StatelessWidget {
             fontSize: 13,
             fontWeight: FontWeight.w400,
             fontStyle: FontStyle.italic,
-            color: _kWhite80,
+            color: AppColors.textInverse.withValues(alpha: 0.8),
             height: 1.5,
           ),
           maxLines: 4,
@@ -301,12 +286,12 @@ class _QuoteBlock extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           attribution,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'IBMPlexMono',
             fontSize: 9,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.5,
-            color: _kWhite55,
+            color: AppColors.textInverse.withValues(alpha: 0.55),
           ),
         ),
       ],
@@ -369,9 +354,9 @@ class _StatCell extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       constraints: const BoxConstraints(minHeight: 72),
       decoration: BoxDecoration(
-        color: _kStatBg,
+        color: AppColors.warmInset,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _kStatBorder, width: 1),
+        border: Border.all(color: AppColors.borderStrong, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,7 +369,7 @@ class _StatCell extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.8,
-              color: _kStatLabel,
+              color: AppColors.contractorStatLabel,
             ),
           ),
           const SizedBox(height: 5),
@@ -394,7 +379,7 @@ class _StatCell extends StatelessWidget {
               fontFamily: 'IBMPlexMono',
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: _kStatValue,
+              color: AppColors.textPrimary,
             ),
           ),
         ],
@@ -414,9 +399,9 @@ class _RatingCell extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       constraints: const BoxConstraints(minHeight: 72),
       decoration: BoxDecoration(
-        color: _kStatBg,
+        color: AppColors.warmInset,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _kStatBorder, width: 1),
+        border: Border.all(color: AppColors.borderStrong, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -429,7 +414,7 @@ class _RatingCell extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.8,
-              color: _kStatLabel,
+              color: AppColors.contractorStatLabel,
             ),
           ),
           const SizedBox(height: 5),
@@ -459,9 +444,9 @@ class _PhoneCell extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       constraints: const BoxConstraints(minHeight: 72),
       decoration: BoxDecoration(
-        color: _kStatBg,
+        color: AppColors.warmInset,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _kStatBorder, width: 1),
+        border: Border.all(color: AppColors.borderStrong, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -474,7 +459,7 @@ class _PhoneCell extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.8,
-              color: _kStatLabel,
+              color: AppColors.contractorStatLabel,
             ),
           ),
           const SizedBox(height: 5),
@@ -484,7 +469,7 @@ class _PhoneCell extends StatelessWidget {
               fontFamily: 'IBMPlexMono',
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: _kStatValue,
+              color: AppColors.textPrimary,
             ),
             overflow: TextOverflow.ellipsis,
           ),
@@ -506,7 +491,7 @@ class _ProjectsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final isActive =
         project.status == 'in_progress' || project.status == 'planning';
-    final dotColor = isActive ? AppColors.accent : const Color(0xFFB0ACA5);
+    final dotColor = isActive ? AppColors.accent : AppColors.gray400;
     final contractAmt = contractor.contractAmount ?? 0.0;
 
     return Column(
@@ -518,7 +503,7 @@ class _ProjectsSection extends StatelessWidget {
               width: 6,
               height: 6,
               decoration: const BoxDecoration(
-                color: Color(0xFFB0ACA5),
+                color: AppColors.gray400,
                 shape: BoxShape.circle,
               ),
             ),
@@ -530,7 +515,7 @@ class _ProjectsSection extends StatelessWidget {
                 fontSize: 9,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.0,
-                color: Color(0xFF8A8480),
+                color: AppColors.gray500,
               ),
             ),
           ],
@@ -556,7 +541,7 @@ class _ProjectsSection extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: _kStatValue,
+                      color: AppColors.textPrimary,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -566,7 +551,7 @@ class _ProjectsSection extends StatelessWidget {
                     style: const TextStyle(
                       fontFamily: 'IBMPlexMono',
                       fontSize: 10,
-                      color: Color(0xFF8A8480),
+                      color: AppColors.gray500,
                     ),
                   ),
                 ],
@@ -579,7 +564,7 @@ class _ProjectsSection extends StatelessWidget {
                 fontFamily: 'IBMPlexMono',
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-                color: _kStatValue,
+                color: AppColors.textPrimary,
               ),
             ),
           ],
@@ -658,11 +643,11 @@ class _PillButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bg = enabled
-        ? _kCardBg
-        : _kCardBg.withValues(alpha: 0.35);
+        ? AppColors.contractorCardBg
+        : AppColors.contractorCardBg.withValues(alpha: 0.35);
     final fg = enabled
-        ? Colors.white
-        : Colors.white.withValues(alpha: 0.5);
+        ? AppColors.textInverse
+        : AppColors.textInverse.withValues(alpha: 0.5);
 
     return GestureDetector(
       onTap: enabled ? onTap : null,

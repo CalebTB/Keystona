@@ -590,7 +590,7 @@ class _ColorPicker extends StatelessWidget {
                   : null,
             ),
             child: isSelected
-                ? const Icon(Icons.check, size: 18, color: Colors.white)
+                ? const Icon(Icons.check, size: 18, color: AppColors.textInverse)
                 : null,
           ),
         );

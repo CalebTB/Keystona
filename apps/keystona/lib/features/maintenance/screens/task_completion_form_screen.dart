@@ -610,7 +610,7 @@ class _PhotoThumbnail extends StatelessWidget {
                 color: AppColors.error,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.close, size: 12, color: Colors.white),
+              child: const Icon(Icons.close, size: 12, color: AppColors.textInverse),
             ),
           ),
         ),

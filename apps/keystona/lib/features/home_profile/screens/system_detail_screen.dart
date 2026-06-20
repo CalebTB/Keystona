@@ -325,7 +325,7 @@ class _DetailContentState extends ConsumerState<_DetailContent> {
                             color: AppColors.border, width: 1.5),
                         boxShadow: const [
                           BoxShadow(
-                            color: Color(0x0A1A2B4A),
+                            color: AppColors.shadowXs,
                             blurRadius: 8,
                             offset: Offset(0, 2),
                           ),

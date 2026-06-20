@@ -212,12 +212,12 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(Icons.add_rounded,
-                                  color: Colors.white, size: 16),
+                                  color: AppColors.textInverse, size: 16),
                               const SizedBox(width: 4),
                               Text(
                                 'Add',
                                 style: AppTextStyles.labelMedium.copyWith(
-                                  color: Colors.white,
+                                  color: AppColors.textInverse,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -391,12 +391,12 @@ class _AndroidDocumentsLayoutState
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(Icons.add_rounded,
-                              color: Colors.white, size: 16),
+                              color: AppColors.textInverse, size: 16),
                           const SizedBox(width: 4),
                           Text(
                             'Add',
                             style: AppTextStyles.labelMedium.copyWith(
-                              color: Colors.white,
+                              color: AppColors.textInverse,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -733,7 +733,7 @@ class _DocSearchBarState extends ConsumerState<_DocSearchBar> {
           border: Border.all(color: AppColors.border, width: 1),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x0A2A2420),
+              color: AppColors.shadowXs,
               blurRadius: 8,
               offset: Offset(0, 2),
             ),
@@ -934,7 +934,7 @@ class _FilterPill extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : AppColors.textPrimary,
+                color: isSelected ? AppColors.textInverse : AppColors.textPrimary,
               ),
             ),
             const SizedBox(width: 4),
@@ -944,7 +944,7 @@ class _FilterPill extends StatelessWidget {
                 fontSize: 11,
                 fontWeight: FontWeight.w400,
                 color: isSelected
-                    ? Colors.white.withValues(alpha: 0.75)
+                    ? AppColors.textInverse.withValues(alpha: 0.75)
                     : AppColors.textSecondary,
               ),
             ),
@@ -988,7 +988,7 @@ class _DocGridTile extends StatelessWidget {
             border: Border.all(color: AppColors.border, width: 1.5),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x0D2A2420),
+                color: AppColors.shadowSm,
                 blurRadius: 4,
                 offset: Offset(0, 1),
               ),
@@ -1054,7 +1054,7 @@ class _DocGridTile extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0x0F000000),
+                          color: AppColors.navHairline,
                           borderRadius: BorderRadius.circular(3),
                         ),
                         child: Text(
@@ -1200,7 +1200,7 @@ class _FeedRow extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Color(0x0D2A2420),
+            color: AppColors.shadowSm,
             blurRadius: 4,
             offset: Offset(0, 1),
           ),
@@ -1388,7 +1388,7 @@ class _StorageTierCard extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: fraction,
                     minHeight: 3,
-                    backgroundColor: const Color(0x14FFFFFF),
+                    backgroundColor: AppColors.darkTrack,
                     valueColor: const AlwaysStoppedAnimation<Color>(
                       AppColors.accent,
                     ),
@@ -1417,7 +1417,7 @@ class _StorageTierCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
               decoration: BoxDecoration(
-                color: const Color(0x26B85638),
+                color: AppColors.accentOverlay,
                 borderRadius: BorderRadius.circular(AppSizes.radiusSm),
               ),
               child: Text(

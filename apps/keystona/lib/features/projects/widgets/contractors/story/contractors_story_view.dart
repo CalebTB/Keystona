@@ -182,7 +182,7 @@ class _PageDots extends StatelessWidget {
             height: 6,
             margin: const EdgeInsets.symmetric(horizontal: 3),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: isActive ? 0.6 : 0.2),
+              color: AppColors.textPrimary.withValues(alpha: isActive ? 0.6 : 0.2),
               borderRadius: BorderRadius.circular(3),
             ),
           );

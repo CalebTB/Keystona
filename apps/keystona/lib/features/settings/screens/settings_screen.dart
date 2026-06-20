@@ -49,6 +49,12 @@ class SettingsScreen extends ConsumerWidget {
             border: null,
             largeTitle: const Text('Settings'),
           ),
+          CupertinoSliverRefreshControl(
+            onRefresh: () async {
+              ref.invalidate(homeProfileProvider);
+              ref.invalidate(trialStatusProvider);
+            },
+          ),
           SliverToBoxAdapter(
             child: Padding(
               padding: AppPadding.screen.copyWith(top: AppSizes.sm, bottom: 48),
@@ -111,11 +117,11 @@ class SettingsScreen extends ConsumerWidget {
 
                   // ── SUBSCRIPTION group ───────────────────────────────────
                   _GroupLabel(
-                      dot: const Color(0xFF6B7A8D), label: 'SUBSCRIPTION'),
+                      dot: AppColors.slate, label: 'SUBSCRIPTION'),
                   const SizedBox(height: AppSizes.sm),
                   _SettingsGroup(rows: [
                     _SettingsRow(
-                      iconColor: const Color(0xFF6B7A8D),
+                      iconColor: AppColors.slate,
                       icon: CupertinoIcons.star,
                       title: 'Manage plan',
                       subtitle: isPremium
@@ -218,7 +224,7 @@ class _AccountCard extends StatelessWidget {
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFFD4715A), Color(0xFFC9A84C)],
+                  colors: [AppColors.avatarGradientStart, AppColors.goldAccent],
                 ),
                 borderRadius: BorderRadius.circular(14),
               ),
@@ -229,7 +235,7 @@ class _AccountCard extends StatelessWidget {
                     fontFamily: 'Fraunces',
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: AppColors.textInverse,
                   ),
                 ),
               ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../../core/theme/app_colors.dart';
+
 /// 44px circular avatar for a contractor, using role color as background.
 ///
 /// Shows white Fraunces initials extracted from [name] (max 2 words).
@@ -38,7 +40,7 @@ class ContractorAvatar extends StatelessWidget {
         style: GoogleFonts.fraunces(
           fontSize: size * 0.32,
           fontWeight: FontWeight.w700,
-          color: Colors.white,
+          color: AppColors.textInverse,
           height: 1,
         ),
       ),

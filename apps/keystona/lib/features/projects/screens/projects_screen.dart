@@ -219,7 +219,7 @@ class _AddButton extends StatelessWidget {
           border: Border.all(color: AppColors.border, width: 1.5),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x14000000),
+              color: AppColors.shadowMd,
               blurRadius: 8,
               offset: Offset(0, 2),
             ),
@@ -317,7 +317,7 @@ class _Chip extends StatelessWidget {
               label,
               style: AppTextStyles.labelSmall.copyWith(
                 fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : AppColors.textSecondary,
+                color: selected ? AppColors.textInverse : AppColors.textSecondary,
               ),
             ),
             const SizedBox(width: 5),
@@ -325,7 +325,7 @@ class _Chip extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
               decoration: BoxDecoration(
                 color: selected
-                    ? Colors.white.withValues(alpha: 0.15)
+                    ? AppColors.textInverse.withValues(alpha: 0.15)
                     : AppColors.warmFill,
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -334,7 +334,7 @@ class _Chip extends StatelessWidget {
                 style: AppTextStyles.monoSection.copyWith(
                   fontSize: 9,
                   color: selected
-                      ? Colors.white.withValues(alpha: 0.8)
+                      ? AppColors.textInverse.withValues(alpha: 0.8)
                       : AppColors.textSecondary,
                 ),
               ),
@@ -541,7 +541,7 @@ class _ProjectsScreenSkeletonState extends State<_ProjectsScreenSkeleton>
                       width: double.infinity,
                       height: 120,
                       decoration: const BoxDecoration(
-                        color: Color(0xFF352C24),
+                        color: AppColors.gray800,
                         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                       ),
                       padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
@@ -656,7 +656,7 @@ class _ShimmerBar extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         color: dark
-            ? Colors.white.withValues(alpha: 0.15)
+            ? AppColors.textInverse.withValues(alpha: 0.15)
             : AppColors.gray200,
         borderRadius: BorderRadius.circular(radius),
       ),

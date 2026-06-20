@@ -284,7 +284,7 @@ class _ProjectJournalScreenState
       floatingActionButton: FloatingActionButton(
         onPressed: _onAddTap,
         backgroundColor: AppColors.accent,
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add, color: AppColors.textInverse),
       ),
     );
   }
@@ -604,7 +604,7 @@ class _DeleteBackground extends StatelessWidget {
         color: AppColors.error,
         borderRadius: BorderRadius.circular(AppSizes.radiusMd),
       ),
-      child: const Icon(Icons.delete_outline, color: Colors.white),
+      child: const Icon(Icons.delete_outline, color: AppColors.textInverse),
     );
   }
 }
@@ -646,7 +646,7 @@ class _EmptyState extends StatelessWidget {
               onPressed: onAddTap,
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.goldAccent,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.textInverse,
                 padding: AppPadding.button,
               ),
               child: const Text('+ Add Note'),

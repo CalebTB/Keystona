@@ -49,7 +49,7 @@ class DocumentCard extends StatelessWidget {
             border: Border.all(color: AppColors.border, width: 1.5),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x0D2A2420),
+                color: AppColors.shadowSm,
                 blurRadius: 4,
                 offset: Offset(0, 1),
               ),

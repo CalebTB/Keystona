@@ -122,7 +122,7 @@ class _ProjectDocumentsScreenState
           ? FloatingActionButton(
               onPressed: _onLink,
               backgroundColor: AppColors.deepNavy,
-              child: const Icon(Icons.link, color: Colors.white),
+              child: const Icon(Icons.link, color: AppColors.textInverse),
             )
           : null,
     );

@@ -19,8 +19,6 @@ import '../widgets/photos/grid/photos_grid_skeleton.dart';
 import '../widgets/photos/shared/photos_view_toggle.dart';
 import 'photo_comparison_screen.dart';
 
-// accent: #B85638
-const Color _kAccent = Color(0xFFB85638);
 
 /// Photo gallery for a single project — wrapper + curated grid view.
 ///
@@ -382,6 +380,11 @@ class _ProjectPhotosScreenState extends ConsumerState<ProjectPhotosScreen> {
     }
   }
 
+  Future<void> _onRefresh() async {
+    ref.invalidate(projectPhotosProvider(widget.projectId));
+    ref.invalidate(projectDetailProvider(widget.projectId));
+  }
+
   // ── Default segment logic ─────────────────────────────────────────────────
 
   void _initializeSegment(List<ProjectPhoto> photos, String? projectStatus) {
@@ -494,7 +497,13 @@ class _ProjectPhotosScreenState extends ConsumerState<ProjectPhotosScreen> {
           middle: const Text('Photos'),
           trailing: trailingAction,
         ),
-        child: SafeArea(bottom: false, child: body),
+        child: SafeArea(
+          bottom: false,
+          child: RefreshIndicator(
+            onRefresh: _onRefresh,
+            child: body,
+          ),
+        ),
       );
     }
 
@@ -514,7 +523,10 @@ class _ProjectPhotosScreenState extends ConsumerState<ProjectPhotosScreen> {
             ),
         ],
       ),
-      body: body,
+      body: RefreshIndicator(
+        onRefresh: _onRefresh,
+        child: body,
+      ),
     );
   }
 }
@@ -555,7 +567,7 @@ class _EmptyState extends StatelessWidget {
             FilledButton(
               onPressed: onAdd,
               style: FilledButton.styleFrom(
-                backgroundColor: _kAccent,
+                backgroundColor: AppColors.accent,
                 padding: AppPadding.button,
               ),
               child: const Text('+ Add Photo'),
@@ -619,7 +631,7 @@ class _PairPickerSheet extends StatelessWidget {
           maxHeight: MediaQuery.of(context).size.height * 0.55,
         ),
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         ),
         child: Column(
@@ -632,7 +644,7 @@ class _PairPickerSheet extends StatelessWidget {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFDDD6CC),
+                  color: AppColors.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -647,25 +659,25 @@ class _PairPickerSheet extends StatelessWidget {
                       style: GoogleFonts.outfit(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1A2B4A),
+                        color: AppColors.deepNavy,
                       ),
                     ),
                   ),
                   GestureDetector(
                     onTap: () => Navigator.of(context, rootNavigator: true).pop(),
-                    child: const Icon(Icons.close, size: 20, color: Color(0xFF9B9289)),
+                    child: const Icon(Icons.close, size: 20, color: AppColors.gray500),
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1, color: Color(0xFFEDE8E0)),
+            const Divider(height: 1, color: AppColors.gray200),
             Flexible(
               child: ListView.separated(
                 shrinkWrap: true,
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 itemCount: candidates.length,
                 separatorBuilder: (_, _) =>
-                    const Divider(height: 1, indent: 72, color: Color(0xFFEDE8E0)),
+                    const Divider(height: 1, indent: 72, color: AppColors.gray200),
                 itemBuilder: (context, i) {
                   final photo = candidates[i];
                   return ListTile(
@@ -682,7 +694,7 @@ class _PairPickerSheet extends StatelessWidget {
                                 imageUrl: photo.signedUrl!,
                                 fit: BoxFit.cover,
                               )
-                            : const ColoredBox(color: Color(0xFFD0C8BC)),
+                            : const ColoredBox(color: AppColors.gray400),
                       ),
                     ),
                     title: Text(
@@ -692,7 +704,7 @@ class _PairPickerSheet extends StatelessWidget {
                       style: GoogleFonts.outfit(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: const Color(0xFF2A2420),
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     subtitle: Text(
@@ -700,11 +712,11 @@ class _PairPickerSheet extends StatelessWidget {
                       style: const TextStyle(
                         fontFamily: 'IBMPlexMono',
                         fontSize: 10,
-                        color: Color(0xFF9B9289),
+                        color: AppColors.gray500,
                       ),
                     ),
                     trailing: const Icon(Icons.chevron_right,
-                        size: 18, color: Color(0xFF9B9289)),
+                        size: 18, color: AppColors.gray500),
                     onTap: () => onSelected(photo),
                   );
                 },
@@ -765,7 +777,7 @@ class _PairEditFormSheetState extends State<_PairEditFormSheet> {
           maxHeight: MediaQuery.of(context).size.height * 0.6,
         ),
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         ),
         child: Padding(
@@ -784,7 +796,7 @@ class _PairEditFormSheetState extends State<_PairEditFormSheet> {
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFDDD6CC),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -800,7 +812,7 @@ class _PairEditFormSheetState extends State<_PairEditFormSheet> {
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF1A2B4A),
+                          color: AppColors.deepNavy,
                         ),
                       ),
                     ),
@@ -808,12 +820,12 @@ class _PairEditFormSheetState extends State<_PairEditFormSheet> {
                       onTap: () =>
                           Navigator.of(context, rootNavigator: true).pop(),
                       child: const Icon(Icons.close,
-                          size: 20, color: Color(0xFF9B9289)),
+                          size: 20, color: AppColors.gray500),
                     ),
                   ],
                 ),
               ),
-              const Divider(height: 1, color: Color(0xFFEDE8E0)),
+              const Divider(height: 1, color: AppColors.gray200),
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -846,7 +858,7 @@ class _PairEditFormSheetState extends State<_PairEditFormSheet> {
                           _captionCtrl.text.trim(),
                         ),
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF1A2B4A),
+                          backgroundColor: AppColors.deepNavy,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
                         child: const Text('Save Changes'),
@@ -865,25 +877,25 @@ class _PairEditFormSheetState extends State<_PairEditFormSheet> {
   InputDecoration _inputDecoration(String hint) => InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(
-          color: Color(0xFFB0A89E),
+          color: AppColors.textDisabled,
           fontSize: 14,
         ),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFFDDD6CC)),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFFDDD6CC)),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFF1A2B4A), width: 1.5),
+          borderSide: const BorderSide(color: AppColors.deepNavy, width: 1.5),
         ),
         filled: true,
-        fillColor: const Color(0xFFFAF8F5),
+        fillColor: AppColors.gray50,
       );
 }
 
@@ -899,7 +911,7 @@ class _FieldLabel extends StatelessWidget {
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.5,
-          color: Color(0xFF6B6058),
+          color: AppColors.textSecondary,
         ),
       );
 }

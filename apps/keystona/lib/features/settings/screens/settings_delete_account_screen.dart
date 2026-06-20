@@ -138,12 +138,12 @@ class _SettingsDeleteAccountScreenState
                   child: _deleting
                       ? const Center(
                           child: CupertinoActivityIndicator(
-                              color: Colors.white))
+                              color: AppColors.textInverse))
                       : Text(
                           'Delete my account',
                           textAlign: TextAlign.center,
                           style: AppTextStyles.bodyMediumSemibold
-                              .copyWith(color: Colors.white),
+                              .copyWith(color: AppColors.textInverse),
                         ),
                 ),
               ),

@@ -135,8 +135,8 @@ class _GraceBanner extends StatelessWidget {
   final VoidCallback onUpgrade;
 
   // Amber background — Bootstrap-style warning palette, not a hardcoded brand color.
-  static const _background = Color(0xFFFFF3CD);
-  static const _foreground = Color(0xFF856404);
+  static const _background = AppColors.trialBannerBg;
+  static const _foreground = AppColors.trialBannerText;
 
   @override
   Widget build(BuildContext context) {

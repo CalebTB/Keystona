@@ -68,7 +68,7 @@ class ProjectEmptyState extends StatelessWidget {
             onPressed: onCreateProject,
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.goldAccent,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.textInverse,
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSizes.xl,
                 vertical: AppSizes.md,

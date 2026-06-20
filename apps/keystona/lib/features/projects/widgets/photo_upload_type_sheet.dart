@@ -54,7 +54,7 @@ class _TypeSheetState extends State<_TypeSheet> {
             EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: Container(
           decoration: const BoxDecoration(
-            color: Colors.white,
+            color: AppColors.textInverse,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           padding: AppPadding.screen,
@@ -106,7 +106,7 @@ class _TypeSheetState extends State<_TypeSheet> {
                         t.label,
                         style: AppTextStyles.labelSmall.copyWith(
                           color: selected
-                              ? Colors.white
+                              ? AppColors.textInverse
                               : AppColors.textPrimary,
                           fontWeight: selected
                               ? FontWeight.w600

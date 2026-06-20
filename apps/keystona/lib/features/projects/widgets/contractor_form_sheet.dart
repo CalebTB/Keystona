@@ -235,7 +235,7 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
         padding: EdgeInsets.only(bottom: bottomPad),
         child: Container(
           decoration: const BoxDecoration(
-            color: Colors.white,
+            color: AppColors.textInverse,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           padding: AppPadding.screen,
@@ -571,7 +571,7 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white),
+                      strokeWidth: 2, color: AppColors.textInverse),
                 )
               : Text(_isEditing ? 'Save Changes' : 'Add'),
         ),

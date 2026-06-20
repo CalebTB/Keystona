@@ -38,59 +38,72 @@ class _SettingsNotificationsScreenState
       ),
       child: SafeArea(
         bottom: false,
-        child: ListView(
-          padding: AppPadding.screen.copyWith(top: AppSizes.md),
-          children: [
-            _label('GENERAL'),
-            const SizedBox(height: AppSizes.sm),
-            _group([
-              _toggle(
-                icon: CupertinoIcons.bell,
-                color: AppColors.sandAmber,
-                title: 'Push notifications',
-                value: _pushEnabled,
-                onChanged: (v) => setState(() => _pushEnabled = v),
-              ),
-              _toggle(
-                icon: CupertinoIcons.moon,
-                color: AppColors.sandAmber,
-                title: 'Quiet hours',
-                subtitle: '10pm – 8am',
-                value: _quietHoursEnabled,
-                onChanged: (v) => setState(() => _quietHoursEnabled = v),
-              ),
-            ]),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            CupertinoSliverRefreshControl(onRefresh: () async {}),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: AppPadding.screen.copyWith(top: AppSizes.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _label('GENERAL'),
+                    const SizedBox(height: AppSizes.sm),
+                    _group([
+                      _toggle(
+                        icon: CupertinoIcons.bell,
+                        color: AppColors.sandAmber,
+                        title: 'Push notifications',
+                        value: _pushEnabled,
+                        onChanged: (v) => setState(() => _pushEnabled = v),
+                      ),
+                      _toggle(
+                        icon: CupertinoIcons.moon,
+                        color: AppColors.sandAmber,
+                        title: 'Quiet hours',
+                        subtitle: '10pm – 8am',
+                        value: _quietHoursEnabled,
+                        onChanged: (v) => setState(() => _quietHoursEnabled = v),
+                      ),
+                    ]),
 
-            const SizedBox(height: AppSizes.xl),
+                    const SizedBox(height: AppSizes.xl),
 
-            _label('REMINDERS'),
-            const SizedBox(height: AppSizes.sm),
-            _group([
-              _toggle(
-                icon: CupertinoIcons.wrench,
-                color: AppColors.olive,
-                title: 'Maintenance reminders',
-                subtitle: 'Tasks due soon',
-                value: _maintenanceReminders,
-                onChanged: (v) => setState(() => _maintenanceReminders = v),
+                    _label('REMINDERS'),
+                    const SizedBox(height: AppSizes.sm),
+                    _group([
+                      _toggle(
+                        icon: CupertinoIcons.wrench,
+                        color: AppColors.olive,
+                        title: 'Maintenance reminders',
+                        subtitle: 'Tasks due soon',
+                        value: _maintenanceReminders,
+                        onChanged: (v) =>
+                            setState(() => _maintenanceReminders = v),
+                      ),
+                      _toggle(
+                        icon: CupertinoIcons.doc_text,
+                        color: AppColors.accent,
+                        title: 'Expiration alerts',
+                        subtitle: 'Documents expiring within 90 days',
+                        value: _expirationAlerts,
+                        onChanged: (v) =>
+                            setState(() => _expirationAlerts = v),
+                      ),
+                      _toggle(
+                        icon: CupertinoIcons.chart_bar,
+                        color: AppColors.plum,
+                        title: 'Weekly digest',
+                        subtitle: 'Home health summary every Sunday',
+                        value: _weeklyDigest,
+                        onChanged: (v) => setState(() => _weeklyDigest = v),
+                      ),
+                    ]),
+                  ],
+                ),
               ),
-              _toggle(
-                icon: CupertinoIcons.doc_text,
-                color: AppColors.accent,
-                title: 'Expiration alerts',
-                subtitle: 'Documents expiring within 90 days',
-                value: _expirationAlerts,
-                onChanged: (v) => setState(() => _expirationAlerts = v),
-              ),
-              _toggle(
-                icon: CupertinoIcons.chart_bar,
-                color: AppColors.plum,
-                title: 'Weekly digest',
-                subtitle: 'Home health summary every Sunday',
-                value: _weeklyDigest,
-                onChanged: (v) => setState(() => _weeklyDigest = v),
-              ),
-            ]),
+            ),
           ],
         ),
       ),
