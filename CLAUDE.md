@@ -271,6 +271,7 @@ Comprehensive specifications in `keystona-project-files/`:
 - **Intentional `Colors.black` / `Colors.white` in full-screen media viewers**: Design system exemption for photo comparison and photo detail screens — warm off-white (#FAF8F5) looks wrong on black media backgrounds; keep raw `Colors.black` / `Colors.white` in `_PhotoViewer` and `photo_comparison_screen.dart` only
 - **New AppColors shadow tokens**: `shadowXs` (0x0A2A2420), `shadowSm` (0x0D2A2420), `shadowMd`, `fabShadow` (0x331A2B4A) — use these instead of inline `Color(0x0A...)` literals for elevation; consistent opacity across all cards → `lib/core/theme/app_colors.dart`
 - **`AppColors.textInverse` over `Colors.white` on brand-colored surfaces**: Keystona's background is warm off-white (#F3F0EB), not pure white — icons/labels on navy/gold/accent backgrounds should use `AppColors.textInverse`, never `Colors.white`
+- **`VoidCallback onTap` on shared action widgets instead of `String route`**: When sibling widgets in a row need different nav strategies (`go` vs `push`), give the widget an `onTap: VoidCallback` parameter — caller decides the nav; widget stays nav-agnostic → `lib/features/home/screens/home_screen.dart _QuickAction`
 
 ## Decisions
 
@@ -404,6 +405,9 @@ Comprehensive specifications in `keystona-project-files/`:
 - **Batch `sed` color replacements lose the AppColors import**: After replacing `Colors.white` with `AppColors.textInverse` via grep/sed, the `flutter/material.dart` import may no longer be needed but `app_colors.dart` isn't added automatically — always grep for missing `app_colors.dart` imports after a batch replacement pass
 - **`WebSearch*` wildcard not valid in `.claude/settings.local.json` allow rules**: Built-in tool permission rules don't support glob wildcards — use exact tool names (`WebSearch`, not `WebSearch*`); wildcard causes the rule to be silently skipped on startup → `.claude/settings.local.json`
 - **`AppColors.textTertiary` doesn't exist — use `AppColors.gray400`**: No `textTertiary` alias in the palette; subdued hint/icon colors use `AppColors.gray400` (same value as `textDisabled`) — always verify color names against `app_colors.dart` before using
+- **`ListView` without `padding: EdgeInsets.zero` inside `CustomScrollView` adds safe area top inset**: On iPhone with notch/Dynamic Island, a `ListView` (or `ListView.separated`) not given explicit `padding: EdgeInsets.zero` inherits `MediaQuery.padding`, which adds ~47px as top padding — creates a huge visual gap between the section header and the first list item even though the `SizedBox` above it is tiny. Always set `padding: EdgeInsets.zero` on any non-scrollable `ListView` used inside a `CustomScrollView`
+- **`CupertinoButton` minimum touch target bloats section header rows**: Even with `padding: EdgeInsets.zero`, `CupertinoButton` enforces a 44px minimum height — inflates header rows and creates false visual gaps below them. Use `GestureDetector` + `Text` for inline text buttons in section headers where vertical compactness matters
+- **`context.push()` vs `context.go()` for tab vs sub-screen navigation**: In a `StatefulShellRoute` app, `context.push(tabRoute)` stacks a new page on the current branch instead of switching tabs — always use `context.go(route)` to switch to a different tab's root. Reserve `context.push()` for routes that are sub-screens within the current branch (e.g. Emergency Hub pushed from Home branch)
 
 ## Philosophy
 

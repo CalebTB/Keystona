@@ -28,7 +28,7 @@ import '../../features/home_profile/models/system.dart';
 import '../../features/home_profile/screens/appliance_detail_screen.dart';
 import '../../features/home_profile/screens/appliance_form_screen.dart';
 import '../../features/home_profile/screens/appliances_screen.dart';
-import '../../features/home_profile/screens/home_profile_screen.dart';
+import '../../features/home/screens/home_screen.dart';
 import '../../features/home_profile/screens/item_tasks_screen.dart';
 import '../../features/home_profile/screens/lifespan_screen.dart';
 import '../../features/home_profile/screens/property_edit_screen.dart';
@@ -262,7 +262,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: AppRoutes.home,
-                builder: (_, _) => const HomeProfileScreen(),
+                builder: (_, _) => const HomeScreen(),
                 routes: [
                   GoRoute(
                     path: 'systems',

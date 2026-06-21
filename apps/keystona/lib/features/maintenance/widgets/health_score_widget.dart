@@ -20,7 +20,12 @@ import 'health_score_skeleton.dart';
 ///   score 40–70  → [AppColors.healthFair]   (amber)
 ///   score 0–39   → [AppColors.healthPoor]   (red)
 class HealthScoreWidget extends ConsumerWidget {
-  const HealthScoreWidget({super.key});
+  const HealthScoreWidget({super.key, this.compact = false});
+
+  /// When true, renders only the inner Row (gauge + stats) without the
+  /// surrounding card border and screen-horizontal padding — use when
+  /// embedding inside an existing card container.
+  final bool compact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -29,7 +34,7 @@ class HealthScoreWidget extends ConsumerWidget {
     return scoreAsync.when(
       loading: () => const HealthScoreSkeleton(),
       error: (_, _) => const SizedBox.shrink(),
-      data: (score) => _ScoreCard(score: score),
+      data: (score) => _ScoreCard(score: score, compact: compact),
     );
   }
 }
@@ -37,11 +42,46 @@ class HealthScoreWidget extends ConsumerWidget {
 // ── Score card ────────────────────────────────────────────────────────────────
 
 class _ScoreCard extends StatelessWidget {
-  const _ScoreCard({required this.score});
+  const _ScoreCard({required this.score, this.compact = false});
   final HomeHealthScore score;
+  final bool compact;
+
+  Widget _row() => Row(
+        children: [
+          _GaugePainter(score: score.score),
+          const SizedBox(width: AppSizes.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _TrendRow(trend: score.trend),
+                const SizedBox(height: AppSizes.xs),
+                Text(
+                  'Home Maintenance Score',
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: AppSizes.sm),
+                _StatsRow(score: score),
+              ],
+            ),
+          ),
+        ],
+      );
 
   @override
   Widget build(BuildContext context) {
+    if (compact) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.md,
+          vertical: AppSizes.md,
+        ),
+        child: _row(),
+      );
+    }
     return Padding(
       padding: AppPadding.screenHorizontal.copyWith(
         top: AppSizes.sm,
@@ -57,32 +97,7 @@ class _ScoreCard extends StatelessWidget {
           horizontal: AppSizes.md,
           vertical: AppSizes.md,
         ),
-        child: Row(
-          children: [
-            // Circular gauge.
-            _GaugePainter(score: score.score),
-            const SizedBox(width: AppSizes.md),
-            // Right side: trend + stats.
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _TrendRow(trend: score.trend),
-                  const SizedBox(height: AppSizes.xs),
-                  Text(
-                    'Home Maintenance Score',
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: AppSizes.sm),
-                  _StatsRow(score: score),
-                ],
-              ),
-            ),
-          ],
-        ),
+        child: _row(),
       ),
     );
   }
