@@ -4,21 +4,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 import '../../../core/widgets/trial_banner.dart';
-import '../../../features/home_profile/models/property.dart';
-import '../../../features/maintenance/widgets/health_score_widget.dart';
 import '../../../features/maintenance/widgets/overdue_banner.dart';
 import '../../../features/maintenance/widgets/task_card.dart';
 import '../providers/dashboard_provider.dart';
 
-/// The Home tab root screen — a scrollable dashboard with greeting, health
-/// score hero, quick actions, overdue banner, upcoming tasks, and trial banner.
+/// Home tab root screen — Aurora Design System v2.0.
 ///
-/// Uses [CupertinoPageScaffold] (iOS-first) with no nav bar; the large title
-/// sits inline in the scroll content.
+/// White paper canvas. Coral hero. Butter quick-action tiles. Ink typography.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -27,7 +25,7 @@ class HomeScreen extends ConsumerWidget {
     final dashAsync = ref.watch(dashboardProvider);
 
     return CupertinoPageScaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       child: dashAsync.when(
         loading: () => const _DashboardSkeleton(),
         error: (_, _) => _ErrorView(
@@ -36,77 +34,109 @@ class HomeScreen extends ConsumerWidget {
         data: (data) => CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            // Pull-to-refresh (iOS-native spinner).
             CupertinoSliverRefreshControl(
-              onRefresh: () =>
-                  ref.read(dashboardProvider.notifier).refresh(),
+              onRefresh: () => ref.read(dashboardProvider.notifier).refresh(),
             ),
 
-            // ── A. Greeting header — top padding respects safe area ─────
+            // ── A. Greeting header ─────────────────────────────────────────
             SliverToBoxAdapter(
               child: SafeArea(
                 bottom: false,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(
+                    AuroraSpacing.screenPadH,
+                    AuroraSpacing.screenPadTop,
+                    AuroraSpacing.screenPadH,
+                    0,
+                  ),
                   child: _GreetingHeader(data: data),
                 ),
               ),
             ),
 
-            // ── B. Health score hero card ───────────────────────────────
+            // ── B. Aurora hero card (coral) ────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding:
-                    const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                child: _HeroCard(data: data),
+                padding: const EdgeInsets.fromLTRB(
+                  AuroraSpacing.screenPadH,
+                  AuroraSpacing.space7,
+                  AuroraSpacing.screenPadH,
+                  0,
+                ),
+                child: _ScoreHero(data: data),
               ),
             ),
 
-            // ── C. Quick actions row ────────────────────────────────────
+            // ── C. Quick actions row ───────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                padding: const EdgeInsets.fromLTRB(
+                  AuroraSpacing.screenPadH,
+                  AuroraSpacing.space5,
+                  AuroraSpacing.screenPadH,
+                  0,
+                ),
                 child: const _QuickActionsRow(),
               ),
             ),
 
-            // ── D. Your Home section (systems + appliances) ─────────────
+            // ── D. Your Home section ───────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                padding: const EdgeInsets.fromLTRB(
+                  AuroraSpacing.screenPadH,
+                  AuroraSpacing.space5,
+                  AuroraSpacing.screenPadH,
+                  0,
+                ),
                 child: _YourHomeSection(data: data),
               ),
             ),
 
-            // ── E. Overdue banner (conditional) ────────────────────────
+            // ── E. Overdue banner (conditional) ────────────────────────────
             if (data.overdueTasks.isNotEmpty)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(
+                    AuroraSpacing.screenPadH,
+                    AuroraSpacing.space5,
+                    AuroraSpacing.screenPadH,
+                    0,
+                  ),
                   child: OverdueBanner(overdueTasks: data.overdueTasks),
                 ),
               ),
 
-            // ── F. Coming Up section (conditional) ─────────────────────
+            // ── F. Coming Up section (conditional) ─────────────────────────
             if (data.upcomingTasks.isNotEmpty)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(
+                    AuroraSpacing.screenPadH,
+                    AuroraSpacing.space5,
+                    AuroraSpacing.screenPadH,
+                    0,
+                  ),
                   child: _ComingUpSection(data: data),
                 ),
               ),
 
-            // ── G. Trial banner — padding lives inside TrialBanner itself
-            //    so this sliver vanishes when no trial is active.
-            const SliverToBoxAdapter(child: Padding(
-              padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
-              child: TrialBanner(),
-            )),
+            // ── G. Trial banner ────────────────────────────────────────────
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  AuroraSpacing.screenPadH,
+                  AuroraSpacing.space5,
+                  AuroraSpacing.screenPadH,
+                  0,
+                ),
+                child: TrialBanner(),
+              ),
+            ),
 
-            // Bottom safe area.
             const SliverSafeArea(
               top: false,
-              minimum: EdgeInsets.only(bottom: 24),
+              minimum: EdgeInsets.only(bottom: AuroraSpacing.screenPadBottom),
               sliver: SliverToBoxAdapter(child: SizedBox.shrink()),
             ),
           ],
@@ -133,9 +163,7 @@ class _GreetingHeader extends StatelessWidget {
   String get _subtitle {
     final overdue = data.overdueTasks;
     if (overdue.isNotEmpty) {
-      if (overdue.length == 1) {
-        return '${overdue.first.name} needs attention';
-      }
+      if (overdue.length == 1) return '${overdue.first.name} needs attention';
       return '${overdue.length} tasks need attention';
     }
     return 'Your home is looking good';
@@ -149,121 +177,94 @@ class _GreetingHeader extends StatelessWidget {
       children: [
         Text(
           '$_greeting, ${data.firstName}',
-          style: AppTextStyles.h2.copyWith(color: AppColors.deepNavy),
+          style: AuroraType.h1,
         ),
         const SizedBox(height: 4),
         Text(
           _subtitle,
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
         ),
       ],
     );
   }
 }
 
-// ── Health score hero card ─────────────────────────────────────────────────────
+// ── Score hero (coral) ─────────────────────────────────────────────────────────
 
-class _HeroCard extends StatelessWidget {
-  const _HeroCard({required this.data});
+class _ScoreHero extends StatelessWidget {
+  const _ScoreHero({required this.data});
 
   final DashboardData data;
 
+  String _trendLabel(String trend) => switch (trend) {
+        'improving' => '↗ Improving this month',
+        'declining' => '↘ Needs attention',
+        _ => '→ Stable this month',
+      };
+
   @override
   Widget build(BuildContext context) {
-    final property = data.property;
+    final score = data.score;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-        border: Border.all(color: AppColors.border),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadowSm,
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Top row: address + settings gear.
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Property address row — sits above the coral card.
+        if (data.property != null)
           Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSizes.md,
-              AppSizes.md,
-              AppSizes.sm,
-              4,
-            ),
+            padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
             child: Row(
               children: [
-                Expanded(
-                  child: property != null
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              property.addressLine1,
-                              style: AppTextStyles.labelMedium.copyWith(
-                                color: AppColors.deepNavy,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              _buildSubtitle(property),
-                              style: AppTextStyles.labelSmall.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        )
-                      : GestureDetector(
-                          onTap: () => context.push(AppRoutes.homeEdit),
-                          child: Text(
-                            'Set up your home',
-                            style: AppTextStyles.labelMedium.copyWith(
-                              color: AppColors.accent,
-                              decoration: TextDecoration.underline,
-                              decorationColor: AppColors.accent,
-                            ),
-                          ),
-                        ),
+                const Icon(
+                  CupertinoIcons.house,
+                  size: 12,
+                  color: AuroraColors.inkSecondary,
                 ),
-                CupertinoButton(
-                  padding: const EdgeInsets.all(8),
-                  onPressed: () => context.push(AppRoutes.homeEdit),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    data.property!.addressLine1,
+                    style: AuroraType.label.copyWith(
+                      color: AuroraColors.inkSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => context.push(AppRoutes.homeEdit),
                   child: const Icon(
                     CupertinoIcons.settings,
-                    size: 20,
-                    color: AppColors.textSecondary,
+                    size: 16,
+                    color: AuroraColors.inkSecondary,
                   ),
                 ),
               ],
             ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
+            child: GestureDetector(
+              onTap: () => context.push(AppRoutes.homeEdit),
+              child: Text(
+                'Set up your home →',
+                style: AuroraType.label.copyWith(color: AuroraColors.coral),
+              ),
+            ),
           ),
 
-          // Divider.
-          const Divider(color: AppColors.border, height: 1),
-
-          // compact: true strips the inner card border/padding — hero card is the container.
-          const HealthScoreWidget(compact: true),
-        ],
-      ),
+        // Aurora coral hero card.
+        AuroraHeroCard(
+          score: score.score,
+          trend: _trendLabel(score.trend),
+          maintScore: score.score,
+          docsScore: 0,
+          emergScore: 0,
+        ),
+      ],
     );
-  }
-
-  String _buildSubtitle(Property property) {
-    final label = property.propertyType.propertyTypeLabel;
-    final year = property.yearBuilt;
-    if (year != null) return '$label · Built $year';
-    return label;
   }
 }
 
@@ -278,27 +279,30 @@ class _QuickActionsRow extends StatelessWidget {
       children: [
         Expanded(
           child: _QuickAction(
-            icon: CupertinoIcons.exclamationmark_shield,
+            icon: CupertinoIcons.exclamationmark_shield_fill,
             label: 'Emergency',
-            // push — Emergency is a sub-screen within the Home branch, not a tab
+            tileColor: AuroraColors.coral,
+            iconColor: Colors.white,
             onTap: () => context.push(AppRoutes.emergency),
           ),
         ),
-        const SizedBox(width: AppSizes.sm),
+        const SizedBox(width: AuroraSpacing.space2),
         Expanded(
           child: _QuickAction(
-            icon: CupertinoIcons.doc,
+            icon: CupertinoIcons.doc_text,
             label: 'Documents',
-            // go — switches to the Documents tab
+            tileColor: AuroraColors.cobaltDim,
+            iconColor: AuroraColors.cobalt,
             onTap: () => context.go(AppRoutes.documents),
           ),
         ),
-        const SizedBox(width: AppSizes.sm),
+        const SizedBox(width: AuroraSpacing.space2),
         Expanded(
           child: _QuickAction(
             icon: CupertinoIcons.checkmark_square,
             label: 'Tasks',
-            // go — switches to the Tasks tab
+            tileColor: AuroraColors.limeDim,
+            iconColor: AuroraColors.limeDeep,
             onTap: () => context.go(AppRoutes.maintenance),
           ),
         ),
@@ -311,34 +315,49 @@ class _QuickAction extends StatelessWidget {
   const _QuickAction({
     required this.icon,
     required this.label,
+    required this.tileColor,
+    required this.iconColor,
     required this.onTap,
   });
 
   final IconData icon;
   final String label;
+  final Color tileColor;
+  final Color iconColor;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoButton(
-      padding: EdgeInsets.zero,
-      onPressed: onTap,
+    return GestureDetector(
+      onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: AppColors.border, width: 1.5),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AuroraSpacing.space3,
+          vertical: AuroraSpacing.space4,
+        ),
+        decoration: const BoxDecoration(
+          color: AuroraColors.butter,
+          borderRadius: AuroraRadius.lg,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 22, color: AppColors.deepNavy),
-            const SizedBox(height: AppSizes.xs),
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: tileColor,
+                borderRadius: AuroraRadius.sm,
+              ),
+              child: Icon(icon, size: 16, color: iconColor),
+            ),
+            const SizedBox(height: AuroraSpacing.space1),
             Text(
               label,
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textSecondary,
+              style: const TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w600,
+                color: AuroraColors.ink,
               ),
               textAlign: TextAlign.center,
             ),
@@ -362,43 +381,37 @@ class _YourHomeSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          children: [
-            Text(
-              'Your Home',
-              style: AppTextStyles.bodyMediumSemibold.copyWith(
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ],
+        Text(
+          'YOUR HOME',
+          style: AuroraType.label,
         ),
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: AuroraSpacing.space3),
         Row(
           children: [
             Expanded(
-              child: _HomeStatCard(
-                icon: CupertinoIcons.wrench_fill,
+              child: _HomeStatTile(
+                icon: CupertinoIcons.wrench,
                 label: 'Systems',
                 count: data.systemCount,
-                route: AppRoutes.homeSystems,
+                onTap: () => context.push(AppRoutes.homeSystems),
               ),
             ),
-            const SizedBox(width: AppSizes.sm),
+            const SizedBox(width: AuroraSpacing.space2),
             Expanded(
-              child: _HomeStatCard(
+              child: _HomeStatTile(
                 icon: CupertinoIcons.device_laptop,
                 label: 'Appliances',
                 count: data.applianceCount,
-                route: AppRoutes.homeAppliances,
+                onTap: () => context.push(AppRoutes.homeAppliances),
               ),
             ),
-            const SizedBox(width: AppSizes.sm),
+            const SizedBox(width: AuroraSpacing.space2),
             Expanded(
-              child: _HomeStatCard(
+              child: _HomeStatTile(
                 icon: CupertinoIcons.chart_bar,
                 label: 'Lifespan',
                 count: null,
-                route: AppRoutes.homeLifespan,
+                onTap: () => context.push(AppRoutes.homeLifespan),
               ),
             ),
           ],
@@ -408,41 +421,43 @@ class _YourHomeSection extends StatelessWidget {
   }
 }
 
-class _HomeStatCard extends StatelessWidget {
-  const _HomeStatCard({
+class _HomeStatTile extends StatelessWidget {
+  const _HomeStatTile({
     required this.icon,
     required this.label,
     required this.count,
-    required this.route,
+    required this.onTap,
   });
 
   final IconData icon;
   final String label;
   final int? count;
-  final String route;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoButton(
-      padding: EdgeInsets.zero,
-      onPressed: () => context.push(route),
+    return GestureDetector(
+      onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: AppColors.border, width: 1.5),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AuroraSpacing.space3,
+          vertical: AuroraSpacing.space4,
+        ),
+        decoration: const BoxDecoration(
+          color: AuroraColors.butter,
+          borderRadius: AuroraRadius.lg,
         ),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: AppColors.deepNavy),
-            const SizedBox(width: 6),
+            Icon(icon, size: 16, color: AuroraColors.ink),
+            const SizedBox(width: AuroraSpacing.space1),
             Expanded(
               child: Text(
                 count != null ? '$count $label' : label,
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.textPrimary,
+                style: const TextStyle(
+                  fontSize: 11,
                   fontWeight: FontWeight.w600,
+                  color: AuroraColors.ink,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -450,8 +465,8 @@ class _HomeStatCard extends StatelessWidget {
             ),
             const Icon(
               CupertinoIcons.chevron_right,
-              size: 12,
-              color: AppColors.gray400,
+              size: 10,
+              color: AuroraColors.inkTertiary,
             ),
           ],
         ),
@@ -473,37 +488,28 @@ class _ComingUpSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Section header row.
         Row(
           children: [
-            Text(
-              'Coming Up',
-              style: AppTextStyles.bodyMediumSemibold.copyWith(
-                color: AppColors.textPrimary,
-              ),
-            ),
+            Text('COMING UP', style: AuroraType.label),
             const Spacer(),
             GestureDetector(
               onTap: () => context.go(AppRoutes.maintenance),
               child: Text(
                 'View all',
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.accent,
-                ),
+                style: AuroraType.label.copyWith(color: AuroraColors.coral),
               ),
             ),
           ],
         ),
-        const SizedBox(height: AppSizes.sm),
-        // Task list (non-scrollable — sits inside CustomScrollView).
+        const SizedBox(height: AuroraSpacing.space3),
         ListView.separated(
           shrinkWrap: true,
           padding: EdgeInsets.zero,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: data.upcomingTasks.length,
-          separatorBuilder: (_, _) => const SizedBox(height: AppSizes.sm),
-          itemBuilder: (_, index) =>
-              TaskCard(task: data.upcomingTasks[index]),
+          separatorBuilder: (_, _) =>
+              const SizedBox(height: AuroraSpacing.space2),
+          itemBuilder: (_, index) => TaskCard(task: data.upcomingTasks[index]),
         ),
       ],
     );
@@ -522,34 +528,29 @@ class _ErrorView extends StatelessWidget {
     return SafeArea(
       child: Center(
         child: Padding(
-        padding: const EdgeInsets.all(AppSizes.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              CupertinoIcons.exclamationmark_circle,
-              size: AppSizes.iconXl,
-              color: AppColors.textSecondary,
-            ),
-            const SizedBox(height: AppSizes.md),
-            Text(
-              'Could not load your dashboard',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+          padding: const EdgeInsets.all(AuroraSpacing.space10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                CupertinoIcons.exclamationmark_circle,
+                size: 48,
+                color: AuroraColors.inkTertiary,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSizes.md),
-            CupertinoButton(
-              onPressed: onRetry,
-              child: Text(
-                'Try again',
-                style: AppTextStyles.button.copyWith(color: AppColors.accent),
+              const SizedBox(height: AuroraSpacing.space7),
+              Text(
+                'Could not load your dashboard',
+                style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
+                textAlign: TextAlign.center,
               ),
-            ),
-          ],
+              const SizedBox(height: AuroraSpacing.space7),
+              GhostButton(
+                label: 'Try again',
+                onPressed: onRetry,
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -595,93 +596,95 @@ class _DashboardSkeletonState extends State<_DashboardSkeleton>
     return AnimatedBuilder(
       animation: _anim,
       builder: (_, _) {
-        final shimmer = AppColors.gray200.withValues(alpha: _anim.value);
+        final shimmer = AuroraColors.butter.withValues(alpha: _anim.value + 0.3);
         return SafeArea(
           bottom: false,
           child: SingleChildScrollView(
             physics: const NeverScrollableScrollPhysics(),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              padding: const EdgeInsets.fromLTRB(
+                AuroraSpacing.screenPadH,
+                AuroraSpacing.screenPadTop,
+                AuroraSpacing.screenPadH,
+                AuroraSpacing.screenPadBottom,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Greeting: two shimmer bars.
-                  _SkeletonBar(color: shimmer, width: 200, height: 20),
+                  // Greeting bars.
+                  _SkeletonBar(color: shimmer, width: 200, height: 22),
                   const SizedBox(height: 6),
-                  _SkeletonBar(color: shimmer, width: 160, height: 14),
-                  const SizedBox(height: 16),
+                  _SkeletonBar(color: shimmer, width: 150, height: 14),
+                  const SizedBox(height: AuroraSpacing.space7),
 
-                  // Hero card shimmer.
-                  Container(
-                    height: 130,
-                    decoration: BoxDecoration(
-                      color: shimmer,
-                      borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-                    ),
+                  // Hero card shimmer (taller — coral hero is bigger).
+                  _SkeletonBar(
+                    color: AuroraColors.coralDim,
+                    width: double.infinity,
+                    height: 148,
+                    radius: 22,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AuroraSpacing.space5),
 
-                  // Quick action boxes (3).
+                  // Quick action tiles (3).
                   Row(
                     children: List.generate(3, (i) {
                       return Expanded(
                         child: Padding(
                           padding: EdgeInsets.only(
-                            left: i == 0 ? 0 : 4,
-                            right: i == 2 ? 0 : 4,
+                            left: i == 0 ? 0 : 3,
+                            right: i == 2 ? 0 : 3,
                           ),
-                          child: Container(
+                          child: _SkeletonBar(
+                            color: shimmer,
+                            width: double.infinity,
                             height: 64,
-                            decoration: BoxDecoration(
-                              color: shimmer,
-                              borderRadius:
-                                  BorderRadius.circular(AppSizes.radiusMd),
-                            ),
+                            radius: 14,
                           ),
                         ),
                       );
                     }),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AuroraSpacing.space5),
 
-                  // Your Home row (3 stat cards).
+                  // Your Home tiles (3).
+                  _SkeletonBar(color: shimmer, width: 80, height: 10),
+                  const SizedBox(height: AuroraSpacing.space3),
                   Row(
                     children: List.generate(3, (i) {
                       return Expanded(
                         child: Padding(
                           padding: EdgeInsets.only(
-                            left: i == 0 ? 0 : 4,
-                            right: i == 2 ? 0 : 4,
+                            left: i == 0 ? 0 : 3,
+                            right: i == 2 ? 0 : 3,
                           ),
-                          child: Container(
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: shimmer,
-                              borderRadius:
-                                  BorderRadius.circular(AppSizes.radiusMd),
-                            ),
+                          child: _SkeletonBar(
+                            color: shimmer,
+                            width: double.infinity,
+                            height: 42,
+                            radius: 14,
                           ),
                         ),
                       );
                     }),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AuroraSpacing.space5),
 
-                  // Coming Up label + two task bars.
-                  _SkeletonBar(color: shimmer, width: 90, height: 14),
-                  const SizedBox(height: 8),
+                  // Coming Up label + two task rows.
+                  _SkeletonBar(color: shimmer, width: 80, height: 10),
+                  const SizedBox(height: AuroraSpacing.space3),
                   _SkeletonBar(
                     color: shimmer,
                     width: double.infinity,
-                    height: 64,
-                    radius: AppSizes.radiusCard,
+                    height: 58,
+                    radius: 14,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AuroraSpacing.space2),
                   _SkeletonBar(
                     color: shimmer,
                     width: double.infinity,
-                    height: 64,
-                    radius: AppSizes.radiusCard,
+                    height: 58,
+                    radius: 14,
                   ),
                 ],
               ),
@@ -698,7 +701,7 @@ class _SkeletonBar extends StatelessWidget {
     required this.color,
     required this.width,
     required this.height,
-    this.radius = AppSizes.radiusXs,
+    this.radius = 4,
   });
 
   final Color color;
