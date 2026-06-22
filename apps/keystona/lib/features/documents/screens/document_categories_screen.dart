@@ -2,9 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/error_view.dart';
 import '../models/document_category.dart';
 import '../providers/document_categories_provider.dart';
@@ -14,8 +14,7 @@ import '../widgets/category_list_skeleton.dart';
 /// Screen for managing document categories.
 ///
 /// Accessible from the Documents overflow menu. Displays read-only system
-/// categories and editable custom categories. Users can create, rename,
-/// recolor, and delete custom categories from this screen.
+/// categories and editable custom categories.
 class DocumentCategoriesScreen extends ConsumerWidget {
   const DocumentCategoriesScreen({super.key});
 
@@ -73,8 +72,7 @@ class _IOSCategoriesLayout extends ConsumerWidget {
     );
   }
 
-  void _openCreate(BuildContext context) =>
-      showCategoryFormSheet(context);
+  void _openCreate(BuildContext context) => showCategoryFormSheet(context);
 }
 
 // ── Android layout ────────────────────────────────────────────────────────────
@@ -87,16 +85,16 @@ class _AndroidCategoriesLayout extends ConsumerWidget {
     final categoriesState = ref.watch(documentCategoriesProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       appBar: AppBar(
-        title: Text('Categories', style: AppTextStyles.h3),
-        backgroundColor: AppColors.warmOffWhite,
+        title: Text('Categories', style: AuroraType.h3),
+        backgroundColor: AuroraColors.paper,
         scrolledUnderElevation: 0,
         elevation: 0,
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.accent,
-        foregroundColor: AppColors.textInverse,
+        backgroundColor: AuroraColors.coral,
+        foregroundColor: Colors.white,
         onPressed: () => showCategoryFormSheet(context),
         child: const Icon(Icons.add),
       ),
@@ -128,16 +126,12 @@ class _CategoryList extends StatelessWidget {
     final custom = categories.where((c) => !c.isSystem).toList();
 
     return ListView(
-      padding: AppPadding.screen,
+      padding: const EdgeInsets.all(AuroraSpacing.screenPadH),
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
-        // ── System categories (read-only) ──────────────────────────────────
         _SectionHeader(label: 'System'),
         ...system.map((cat) => _CategoryRow(category: cat)),
-
-        const SizedBox(height: AppSizes.lg),
-
-        // ── Custom categories ──────────────────────────────────────────────
+        const SizedBox(height: AuroraSpacing.space7),
         _SectionHeader(label: 'Custom'),
         if (custom.isEmpty) const _EmptyCustomCategories(),
         ...custom.map((cat) => _CategoryRow(category: cat)),
@@ -154,11 +148,11 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.sm),
+      padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
       child: Text(
         label.toUpperCase(),
-        style: AppTextStyles.labelSmall.copyWith(
-          color: AppColors.textSecondary,
+        style: AuroraType.labelSm.copyWith(
+          color: AuroraColors.inkSecondary,
           letterSpacing: 0.8,
         ),
       ),
@@ -174,25 +168,26 @@ class _EmptyCustomCategories extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSizes.xl),
+      padding: const EdgeInsets.symmetric(vertical: AuroraSpacing.space8),
       child: Column(
         children: [
           const Icon(
             Icons.folder_outlined,
-            size: AppSizes.iconXl,
-            color: AppColors.textDisabled,
+            size: 48,
+            color: AuroraColors.inkTertiary,
           ),
-          const SizedBox(height: AppSizes.md),
+          const SizedBox(height: AuroraSpacing.space5),
           Text(
             'No custom categories yet',
-            style: AppTextStyles.h4.copyWith(color: AppColors.textSecondary),
+            style: AuroraType.bodySm.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AuroraColors.inkSecondary,
+            ),
           ),
-          const SizedBox(height: AppSizes.xs),
+          const SizedBox(height: AuroraSpacing.space1),
           Text(
             'Tap + to create your first custom category.',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
             textAlign: TextAlign.center,
           ),
         ],
@@ -218,19 +213,17 @@ class _CategoryRow extends ConsumerWidget {
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.sm),
+      padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
       child: Container(
-        height: AppSizes.cardMinHeight,
+        constraints: const BoxConstraints(minHeight: 56),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: AppColors.border),
+          color: AuroraColors.paper,
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
+          border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(
           children: [
-            const SizedBox(width: AppSizes.md),
-
-            // Color dot with icon
+            const SizedBox(width: AuroraSpacing.space5),
             Container(
               width: 40,
               height: 40,
@@ -240,63 +233,60 @@ class _CategoryRow extends ConsumerWidget {
               ),
               child: Icon(
                 CategoryIcons.forKey(category.icon),
-                size: AppSizes.iconSm,
-                color: AppColors.textInverse,
+                size: 16,
+                color: Colors.white,
               ),
             ),
-
-            const SizedBox(width: AppSizes.md),
-
-            // Category name
+            const SizedBox(width: AuroraSpacing.space5),
             Expanded(
               child: Text(
                 category.name,
-                style: AppTextStyles.bodyMediumSemibold,
+                style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-
-            // Action buttons (custom categories only)
             if (!category.isSystem) ...[
               if (isIOS) ...[
                 CupertinoButton(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AuroraSpacing.space3,
+                  ),
                   onPressed: () => _openEdit(context),
                   child: const Icon(
                     CupertinoIcons.pencil,
-                    size: AppSizes.iconMd,
-                    color: AppColors.deepNavy,
+                    size: 20,
+                    color: AuroraColors.ink,
                   ),
                 ),
                 CupertinoButton(
-                  padding: const EdgeInsets.only(
-                    left: AppSizes.xs,
-                    right: AppSizes.md,
+                  padding: EdgeInsets.only(
+                    left: AuroraSpacing.space1,
+                    right: AuroraSpacing.space5,
                   ),
                   onPressed: () => _confirmDelete(context, ref),
                   child: const Icon(
                     CupertinoIcons.trash,
-                    size: AppSizes.iconMd,
-                    color: AppColors.error,
+                    size: 20,
+                    color: AuroraColors.coral,
                   ),
                 ),
               ] else ...[
                 IconButton(
                   onPressed: () => _openEdit(context),
                   icon: const Icon(Icons.edit_outlined),
-                  color: AppColors.deepNavy,
-                  iconSize: AppSizes.iconMd,
+                  color: AuroraColors.ink,
+                  iconSize: 20,
                 ),
                 IconButton(
                   onPressed: () => _confirmDelete(context, ref),
                   icon: const Icon(Icons.delete_outline),
-                  color: AppColors.error,
-                  iconSize: AppSizes.iconMd,
-                  padding: const EdgeInsets.only(right: AppSizes.md),
+                  color: AuroraColors.coral,
+                  iconSize: 20,
+                  padding: const EdgeInsets.only(right: AuroraSpacing.space5),
                 ),
               ],
             ] else
-              const SizedBox(width: AppSizes.md),
+              const SizedBox(width: AuroraSpacing.space5),
           ],
         ),
       ),
@@ -352,7 +342,9 @@ class _CategoryRow extends ConsumerWidget {
                 confirmed = true;
                 Navigator.of(ctx).pop();
               },
-              style: TextButton.styleFrom(foregroundColor: AppColors.error),
+              style: TextButton.styleFrom(
+                foregroundColor: AuroraColors.coral,
+              ),
               child: const Text('Delete'),
             ),
           ],
@@ -373,7 +365,7 @@ class _CategoryRow extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Failed to delete category. Please try again.'),
-            backgroundColor: AppColors.error,
+            backgroundColor: AuroraColors.coral,
           ),
         );
       }

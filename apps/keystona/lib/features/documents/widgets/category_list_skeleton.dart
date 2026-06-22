@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
 /// Shimmer placeholder displayed while [documentCategoriesProvider] is loading.
 ///
@@ -14,15 +15,15 @@ class CategoryListSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: AppColors.gray200,
-      highlightColor: AppColors.gray100,
+      baseColor: AuroraColors.butter,
+      highlightColor: AuroraColors.paper,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Section header placeholder
           _sectionHeader(),
           ..._rows(3),
-          const SizedBox(height: AppSizes.md),
+          const SizedBox(height: AuroraSpacing.space5),
           _sectionHeader(),
           ..._rows(2),
         ],
@@ -33,15 +34,15 @@ class CategoryListSkeleton extends StatelessWidget {
   Widget _sectionHeader() {
     return Padding(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
+        horizontal: AuroraSpacing.space5,
+        vertical: AuroraSpacing.space3,
       ),
       child: Container(
         height: 14,
         width: 80,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+        decoration: const BoxDecoration(
+          color: AuroraColors.paper,
+          borderRadius: AuroraRadius.sm,
         ),
       ),
     );
@@ -59,32 +60,34 @@ class _SkeletonRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
+        horizontal: AuroraSpacing.space5,
+        vertical: AuroraSpacing.space3,
       ),
       child: Row(
         children: [
           // Color dot + icon placeholder
-          Container(
+          const SizedBox(
             width: 40,
             height: 40,
-            decoration: const BoxDecoration(
-              color: AppColors.surface,
-              shape: BoxShape.circle,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: AuroraColors.paper,
+                shape: BoxShape.circle,
+              ),
             ),
           ),
-          const SizedBox(width: AppSizes.md),
+          const SizedBox(width: AuroraSpacing.space5),
           // Name text placeholder
           Expanded(
             child: Container(
               height: 14,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+              decoration: const BoxDecoration(
+                color: AuroraColors.paper,
+                borderRadius: AuroraRadius.sm,
               ),
             ),
           ),
-          const SizedBox(width: AppSizes.xl),
+          const SizedBox(width: AuroraSpacing.space8),
         ],
       ),
     );

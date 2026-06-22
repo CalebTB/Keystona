@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../providers/document_upload_provider.dart';
 
 /// Step 2 of the upload wizard — document name, expiration date, and notes.
@@ -55,22 +56,26 @@ class _UploadMetadataStepState extends ConsumerState<UploadMetadataStep> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Document details', style: AppTextStyles.h3),
-        const SizedBox(height: AppSizes.xs),
+        Text('Document details', style: AuroraType.h3),
+        const SizedBox(height: AuroraSpacing.space1),
         Text(
           'Name this document and add optional details.',
-          style: AppTextStyles.bodyMedium
-              .copyWith(color: AppColors.textSecondary),
+          style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
         ),
-        const SizedBox(height: AppSizes.lg),
+        const SizedBox(height: AuroraSpacing.space7),
         Expanded(
           child: Form(
             key: _formKey,
             child: ListView(
               children: [
                 // ── Name ─────────────────────────────────────────────────
-                Text('Document name', style: AppTextStyles.labelLarge),
-                const SizedBox(height: AppSizes.xs),
+                Text(
+                  'DOCUMENT NAME',
+                  style: AuroraType.label.copyWith(
+                    color: AuroraColors.inkSecondary,
+                  ),
+                ),
+                const SizedBox(height: AuroraSpacing.space1),
                 TextFormField(
                   controller: _nameController,
                   textCapitalization: TextCapitalization.sentences,
@@ -93,17 +98,23 @@ class _UploadMetadataStepState extends ConsumerState<UploadMetadataStep> {
                       .setName(v),
                 ),
 
-                const SizedBox(height: AppSizes.lg),
+                const SizedBox(height: AuroraSpacing.space7),
 
                 // ── Expiration date ───────────────────────────────────────
-                Text('Expiration date', style: AppTextStyles.labelLarge),
-                const SizedBox(height: AppSizes.xs),
+                Text(
+                  'EXPIRATION DATE',
+                  style: AuroraType.label.copyWith(
+                    color: AuroraColors.inkSecondary,
+                  ),
+                ),
+                const SizedBox(height: AuroraSpacing.space1),
                 Text(
                   'Optional — for warranties, insurance, permits.',
-                  style: AppTextStyles.caption
-                      .copyWith(color: AppColors.textSecondary),
+                  style: AuroraType.bodySm.copyWith(
+                    color: AuroraColors.inkSecondary,
+                  ),
                 ),
-                const SizedBox(height: AppSizes.sm),
+                const SizedBox(height: AuroraSpacing.space3),
                 _ExpirationDateField(
                   value: _expirationDate,
                   onChanged: (date) {
@@ -114,17 +125,23 @@ class _UploadMetadataStepState extends ConsumerState<UploadMetadataStep> {
                   },
                 ),
 
-                const SizedBox(height: AppSizes.lg),
+                const SizedBox(height: AuroraSpacing.space7),
 
                 // ── Notes ─────────────────────────────────────────────────
-                Text('Notes', style: AppTextStyles.labelLarge),
-                const SizedBox(height: AppSizes.xs),
+                Text(
+                  'NOTES',
+                  style: AuroraType.label.copyWith(
+                    color: AuroraColors.inkSecondary,
+                  ),
+                ),
+                const SizedBox(height: AuroraSpacing.space1),
                 Text(
                   'Optional — any context you want to remember.',
-                  style: AppTextStyles.caption
-                      .copyWith(color: AppColors.textSecondary),
+                  style: AuroraType.bodySm.copyWith(
+                    color: AuroraColors.inkSecondary,
+                  ),
                 ),
-                const SizedBox(height: AppSizes.sm),
+                const SizedBox(height: AuroraSpacing.space3),
                 TextFormField(
                   controller: _notesController,
                   maxLines: 3,
@@ -144,29 +161,33 @@ class _UploadMetadataStepState extends ConsumerState<UploadMetadataStep> {
         ),
 
         // ── Actions ───────────────────────────────────────────────────────
-        const SizedBox(height: AppSizes.md),
+        const SizedBox(height: AuroraSpacing.space5),
         FilledButton(
           onPressed: _submit,
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.accent,
-            minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+            backgroundColor: AuroraColors.coral,
+            minimumSize: const Size.fromHeight(56),
+            shape: const RoundedRectangleBorder(
+              borderRadius: AuroraRadius.sm,
             ),
           ),
           child: Text(
             'Upload',
-            style: AppTextStyles.button
-                .copyWith(color: AppColors.textInverse),
+            style: AuroraType.bodyLg.copyWith(
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
           ),
         ),
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: AuroraSpacing.space3),
         TextButton(
           onPressed: widget.onBack,
           child: Text(
             'Back',
-            style: AppTextStyles.button
-                .copyWith(color: AppColors.textSecondary),
+            style: AuroraType.bodyLg.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AuroraColors.inkSecondary,
+            ),
           ),
         ),
       ],
@@ -214,21 +235,21 @@ class _ExpirationDateField extends StatelessWidget {
             icon: const Icon(Icons.calendar_today_outlined, size: 18),
             label: Text(
               label,
-              style: AppTextStyles.bodyMedium.copyWith(
+              style: AuroraType.body.copyWith(
                 color: value != null
-                    ? AppColors.textPrimary
-                    : AppColors.textSecondary,
+                    ? AuroraColors.ink
+                    : AuroraColors.inkSecondary,
               ),
             ),
             style: OutlinedButton.styleFrom(
               alignment: Alignment.centerLeft,
               padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.md,
-                vertical: AppSizes.sm,
+                horizontal: AuroraSpacing.space5,
+                vertical: AuroraSpacing.space3,
               ),
-              side: const BorderSide(color: AppColors.border),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+              side: const BorderSide(color: AuroraColors.inkBorder),
+              shape: const RoundedRectangleBorder(
+                borderRadius: AuroraRadius.sm,
               ),
             ),
             onPressed: () async {
@@ -244,9 +265,9 @@ class _ExpirationDateField extends StatelessWidget {
           ),
         ),
         if (value != null) ...[
-          const SizedBox(width: AppSizes.sm),
+          const SizedBox(width: AuroraSpacing.space3),
           IconButton(
-            icon: const Icon(Icons.clear, color: AppColors.textSecondary),
+            icon: Icon(Icons.clear, color: AuroraColors.inkSecondary),
             onPressed: () => onChanged(null),
           ),
         ],

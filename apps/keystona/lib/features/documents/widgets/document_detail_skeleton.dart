@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
 /// Skeleton loading state for [DocumentDetailScreen].
 ///
@@ -19,8 +20,8 @@ class DocumentDetailSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: AppColors.gray200,
-      highlightColor: AppColors.gray100,
+      baseColor: AuroraColors.butter,
+      highlightColor: AuroraColors.paper,
       child: SingleChildScrollView(
         physics: const NeverScrollableScrollPhysics(),
         child: Column(
@@ -30,28 +31,28 @@ class DocumentDetailSkeleton extends StatelessWidget {
             Container(
               width: double.infinity,
               height: 240,
-              color: AppColors.gray300,
+              color: AuroraColors.inkBorder,
             ),
 
             Padding(
-              padding: AppPadding.screen,
+              padding: const EdgeInsets.all(AuroraSpacing.screenPadH),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: AppSizes.lg),
+                  const SizedBox(height: AuroraSpacing.space7),
 
                   // Action buttons row.
                   Row(
                     children: [
                       _SkeletonPill(width: 88),
-                      const SizedBox(width: AppSizes.sm),
+                      const SizedBox(width: AuroraSpacing.space3),
                       _SkeletonPill(width: 88),
-                      const SizedBox(width: AppSizes.sm),
+                      const SizedBox(width: AuroraSpacing.space3),
                       _SkeletonPill(width: 88),
                     ],
                   ),
 
-                  const SizedBox(height: AppSizes.lg),
+                  const SizedBox(height: AuroraSpacing.space7),
                   const _SectionDivider(),
 
                   // Metadata rows — 6 rows of label + value.
@@ -78,9 +79,9 @@ class _SkeletonPill extends StatelessWidget {
     return Container(
       width: width,
       height: 40,
-      decoration: BoxDecoration(
-        color: AppColors.gray300,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+      decoration: const BoxDecoration(
+        color: AuroraColors.inkBorder,
+        borderRadius: AuroraRadius.md,
       ),
     );
   }
@@ -94,7 +95,7 @@ class _MetadataRowSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSizes.md),
+      padding: const EdgeInsets.symmetric(vertical: AuroraSpacing.space5),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -102,18 +103,18 @@ class _MetadataRowSkeleton extends StatelessWidget {
           Container(
             width: 72,
             height: 14,
-            decoration: BoxDecoration(
-              color: AppColors.gray300,
-              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+            decoration: const BoxDecoration(
+              color: AuroraColors.inkBorder,
+              borderRadius: AuroraRadius.sm,
             ),
           ),
           // Value.
           Container(
             width: valueWidth,
             height: 14,
-            decoration: BoxDecoration(
-              color: AppColors.gray300,
-              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+            decoration: const BoxDecoration(
+              color: AuroraColors.inkBorder,
+              borderRadius: AuroraRadius.sm,
             ),
           ),
         ],
@@ -127,6 +128,6 @@ class _SectionDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Divider(height: 1, thickness: 1, color: AppColors.divider);
+    return const Divider(height: 1, thickness: 1, color: AuroraColors.inkBorder);
   }
 }

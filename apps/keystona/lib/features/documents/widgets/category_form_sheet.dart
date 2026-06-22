@@ -2,9 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../models/document_category.dart';
 import '../providers/document_categories_provider.dart';
 
@@ -85,9 +86,7 @@ Future<bool> showCategoryFormSheet(
       isScrollControlled: true,
       useSafeArea: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSizes.radiusLg),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (_) => CategoryFormSheet(existing: existing),
     );
@@ -97,9 +96,6 @@ Future<bool> showCategoryFormSheet(
 }
 
 /// Bottom sheet for creating or editing a custom document category.
-///
-/// Displays a name text field, an icon picker, and a color swatch grid.
-/// On save, calls [DocumentCategoriesNotifier.create] or [updateCategory].
 class CategoryFormSheet extends ConsumerStatefulWidget {
   const CategoryFormSheet({super.key, this.existing});
 
@@ -120,9 +116,7 @@ class _CategoryFormSheetState extends ConsumerState<CategoryFormSheet> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(
-      text: widget.existing?.name ?? '',
-    );
+    _nameController = TextEditingController(text: widget.existing?.name ?? '');
     _selectedIcon = widget.existing?.icon ?? CategoryIcons.all.keys.first;
     _selectedColor = widget.existing?.color ?? kCategoryColors.first;
   }
@@ -173,8 +167,10 @@ class _CategoryFormSheetState extends ConsumerState<CategoryFormSheet> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_isEdit ? 'Failed to update category.' : 'Failed to create category.'),
-            backgroundColor: AppColors.error,
+            content: Text(_isEdit
+                ? 'Failed to update category.'
+                : 'Failed to create category.'),
+            backgroundColor: AuroraColors.coral,
           ),
         );
       }
@@ -244,8 +240,8 @@ class _IOSSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Material wrapper is required: TextField (in _FormBody) needs a Material
-    // ancestor — showCupertinoModalPopup provides only a Cupertino context.
+    // Material wrapper required: TextField needs a Material ancestor inside
+    // showCupertinoModalPopup which only provides a Cupertino context.
     return Material(
       type: MaterialType.transparency,
       child: ConstrainedBox(
@@ -255,9 +251,7 @@ class _IOSSheet extends StatelessWidget {
         child: Container(
           decoration: const BoxDecoration(
             color: CupertinoColors.systemGroupedBackground,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(AppSizes.radiusLg),
-            ),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
           ),
           padding: EdgeInsets.only(
             bottom: MediaQuery.viewInsetsOf(context).bottom,
@@ -268,8 +262,7 @@ class _IOSSheet extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Drag handle
-                  const SizedBox(height: AppSizes.sm),
+                  const SizedBox(height: AuroraSpacing.space3),
                   Container(
                     width: 36,
                     height: 4,
@@ -278,11 +271,11 @@ class _IOSSheet extends StatelessWidget {
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  const SizedBox(height: AppSizes.sm),
-
-                  // Header row
+                  const SizedBox(height: AuroraSpacing.space3),
                   Padding(
-                    padding: AppPadding.screenHorizontal,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AuroraSpacing.screenPadH,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -291,7 +284,11 @@ class _IOSSheet extends StatelessWidget {
                           onPressed: loading ? null : onCancel,
                           child: const Text('Cancel'),
                         ),
-                        Text(title, style: AppTextStyles.h4),
+                        Text(
+                          title,
+                          style: AuroraType.bodySm
+                              .copyWith(fontWeight: FontWeight.w600),
+                        ),
                         CupertinoButton(
                           padding: EdgeInsets.zero,
                           onPressed: loading ? null : onSubmit,
@@ -302,12 +299,12 @@ class _IOSSheet extends StatelessWidget {
                       ],
                     ),
                   ),
-
                   const Divider(height: 1),
-                  const SizedBox(height: AppSizes.md),
-
+                  const SizedBox(height: AuroraSpacing.space5),
                   Padding(
-                    padding: AppPadding.screenHorizontal,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AuroraSpacing.screenPadH,
+                    ),
                     child: _FormBody(
                       nameController: nameController,
                       nameError: nameError,
@@ -317,7 +314,7 @@ class _IOSSheet extends StatelessWidget {
                       onColorSelected: onColorSelected,
                     ),
                   ),
-                  const SizedBox(height: AppSizes.lg),
+                  const SizedBox(height: AuroraSpacing.space7),
                 ],
               ),
             ),
@@ -362,30 +359,29 @@ class _AndroidSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Drag handle
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
           Container(
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.gray300,
+              color: AuroraColors.inkBorder,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(height: AppSizes.md),
-
+          const SizedBox(height: AuroraSpacing.space5),
           Padding(
-            padding: AppPadding.screenHorizontal,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AuroraSpacing.screenPadH,
+            ),
             child: Row(
-              children: [
-                Text(title, style: AppTextStyles.h3),
-              ],
+              children: [Text(title, style: AuroraType.h3)],
             ),
           ),
-          const SizedBox(height: AppSizes.md),
-
+          const SizedBox(height: AuroraSpacing.space5),
           Padding(
-            padding: AppPadding.screenHorizontal,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AuroraSpacing.screenPadH,
+            ),
             child: _FormBody(
               nameController: nameController,
               nameError: nameError,
@@ -395,19 +391,20 @@ class _AndroidSheet extends StatelessWidget {
               onColorSelected: onColorSelected,
             ),
           ),
-          const SizedBox(height: AppSizes.md),
-
+          const SizedBox(height: AuroraSpacing.space5),
           Padding(
-            padding: AppPadding.screenHorizontal,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AuroraSpacing.screenPadH,
+            ),
             child: SizedBox(
               width: double.infinity,
-              height: AppSizes.buttonHeight,
+              height: 56,
               child: FilledButton(
                 onPressed: loading ? null : onSubmit,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                  backgroundColor: AuroraColors.coral,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: AuroraRadius.sm,
                   ),
                 ),
                 child: loading
@@ -416,18 +413,20 @@ class _AndroidSheet extends StatelessWidget {
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppColors.textInverse,
+                          color: Colors.white,
                         ),
                       )
                     : Text(
                         'Save',
-                        style: AppTextStyles.button
-                            .copyWith(color: AppColors.textInverse),
+                        style: AuroraType.bodyLg.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
                       ),
               ),
             ),
           ),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AuroraSpacing.space7),
         ],
       ),
     );
@@ -458,9 +457,11 @@ class _FormBody extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Name field
-        Text('Name', style: AppTextStyles.labelLarge),
-        const SizedBox(height: AppSizes.xs),
+        Text(
+          'Name',
+          style: AuroraType.bodySm.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: AuroraSpacing.space1),
         TextField(
           controller: nameController,
           maxLength: 50,
@@ -469,34 +470,30 @@ class _FormBody extends StatelessWidget {
             hintText: 'e.g. Pool & Spa',
             errorText: nameError,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-              borderSide: const BorderSide(color: AppColors.border),
+              borderRadius: AuroraRadius.sm,
+              borderSide: const BorderSide(color: AuroraColors.inkBorder),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-              borderSide: const BorderSide(color: AppColors.border),
+              borderRadius: AuroraRadius.sm,
+              borderSide: const BorderSide(color: AuroraColors.inkBorder),
             ),
-            counterStyle: AppTextStyles.caption,
+            counterStyle: AuroraType.bodySm,
           ),
         ),
-        const SizedBox(height: AppSizes.md),
-
-        // Icon picker
-        Text('Icon', style: AppTextStyles.labelLarge),
-        const SizedBox(height: AppSizes.sm),
-        _IconPicker(
-          selected: selectedIcon,
-          onSelected: onIconSelected,
+        const SizedBox(height: AuroraSpacing.space5),
+        Text(
+          'Icon',
+          style: AuroraType.bodySm.copyWith(fontWeight: FontWeight.w600),
         ),
-        const SizedBox(height: AppSizes.md),
-
-        // Color picker
-        Text('Color', style: AppTextStyles.labelLarge),
-        const SizedBox(height: AppSizes.sm),
-        _ColorPicker(
-          selected: selectedColor,
-          onSelected: onColorSelected,
+        const SizedBox(height: AuroraSpacing.space3),
+        _IconPicker(selected: selectedIcon, onSelected: onIconSelected),
+        const SizedBox(height: AuroraSpacing.space5),
+        Text(
+          'Color',
+          style: AuroraType.bodySm.copyWith(fontWeight: FontWeight.w600),
         ),
+        const SizedBox(height: AuroraSpacing.space3),
+        _ColorPicker(selected: selectedColor, onSelected: onColorSelected),
       ],
     );
   }
@@ -524,19 +521,19 @@ class _IconPicker extends StatelessWidget {
               duration: const Duration(milliseconds: 150),
               width: 48,
               height: 48,
-              margin: const EdgeInsets.only(right: AppSizes.sm),
+              margin: const EdgeInsets.only(right: AuroraSpacing.space3),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.deepNavy : AppColors.surfaceVariant,
-                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                color: isSelected ? AuroraColors.ink : AuroraColors.butter,
+                borderRadius: AuroraRadius.sm,
                 border: Border.all(
-                  color: isSelected ? AppColors.deepNavy : AppColors.border,
+                  color: isSelected ? AuroraColors.ink : AuroraColors.inkBorder,
                   width: isSelected ? 2 : 1,
                 ),
               ),
               child: Icon(
                 entry.value,
-                size: AppSizes.iconMd,
-                color: isSelected ? AppColors.textInverse : AppColors.textSecondary,
+                size: 20,
+                color: isSelected ? Colors.white : AuroraColors.inkSecondary,
               ),
             ),
           );
@@ -562,8 +559,8 @@ class _ColorPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: AppSizes.sm,
-      runSpacing: AppSizes.sm,
+      spacing: AuroraSpacing.space3,
+      runSpacing: AuroraSpacing.space3,
       children: kCategoryColors.map((hex) {
         final isSelected = hex == selected;
         return GestureDetector(
@@ -576,7 +573,7 @@ class _ColorPicker extends StatelessWidget {
               color: _fromHex(hex),
               shape: BoxShape.circle,
               border: Border.all(
-                color: isSelected ? AppColors.deepNavy : Colors.transparent,
+                color: isSelected ? AuroraColors.ink : Colors.transparent,
                 width: 3,
               ),
               boxShadow: isSelected
@@ -590,7 +587,7 @@ class _ColorPicker extends StatelessWidget {
                   : null,
             ),
             child: isSelected
-                ? const Icon(Icons.check, size: 18, color: AppColors.textInverse)
+                ? const Icon(Icons.check, size: 18, color: Colors.white)
                 : null,
           ),
         );

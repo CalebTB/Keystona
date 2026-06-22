@@ -5,16 +5,15 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/confirm_dialog.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/snackbar_service.dart';
@@ -30,12 +29,12 @@ import '../widgets/edit_metadata_sheet.dart';
 
 Color _catColor(DocumentCategory? category) {
   final hex = category?.color;
-  if (hex == null || hex.isEmpty) return AppColors.slate;
+  if (hex == null || hex.isEmpty) return AuroraColors.cobalt;
   try {
     final cleaned = hex.replaceAll('#', '');
     return Color(int.parse('FF$cleaned', radix: 16));
   } catch (_) {
-    return AppColors.slate;
+    return AuroraColors.cobalt;
   }
 }
 
@@ -71,7 +70,7 @@ class DocumentDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final detailState = ref.watch(documentDetailProvider(documentId));
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       body: detailState.when(
         loading: () => const DocumentDetailSkeleton(),
         error: (e, _) => SafeArea(
@@ -104,7 +103,7 @@ class _BackButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSizes.screenPadding, 12, 0, 0),
+      padding: const EdgeInsets.fromLTRB(AuroraSpacing.screenPadH, 12, 0, 0),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
@@ -112,12 +111,15 @@ class _BackButton extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(CupertinoIcons.chevron_back,
-                color: AppColors.accent, size: 20),
+                color: AuroraColors.coral, size: 20),
             const SizedBox(width: 2),
             Text(
               'Documents',
-              style: AppTextStyles.labelLarge
-                  .copyWith(color: AppColors.accent, fontSize: 14),
+              style: AuroraType.bodySm.copyWith(
+                color: AuroraColors.coral,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
             ),
           ],
         ),
@@ -154,7 +156,9 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
           .read(documentDetailProvider(widget.documentId).notifier)
           .getSignedUrl();
       if (url == null) {
-        if (mounted) SnackbarService.showError(context, "Couldn't generate share link.");
+        if (mounted) {
+          SnackbarService.showError(context, "Couldn't generate share link.");
+        }
         return;
       }
       await SharePlus.instance.share(
@@ -171,7 +175,9 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
           .read(documentDetailProvider(widget.documentId).notifier)
           .getSignedUrl();
       if (url == null) {
-        if (mounted) SnackbarService.showError(context, "Couldn't generate download link.");
+        if (mounted) {
+          SnackbarService.showError(context, "Couldn't generate download link.");
+        }
         return;
       }
       final uri = Uri.parse(url);
@@ -187,7 +193,8 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
     await ConfirmDialog.show(
       context,
       title: 'Delete document?',
-      message: 'The document will be moved to trash. You can undo this within 5 seconds.',
+      message:
+          'The document will be moved to trash. You can undo this within 5 seconds.',
       confirmLabel: 'Delete',
       onConfirm: _commitDelete,
     );
@@ -204,7 +211,8 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
     } catch (_) {
       if (mounted) {
         setState(() => _deletePending = false);
-        SnackbarService.showError(context, "Couldn't delete document. Try again.");
+        SnackbarService.showError(
+            context, "Couldn't delete document. Try again.");
       }
       return;
     }
@@ -215,14 +223,14 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
       SnackBar(
         content: Text(
           'Document moved to trash.',
-          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textInverse),
+          style: AuroraType.body.copyWith(color: Colors.white),
         ),
-        backgroundColor: AppColors.gray800,
+        backgroundColor: AuroraColors.ink,
         duration: const Duration(seconds: 5),
         behavior: SnackBarBehavior.floating,
         action: SnackBarAction(
           label: 'UNDO',
-          textColor: AppColors.goldAccent,
+          textColor: AuroraColors.yellow,
           onPressed: _undoDelete,
         ),
       ),
@@ -248,7 +256,9 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
         SnackbarService.showSuccess(context, 'Document restored.');
       }
     } catch (_) {
-      if (mounted) SnackbarService.showError(context, "Couldn't restore document.");
+      if (mounted) {
+        SnackbarService.showError(context, "Couldn't restore document.");
+      }
     }
   }
 
@@ -257,9 +267,7 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
     final doc = ref.watch(documentDetailProvider(widget.documentId)).value ??
         widget.document;
     final catColor = _catColor(doc.category);
-    final daysLeft = doc.expirationDate
-        ?.difference(DateTime.now())
-        .inDays;
+    final daysLeft = doc.expirationDate?.difference(DateTime.now()).inDays;
     final showExpiryCard = daysLeft != null && daysLeft < 90;
     return Stack(
       children: [
@@ -273,7 +281,7 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
             ),
             SliverPadding(
               padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.screenPadding,
+                horizontal: AuroraSpacing.screenPadH,
               ),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
@@ -289,13 +297,13 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
                     const SizedBox(height: 12),
                     _ExpiryCountdownCard(daysLeft: daysLeft),
                   ],
-                  const SizedBox(height: AppSizes.md),
+                  const SizedBox(height: AuroraSpacing.space5),
                   _DetailsCard(document: doc),
                   _LinkedToCard(document: doc),
                   _UsedInCard(documentId: widget.documentId),
-                  const SizedBox(height: AppSizes.md),
+                  const SizedBox(height: AuroraSpacing.space5),
                   _NotesCard(document: doc),
-                  const SizedBox(height: AppSizes.md),
+                  const SizedBox(height: AuroraSpacing.space5),
                   _FileInfoCard(document: doc),
                   const SizedBox(height: 120),
                 ]),
@@ -330,7 +338,7 @@ class _NavRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppSizes.screenPadding, 8, AppSizes.screenPadding, 0,
+        AuroraSpacing.screenPadH, 8, AuroraSpacing.screenPadH, 0,
       ),
       child: Row(
         children: [
@@ -341,14 +349,14 @@ class _NavRow extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(CupertinoIcons.chevron_back,
-                    color: AppColors.accent, size: 20),
+                    color: AuroraColors.coral, size: 20),
                 const SizedBox(width: 2),
                 Text(
                   'Documents',
-                  style: AppTextStyles.labelLarge.copyWith(
-                    color: AppColors.accent,
-                    fontSize: 14,
+                  style: AuroraType.bodySm.copyWith(
+                    color: AuroraColors.coral,
                     fontWeight: FontWeight.w600,
+                    fontSize: 14,
                   ),
                 ),
               ],
@@ -379,18 +387,18 @@ class _NavIconButton extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AuroraColors.paper,
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.border, width: 1.5),
+          border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: AppColors.deepNavy.withValues(alpha: 0.05),
+              color: AuroraColors.ink.withValues(alpha: 0.05),
               blurRadius: 4,
               offset: const Offset(0, 1),
             ),
           ],
         ),
-        child: Icon(icon, size: 16, color: AppColors.textSecondary),
+        child: Icon(icon, size: 16, color: AuroraColors.inkSecondary),
       ),
     );
   }
@@ -448,19 +456,19 @@ class _PreviewCardState extends State<_PreviewCard> {
       child: Container(
         height: 220,
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-          border: Border.all(color: AppColors.border, width: 1.5),
+          color: AuroraColors.paper,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: AppColors.deepNavy.withValues(alpha: 0.08),
+              color: AuroraColors.ink.withValues(alpha: 0.08),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppSizes.radiusLg - 1.5),
+          borderRadius: BorderRadius.circular(14.5),
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -502,10 +510,10 @@ class _PreviewCardState extends State<_PreviewCard> {
                   document.pageCount != null
                       ? '${document.pageCount} page${document.pageCount == 1 ? '' : 's'} · Tap to preview'
                       : 'Tap to preview',
-                  style: AppTextStyles.monoTiny.copyWith(
+                  style: AuroraType.labelSm.copyWith(
                     color: _thumbnailUrl != null
-                        ? AppColors.textInverse.withValues(alpha: 0.85)
-                        : AppColors.gray500,
+                        ? Colors.white.withValues(alpha: 0.85)
+                        : AuroraColors.inkTertiary,
                   ),
                 ),
               ),
@@ -520,15 +528,15 @@ class _PreviewCardState extends State<_PreviewCard> {
                   decoration: BoxDecoration(
                     color: _thumbnailUrl != null
                         ? Colors.black.withValues(alpha: 0.35)
-                        : AppColors.deepNavy.withValues(alpha: 0.06),
+                        : AuroraColors.ink.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     Icons.open_in_full_rounded,
                     size: 16,
                     color: _thumbnailUrl != null
-                        ? AppColors.textInverse
-                        : AppColors.textSecondary,
+                        ? Colors.white
+                        : AuroraColors.inkSecondary,
                   ),
                 ),
               ),
@@ -549,7 +557,7 @@ class _PreviewCardState extends State<_PreviewCard> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.center,
-                colors: [dimColor, AppColors.surface],
+                colors: [dimColor, AuroraColors.paper],
               ),
             ),
           ),
@@ -574,7 +582,7 @@ class _PreviewCardState extends State<_PreviewCard> {
                     const SizedBox(height: 4),
                     Text(
                       ext,
-                      style: AppTextStyles.monoTiny.copyWith(
+                      style: AuroraType.labelSm.copyWith(
                         color: catColor,
                         fontWeight: FontWeight.w700,
                       ),
@@ -592,6 +600,9 @@ class _PreviewCardState extends State<_PreviewCard> {
 
 // ─── Fullscreen Preview ───────────────────────────────────────────────────────
 
+/// INTENTIONAL EXCEPTION: Colors.black / Colors.white are correct here.
+/// These are design-system-exempt — brand off-white looks wrong on
+/// a black media background.
 class _FullscreenPreview extends StatelessWidget {
   const _FullscreenPreview({required this.document});
 
@@ -609,7 +620,7 @@ class _FullscreenPreview extends StatelessWidget {
         foregroundColor: Colors.white,
         title: Text(
           document.name,
-          style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
+          style: AuroraType.body.copyWith(color: Colors.white),
         ),
         elevation: 0,
       ),
@@ -626,8 +637,7 @@ class _FullscreenPreview extends StatelessWidget {
                       const SizedBox(height: 16),
                       Text(
                         'Preview not available',
-                        style: AppTextStyles.bodyMedium
-                            .copyWith(color: Colors.white54),
+                        style: AuroraType.body.copyWith(color: Colors.white54),
                       ),
                     ],
                   ),
@@ -659,13 +669,7 @@ class _TitleArea extends StatelessWidget {
       children: [
         Text(
           document.name,
-          style: GoogleFonts.fraunces(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.5,
-            color: AppColors.textPrimary,
-            height: 1.2,
-          ),
+          style: AuroraType.h1.copyWith(color: AuroraColors.ink),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -689,7 +693,7 @@ class _TitleArea extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       document.category!.name,
-                      style: AppTextStyles.labelSmall.copyWith(
+                      style: AuroraType.labelSm.copyWith(
                         color: catColor,
                         fontWeight: FontWeight.w700,
                       ),
@@ -699,26 +703,26 @@ class _TitleArea extends StatelessWidget {
               ),
             if (document.type != null)
               _TitleBadge(
-                backgroundColor: AppColors.warmFill,
+                backgroundColor: AuroraColors.butter,
                 child: Text(
                   document.type!.name,
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.gray500,
+                  style: AuroraType.labelSm.copyWith(
+                    color: AuroraColors.inkTertiary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
             if (showExpiryBadge)
               _TitleBadge(
-                backgroundColor: AppColors.accentDim,
+                backgroundColor: AuroraColors.coralDim,
                 border: Border.all(
-                  color: AppColors.accent.withValues(alpha: 0.12),
+                  color: AuroraColors.coral.withValues(alpha: 0.12),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(Icons.access_time_rounded,
-                        size: 12, color: AppColors.accent),
+                        size: 12, color: AuroraColors.coral),
                     const SizedBox(width: 4),
                     Text(
                       daysLeft! < 0
@@ -726,8 +730,8 @@ class _TitleArea extends StatelessWidget {
                           : daysLeft == 0
                               ? 'Expires today'
                               : 'Expires in ${daysLeft}d',
-                      style: AppTextStyles.monoTiny.copyWith(
-                        color: AppColors.accent,
+                      style: AuroraType.labelSm.copyWith(
+                        color: AuroraColors.coral,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -758,7 +762,7 @@ class _TitleBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(AppSizes.radiusXs),
+        borderRadius: BorderRadius.circular(4),
         border: border,
       ),
       child: child,
@@ -786,14 +790,14 @@ class _ExpiryCountdownCard extends StatelessWidget {
     final displayDays = daysLeft < 0 ? 'Expired' : '${daysLeft}d';
 
     return Container(
-      padding: const EdgeInsets.all(AppSizes.md),
+      padding: const EdgeInsets.all(AuroraSpacing.space5),
       decoration: BoxDecoration(
-        color: AppColors.accentDim,
+        color: AuroraColors.coralDim,
         border: Border.all(
-          color: AppColors.accent.withValues(alpha: 0.12),
+          color: AuroraColors.coral.withValues(alpha: 0.12),
           width: 1.5,
         ),
-        borderRadius: BorderRadius.circular(AppSizes.radiusCard),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -801,20 +805,20 @@ class _ExpiryCountdownCard extends StatelessWidget {
           Row(
             children: [
               const Icon(Icons.access_time_rounded,
-                  color: AppColors.accent, size: 18),
+                  color: AuroraColors.coral, size: 18),
               const SizedBox(width: 8),
               Text(
                 'Expiration Countdown',
-                style: AppTextStyles.labelLarge.copyWith(
-                  color: AppColors.accent,
+                style: AuroraType.bodySm.copyWith(
+                  color: AuroraColors.coral,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const Spacer(),
               Text(
                 displayDays,
-                style: AppTextStyles.monoDisplay.copyWith(
-                  color: AppColors.accent,
+                style: AuroraType.number.copyWith(
+                  color: AuroraColors.coral,
                   fontSize: 20,
                 ),
               ),
@@ -833,15 +837,15 @@ class _ExpiryCountdownCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(2),
                     gradient: isCurrent
                         ? LinearGradient(colors: [
-                            AppColors.accent,
-                            AppColors.accent.withValues(alpha: 0.15),
+                            AuroraColors.coral,
+                            AuroraColors.coral.withValues(alpha: 0.15),
                           ])
                         : null,
                     color: isCurrent
                         ? null
                         : isPassed
-                            ? AppColors.accent
-                            : AppColors.accent.withValues(alpha: 0.12),
+                            ? AuroraColors.coral
+                            : AuroraColors.coral.withValues(alpha: 0.12),
                   ),
                 ),
               );
@@ -850,8 +854,8 @@ class _ExpiryCountdownCard extends StatelessWidget {
           const SizedBox(height: 6),
           Row(
             children: [
-              _ExpiryLabel('90 days ✓', passed: passedSegments > 0,
-                  align: TextAlign.left),
+              _ExpiryLabel('90 days ✓',
+                  passed: passedSegments > 0, align: TextAlign.left),
               _ExpiryLabel('60 days ✓', passed: passedSegments > 1),
               _ExpiryLabel('30 days ✓', passed: passedSegments > 2),
               _ExpiryLabel(
@@ -886,12 +890,12 @@ class _ExpiryLabel extends StatelessWidget {
     return Expanded(
       child: Text(
         text,
-        style: AppTextStyles.monoTiny.copyWith(
+        style: AuroraType.labelSm.copyWith(
           color: isCurrent
-              ? AppColors.accent
+              ? AuroraColors.coral
               : passed
-                  ? AppColors.accent.withValues(alpha: 0.6)
-                  : AppColors.gray500,
+                  ? AuroraColors.coral.withValues(alpha: 0.6)
+                  : AuroraColors.inkTertiary,
           fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w600,
         ),
         textAlign: align,
@@ -921,12 +925,12 @@ class _InfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusCard),
-        border: Border.all(color: AppColors.border, width: 1.5),
+        color: AuroraColors.paper,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: AppColors.deepNavy.withValues(alpha: 0.05),
+            color: AuroraColors.ink.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),
@@ -939,14 +943,14 @@ class _InfoCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
             decoration: const BoxDecoration(
               border: Border(
-                bottom: BorderSide(color: AppColors.warmFill),
+                bottom: BorderSide(color: AuroraColors.butter),
               ),
             ),
             child: Row(
               children: [
-                Icon(icon, size: 15, color: AppColors.gray500),
+                Icon(icon, size: 15, color: AuroraColors.inkTertiary),
                 const SizedBox(width: 8),
-                Text(label, style: AppTextStyles.monoSection),
+                Text(label, style: AuroraType.label),
                 if (trailing != null) ...[
                   const Spacer(),
                   trailing!,
@@ -996,17 +1000,19 @@ class _DetailsGrid extends StatelessWidget {
   static bool _isMono(dynamic value) {
     final s = value.toString();
     if (s.startsWith(r'$')) return true;
-    if (RegExp(r'^\(?\d{3}\)?[\s\-]\d{3}[\s\-]\d{4}$').hasMatch(s)) return true;
+    if (RegExp(r'^\(?\d{3}\)?[\s\-]\d{3}[\s\-]\d{4}$').hasMatch(s)) {
+      return true;
+    }
     if (RegExp(r'^[A-Z0-9][A-Z0-9\-]{2,}$').hasMatch(s)) return true;
     if (RegExp(r'^\d+(\.\d+)?$').hasMatch(s)) return true;
     return false;
   }
 
-  // Phone numbers get slate color to match the design reference.
+  // Phone numbers get cobalt color to match the design reference.
   static Color? _valueColor(String key, dynamic value) {
     final s = value?.toString() ?? '';
     if (RegExp(r'^\(?\d{3}\)?[\s\-]\d{3}[\s\-]\d{4}$').hasMatch(s)) {
-      return AppColors.slate;
+      return AuroraColors.cobalt;
     }
     return null;
   }
@@ -1044,7 +1050,7 @@ class _DetailsGrid extends StatelessWidget {
                   label: 'Expiration',
                   value: DateFormat('MMM d, yyyy')
                       .format(document.expirationDate!),
-                  valueColor: AppColors.accent,
+                  valueColor: AuroraColors.coral,
                 ),
               ));
             }
@@ -1099,7 +1105,7 @@ class _DetailsGrid extends StatelessWidget {
                     label: 'Expiration',
                     value: DateFormat('MMM d, yyyy')
                         .format(document.expirationDate!),
-                    valueColor: AppColors.accent,
+                    valueColor: AuroraColors.coral,
                   ),
                 ),
             ]);
@@ -1132,17 +1138,16 @@ class _InfoItem extends StatelessWidget {
       children: [
         Text(
           label.toUpperCase(),
-          style: AppTextStyles.monoTiny.copyWith(
-            color: AppColors.gray500,
+          style: AuroraType.labelSm.copyWith(
+            color: AuroraColors.inkTertiary,
             letterSpacing: 0.3,
           ),
         ),
         const SizedBox(height: 3),
         Text(
           value,
-          style: (mono ? AppTextStyles.monoLabel : AppTextStyles.bodySmall)
-              .copyWith(
-            color: valueColor ?? AppColors.textPrimary,
+          style: (mono ? AuroraType.label : AuroraType.bodySm).copyWith(
+            color: valueColor ?? AuroraColors.ink,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -1162,7 +1167,7 @@ class _CardEditButton extends StatelessWidget {
       onTap: onTap,
       child: Text(
         'Edit',
-        style: AppTextStyles.labelSmall.copyWith(color: AppColors.accent),
+        style: AuroraType.labelSm.copyWith(color: AuroraColors.coral),
       ),
     );
   }
@@ -1228,19 +1233,21 @@ class _LinkedToCardState extends State<_LinkedToCard> {
     final linkedId = (doc.linkedSystemId ?? doc.linkedApplianceId)!;
 
     return Padding(
-      padding: const EdgeInsets.only(top: AppSizes.md),
+      padding: const EdgeInsets.only(top: AuroraSpacing.space5),
       child: _InfoCard(
         icon: Icons.link_rounded,
         label: 'LINKED TO',
         child: _LinkedItemRow(
           icon: isSystem ? Icons.settings_outlined : Icons.kitchen_outlined,
-          iconColor: AppColors.slate,
-          iconBg: AppColors.slateDim,
-          title: _linkedName ?? (isSystem ? 'Linked System' : 'Linked Appliance'),
+          iconColor: AuroraColors.cobalt,
+          iconBg: AuroraColors.cobaltDim,
+          title:
+              _linkedName ?? (isSystem ? 'Linked System' : 'Linked Appliance'),
           subtitle: isSystem ? 'System' : 'Appliance',
           onTap: () {
             final path = isSystem
-                ? AppRoutes.homeSystemDetail.replaceFirst(':systemId', linkedId)
+                ? AppRoutes.homeSystemDetail
+                    .replaceFirst(':systemId', linkedId)
                 : AppRoutes.homeApplianceDetail
                     .replaceFirst(':applianceId', linkedId);
             context.push(path);
@@ -1272,7 +1279,7 @@ class _LinkedItemRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppSizes.radiusCard - 1),
+      borderRadius: BorderRadius.circular(13),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
@@ -1293,20 +1300,22 @@ class _LinkedItemRow extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: AppTextStyles.bodySmall
-                        .copyWith(fontWeight: FontWeight.w600),
+                    style: AuroraType.bodySm.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   Text(
                     subtitle,
-                    style: AppTextStyles.caption
-                        .copyWith(color: AppColors.gray500),
+                    style: AuroraType.bodySm.copyWith(
+                      color: AuroraColors.inkTertiary,
+                    ),
                   ),
                 ],
               ),
             ),
             if (onTap != null)
               const Icon(Icons.chevron_right,
-                  size: 14, color: AppColors.borderStrong),
+                  size: 14, color: AuroraColors.inkSecondary),
           ],
         ),
       ),
@@ -1352,7 +1361,7 @@ class _UsedInCard extends ConsumerWidget {
         if (links.isEmpty) return const SizedBox.shrink();
         return Column(
           children: [
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
             _InfoCard(
               icon: Icons.folder_open_outlined,
               label: 'USED IN',
@@ -1362,14 +1371,14 @@ class _UsedInCard extends ConsumerWidget {
                     if (i > 0)
                       const Divider(
                         height: 1,
-                        color: AppColors.warmFill,
+                        color: AuroraColors.butter,
                         indent: 16,
                         endIndent: 16,
                       ),
                     _LinkedItemRow(
                       icon: _iconFor(links[i].type),
-                      iconColor: AppColors.slate,
-                      iconBg: AppColors.slateDim,
+                      iconColor: AuroraColors.cobalt,
+                      iconBg: AuroraColors.cobaltDim,
                       title: links[i].label,
                       subtitle:
                           links[i].subtitle ?? _typeLabel(links[i].type),
@@ -1411,8 +1420,8 @@ class _NotesCard extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
               child: Text(
                 document.notes!,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
+                style: AuroraType.bodySm.copyWith(
+                  color: AuroraColors.inkSecondary,
                   height: 1.6,
                 ),
               ),
@@ -1424,12 +1433,12 @@ class _NotesCard extends StatelessWidget {
                 child: Row(
                   children: [
                     const Icon(Icons.add_rounded,
-                        size: 16, color: AppColors.textSecondary),
+                        size: 16, color: AuroraColors.inkSecondary),
                     const SizedBox(width: 6),
                     Text(
                       'Add a note…',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                      style: AuroraType.bodySm.copyWith(
+                        color: AuroraColors.inkSecondary,
                       ),
                     ),
                   ],
@@ -1460,10 +1469,10 @@ class _FileInfoCard extends StatelessWidget {
       _ => 'Not run',
     };
     final ocrColor = switch (ocrStatus) {
-      'complete' => AppColors.olive,
-      'processing' => AppColors.sand,
-      'failed' => AppColors.error,
-      _ => AppColors.gray500,
+      'complete' => AuroraColors.limeDeep,
+      'processing' => AuroraColors.yellow,
+      'failed' => AuroraColors.coral,
+      _ => AuroraColors.inkTertiary,
     };
 
     return _InfoCard(
@@ -1518,17 +1527,17 @@ class _FileMeta extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: AppColors.gray500),
+        Icon(icon, size: 14, color: AuroraColors.inkTertiary),
         const SizedBox(width: 6),
         RichText(
           text: TextSpan(
-            style: AppTextStyles.bodySmall.copyWith(color: AppColors.gray500),
+            style: AuroraType.bodySm.copyWith(color: AuroraColors.inkTertiary),
             children: [
               if (prefix != null) TextSpan(text: prefix),
               TextSpan(
                 text: value,
                 style: TextStyle(
-                  color: valueColor ?? AppColors.textSecondary,
+                  color: valueColor ?? AuroraColors.inkSecondary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1557,8 +1566,8 @@ class _BottomActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: AppColors.warmOffWhite,
-        border: Border(top: BorderSide(color: AppColors.border)),
+        color: AuroraColors.paper,
+        border: Border(top: BorderSide(color: AuroraColors.inkBorder)),
       ),
       child: SafeArea(
         top: false,
@@ -1616,18 +1625,18 @@ class _BarButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDisabled = onTap == null;
     final bg = isDisabled
-        ? AppColors.warmFill
+        ? AuroraColors.butter
         : switch (style) {
-            _BarButtonStyle.primary => AppColors.deepNavy,
-            _BarButtonStyle.secondary => AppColors.surface,
-            _BarButtonStyle.danger => AppColors.accentDim,
+            _BarButtonStyle.primary => AuroraColors.ink,
+            _BarButtonStyle.secondary => AuroraColors.paper,
+            _BarButtonStyle.danger => AuroraColors.coralDim,
           };
     final fg = isDisabled
-        ? AppColors.textDisabled
+        ? AuroraColors.inkTertiary
         : switch (style) {
-            _BarButtonStyle.primary => AppColors.textInverse,
-            _BarButtonStyle.secondary => AppColors.textSecondary,
-            _BarButtonStyle.danger => AppColors.accent,
+            _BarButtonStyle.primary => Colors.white,
+            _BarButtonStyle.secondary => AuroraColors.inkSecondary,
+            _BarButtonStyle.danger => AuroraColors.coral,
           };
 
     return GestureDetector(
@@ -1639,12 +1648,12 @@ class _BarButton extends StatelessWidget {
           color: bg,
           borderRadius: BorderRadius.circular(12),
           border: style == _BarButtonStyle.secondary
-              ? Border.all(color: AppColors.border, width: 1.5)
+              ? Border.all(color: AuroraColors.inkBorder, width: 1.5)
               : null,
           boxShadow: style == _BarButtonStyle.secondary
               ? [
                   BoxShadow(
-                    color: AppColors.deepNavy.withValues(alpha: 0.05),
+                    color: AuroraColors.ink.withValues(alpha: 0.05),
                     blurRadius: 4,
                     offset: const Offset(0, 1),
                   ),
@@ -1660,7 +1669,7 @@ class _BarButton extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 label!,
-                style: AppTextStyles.labelLarge.copyWith(
+                style: AuroraType.bodySm.copyWith(
                   color: fg,
                   fontWeight: FontWeight.w700,
                 ),
@@ -1675,6 +1684,7 @@ class _BarButton extends StatelessWidget {
 
 // ─── PDF Preview (fullscreen) ─────────────────────────────────────────────────
 
+/// INTENTIONAL EXCEPTION: Colors.white54 used here — black fullscreen bg.
 class _PdfPreview extends StatefulWidget {
   const _PdfPreview({required this.filePath});
 
@@ -1713,21 +1723,23 @@ class _PdfPreviewState extends State<_PdfPreview> {
       builders: PdfViewBuilders<DefaultBuilderOptions>(
         options: const DefaultBuilderOptions(),
         documentLoaderBuilder: (_) => const Center(
-          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.deepNavy),
+          child: CircularProgressIndicator(
+              strokeWidth: 2, color: Colors.white54),
         ),
         pageLoaderBuilder: (_) => const Center(
-          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.deepNavy),
+          child: CircularProgressIndicator(
+              strokeWidth: 2, color: Colors.white54),
         ),
         errorBuilder: (_, error) => Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.error_outline,
-                  size: AppSizes.iconLg, color: Colors.white54),
-              const SizedBox(height: AppSizes.sm),
+                  size: 32, color: Colors.white54),
+              const SizedBox(height: AuroraSpacing.space3),
               Text(
                 'PDF preview unavailable',
-                style: AppTextStyles.bodyMedium.copyWith(color: Colors.white54),
+                style: AuroraType.body.copyWith(color: Colors.white54),
               ),
             ],
           ),
@@ -1739,6 +1751,7 @@ class _PdfPreviewState extends State<_PdfPreview> {
 
 // ─── Image Preview (fullscreen) ───────────────────────────────────────────────
 
+/// INTENTIONAL EXCEPTION: Colors.white used here — black fullscreen bg.
 class _ImagePreview extends StatefulWidget {
   const _ImagePreview({required this.filePath});
 
@@ -1778,14 +1791,14 @@ class _ImagePreviewState extends State<_ImagePreview> {
   Widget build(BuildContext context) {
     if (_loading) {
       return const Center(
-        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.darkText),
+        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
       );
     }
     if (_signedUrl == null) {
       return Center(
         child: Text(
           'Preview unavailable',
-          style: AppTextStyles.bodyMedium.copyWith(color: Colors.white54),
+          style: AuroraType.body.copyWith(color: Colors.white54),
         ),
       );
     }
@@ -1797,7 +1810,7 @@ class _ImagePreviewState extends State<_ImagePreview> {
       loadingBuilder: (_, event) => Center(
         child: CircularProgressIndicator(
           strokeWidth: 2,
-          color: AppColors.darkText,
+          color: Colors.white,
           value: event == null
               ? null
               : event.cumulativeBytesLoaded /

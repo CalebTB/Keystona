@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 
 /// Color-coded pill badge showing document expiration status.
 ///
@@ -35,36 +36,37 @@ class ExpirationBadge extends StatelessWidget {
     final String label;
 
     if (daysRemaining < 0) {
-      bgColor = AppColors.errorLight;
-      textColor = AppColors.error;
-      label = large ? 'Expired' : 'Expired';
+      bgColor = AuroraColors.coralDim;
+      textColor = AuroraColors.coralDeep;
+      label = 'EXPIRED';
     } else if (daysRemaining < 30) {
-      bgColor = AppColors.errorLight;
-      textColor = AppColors.error;
-      label = large ? 'Expires in ${daysRemaining}d' : '${daysRemaining}d';
+      bgColor = AuroraColors.coralDim;
+      textColor = AuroraColors.coralDeep;
+      label = large ? 'EXPIRES IN ${daysRemaining}D' : '${daysRemaining}D';
     } else if (daysRemaining <= 90) {
-      bgColor = AppColors.warningLight;
-      textColor = AppColors.warning;
-      label = large ? 'Expires in ${daysRemaining}d' : '${daysRemaining}d';
+      bgColor = AuroraColors.yellowDim;
+      textColor = AuroraColors.yellowDeep;
+      label = large ? 'EXPIRES IN ${daysRemaining}D' : '${daysRemaining}D';
     } else {
-      bgColor = AppColors.successLight;
-      textColor = AppColors.success;
-      label = large ? 'Expires in ${daysRemaining}d' : '${daysRemaining}d';
+      bgColor = AuroraColors.limeDim;
+      textColor = AuroraColors.limeDeep;
+      label = large ? 'EXPIRES IN ${daysRemaining}D' : '${daysRemaining}D';
     }
 
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: large ? AppSizes.md : AppSizes.sm,
-        vertical: large ? AppSizes.xs : 2,
+        horizontal: large ? AuroraSpacing.space5 : AuroraSpacing.space3,
+        vertical: large ? AuroraSpacing.space1 : 2,
       ),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+        borderRadius: AuroraRadius.full,
       ),
       child: Text(
         label,
-        style: (large ? AppTextStyles.labelMedium : AppTextStyles.labelSmall)
-            .copyWith(color: textColor),
+        style: (large ? AuroraType.label : AuroraType.labelSm).copyWith(
+          color: textColor,
+        ),
       ),
     );
   }

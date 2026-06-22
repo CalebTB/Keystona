@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
 /// Shimmer loading placeholder that matches the [DocumentCard] layout exactly.
 ///
@@ -14,13 +15,13 @@ class DocumentListSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: AppColors.gray200,
-      highlightColor: AppColors.gray100,
+      baseColor: AuroraColors.butter,
+      highlightColor: AuroraColors.paper,
       child: ListView.separated(
-        padding: AppPadding.screen,
+        padding: const EdgeInsets.all(AuroraSpacing.screenPadH),
         itemCount: 4,
         separatorBuilder: (context, index) =>
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
         itemBuilder: (context, index) => const _SkeletonCard(),
       ),
     );
@@ -34,10 +35,10 @@ class _SkeletonCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 80,
-      padding: AppPadding.card,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.md,
+      padding: const EdgeInsets.all(AuroraSpacing.space6),
+      decoration: const BoxDecoration(
+        color: AuroraColors.paper,
+        borderRadius: AuroraRadius.md,
       ),
       child: Row(
         children: [
@@ -45,12 +46,12 @@ class _SkeletonCard extends StatelessWidget {
           Container(
             width: 48,
             height: 48,
-            decoration: BoxDecoration(
-              color: AppColors.gray200,
-              borderRadius: AppRadius.sm,
+            decoration: const BoxDecoration(
+              color: AuroraColors.butter,
+              borderRadius: AuroraRadius.sm,
             ),
           ),
-          const SizedBox(width: AppSizes.md),
+          const SizedBox(width: AuroraSpacing.space5),
           // Text lines — title, category chip, date.
           Expanded(
             child: Column(
@@ -60,19 +61,19 @@ class _SkeletonCard extends StatelessWidget {
                 Container(
                   height: 14,
                   width: double.infinity,
-                  color: AppColors.gray200,
+                  color: AuroraColors.butter,
                 ),
                 const SizedBox(height: 6),
                 Container(
                   height: 11,
                   width: 120,
-                  color: AppColors.gray200,
+                  color: AuroraColors.butter,
                 ),
                 const SizedBox(height: 6),
                 Container(
                   height: 11,
                   width: 80,
-                  color: AppColors.gray200,
+                  color: AuroraColors.butter,
                 ),
               ],
             ),

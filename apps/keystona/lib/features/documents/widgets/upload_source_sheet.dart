@@ -6,9 +6,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/photo_picker.dart';
 import '../providers/document_upload_provider.dart';
 
@@ -100,7 +100,7 @@ abstract final class UploadSourceSheet {
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSizes.radiusLg),
+          top: Radius.circular(16),
         ),
       ),
       builder: (sheetContext) => _MaterialSourceSheet(
@@ -214,10 +214,10 @@ class _MaterialSourceSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppSizes.md,
-        AppSizes.lg,
-        AppSizes.md,
-        AppSizes.xl,
+        AuroraSpacing.space5,
+        AuroraSpacing.space7,
+        AuroraSpacing.space5,
+        AuroraSpacing.space8,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -225,10 +225,10 @@ class _MaterialSourceSheet extends StatelessWidget {
         children: [
           Text(
             'Add Document',
-            style: AppTextStyles.h3,
+            style: AuroraType.h3,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: AppSizes.md),
+          const SizedBox(height: AuroraSpacing.space5),
           _Tile(
             icon: Icons.camera_alt_outlined,
             label: 'Camera',
@@ -266,8 +266,8 @@ class _Tile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(icon, color: AppColors.deepNavy),
-      title: Text(label, style: AppTextStyles.bodyLarge),
+      leading: Icon(icon, color: AuroraColors.ink),
+      title: Text(label, style: AuroraType.bodyLg),
       onTap: onTap,
     );
   }

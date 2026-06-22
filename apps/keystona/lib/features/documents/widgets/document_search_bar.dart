@@ -4,9 +4,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/upgrade_sheet.dart';
 import '../../../services/providers/service_providers.dart';
 
@@ -95,13 +96,11 @@ class _DocumentSearchBarState extends ConsumerState<DocumentSearchBar> {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppSizes.md,
-        AppSizes.sm,
-        AppSizes.md,
-        AppSizes.xs,
+        AuroraSpacing.space5,
+        AuroraSpacing.space3,
+        AuroraSpacing.space5,
+        AuroraSpacing.space1,
       ),
-      // Free users can search by name/category. The PRO badge taps open the
-      // upgrade sheet to explain full-text OCR search.
       child: searchBar,
     );
   }
@@ -137,7 +136,7 @@ class _IOSSearchBar extends StatelessWidget {
           ),
         ),
         if (!isPremium) ...[
-          const SizedBox(width: AppSizes.sm),
+          const SizedBox(width: AuroraSpacing.space3),
           GestureDetector(
             onTap: onProBadgeTap,
             child: const _ProBadge(),
@@ -168,13 +167,15 @@ class _AndroidSearchBar extends StatelessWidget {
     return TextField(
       controller: controller,
       onChanged: onChanged,
-      style: AppTextStyles.bodyMedium,
+      style: AuroraType.body,
       decoration: InputDecoration(
         hintText: 'Search documents',
-        hintStyle:
-            AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-        prefixIcon:
-            const Icon(Icons.search, color: AppColors.textSecondary, size: AppSizes.iconMd),
+        hintStyle: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
+        prefixIcon: Icon(
+          Icons.search,
+          color: AuroraColors.inkSecondary,
+          size: 20,
+        ),
         suffixIcon: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -184,8 +185,11 @@ class _AndroidSearchBar extends StatelessWidget {
               builder: (context, value, _) {
                 if (value.text.isEmpty) return const SizedBox.shrink();
                 return IconButton(
-                  icon: const Icon(Icons.clear,
-                      color: AppColors.textSecondary, size: AppSizes.iconMd),
+                  icon: Icon(
+                    Icons.clear,
+                    color: AuroraColors.inkSecondary,
+                    size: 20,
+                  ),
                   onPressed: onClear,
                 );
               },
@@ -193,20 +197,20 @@ class _AndroidSearchBar extends StatelessWidget {
           ],
         ),
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: AuroraColors.paper,
         contentPadding:
-            const EdgeInsets.symmetric(vertical: AppSizes.sm),
+            const EdgeInsets.symmetric(vertical: AuroraSpacing.space3),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: AuroraRadius.sm,
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: AuroraRadius.sm,
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: const BorderSide(color: AppColors.deepNavy),
+          borderRadius: AuroraRadius.sm,
+          borderSide: const BorderSide(color: AuroraColors.ink),
         ),
       ),
     );
@@ -223,29 +227,28 @@ class _ProBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.sm,
-        vertical: AppSizes.xs,
+        horizontal: AuroraSpacing.space3,
+        vertical: AuroraSpacing.space1,
       ),
       decoration: BoxDecoration(
-        color: AppColors.goldAccent.withAlpha(25),
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-        border: Border.all(color: AppColors.goldAccent.withAlpha(100)),
+        color: AuroraColors.yellow.withAlpha(25),
+        borderRadius: AuroraRadius.full,
+        border: Border.all(color: AuroraColors.yellow.withAlpha(100)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.star_rounded,
-            color: AppColors.goldAccent,
+            color: AuroraColors.yellow,
             size: 12,
           ),
           const SizedBox(width: 2),
           Text(
             'PRO',
-            style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.goldAccent,
+            style: AuroraType.labelSm.copyWith(
+              color: AuroraColors.yellowDeep,
               fontWeight: FontWeight.w700,
-              fontSize: 10,
             ),
           ),
         ],

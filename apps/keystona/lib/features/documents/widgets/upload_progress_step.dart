@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/upgrade_sheet.dart' show UpgradeSheet, UpgradeSheetConfig;
 import '../models/document_upload_state.dart';
 import '../providers/document_upload_provider.dart';
@@ -85,30 +86,29 @@ class _ProgressView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSizes.xl),
+        padding: const EdgeInsets.all(AuroraSpacing.space8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const _AnimatedUploadIcon(),
-            const SizedBox(height: AppSizes.xl),
+            const SizedBox(height: AuroraSpacing.space8),
             Text(
               progress < 0.5 ? 'Preparing upload…' : 'Uploading…',
-              style: AppTextStyles.h3,
+              style: AuroraType.h3,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             Text(
               'This may take a moment.',
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textSecondary),
+              style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
             ),
-            const SizedBox(height: AppSizes.xl),
+            const SizedBox(height: AuroraSpacing.space8),
             ClipRRect(
-              borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+              borderRadius: AuroraRadius.full,
               child: LinearProgressIndicator(
                 value: progress < 0.05 ? null : progress,
                 minHeight: 6,
-                backgroundColor: AppColors.gray200,
-                valueColor: const AlwaysStoppedAnimation(AppColors.deepNavy),
+                backgroundColor: AuroraColors.butter,
+                valueColor: const AlwaysStoppedAnimation(AuroraColors.ink),
               ),
             ),
           ],
@@ -133,46 +133,47 @@ class _SuccessView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSizes.xl),
+        padding: const EdgeInsets.all(AuroraSpacing.space8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: 72,
               height: 72,
-              decoration: BoxDecoration(
-                color: AppColors.successLight,
+              decoration: const BoxDecoration(
+                color: AuroraColors.limeDim,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.check_rounded,
-                color: AppColors.success,
-                size: AppSizes.iconLg,
+                color: AuroraColors.limeDeep,
+                size: 32,
               ),
             ),
-            const SizedBox(height: AppSizes.xl),
-            Text('Document saved!', style: AppTextStyles.h2),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space8),
+            Text('Document saved!', style: AuroraType.h2),
+            const SizedBox(height: AuroraSpacing.space3),
             Text(
               '"$documentName" has been added to your vault.',
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textSecondary),
+              style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.xl),
+            const SizedBox(height: AuroraSpacing.space8),
             FilledButton(
               onPressed: onDone,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                backgroundColor: AuroraColors.coral,
+                minimumSize: const Size.fromHeight(56),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: AuroraRadius.sm,
                 ),
               ),
               child: Text(
                 'Done',
-                style: AppTextStyles.button
-                    .copyWith(color: AppColors.textInverse),
+                style: AuroraType.bodyLg.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
               ),
             ),
           ],
@@ -182,7 +183,7 @@ class _SuccessView extends StatelessWidget {
   }
 }
 
-// ── Error view ─────────────────────────────────────────────────────────────────
+// ── Error views ────────────────────────────────────────────────────────────────
 
 class _FreeTierErrorView extends StatelessWidget {
   const _FreeTierErrorView({required this.onUpgrade});
@@ -192,7 +193,7 @@ class _FreeTierErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSizes.xl),
+        padding: const EdgeInsets.all(AuroraSpacing.space8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -200,31 +201,35 @@ class _FreeTierErrorView extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: const BoxDecoration(
-                color: AppColors.uploadSuccessBg,
+                color: AuroraColors.limeDim,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.star_rounded,
-                color: AppColors.goldAccent,
-                size: AppSizes.iconLg,
+                color: AuroraColors.yellow,
+                size: 32,
               ),
             ),
-            const SizedBox(height: AppSizes.xl),
-            Text('Document limit reached', style: AppTextStyles.h3, textAlign: TextAlign.center),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space8),
             Text(
-              "You've reached 25 documents on the Free plan. Upgrade to Pro for unlimited storage.",
-              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+              'Document limit reached',
+              style: AuroraType.h3,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space3),
+            Text(
+              "You've reached 25 documents on the Free plan. Upgrade to Pro for unlimited storage.",
+              style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AuroraSpacing.space7),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: onUpgrade,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accent,
-                  foregroundColor: AppColors.goldAccent,
+                  backgroundColor: AuroraColors.coral,
+                  foregroundColor: AuroraColors.yellow,
                 ),
                 child: const Text('See Premium Plans'),
               ),
@@ -246,47 +251,48 @@ class _ErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSizes.xl),
+        padding: const EdgeInsets.all(AuroraSpacing.space8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: 72,
               height: 72,
-              decoration: BoxDecoration(
-                color: AppColors.errorLight,
+              decoration: const BoxDecoration(
+                color: AuroraColors.coralDim,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.error_outline_rounded,
-                color: AppColors.error,
-                size: AppSizes.iconLg,
+                color: AuroraColors.coral,
+                size: 32,
               ),
             ),
-            const SizedBox(height: AppSizes.xl),
-            Text('Upload failed', style: AppTextStyles.h3),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space8),
+            Text('Upload failed', style: AuroraType.h3),
+            const SizedBox(height: AuroraSpacing.space3),
             Text(
               message,
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textSecondary),
+              style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
-              const SizedBox(height: AppSizes.xl),
+              const SizedBox(height: AuroraSpacing.space8),
               FilledButton(
                 onPressed: onRetry,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accent,
-                  minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                  backgroundColor: AuroraColors.coral,
+                  minimumSize: const Size.fromHeight(56),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: AuroraRadius.sm,
                   ),
                 ),
                 child: Text(
                   'Try Again',
-                  style: AppTextStyles.button
-                      .copyWith(color: AppColors.textInverse),
+                  style: AuroraType.bodyLg.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ],
@@ -337,13 +343,13 @@ class _AnimatedUploadIconState extends State<_AnimatedUploadIcon>
         width: 72,
         height: 72,
         decoration: const BoxDecoration(
-          color: AppColors.deepNavy,
+          color: AuroraColors.ink,
           shape: BoxShape.circle,
         ),
         child: const Icon(
           Icons.upload_rounded,
-          color: AppColors.textInverse,
-          size: AppSizes.iconLg,
+          color: Colors.white,
+          size: 32,
         ),
       ),
     );

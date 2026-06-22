@@ -4,13 +4,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/upgrade_sheet.dart';
 import '../../../services/providers/service_providers.dart';
@@ -30,13 +29,13 @@ import '../widgets/upload_source_sheet.dart';
 // ── Top-level helpers ─────────────────────────────────────────────────────────
 
 /// Parses a hex category color string (e.g. '#B85638') to a [Color].
-/// Falls back to [AppColors.accent] when parsing fails.
+/// Falls back to [AuroraColors.coral] when parsing fails.
 Color _parseCatColor(String? hex) {
-  if (hex == null || hex.isEmpty) return AppColors.accent;
+  if (hex == null || hex.isEmpty) return AuroraColors.coral;
   final s = hex.replaceAll('#', '');
-  if (s.length != 6) return AppColors.accent;
+  if (s.length != 6) return AuroraColors.coral;
   final v = int.tryParse('FF$s', radix: 16);
-  return v != null ? Color(v) : AppColors.accent;
+  return v != null ? Color(v) : AuroraColors.coral;
 }
 
 /// Returns a short file-type label from a MIME type string.
@@ -62,15 +61,23 @@ String _formatSize(int? bytes) {
   if (exp == null) return null;
   final days = exp.difference(DateTime.now()).inDays;
   if (days < 0) {
-    return (bg: AppColors.accentDim, text: AppColors.accent, label: 'EXPIRED');
+    return (
+      bg: AuroraColors.coralDim,
+      text: AuroraColors.coral,
+      label: 'EXPIRED',
+    );
   }
   if (days <= 30) {
-    return (bg: AppColors.accentDim, text: AppColors.accent, label: '${days}d');
+    return (
+      bg: AuroraColors.coralDim,
+      text: AuroraColors.coral,
+      label: '${days}d',
+    );
   }
   if (days <= 90) {
     return (
-      bg: AppColors.sandDim,
-      text: AppColors.sandAmber,
+      bg: AuroraColors.yellowDim,
+      text: AuroraColors.yellowDeep,
       label: '${days}d',
     );
   }
@@ -86,7 +93,9 @@ class DocumentsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    return isIOS ? const _IOSDocumentsLayout() : const _AndroidDocumentsLayout();
+    return isIOS
+        ? const _IOSDocumentsLayout()
+        : const _AndroidDocumentsLayout();
   }
 }
 
@@ -130,7 +139,6 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
     }
     if (!mounted) return;
 
-    // Reset any stale upload state from a previous session.
     ref.invalidate(documentUploadProvider);
 
     bool filePicked = false;
@@ -160,20 +168,17 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
         children: [
           CustomScrollView(
             slivers: [
-              // Safe area spacer — replaces nav bar.
               SliverToBoxAdapter(
                 child: SizedBox(
                   height: MediaQuery.of(context).padding.top,
                 ),
               ),
-
-              // Pull-to-refresh.
               CupertinoSliverRefreshControl(
                 onRefresh: () =>
                     ref.read(documentsProvider.notifier).refresh(),
               ),
 
-              // Title row: large title + add button on the same line.
+              // Title row: large title + add button.
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(22, 10, 16, 0),
@@ -183,11 +188,8 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
                       Expanded(
                         child: Text(
                           'Documents',
-                          style: GoogleFonts.fraunces(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.7,
-                            color: AppColors.textPrimary,
+                          style: AuroraType.displayLg.copyWith(
+                            color: AuroraColors.ink,
                           ),
                         ),
                       ),
@@ -197,12 +199,11 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 14, vertical: 7),
                           decoration: BoxDecoration(
-                            color: AppColors.accent,
-                            borderRadius:
-                                BorderRadius.circular(AppSizes.radiusFull),
+                            color: AuroraColors.coral,
+                            borderRadius: BorderRadius.circular(999),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.accent.withValues(alpha: 0.25),
+                                color: AuroraColors.coral.withValues(alpha: 0.25),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
@@ -212,12 +213,12 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(Icons.add_rounded,
-                                  color: AppColors.textInverse, size: 16),
+                                  color: Colors.white, size: 16),
                               const SizedBox(width: 4),
                               Text(
                                 'Add',
-                                style: AppTextStyles.labelMedium.copyWith(
-                                  color: AppColors.textInverse,
+                                style: AuroraType.label.copyWith(
+                                  color: Colors.white,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -272,7 +273,6 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
               const SliverToBoxAdapter(child: SizedBox(height: 110)),
             ],
           ),
-
         ],
       ),
     );
@@ -345,23 +345,24 @@ class _AndroidDocumentsLayoutState
     final categoryCounts = countsState.value ?? {};
 
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       body: RefreshIndicator(
-        color: AppColors.deepNavy,
+        color: AuroraColors.ink,
         onRefresh: () => ref.read(documentsProvider.notifier).refresh(),
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
-              title: Text('Documents', style: AppTextStyles.h3),
+              title: Text('Documents', style: AuroraType.h3),
               floating: true,
-              backgroundColor: AppColors.warmOffWhite,
+              backgroundColor: AuroraColors.paper,
               scrolledUnderElevation: 0,
               elevation: 0,
               actions: [
                 IconButton(
                   icon: const Icon(Icons.tune_rounded),
-                  color: AppColors.textSecondary,
-                  onPressed: () => context.push(AppRoutes.documentsCategories),
+                  color: AuroraColors.inkSecondary,
+                  onPressed: () =>
+                      context.push(AppRoutes.documentsCategories),
                 ),
                 _SortButton(
                   isIOS: false,
@@ -376,12 +377,11 @@ class _AndroidDocumentsLayoutState
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(
-                        color: AppColors.accent,
-                        borderRadius:
-                            BorderRadius.circular(AppSizes.radiusFull),
+                        color: AuroraColors.coral,
+                        borderRadius: BorderRadius.circular(999),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.accent.withValues(alpha: 0.25),
+                            color: AuroraColors.coral.withValues(alpha: 0.25),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -391,12 +391,12 @@ class _AndroidDocumentsLayoutState
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(Icons.add_rounded,
-                              color: AppColors.textInverse, size: 16),
+                              color: Colors.white, size: 16),
                           const SizedBox(width: 4),
                           Text(
                             'Add',
-                            style: AppTextStyles.labelMedium.copyWith(
-                              color: AppColors.textInverse,
+                            style: AuroraType.label.copyWith(
+                              color: Colors.white,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -488,9 +488,10 @@ List<Widget> _buildBody({
         }
         if (selectedCategoryId != null) {
           final catName = (categoriesState.value ?? [])
-              .where((c) => c.id == selectedCategoryId)
-              .map((c) => c.name)
-              .firstOrNull ?? 'this category';
+                  .where((c) => c.id == selectedCategoryId)
+                  .map((c) => c.name)
+                  .firstOrNull ??
+              'this category';
           return [
             SliverFillRemaining(
               child: _FilteredEmptyState(categoryName: catName),
@@ -509,12 +510,13 @@ List<Widget> _buildBody({
         return [
           SliverPadding(
             padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.screenPadding,
-              vertical: AppSizes.sm,
+              horizontal: AuroraSpacing.screenPadH,
+              vertical: AuroraSpacing.space3,
             ),
             sliver: SliverList.separated(
               itemCount: docs.length,
-              separatorBuilder: (_, _) => const SizedBox(height: AppSizes.sm),
+              separatorBuilder: (_, _) =>
+                  const SizedBox(height: AuroraSpacing.space3),
               itemBuilder: (_, i) => DocumentSearchResultCard(
                 document: docs[i],
                 snippet: notifier.snippetFor(docs[i].id),
@@ -533,7 +535,6 @@ List<Widget> _buildBody({
       final categories = categoriesState.value ?? [];
 
       return [
-        // "Recently Added" — only shown when there are docs from the last 30 days.
         if (recentDocs.isNotEmpty) ...[
           SliverToBoxAdapter(
             child: InkWell(
@@ -545,11 +546,7 @@ List<Widget> _buildBody({
                     Expanded(
                       child: Text(
                         'Recently Added',
-                        style: GoogleFonts.fraunces(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
+                        style: AuroraType.h2.copyWith(color: AuroraColors.ink),
                       ),
                     ),
                     AnimatedRotation(
@@ -558,7 +555,7 @@ List<Widget> _buildBody({
                       child: const Icon(
                         Icons.keyboard_arrow_down_rounded,
                         size: 20,
-                        color: AppColors.textSecondary,
+                        color: AuroraColors.inkSecondary,
                       ),
                     ),
                   ],
@@ -567,7 +564,6 @@ List<Widget> _buildBody({
             ),
           ),
 
-          // Grid of up to 6 docs added in the last 30 days — collapsible.
           if (recentlyAddedExpanded)
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(22, 8, 22, 0),
@@ -586,7 +582,6 @@ List<Widget> _buildBody({
             ),
         ],
 
-        // All documents feed.
         SliverToBoxAdapter(
           child: _AllDocsFeed(
             docs: docs,
@@ -630,32 +625,27 @@ class _FilteredEmptyState extends StatelessWidget {
             Container(
               width: 64,
               height: 64,
-              decoration: BoxDecoration(
-                color: AppColors.warmFill,
+              decoration: const BoxDecoration(
+                color: AuroraColors.butter,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.folder_open_outlined,
                 size: 28,
-                color: AppColors.textSecondary,
+                color: AuroraColors.inkSecondary,
               ),
             ),
             const SizedBox(height: 16),
             Text(
               'No $categoryName documents',
-              style: GoogleFonts.fraunces(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
+              style: AuroraType.h2.copyWith(color: AuroraColors.ink),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               'Documents you add to this category will appear here.',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: AppColors.textSecondary,
+              style: AuroraType.body.copyWith(
+                color: AuroraColors.inkSecondary,
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
@@ -720,20 +710,20 @@ class _DocSearchBarState extends ConsumerState<_DocSearchBar> {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppSizes.screenPadding,
+        AuroraSpacing.screenPadH,
         0,
-        AppSizes.screenPadding,
-        AppSizes.xs,
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.space1,
       ),
       child: Container(
         height: 48,
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AuroraColors.paper,
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: AppColors.border, width: 1),
+          border: Border.all(color: AuroraColors.inkBorder, width: 1),
           boxShadow: const [
             BoxShadow(
-              color: AppColors.shadowXs,
+              color: Color(0x0A071238),
               blurRadius: 8,
               offset: Offset(0, 2),
             ),
@@ -746,25 +736,18 @@ class _DocSearchBarState extends ConsumerState<_DocSearchBar> {
               child: Icon(
                 Icons.search_rounded,
                 size: 18,
-                color: AppColors.textSecondary,
+                color: AuroraColors.inkSecondary,
               ),
             ),
             Expanded(
               child: TextField(
                 controller: _controller,
                 onChanged: _onTextChanged,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: AppColors.textPrimary,
-                ),
+                style: AuroraType.body.copyWith(color: AuroraColors.ink),
                 decoration: InputDecoration(
                   hintText: 'Search documents...',
-                  hintStyle: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary,
-                  ),
+                  hintStyle:
+                      AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
@@ -786,19 +769,16 @@ class _DocSearchBarState extends ConsumerState<_DocSearchBar> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: isPremium
-                        ? AppColors.sandDim
-                        : AppColors.warmFill,
+                    color: isPremium ? AuroraColors.yellowDim : AuroraColors.butter,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     'OCR',
-                    style: GoogleFonts.ibmPlexMono(
-                      fontSize: 10,
+                    style: AuroraType.labelSm.copyWith(
                       fontWeight: FontWeight.w700,
                       color: isPremium
-                          ? AppColors.sand
-                          : AppColors.textSecondary,
+                          ? AuroraColors.yellow
+                          : AuroraColors.inkSecondary,
                     ),
                   ),
                 ),
@@ -842,22 +822,20 @@ class _CategoryLegend extends StatelessWidget {
           child: ListView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.screenPadding,
+              horizontal: AuroraSpacing.screenPadH,
               vertical: 8,
             ),
             children: [
-              // "All" pill — active when no category is selected.
               Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: _FilterPill(
                   label: 'All',
                   count: totalCount,
                   isSelected: selectedCategoryId == null,
-                  activeColor: AppColors.deepNavy,
+                  activeColor: AuroraColors.ink,
                   onTap: () => onCategorySelected(null),
                 ),
               ),
-              // One pill per category.
               ...categories.map((cat) {
                 final isSelected = selectedCategoryId == cat.id;
                 final catColor = _parseCatColor(cat.color);
@@ -877,7 +855,11 @@ class _CategoryLegend extends StatelessWidget {
             ],
           ),
         ),
-        const Divider(height: 1, thickness: 1, color: AppColors.divider),
+        const Divider(
+          height: 1,
+          thickness: 1,
+          color: AuroraColors.inkBorder,
+        ),
       ],
     );
   }
@@ -908,10 +890,10 @@ class _FilterPill extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? activeColor : AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+          color: isSelected ? activeColor : AuroraColors.paper,
+          borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: isSelected ? activeColor : AppColors.border,
+            color: isSelected ? activeColor : AuroraColors.inkBorder,
             width: 1,
           ),
         ),
@@ -931,21 +913,19 @@ class _FilterPill extends StatelessWidget {
             ],
             Text(
               label,
-              style: GoogleFonts.inter(
-                fontSize: 12,
+              style: AuroraType.bodySm.copyWith(
                 fontWeight: FontWeight.w600,
-                color: isSelected ? AppColors.textInverse : AppColors.textPrimary,
+                color: isSelected ? Colors.white : AuroraColors.ink,
               ),
             ),
             const SizedBox(width: 4),
             Text(
               '$count',
-              style: GoogleFonts.inter(
-                fontSize: 11,
+              style: AuroraType.bodySm.copyWith(
                 fontWeight: FontWeight.w400,
                 color: isSelected
-                    ? AppColors.textInverse.withValues(alpha: 0.75)
-                    : AppColors.textSecondary,
+                    ? Colors.white.withValues(alpha: 0.75)
+                    : AuroraColors.inkSecondary,
               ),
             ),
           ],
@@ -973,7 +953,7 @@ class _DocGridTile extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        borderRadius: BorderRadius.circular(12),
         onTap: () {
           final path = AppRoutes.documentDetail.replaceFirst(
             ':documentId',
@@ -983,12 +963,12 @@ class _DocGridTile extends StatelessWidget {
         },
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            border: Border.all(color: AppColors.border, width: 1.5),
+            color: AuroraColors.paper,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
             boxShadow: const [
               BoxShadow(
-                color: AppColors.shadowSm,
+                color: Color(0x0D071238),
                 blurRadius: 4,
                 offset: Offset(0, 1),
               ),
@@ -1000,17 +980,16 @@ class _DocGridTile extends StatelessWidget {
               // Category color stripe at top.
               ClipRRect(
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(AppSizes.radiusMd - 1.5),
-                  topRight: Radius.circular(AppSizes.radiusMd - 1.5),
+                  topLeft: Radius.circular(10.5),
+                  topRight: Radius.circular(10.5),
                 ),
                 child: Container(height: 4, color: catColor),
               ),
 
-              // Icon area: fills available space.
+              // Icon area.
               Expanded(
                 child: Stack(
                   children: [
-                    // Large centered icon.
                     Center(
                       child: Icon(
                         CategoryIcons.forKey(cat?.icon ?? ''),
@@ -1035,7 +1014,7 @@ class _DocGridTile extends StatelessWidget {
                           ),
                           child: Text(
                             expiry.label,
-                            style: GoogleFonts.ibmPlexMono(
+                            style: AuroraType.labelSm.copyWith(
                               fontSize: 8,
                               fontWeight: FontWeight.w700,
                               color: expiry.text,
@@ -1044,7 +1023,7 @@ class _DocGridTile extends StatelessWidget {
                         ),
                       ),
 
-                    // File type badge — bottom-right (category color).
+                    // File type badge — bottom-right.
                     Positioned(
                       bottom: 6,
                       right: 6,
@@ -1054,12 +1033,12 @@ class _DocGridTile extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.navHairline,
+                          color: AuroraColors.butter,
                           borderRadius: BorderRadius.circular(3),
                         ),
                         child: Text(
                           typeLabel,
-                          style: GoogleFonts.ibmPlexMono(
+                          style: AuroraType.labelSm.copyWith(
                             fontSize: 8,
                             fontWeight: FontWeight.w700,
                             color: catColor,
@@ -1071,8 +1050,7 @@ class _DocGridTile extends StatelessWidget {
                 ),
               ),
 
-              // Divider.
-              const Divider(height: 1, color: AppColors.warmFill),
+              const Divider(height: 1, color: AuroraColors.butter),
 
               // Footer: name + date.
               Padding(
@@ -1086,10 +1064,10 @@ class _DocGridTile extends StatelessWidget {
                   children: [
                     Text(
                       document.name,
-                      style: GoogleFonts.inter(
+                      style: AuroraType.bodySm.copyWith(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: AuroraColors.ink,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1097,10 +1075,10 @@ class _DocGridTile extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       dateStr,
-                      style: GoogleFonts.inter(
+                      style: AuroraType.bodySm.copyWith(
                         fontSize: 9,
                         fontWeight: FontWeight.w400,
-                        color: AppColors.textTertiary,
+                        color: AuroraColors.inkTertiary,
                       ),
                     ),
                   ],
@@ -1135,25 +1113,20 @@ class _AllDocsFeed extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppSizes.screenPadding,
-        AppSizes.xs,
-        AppSizes.screenPadding,
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.space1,
+        AuroraSpacing.screenPadH,
         0,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section header.
           Row(
             children: [
               Expanded(
                 child: Text(
                   sectionTitle,
-                  style: GoogleFonts.fraunces(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
+                  style: AuroraType.h2.copyWith(color: AuroraColors.ink),
                 ),
               ),
               _SortButton(
@@ -1163,12 +1136,8 @@ class _AllDocsFeed extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSizes.xs),
-
-          // Feed rows.
-          ...docs.map(
-            (doc) => _FeedRow(document: doc),
-          ),
+          const SizedBox(height: AuroraSpacing.space1),
+          ...docs.map((doc) => _FeedRow(document: doc)),
         ],
       ),
     );
@@ -1193,14 +1162,14 @@ class _FeedRow extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       decoration: const BoxDecoration(
-        color: AppColors.surface,
+        color: AuroraColors.paper,
         borderRadius: BorderRadius.all(Radius.circular(10)),
         border: Border.fromBorderSide(
-          BorderSide(color: AppColors.border, width: 1),
+          BorderSide(color: AuroraColors.inkBorder, width: 1),
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowSm,
+            color: Color(0x0D071238),
             blurRadius: 4,
             offset: Offset(0, 1),
           ),
@@ -1221,118 +1190,116 @@ class _FeedRow extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
-            children: [
-              // Colored dot.
-              Container(
-                width: 8,
-                height: 8,
-                margin: const EdgeInsets.only(right: 10, top: 2),
-                decoration: BoxDecoration(
-                  color: catColor,
-                  shape: BoxShape.circle,
+              children: [
+                // Colored dot.
+                Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.only(right: 10, top: 2),
+                  decoration: BoxDecoration(
+                    color: catColor,
+                    shape: BoxShape.circle,
+                  ),
                 ),
-              ),
 
-              // Info column.
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      document.name,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                // Info column.
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        document.name,
+                        style: AuroraType.body.copyWith(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AuroraColors.ink,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 3),
-                    Row(
-                      children: [
-                        // Category badge.
-                        if (cat != null) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 5,
-                              vertical: 1,
-                            ),
-                            decoration: BoxDecoration(
-                              color: catColor.withAlpha(20),
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                            child: Text(
-                              cat.name,
-                              style: GoogleFonts.inter(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700,
-                                color: catColor,
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          if (cat != null) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 5,
+                                vertical: 1,
+                              ),
+                              decoration: BoxDecoration(
+                                color: catColor.withAlpha(20),
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                              child: Text(
+                                cat.name,
+                                style: AuroraType.bodySm.copyWith(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                  color: catColor,
+                                ),
                               ),
                             ),
+                            const SizedBox(width: 6),
+                          ],
+                          Text(
+                            dateStr,
+                            style: AuroraType.bodySm.copyWith(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w400,
+                              color: AuroraColors.inkTertiary,
+                            ),
                           ),
-                          const SizedBox(width: 6),
                         ],
-                        Text(
-                          dateStr,
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w400,
-                            color: AppColors.textTertiary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              const SizedBox(width: AppSizes.sm),
+                const SizedBox(width: AuroraSpacing.space3),
 
-              // End column: expiry badge or file size.
-              if (expiry != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 5,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: expiry.bg,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                  child: Text(
-                    expiry.label,
-                    style: GoogleFonts.ibmPlexMono(
+                // End column: expiry badge or file size.
+                if (expiry != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: expiry.bg,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: Text(
+                      expiry.label,
+                      style: AuroraType.labelSm.copyWith(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: expiry.text,
+                      ),
+                    ),
+                  )
+                else if (sizeStr.isNotEmpty)
+                  Text(
+                    sizeStr,
+                    style: AuroraType.labelSm.copyWith(
                       fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                      color: expiry.text,
+                      fontWeight: FontWeight.w400,
+                      color: AuroraColors.inkTertiary,
                     ),
                   ),
-                )
-              else if (sizeStr.isNotEmpty)
-                Text(
-                  sizeStr,
-                  style: GoogleFonts.ibmPlexMono(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.textTertiary,
-                  ),
+
+                const SizedBox(width: AuroraSpacing.space1),
+
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 14,
+                  color: AuroraColors.inkSecondary,
                 ),
-
-              const SizedBox(width: AppSizes.xs),
-
-              // Chevron.
-              const Icon(
-                Icons.chevron_right_rounded,
-                size: 14,
-                color: AppColors.borderStrong,
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
   }
 }
 
@@ -1349,15 +1316,15 @@ class _StorageTierCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.fromLTRB(
-        AppSizes.screenPadding,
-        AppSizes.md,
-        AppSizes.screenPadding,
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.space5,
+        AuroraSpacing.screenPadH,
         0,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.deepNavy,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        color: AuroraColors.ink,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
@@ -1367,19 +1334,19 @@ class _StorageTierCard extends StatelessWidget {
               children: [
                 Text(
                   '$docCount of $kFreeDocumentLimit documents used',
-                  style: GoogleFonts.inter(
+                  style: AuroraType.bodySm.copyWith(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textInverse,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   'Free tier · Upgrade for unlimited',
-                  style: GoogleFonts.inter(
+                  style: AuroraType.bodySm.copyWith(
                     fontSize: 11,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textInverse.withAlpha(102),
+                    color: Colors.white.withAlpha(102),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -1388,23 +1355,22 @@ class _StorageTierCard extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: fraction,
                     minHeight: 3,
-                    backgroundColor: AppColors.darkTrack,
+                    backgroundColor: Colors.white.withAlpha(40),
                     valueColor: const AlwaysStoppedAnimation<Color>(
-                      AppColors.accent,
+                      AuroraColors.coral,
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: AppSizes.md),
+          const SizedBox(width: AuroraSpacing.space5),
           GestureDetector(
             onTap: () => UpgradeSheet.show(
               context,
               config: const UpgradeSheetConfig(
                 headline: 'Unlock Unlimited Documents',
-                reason:
-                    'Upgrade to store as many documents as you need.',
+                reason: 'Upgrade to store as many documents as you need.',
                 features: [
                   'Unlimited document storage',
                   'Full-text search across all docs',
@@ -1417,15 +1383,15 @@ class _StorageTierCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
               decoration: BoxDecoration(
-                color: AppColors.accentOverlay,
-                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                color: AuroraColors.coralDim,
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 'UPGRADE',
-                style: GoogleFonts.ibmPlexMono(
+                style: AuroraType.labelSm.copyWith(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.accent,
+                  color: AuroraColors.coral,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -1471,26 +1437,26 @@ class _SortButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-          border: Border.all(color: AppColors.border, width: 1),
+          color: AuroraColors.paper,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: AuroraColors.inkBorder, width: 1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               _currentLabel,
-              style: GoogleFonts.inter(
+              style: AuroraType.bodySm.copyWith(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
+                color: AuroraColors.inkSecondary,
               ),
             ),
             const SizedBox(width: 2),
             const Icon(
               Icons.keyboard_arrow_down_rounded,
               size: 14,
-              color: AppColors.textSecondary,
+              color: AuroraColors.inkSecondary,
             ),
           ],
         ),
@@ -1526,7 +1492,7 @@ class _SortButton extends StatelessWidget {
   Future<void> _showAndroidSortSheet(BuildContext context) async {
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: AuroraColors.paper,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -1535,14 +1501,18 @@ class _SortButton extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(height: 12),
-            Text('Sort By', style: AppTextStyles.h4),
+            Text(
+              'Sort By',
+              style:
+                  AuroraType.bodySm.copyWith(fontWeight: FontWeight.w600),
+            ),
             const Divider(height: 16),
             ..._options.map(
               (opt) => ListTile(
-                title: Text(opt.label, style: AppTextStyles.bodyMedium),
+                title: Text(opt.label, style: AuroraType.body),
                 trailing: opt.order == currentSort
                     ? const Icon(Icons.check_rounded,
-                        color: AppColors.accent, size: 20)
+                        color: AuroraColors.coral, size: 20)
                     : null,
                 onTap: () {
                   Navigator.of(context).pop();

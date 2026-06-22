@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../models/document_category.dart';
 import '../models/document_type.dart';
 import '../providers/document_categories_provider.dart';
@@ -37,30 +38,30 @@ class _UploadCategoryStepState extends ConsumerState<UploadCategoryStep> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Choose a category', style: AppTextStyles.h3),
-        const SizedBox(height: AppSizes.xs),
+        Text('Choose a category', style: AuroraType.h3),
+        const SizedBox(height: AuroraSpacing.space1),
         Text(
           'What kind of document is this?',
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
+          style: AuroraType.body.copyWith(
+            color: AuroraColors.inkSecondary,
           ),
         ),
-        const SizedBox(height: AppSizes.lg),
+        const SizedBox(height: AuroraSpacing.space7),
         Expanded(
           child: categoriesAsync.when(
             loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
             error: (e, st) => Center(
               child: Text(
                 'Could not load categories.',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                style: AuroraType.body.copyWith(
+                  color: AuroraColors.inkSecondary,
                 ),
               ),
             ),
             data: (categories) => ListView.separated(
               itemCount: categories.length,
               separatorBuilder: (context, index) =>
-                  const SizedBox(height: AppSizes.xs),
+                  const SizedBox(height: AuroraSpacing.space1),
               itemBuilder: (context, i) => _CategoryTile(
                 category: categories[i],
                 isExpanded: _expandedCategoryId == categories[i].id,
@@ -69,8 +70,6 @@ class _UploadCategoryStepState extends ConsumerState<UploadCategoryStep> {
                     _expandedCategoryId =
                         _expandedCategoryId == cat.id ? null : cat.id;
                   });
-                  // Select category; document type will be picked from
-                  // the expanded sub-list or skipped.
                   ref
                       .read(documentUploadProvider.notifier)
                       .selectCategory(cat.id);
@@ -128,10 +127,10 @@ class _CategoryTile extends ConsumerWidget {
       alignment: Alignment.topCenter,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: AppRadius.md,
+          color: AuroraColors.paper,
+          borderRadius: AuroraRadius.md,
           border: Border.all(
-            color: isExpanded ? color : AppColors.border,
+            color: isExpanded ? color : AuroraColors.inkBorder,
             width: isExpanded ? 1.5 : 1,
           ),
         ),
@@ -144,9 +143,9 @@ class _CategoryTile extends ConsumerWidget {
               onTap: () => category.isSystem
                   ? onSelect(category)
                   : onSkipType(category),
-              borderRadius: AppRadius.md,
+              borderRadius: AuroraRadius.md,
               child: Padding(
-                padding: AppPadding.card,
+                padding: const EdgeInsets.all(AuroraSpacing.space6),
                 child: Row(
                   children: [
                     Container(
@@ -154,19 +153,21 @@ class _CategoryTile extends ConsumerWidget {
                       height: 40,
                       decoration: BoxDecoration(
                         color: color.withAlpha(30),
-                        borderRadius: AppRadius.sm,
+                        borderRadius: AuroraRadius.sm,
                       ),
                       child: Icon(
                         CategoryIcons.forKey(category.icon),
                         color: color,
-                        size: AppSizes.iconMd,
+                        size: 20,
                       ),
                     ),
-                    const SizedBox(width: AppSizes.md),
+                    const SizedBox(width: AuroraSpacing.space5),
                     Expanded(
                       child: Text(
                         category.name,
-                        style: AppTextStyles.bodyMediumSemibold,
+                        style: AuroraType.body.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     // Only system categories have document types to expand into.
@@ -175,14 +176,18 @@ class _CategoryTile extends ConsumerWidget {
                         isExpanded
                             ? Icons.keyboard_arrow_up
                             : Icons.keyboard_arrow_down,
-                        color: AppColors.textSecondary,
+                        color: AuroraColors.inkSecondary,
                       ),
                   ],
                 ),
               ),
             ),
             if (isExpanded && category.isSystem) ...[
-              const Divider(height: 1, indent: AppSizes.md, endIndent: AppSizes.md),
+              const Divider(
+                height: 1,
+                indent: AuroraSpacing.space5,
+                endIndent: AuroraSpacing.space5,
+              ),
               _TypeList(
                 category: category,
                 onTypeSelected: onTypeSelected,
@@ -197,9 +202,9 @@ class _CategoryTile extends ConsumerWidget {
 
   Color _parseColor(String hex) {
     final sanitised = hex.replaceAll('#', '');
-    if (sanitised.length != 6) return AppColors.deepNavy;
+    if (sanitised.length != 6) return AuroraColors.ink;
     final value = int.tryParse('FF$sanitised', radix: 16);
-    return value != null ? Color(value) : AppColors.deepNavy;
+    return value != null ? Color(value) : AuroraColors.ink;
   }
 }
 
@@ -222,7 +227,7 @@ class _TypeList extends ConsumerWidget {
 
     return typesAsync.when(
       loading: () => const Padding(
-        padding: EdgeInsets.all(AppSizes.md),
+        padding: EdgeInsets.all(AuroraSpacing.space5),
         child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
       ),
       error: (e, st) => _SkipRow(onSkip: () => onSkip(category)),
@@ -241,22 +246,22 @@ class _TypeList extends ConsumerWidget {
             ...types.map(
               (type) => ListTile(
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.md,
-                  vertical: AppSizes.xs,
+                  horizontal: AuroraSpacing.space5,
+                  vertical: AuroraSpacing.space1,
                 ),
-                title: Text(type.name, style: AppTextStyles.bodyMedium),
+                title: Text(type.name, style: AuroraType.body),
                 subtitle: type.description != null
                     ? Text(
                         type.description!,
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textSecondary,
+                        style: AuroraType.bodySm.copyWith(
+                          color: AuroraColors.inkSecondary,
                         ),
                       )
                     : null,
                 trailing: const Icon(
                   Icons.arrow_forward_ios,
                   size: 14,
-                  color: AppColors.textSecondary,
+                  color: AuroraColors.inkSecondary,
                 ),
                 onTap: () => onTypeSelected(category, type),
               ),
@@ -278,17 +283,18 @@ class _SkipRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppSizes.md,
-        AppSizes.xs,
-        AppSizes.md,
-        AppSizes.sm,
+        AuroraSpacing.space5,
+        AuroraSpacing.space1,
+        AuroraSpacing.space5,
+        AuroraSpacing.space3,
       ),
       child: TextButton(
         onPressed: onSkip,
         child: Text(
           'Skip — just use category',
-          style: AppTextStyles.labelLarge.copyWith(
-            color: AppColors.textSecondary,
+          style: AuroraType.bodySm.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AuroraColors.inkSecondary,
           ),
         ),
       ),
