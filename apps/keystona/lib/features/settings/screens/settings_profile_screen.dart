@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../services/supabase_service.dart';
 import '../../home_profile/providers/home_profile_provider.dart';
 
@@ -26,9 +26,9 @@ class SettingsProfileScreen extends ConsumerWidget {
     final property = overview?.property;
 
     return CupertinoPageScaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         border: null,
         middle: const Text('Profile & Home'),
         leading: CupertinoButton(
@@ -46,12 +46,13 @@ class SettingsProfileScreen extends ConsumerWidget {
           SliverSafeArea(
             sliver: SliverToBoxAdapter(
               child: Padding(
-                padding: AppPadding.screen.copyWith(top: AppSizes.md),
+                padding: const EdgeInsets.all(AuroraSpacing.screenPadH)
+                    .copyWith(top: AuroraSpacing.space7),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _SectionLabel('ACCOUNT'),
-                    const SizedBox(height: AppSizes.sm),
+                    const SizedBox(height: AuroraSpacing.space3),
                     _InfoGroup(rows: [
                       _InfoRow(
                           label: 'Name',
@@ -61,10 +62,10 @@ class SettingsProfileScreen extends ConsumerWidget {
                           value: email.isEmpty ? '—' : email),
                     ]),
 
-                    const SizedBox(height: AppSizes.xl),
+                    const SizedBox(height: AuroraSpacing.space10),
 
                     _SectionLabel('HOME'),
-                    const SizedBox(height: AppSizes.sm),
+                    const SizedBox(height: AuroraSpacing.space3),
                     _InfoGroup(rows: [
                       _InfoRow(
                           label: 'Address',
@@ -89,7 +90,7 @@ class SettingsProfileScreen extends ConsumerWidget {
                               : '—'),
                     ]),
 
-                    const SizedBox(height: AppSizes.xl),
+                    const SizedBox(height: AuroraSpacing.space10),
 
                     GestureDetector(
                       onTap: () => context.push(AppRoutes.homeEdit),
@@ -98,15 +99,16 @@ class SettingsProfileScreen extends ConsumerWidget {
                         padding:
                             const EdgeInsets.symmetric(vertical: 14),
                         decoration: BoxDecoration(
-                          color: AppColors.deepNavy,
-                          borderRadius:
-                              BorderRadius.circular(AppSizes.radiusCard),
+                          color: AuroraColors.ink,
+                          borderRadius: BorderRadius.circular(14),
                         ),
                         child: Text(
                           'Edit home details',
                           textAlign: TextAlign.center,
-                          style: AppTextStyles.bodyMediumSemibold
-                              .copyWith(color: AppColors.textInverse),
+                          style: AuroraType.body.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -127,7 +129,7 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(label, style: AppTextStyles.monoSection);
+    return Text(label, style: AuroraType.label);
   }
 }
 
@@ -139,9 +141,9 @@ class _InfoGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(AppSizes.radiusCard),
-        border: Border.all(color: AppColors.border, width: 1.5),
+        color: AuroraColors.paper,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
       ),
       child: Column(
         children: [
@@ -149,7 +151,7 @@ class _InfoGroup extends StatelessWidget {
             rows[i],
             if (i < rows.length - 1)
               const Divider(
-                  height: 1, thickness: 1, color: AppColors.warmFill,
+                  height: 1, thickness: 1, color: AuroraColors.butter,
                   indent: 16),
           ],
         ],
@@ -170,10 +172,9 @@ class _InfoRow extends StatelessWidget {
       child: Row(
         children: [
           Text(label,
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textSecondary)),
+              style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary)),
           const Spacer(),
-          Text(value, style: AppTextStyles.bodyMedium),
+          Text(value, style: AuroraType.body),
         ],
       ),
     );

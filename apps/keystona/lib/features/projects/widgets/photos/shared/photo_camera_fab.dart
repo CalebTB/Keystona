@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/theme/aurora_colors.dart';
 
-import '../../../../../core/theme/app_colors.dart';
 
 /// Floating camera button — 56px circle, accent background.
 ///
@@ -16,7 +16,7 @@ class PhotoCameraFAB extends StatelessWidget {
   Widget build(BuildContext context) {
     return FloatingActionButton(
       onPressed: onTap,
-      backgroundColor: AppColors.accent,
+      backgroundColor: AuroraColors.coral,
       elevation: 0,
       shape: const CircleBorder(),
       child: Container(
@@ -24,10 +24,10 @@ class PhotoCameraFAB extends StatelessWidget {
         height: 56,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: AppColors.accent,
+          color: AuroraColors.coral,
           boxShadow: [
             BoxShadow(
-              color: AppColors.accent.withValues(alpha: 0.35),
+              color: AuroraColors.coral.withValues(alpha: 0.35),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -35,7 +35,7 @@ class PhotoCameraFAB extends StatelessWidget {
         ),
         child: const Icon(
           Icons.camera_alt_outlined,
-          color: AppColors.textInverse,
+          color: Colors.white,
           size: 22,
         ),
       ),

@@ -1,8 +1,8 @@
 // ignore_for_file: invalid_annotation_target
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import '../../../core/theme/aurora_colors.dart';
 
-import '../../../core/theme/app_colors.dart';
 
 part 'project_photo.freezed.dart';
 part 'project_photo.g.dart';
@@ -47,28 +47,28 @@ abstract final class PhotoTypes {
   static ({Color background, Color foreground}) colorFor(String value) =>
       switch (value) {
         'before' => (
-            background: AppColors.photoBadgeBeforeBg,
-            foreground: AppColors.photoBadgeBeforeFg,
+            background: AuroraColors.cobaltDim,
+            foreground: AuroraColors.cobaltDeep,
           ),
         'after' => (
-            background: AppColors.photoBadgeAfterBg,
-            foreground: AppColors.photoBadgeAfterFg,
+            background: AuroraColors.limeDim,
+            foreground: AuroraColors.limeDeep,
           ),
         'progress' => (
-            background: AppColors.photoBadgeProgressBg,
-            foreground: AppColors.goldAccent,
+            background: AuroraColors.yellowDim,
+            foreground: AuroraColors.yellow,
           ),
         'inspiration' => (
-            background: AppColors.photoBadgeInspirationBg,
-            foreground: AppColors.photoBadgeInspirationFg,
+            background: AuroraColors.coralDim,
+            foreground: AuroraColors.coralDeep,
           ),
         'issue' => (
-            background: AppColors.errorLight,
-            foreground: AppColors.error,
+            background: AuroraColors.coralDim,
+            foreground: AuroraColors.coral,
           ),
         _ => (
-            background: AppColors.photoBadgeOtherBg,
-            foreground: AppColors.photoBadgeOtherFg,
+            background: AuroraColors.butter,
+            foreground: AuroraColors.inkSecondary,
           ),
       };
 }

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
 /// Shimmer skeleton for the contractors list.
 class ContractorSkeleton extends StatefulWidget {
@@ -42,18 +40,18 @@ class _ContractorSkeletonState extends State<ContractorSkeleton>
       builder: (_, _) => Opacity(
         opacity: _opacity.value,
         child: ListView.separated(
-          padding: AppPadding.screen,
+          padding: EdgeInsets.all(AuroraSpacing.screenPadH),
           itemCount: 3,
-          separatorBuilder: (_, _) => const SizedBox(height: AppSizes.sm),
+          separatorBuilder: (_, _) => const SizedBox(height: AuroraSpacing.space3),
           itemBuilder: (_, _) => Container(
             height: 80,
             decoration: BoxDecoration(
-              color: AppColors.gray200,
-              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              color: const Color(0xFFEEEDF2),
+              borderRadius: BorderRadius.circular(12.0),
             ),
             padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.md,
-              vertical: AppSizes.sm,
+              horizontal: AuroraSpacing.space7,
+              vertical: AuroraSpacing.space3,
             ),
             child: Row(
               children: [
@@ -63,10 +61,10 @@ class _ContractorSkeletonState extends State<ContractorSkeleton>
                   height: 44,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.gray300,
+                    color: const Color(0xFFE0DFEA),
                   ),
                 ),
-                const SizedBox(width: AppSizes.md),
+                const SizedBox(width: AuroraSpacing.space7),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,9 +75,9 @@ class _ContractorSkeletonState extends State<ContractorSkeleton>
                         child: Container(
                           height: 14,
                           decoration: BoxDecoration(
-                            color: AppColors.gray300,
+                            color: const Color(0xFFE0DFEA),
                             borderRadius:
-                                BorderRadius.circular(AppSizes.radiusSm),
+                                BorderRadius.circular(8.0),
                           ),
                         ),
                       ),
@@ -89,9 +87,9 @@ class _ContractorSkeletonState extends State<ContractorSkeleton>
                         child: Container(
                           height: 11,
                           decoration: BoxDecoration(
-                            color: AppColors.gray300,
+                            color: const Color(0xFFE0DFEA),
                             borderRadius:
-                                BorderRadius.circular(AppSizes.radiusSm),
+                                BorderRadius.circular(8.0),
                           ),
                         ),
                       ),

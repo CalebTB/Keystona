@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../models/project_phase.dart';
 
 /// Card displaying a single project phase.
@@ -28,34 +28,34 @@ class PhaseCard extends StatelessWidget {
   final Widget? leading;
 
   static Color _stripColor(String s) => switch (s) {
-        'planning'    => AppColors.gray400,
-        'in_progress' => AppColors.slate,
-        'on_hold'     => AppColors.amber,
-        'completed'   => AppColors.olive,
-        'cancelled'   => AppColors.gray300,
-        _             => AppColors.gray300,
+        'planning'    => AuroraColors.inkTertiary,
+        'in_progress' => AuroraColors.cobalt,
+        'on_hold'     => AuroraColors.yellow,
+        'completed'   => AuroraColors.lime,
+        'cancelled'   => const Color(0xFFE0DFEA),
+        _             => const Color(0xFFE0DFEA),
       };
 
   static Color _bgColor(String s) => switch (s) {
-        'planning'    => AppColors.surface,
-        'in_progress' => AppColors.slateDim,
-        'on_hold'     => AppColors.amberDim,
-        'completed'   => AppColors.oliveDim,
-        'cancelled'   => AppColors.gray100,
-        _             => AppColors.surface,
+        'planning'    => AuroraColors.paper,
+        'in_progress' => AuroraColors.cobaltDim,
+        'on_hold'     => AuroraColors.yellowDim,
+        'completed'   => AuroraColors.limeDim,
+        'cancelled'   => AuroraColors.butter,
+        _             => AuroraColors.paper,
       };
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minHeight: AppSizes.cardMinHeight),
+      constraints: const BoxConstraints(minHeight: 72.0),
       decoration: BoxDecoration(
         color: _bgColor(phase.status),
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(color: AuroraColors.inkBorder),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd - 1),
+        borderRadius: BorderRadius.circular(12.0 - 1),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
@@ -73,14 +73,14 @@ class PhaseCard extends StatelessWidget {
                   // ── Card content ─────────────────────────────────────────
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.all(AppSizes.md),
+                      padding: const EdgeInsets.all(AuroraSpacing.space7),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           // Drag handle (or nothing)
                           if (leading != null) ...[
                             leading!,
-                            const SizedBox(width: AppSizes.sm),
+                            const SizedBox(width: AuroraSpacing.space3),
                           ],
 
                           // Name + description + dates
@@ -91,7 +91,7 @@ class PhaseCard extends StatelessWidget {
                               children: [
                                 Text(
                                   phase.name,
-                                  style: AppTextStyles.bodyMediumSemibold,
+                                  style: AuroraType.h3,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -100,8 +100,8 @@ class PhaseCard extends StatelessWidget {
                                   const SizedBox(height: 2),
                                   Text(
                                     phase.description!,
-                                    style: AppTextStyles.bodySmall.copyWith(
-                                      color: AppColors.textSecondary,
+                                    style: AuroraType.bodySm.copyWith(
+                                      color: AuroraColors.inkSecondary,
                                     ),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
@@ -109,13 +109,13 @@ class PhaseCard extends StatelessWidget {
                                 ],
                                 if (phase.plannedStartDate != null ||
                                     phase.plannedEndDate != null) ...[
-                                  const SizedBox(height: AppSizes.xs),
+                                  const SizedBox(height: AuroraSpacing.space1),
                                   _DateInfo(phase: phase),
                                 ],
                               ],
                             ),
                           ),
-                          const SizedBox(width: AppSizes.sm),
+                          const SizedBox(width: AuroraSpacing.space3),
 
                           // Status badge (tappable)
                           GestureDetector(
@@ -164,8 +164,8 @@ class _DateInfo extends StatelessWidget {
     final todayMidnight = DateTime(today.year, today.month, today.day);
 
     String? healthLabel;
-    Color dateColor = AppColors.textSecondary;
-    Color labelColor = AppColors.textSecondary;
+    Color dateColor = AuroraColors.inkSecondary;
+    Color labelColor = AuroraColors.inkSecondary;
 
     if (!done && end != null) {
       final endDay = DateTime(end.year, end.month, end.day);
@@ -174,16 +174,16 @@ class _DateInfo extends StatelessWidget {
       if (diff < 0) {
         final days = diff.abs();
         healthLabel = days == 1 ? '1 day overdue' : '$days days overdue';
-        dateColor = AppColors.error;
-        labelColor = AppColors.error;
+        dateColor = AuroraColors.coral;
+        labelColor = AuroraColors.coral;
       } else if (diff <= 7) {
         healthLabel = diff == 0
             ? 'Due today'
             : diff == 1
                 ? 'Due tomorrow'
                 : 'Due in $diff days';
-        dateColor = AppColors.amber;
-        labelColor = AppColors.amber;
+        dateColor = AuroraColors.yellow;
+        labelColor = AuroraColors.yellow;
       }
     }
 
@@ -192,13 +192,13 @@ class _DateInfo extends StatelessWidget {
       children: [
         Text(
           dateText,
-          style: AppTextStyles.caption.copyWith(color: dateColor),
+          style: AuroraType.bodySm.copyWith(color: dateColor),
         ),
         if (healthLabel != null) ...[
-          const SizedBox(width: AppSizes.xs),
+          const SizedBox(width: AuroraSpacing.space1),
           Text(
             '· $healthLabel',
-            style: AppTextStyles.caption.copyWith(
+            style: AuroraType.bodySm.copyWith(
               color: labelColor,
               fontWeight: FontWeight.w600,
             ),
@@ -216,37 +216,37 @@ class _StatusBadge extends StatelessWidget {
   final String status;
 
   static Color _badgeBg(String s) => switch (s) {
-        'planning'    => AppColors.gray100,
-        'in_progress' => AppColors.slateDim,
-        'on_hold'     => AppColors.amberDim,
-        'completed'   => AppColors.oliveDim,
-        'cancelled'   => AppColors.errorLight,
-        _             => AppColors.gray100,
+        'planning'    => AuroraColors.butter,
+        'in_progress' => AuroraColors.cobaltDim,
+        'on_hold'     => AuroraColors.yellowDim,
+        'completed'   => AuroraColors.limeDim,
+        'cancelled'   => AuroraColors.coralDim,
+        _             => AuroraColors.butter,
       };
 
   static Color _badgeText(String s) => switch (s) {
-        'planning'    => AppColors.textSecondary,
-        'in_progress' => AppColors.slate,
-        'on_hold'     => AppColors.amber,
-        'completed'   => AppColors.olive,
-        'cancelled'   => AppColors.error,
-        _             => AppColors.textSecondary,
+        'planning'    => AuroraColors.inkSecondary,
+        'in_progress' => AuroraColors.cobalt,
+        'on_hold'     => AuroraColors.yellow,
+        'completed'   => AuroraColors.lime,
+        'cancelled'   => AuroraColors.coral,
+        _             => AuroraColors.inkSecondary,
       };
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.sm,
+        horizontal: AuroraSpacing.space3,
         vertical: 3,
       ),
       decoration: BoxDecoration(
         color: _badgeBg(status),
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+        borderRadius: BorderRadius.circular(999.0),
       ),
       child: Text(
         status.phaseStatusLabel,
-        style: AppTextStyles.labelSmall.copyWith(
+        style: AuroraType.label.copyWith(
           color: _badgeText(status),
           fontWeight: FontWeight.w600,
         ),

@@ -1,10 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../models/project_document_link.dart';
 import '../providers/project_documents_provider.dart';
 
@@ -53,10 +53,10 @@ class _DocumentLinkPickerSheetState
       ),
       child: Container(
         decoration: const BoxDecoration(
-          color: AppColors.textInverse,
+          color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -66,23 +66,23 @@ class _DocumentLinkPickerSheetState
               child: Container(
                 width: 36,
                 height: 4,
-                margin: const EdgeInsets.only(bottom: AppSizes.md),
+                margin: const EdgeInsets.only(bottom: AuroraSpacing.space7),
                 decoration: BoxDecoration(
-                  color: AppColors.gray300,
+                  color: const Color(0xFFE0DFEA),
                   borderRadius:
-                      BorderRadius.circular(AppSizes.radiusFull),
+                      BorderRadius.circular(999.0),
                 ),
               ),
             ),
 
-            Text('Link a Document', style: AppTextStyles.h3),
-            const SizedBox(height: AppSizes.sm),
+            Text('Link a Document', style: AuroraType.h3),
+            const SizedBox(height: AuroraSpacing.space3),
             Text(
               'Select a document from your vault:',
-              style: AppTextStyles.bodySmall
-                  .copyWith(color: AppColors.textSecondary),
+              style: AuroraType.bodySm
+                  .copyWith(color: AuroraColors.inkSecondary),
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
 
             // Document list.
             Flexible(
@@ -92,19 +92,19 @@ class _DocumentLinkPickerSheetState
                 error: (_, _) => Center(
                   child: Text(
                     'Could not load documents.',
-                    style: AppTextStyles.bodySmall
-                        .copyWith(color: AppColors.error),
+                    style: AuroraType.bodySm
+                        .copyWith(color: AuroraColors.coral),
                   ),
                 ),
                 data: (docs) {
                   if (docs.isEmpty) {
                     return Center(
                       child: Padding(
-                        padding: const EdgeInsets.all(AppSizes.lg),
+                        padding: const EdgeInsets.all(AuroraSpacing.space9),
                         child: Text(
                           'No documents in your vault yet.',
-                          style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.textSecondary),
+                          style: AuroraType.bodySm.copyWith(
+                              color: AuroraColors.inkSecondary),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -122,23 +122,23 @@ class _DocumentLinkPickerSheetState
                         dense: true,
                         selected: isSelected,
                         selectedTileColor:
-                            AppColors.deepNavy.withValues(alpha: 0.05),
+                            AuroraColors.ink.withValues(alpha: 0.05),
                         leading: Icon(
                           Icons.description_outlined,
                           color: isSelected
-                              ? AppColors.deepNavy
-                              : AppColors.gray400,
+                              ? AuroraColors.ink
+                              : AuroraColors.inkTertiary,
                         ),
                         title: Text(d.name,
-                            style: AppTextStyles.bodyMedium),
+                            style: AuroraType.body),
                         subtitle: d.typeName != null
                             ? Text(d.typeName!,
-                                style: AppTextStyles.bodySmall.copyWith(
-                                    color: AppColors.textSecondary))
+                                style: AuroraType.bodySm.copyWith(
+                                    color: AuroraColors.inkSecondary))
                             : null,
                         trailing: isSelected
                             ? const Icon(Icons.check_circle,
-                                color: AppColors.deepNavy)
+                                color: AuroraColors.ink)
                             : null,
                         onTap: () =>
                             setState(() => _selectedDocId = d.id),
@@ -149,43 +149,43 @@ class _DocumentLinkPickerSheetState
               ),
             ),
 
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space7),
 
             // Link type chips.
             Text(
               'Link type:',
-              style: AppTextStyles.bodySmall
-                  .copyWith(color: AppColors.textSecondary),
+              style: AuroraType.bodySm
+                  .copyWith(color: AuroraColors.inkSecondary),
             ),
-            const SizedBox(height: AppSizes.xs),
+            const SizedBox(height: AuroraSpacing.space1),
             Wrap(
-              spacing: AppSizes.xs,
-              runSpacing: AppSizes.xs,
+              spacing: AuroraSpacing.space1,
+              runSpacing: AuroraSpacing.space1,
               children: DocumentLinkTypes.all.map((t) {
                 final selected = _linkType == t.value;
                 return GestureDetector(
                   onTap: () => setState(() => _linkType = t.value),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: AppSizes.sm + 2,
-                        vertical: AppSizes.xs),
+                        horizontal: AuroraSpacing.space3 + 2,
+                        vertical: AuroraSpacing.space1),
                     decoration: BoxDecoration(
                       color:
-                          selected ? AppColors.deepNavy : AppColors.surface,
+                          selected ? AuroraColors.ink : AuroraColors.paper,
                       borderRadius:
-                          BorderRadius.circular(AppSizes.radiusFull),
+                          BorderRadius.circular(999.0),
                       border: Border.all(
                         color: selected
-                            ? AppColors.deepNavy
-                            : AppColors.border,
+                            ? AuroraColors.ink
+                            : AuroraColors.inkBorder,
                       ),
                     ),
                     child: Text(
                       t.label,
-                      style: AppTextStyles.labelSmall.copyWith(
+                      style: AuroraType.label.copyWith(
                         color: selected
-                            ? AppColors.textInverse
-                            : AppColors.textPrimary,
+                            ? Colors.white
+                            : AuroraColors.ink,
                       ),
                     ),
                   ),
@@ -193,7 +193,7 @@ class _DocumentLinkPickerSheetState
               }).toList(),
             ),
 
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space9),
 
             SizedBox(
               width: double.infinity,
@@ -205,13 +205,13 @@ class _DocumentLinkPickerSheetState
                           linkType: _linkType,
                         )),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accent,
-                  padding: AppPadding.button,
+                  backgroundColor: AuroraColors.coral,
+                  padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                 ),
                 child: const Text('Link Document'),
               ),
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space7),
           ],
         ),
       ),

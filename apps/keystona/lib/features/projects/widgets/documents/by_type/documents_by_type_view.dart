@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../../../../../core/theme/aurora_colors.dart';
 
-import '../../../../../core/theme/app_colors.dart';
 import '../../../models/project_document_link.dart';
 import '../shared/document_link_type.dart';
 import '../shared/file_type_icon_block.dart';
@@ -76,7 +76,7 @@ class DocumentsByTypeView extends StatelessWidget {
                       width: 6,
                       height: 6,
                       decoration: const BoxDecoration(
-                        color: AppColors.oliveLight,
+                        color: AuroraColors.lime,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -89,7 +89,7 @@ class DocumentsByTypeView extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.2,
                         height: 1.2,
-                        color: AppColors.textSecondary,
+                        color: AuroraColors.inkSecondary,
                       ),
                     ),
                   ],
@@ -104,7 +104,7 @@ class DocumentsByTypeView extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.7,
                     height: 1.05,
-                    color: AppColors.textPrimary,
+                    color: AuroraColors.ink,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -238,7 +238,7 @@ class _SectionHeader extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: AuroraColors.ink,
             ),
           ),
           const Spacer(),
@@ -248,7 +248,7 @@ class _SectionHeader extends StatelessWidget {
               fontFamily: 'IBMPlexMono',
               fontSize: 10,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary,
+              color: AuroraColors.inkSecondary,
             ),
           ),
         ],
@@ -281,8 +281,8 @@ class _DocumentCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          border: Border.all(color: AppColors.border),
+          color: AuroraColors.paper,
+          border: Border.all(color: AuroraColors.inkBorder),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -309,7 +309,7 @@ class _DocumentCard extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: AuroraColors.ink,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -344,7 +344,7 @@ class _DocumentCard extends StatelessWidget {
                     style: const TextStyle(
                       fontFamily: 'IBMPlexMono',
                       fontSize: 10,
-                      color: AppColors.textSecondary,
+                      color: AuroraColors.inkSecondary,
                     ),
                   ),
                 ],
@@ -356,7 +356,7 @@ class _DocumentCard extends StatelessWidget {
             const Icon(
               Icons.chevron_right,
               size: 14,
-              color: AppColors.gray400,
+              color: AuroraColors.inkTertiary,
             ),
           ],
         ),
@@ -382,7 +382,7 @@ class _DashedLinkCard extends StatelessWidget {
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: AppColors.gray400,
+            color: AuroraColors.inkTertiary,
             width: 1.5,
             strokeAlign: BorderSide.strokeAlignInside,
           ),
@@ -393,7 +393,7 @@ class _DashedLinkCard extends StatelessWidget {
             const Icon(
               Icons.link_outlined,
               size: 14,
-              color: AppColors.textSecondary,
+              color: AuroraColors.inkSecondary,
             ),
             const SizedBox(width: 6),
             Text(
@@ -401,7 +401,7 @@ class _DashedLinkCard extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
+                color: AuroraColors.inkSecondary,
               ),
             ),
           ],
@@ -425,7 +425,7 @@ class _EmptyGuard extends StatelessWidget {
           const Icon(
             Icons.folder_outlined,
             size: 48,
-            color: AppColors.gray400,
+            color: AuroraColors.inkTertiary,
           ),
           const SizedBox(height: 12),
           Text(
@@ -433,7 +433,7 @@ class _EmptyGuard extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
+              color: AuroraColors.inkSecondary,
             ),
           ),
           const SizedBox(height: 4),
@@ -441,7 +441,7 @@ class _EmptyGuard extends StatelessWidget {
             'Link a document from your vault to get started.',
             style: GoogleFonts.inter(
               fontSize: 13,
-              color: AppColors.gray400,
+              color: AuroraColors.inkTertiary,
             ),
             textAlign: TextAlign.center,
           ),

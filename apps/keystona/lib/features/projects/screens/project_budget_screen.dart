@@ -2,12 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/supabase_service.dart';
 import '../models/project_budget_item.dart';
@@ -59,8 +58,8 @@ class ProjectBudgetScreen extends ConsumerWidget {
       body: body,
       floatingActionButton: FloatingActionButton(
         onPressed: onAdd,
-        backgroundColor: AppColors.accent,
-        child: const Icon(Icons.add, color: AppColors.textInverse),
+        backgroundColor: AuroraColors.coral,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -69,13 +68,13 @@ class ProjectBudgetScreen extends ConsumerWidget {
 // ── Shared helpers ─────────────────────────────────────────────────────────────
 
 Color _categoryColor(String cat) => switch (cat) {
-      'labor' => AppColors.slate,
-      'materials' => AppColors.teal,
-      'fixtures' => AppColors.plum,
-      'permits' => AppColors.sand,
-      'equipment_rental' => AppColors.sandAmber,
-      'design' => AppColors.olive,
-      _ => AppColors.gray500,
+      'labor' => AuroraColors.cobalt,
+      'materials' => AuroraColors.cobalt,
+      'fixtures' => AuroraColors.cobalt,
+      'permits' => AuroraColors.yellow,
+      'equipment_rental' => AuroraColors.yellowDeep,
+      'design' => AuroraColors.lime,
+      _ => const Color(0xFF9D9BB0),
     };
 
 // ── Variant A · Editorial Summary ─────────────────────────────────────────────
@@ -215,7 +214,7 @@ class _BudgetEditorialView extends ConsumerWidget {
                 TextButton(
                   onPressed: () => Navigator.of(ctx).pop(true),
                   child: Text('Delete',
-                      style: TextStyle(color: AppColors.error)),
+                      style: TextStyle(color: AuroraColors.coral)),
                 ),
               ],
             ),
@@ -263,12 +262,12 @@ class _BudgetEditorialView extends ConsumerWidget {
             // ── Screen header ─────────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding: AppPadding.screen.copyWith(bottom: 0),
+                padding: EdgeInsets.all(AuroraSpacing.screenPadH).copyWith(bottom: 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _ScreenHeader(phases: phases),
-                    const SizedBox(height: AppSizes.xs),
+                    const SizedBox(height: AuroraSpacing.space1),
                   ],
                 ),
               ),
@@ -278,7 +277,7 @@ class _BudgetEditorialView extends ConsumerWidget {
             if (summary != null)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: AppPadding.screen.copyWith(top: 0, bottom: 0),
+                  padding: EdgeInsets.all(AuroraSpacing.screenPadH).copyWith(top: 0, bottom: 0),
                   child: _EditorialHero(
                     summary: summary,
                     phases: phases,
@@ -299,19 +298,19 @@ class _BudgetEditorialView extends ConsumerWidget {
             if (summary != null && summary.categoryBreakdown.isNotEmpty) ...[
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: AppPadding.screen.copyWith(top: AppSizes.lg, bottom: 0),
+                  padding: EdgeInsets.all(AuroraSpacing.screenPadH).copyWith(top: AuroraSpacing.space9, bottom: 0),
                   child: _SectionLabel(
                     label: 'BY CATEGORY',
-                    dotColor: AppColors.accent,
+                    dotColor: AuroraColors.coral,
                   ),
                 ),
               ),
               SliverPadding(
-                padding: AppPadding.screen.copyWith(top: AppSizes.xs, bottom: 0),
+                padding: EdgeInsets.all(AuroraSpacing.screenPadH).copyWith(top: AuroraSpacing.space1, bottom: 0),
                 sliver: SliverList.separated(
                   itemCount: summary.categoryBreakdown.length,
                   separatorBuilder: (_, _) =>
-                      const SizedBox(height: AppSizes.sm - 2),
+                      const SizedBox(height: AuroraSpacing.space3 - 2),
                   itemBuilder: (ctx, i) {
                     final row = summary.categoryBreakdown[i];
                     final categoryItems = items
@@ -341,8 +340,8 @@ class _BudgetEditorialView extends ConsumerWidget {
             // ── Smart Insight upsell ──────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding: AppPadding.screen.copyWith(
-                  top: AppSizes.md,
+                padding: EdgeInsets.all(AuroraSpacing.screenPadH).copyWith(
+                  top: AuroraSpacing.space7,
                   bottom: 0,
                 ),
                 child: const _InsightUpsell(),
@@ -350,7 +349,7 @@ class _BudgetEditorialView extends ConsumerWidget {
             ),
 
             const SliverToBoxAdapter(
-              child: SizedBox(height: AppSizes.xxl + AppSizes.xl),
+              child: SizedBox(height: 48.0 + AuroraSpacing.space10),
             ),
           ],
         );
@@ -383,7 +382,7 @@ class _ScreenHeader extends StatelessWidget {
           height: 7,
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.accent,
+            color: AuroraColors.coral,
           ),
         ),
         const SizedBox(width: 6),
@@ -391,8 +390,8 @@ class _ScreenHeader extends StatelessWidget {
           activePhases.isNotEmpty
               ? 'ACTIVE PROJECT · PHASE $currentIndex OF ${activePhases.length}'
               : 'ACTIVE PROJECT',
-          style: AppTextStyles.monoSection.copyWith(
-            color: AppColors.gray500,
+          style: AuroraType.label.copyWith(
+            color: const Color(0xFF9D9BB0),
           ),
         ),
       ],
@@ -459,7 +458,7 @@ class _EditorialHero extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
       decoration: BoxDecoration(
-        color: AppColors.deepNavy,
+        color: AuroraColors.ink,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
@@ -475,10 +474,10 @@ class _EditorialHero extends StatelessWidget {
                   estimated > 0
                       ? 'SPENT OF ${_fmt(estimated)}'
                       : 'NO BUDGET SET · TAP TO SET',
-                  style: AppTextStyles.monoTiny.copyWith(
+                  style: AuroraType.labelSm.copyWith(
                     color: estimated > 0
-                        ? AppColors.darkText.withValues(alpha: 0.5)
-                        : AppColors.sand.withValues(alpha: 0.85),
+                        ? Colors.white.withValues(alpha: 0.5)
+                        : AuroraColors.yellow.withValues(alpha: 0.85),
                     letterSpacing: 1.4,
                   ),
                 ),
@@ -487,8 +486,8 @@ class _EditorialHero extends StatelessWidget {
                   Icons.edit_outlined,
                   size: 12,
                   color: estimated > 0
-                      ? AppColors.darkText.withValues(alpha: 0.35)
-                      : AppColors.sand.withValues(alpha: 0.6),
+                      ? Colors.white.withValues(alpha: 0.35)
+                      : AuroraColors.yellow.withValues(alpha: 0.6),
                 ),
               ],
             ),
@@ -498,28 +497,22 @@ class _EditorialHero extends StatelessWidget {
           // Big number
           Text(
             _fmt(actual),
-            style: GoogleFonts.fraunces(
-              fontSize: 44,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -1.5,
-              height: 1,
-              color: AppColors.textInverse,
-            ),
+            style: AuroraType.displayLg.copyWith(color: Colors.white, letterSpacing: -1.5, height: 1),
           ),
           const SizedBox(height: 4),
 
           // Subline: remaining · percent used
           Text.rich(
             TextSpan(
-              style: AppTextStyles.monoLabel.copyWith(
-                color: AppColors.darkText.withValues(alpha: 0.55),
+              style: AuroraType.label.copyWith(
+                color: Colors.white.withValues(alpha: 0.55),
                 fontSize: 11,
               ),
               children: [
                 TextSpan(
                   text: _fmt(remaining.abs()),
                   style: TextStyle(
-                    color: remaining < 0 ? AppColors.accent : AppColors.textInverse,
+                    color: remaining < 0 ? AuroraColors.coral : Colors.white,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -528,7 +521,7 @@ class _EditorialHero extends StatelessWidget {
                 TextSpan(
                   text: '${spentPct.toStringAsFixed(1)}%',
                   style: const TextStyle(
-                    color: AppColors.textInverse,
+                    color: Colors.white,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -552,23 +545,23 @@ class _EditorialHero extends StatelessWidget {
                 label: 'PACE',
                 value: paceLabel,
                 valueColor:
-                    isBehind ? AppColors.sand : AppColors.textInverse,
+                    isBehind ? AuroraColors.yellow : Colors.white,
               ),
               _MiniDivider(),
               _MiniStat(
                 label: 'OVER BUDGET',
                 value: '${summary.overBudgetCount}',
                 valueColor: summary.overBudgetCount > 0
-                    ? AppColors.sand
-                    : AppColors.textInverse,
+                    ? AuroraColors.yellow
+                    : Colors.white,
               ),
               _MiniDivider(),
               _MiniStat(
                 label: 'COMMITTED',
                 value: _fmt(summary.committedTotal),
                 valueColor: summary.committedTotal > summary.estimatedTotal && summary.estimatedTotal > 0
-                    ? AppColors.sand
-                    : AppColors.textInverse,
+                    ? AuroraColors.yellow
+                    : Colors.white,
               ),
             ],
           ),
@@ -606,13 +599,13 @@ class _HeroProgressBar extends StatelessWidget {
                 height: 8,
                 child: Stack(
                   children: [
-                    Container(color: AppColors.darkTrack),
+                    Container(color: const Color(0x14FFFFFF)),
                     FractionallySizedBox(
                       widthFactor: spentFraction,
                       child: Container(
                         decoration: const BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [AppColors.oliveLight, AppColors.sand],
+                            colors: [AuroraColors.lime, AuroraColors.yellow],
                           ),
                         ),
                       ),
@@ -629,7 +622,7 @@ class _HeroProgressBar extends StatelessWidget {
                 width: 2,
                 height: 14,
                 decoration: BoxDecoration(
-                  color: AppColors.darkText.withValues(alpha: 0.4),
+                  color: Colors.white.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(1),
                 ),
               ),
@@ -662,8 +655,8 @@ class _MiniStat extends StatelessWidget {
         children: [
           Text(
             label,
-            style: AppTextStyles.monoTiny.copyWith(
-              color: AppColors.darkText.withValues(alpha: 0.4),
+            style: AuroraType.labelSm.copyWith(
+              color: Colors.white.withValues(alpha: 0.4),
               letterSpacing: 0.6,
               fontSize: 9,
             ),
@@ -671,7 +664,7 @@ class _MiniStat extends StatelessWidget {
           const SizedBox(height: 3),
           Text(
             value,
-            style: AppTextStyles.monoLabel.copyWith(
+            style: AuroraType.label.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w700,
               color: valueColor,
@@ -689,8 +682,8 @@ class _MiniDivider extends StatelessWidget {
     return Container(
       width: 1,
       height: 28,
-      margin: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
-      color: AppColors.textInverse.withValues(alpha: 0.1),
+      margin: const EdgeInsets.symmetric(horizontal: AuroraSpacing.space3),
+      color: Colors.white.withValues(alpha: 0.1),
     );
   }
 }
@@ -715,8 +708,8 @@ class _SectionLabel extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           label,
-          style: AppTextStyles.monoSection.copyWith(
-            color: AppColors.gray500,
+          style: AuroraType.label.copyWith(
+            color: const Color(0xFF9D9BB0),
           ),
         ),
       ],
@@ -760,18 +753,18 @@ class _CategoryCardState extends State<_CategoryCard> {
     if (row.pendingCount > 0) {
       return (
         '${row.pendingCount} PENDING',
-        AppColors.sandDim,
-        AppColors.sandAmber,
+        AuroraColors.yellowDim,
+        AuroraColors.yellowDeep,
       );
     }
     if (row.estimated > 0 && row.actual > row.estimated) {
       final over = row.actual - row.estimated;
-      return ('+${_fmt(over)} OVER', AppColors.accentDim, AppColors.accent);
+      return ('+${_fmt(over)} OVER', AuroraColors.coralDim, AuroraColors.coral);
     }
     if (row.estimated > 0 && row.actual <= row.estimated * 0.95) {
-      return ('UNDER EST.', AppColors.oliveDim, AppColors.olive);
+      return ('UNDER EST.', AuroraColors.limeDim, AuroraColors.lime);
     }
-    return ('ON TRACK', AppColors.slateDim, AppColors.slate);
+    return ('ON TRACK', AuroraColors.cobaltDim, AuroraColors.cobalt);
   }
 
   @override
@@ -779,7 +772,7 @@ class _CategoryCardState extends State<_CategoryCard> {
     final row = widget.row;
     final color = _dotColor(row.category);
     final isOver = row.estimated > 0 && row.actual > row.estimated;
-    final barColor = isOver ? AppColors.accent : color;
+    final barColor = isOver ? AuroraColors.coral : color;
     final barFraction = row.estimated > 0
         ? (row.actual / row.estimated).clamp(0.0, 1.0)
         : 0.0;
@@ -791,9 +784,9 @@ class _CategoryCardState extends State<_CategoryCard> {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AuroraColors.paper,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AuroraColors.inkBorder),
       ),
       clipBehavior: Clip.hardEdge,
       child: Column(
@@ -826,21 +819,17 @@ class _CategoryCardState extends State<_CategoryCard> {
                         Expanded(
                           child: Text(
                             row.category.budgetCategoryLabel,
-                            style: GoogleFonts.fraunces(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                            ),
+                            style: AuroraType.h3.copyWith(fontSize: 14, color: AuroraColors.ink),
                           ),
                         ),
                         Text(
                           _fmt(row.actual),
-                          style: AppTextStyles.monoLabel.copyWith(
+                          style: AuroraType.label.copyWith(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: isOver
-                                ? AppColors.accent
-                                : AppColors.textPrimary,
+                                ? AuroraColors.coral
+                                : AuroraColors.ink,
                           ),
                         ),
                         if (hasItems) ...[
@@ -851,7 +840,7 @@ class _CategoryCardState extends State<_CategoryCard> {
                             child: const Icon(
                               Icons.keyboard_arrow_down,
                               size: 18,
-                              color: AppColors.gray400,
+                              color: AuroraColors.inkTertiary,
                             ),
                           ),
                         ],
@@ -867,7 +856,7 @@ class _CategoryCardState extends State<_CategoryCard> {
                           height: 5,
                           child: Stack(
                             children: [
-                              Container(color: AppColors.warmInset),
+                              Container(color: AuroraColors.butter),
                               FractionallySizedBox(
                                 widthFactor: barFraction,
                                 child: Container(color: barColor),
@@ -887,8 +876,8 @@ class _CategoryCardState extends State<_CategoryCard> {
                           child: row.estimated > 0
                               ? Text.rich(
                                   TextSpan(
-                                    style: AppTextStyles.monoTiny.copyWith(
-                                      color: AppColors.gray500,
+                                    style: AuroraType.labelSm.copyWith(
+                                      color: const Color(0xFF9D9BB0),
                                       fontSize: 10,
                                       letterSpacing: 0.3,
                                     ),
@@ -896,7 +885,7 @@ class _CategoryCardState extends State<_CategoryCard> {
                                       TextSpan(
                                         text: '${pctOfSpent.toStringAsFixed(0)}%',
                                         style: const TextStyle(
-                                          color: AppColors.textPrimary,
+                                          color: AuroraColors.ink,
                                           fontWeight: FontWeight.w700,
                                         ),
                                       ),
@@ -907,8 +896,8 @@ class _CategoryCardState extends State<_CategoryCard> {
                                 )
                               : Text(
                                   'No estimate set',
-                                  style: AppTextStyles.monoTiny.copyWith(
-                                    color: AppColors.gray400,
+                                  style: AuroraType.labelSm.copyWith(
+                                    color: AuroraColors.inkTertiary,
                                     fontSize: 10,
                                     fontStyle: FontStyle.italic,
                                   ),
@@ -926,7 +915,7 @@ class _CategoryCardState extends State<_CategoryCard> {
                             ),
                             child: Text(
                               pillLabel,
-                              style: AppTextStyles.monoTiny.copyWith(
+                              style: AuroraType.labelSm.copyWith(
                                 color: pillText,
                                 letterSpacing: 0.6,
                                 fontSize: 9,
@@ -949,7 +938,7 @@ class _CategoryCardState extends State<_CategoryCard> {
             child: _expanded
                 ? Column(
                     children: [
-                      Container(height: 1, color: AppColors.border),
+                      Container(height: 1, color: AuroraColors.inkBorder),
                       ...widget.items.map(
                         (item) => Dismissible(
                           key: ValueKey(item.id),
@@ -1022,10 +1011,10 @@ class _CategoryItemRow extends StatelessWidget {
                 height: 8,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: item.isPaid ? AppColors.olive : Colors.transparent,
+                  color: item.isPaid ? AuroraColors.lime : Colors.transparent,
                   border: item.isPaid
                       ? null
-                      : Border.all(color: AppColors.borderStrong, width: 1.5),
+                      : Border.all(color: AuroraColors.inkBorderStrong, width: 1.5),
                 ),
               ),
               const SizedBox(width: 10),
@@ -1037,16 +1026,16 @@ class _CategoryItemRow extends StatelessWidget {
                   children: [
                     Text(
                       item.name,
-                      style: AppTextStyles.bodySmall.copyWith(
+                      style: AuroraType.bodySm.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: AuroraColors.ink,
                       ),
                     ),
                     if (item.vendor != null && item.vendor!.isNotEmpty)
                       Text(
                         item.vendor!,
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.gray500,
+                        style: AuroraType.bodySm.copyWith(
+                          color: const Color(0xFF9D9BB0),
                         ),
                       ),
                   ],
@@ -1059,25 +1048,25 @@ class _CategoryItemRow extends StatelessWidget {
                 children: [
                   Text(
                     _fmt(displayCost),
-                    style: AppTextStyles.monoLabel.copyWith(
+                    style: AuroraType.label.copyWith(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color:
-                          isOver ? AppColors.accent : AppColors.textPrimary,
+                          isOver ? AuroraColors.coral : AuroraColors.ink,
                     ),
                   ),
                   if (hasActual && item.estimatedCost > 0)
                     Text(
                       'est. ${_fmt(item.estimatedCost)}',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.gray500,
+                      style: AuroraType.bodySm.copyWith(
+                        color: const Color(0xFF9D9BB0),
                       ),
                     ),
                 ],
               ),
               const SizedBox(width: 4),
               const Icon(Icons.chevron_right,
-                  size: 16, color: AppColors.gray400),
+                  size: 16, color: AuroraColors.inkTertiary),
             ],
           ),
         ),
@@ -1096,9 +1085,9 @@ class _InsightUpsell extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.warmFill,
+        color: AuroraColors.butter,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.borderStrong, width: 1.5),
+        border: Border.all(color: AuroraColors.inkBorderStrong, width: 1.5),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1106,26 +1095,22 @@ class _InsightUpsell extends StatelessWidget {
           Icon(
             Icons.auto_awesome_outlined,
             size: 18,
-            color: AppColors.sand,
+            color: AuroraColors.yellow,
           ),
-          const SizedBox(width: AppSizes.sm),
+          const SizedBox(width: AuroraSpacing.space3),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Unlock budget insights',
-                  style: GoogleFonts.fraunces(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
+                  style: AuroraType.h3.copyWith(fontSize: 13, color: AuroraColors.ink),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   'Smart Scan flags overages, missing receipts, and pacing issues automatically — included with Premium.',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.gray500,
+                  style: AuroraType.bodySm.copyWith(
+                    color: const Color(0xFF9D9BB0),
                     fontSize: 11,
                   ),
                 ),
@@ -1147,9 +1132,9 @@ class _PaidBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.only(left: AppSizes.lg),
-      color: AppColors.olive,
-      child: const Icon(Icons.check_circle_outline, color: AppColors.textInverse),
+      padding: const EdgeInsets.only(left: AuroraSpacing.space9),
+      color: AuroraColors.lime,
+      child: const Icon(Icons.check_circle_outline, color: Colors.white),
     );
   }
 }
@@ -1159,9 +1144,9 @@ class _DeleteBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       alignment: Alignment.centerRight,
-      padding: const EdgeInsets.only(right: AppSizes.lg),
-      color: AppColors.error,
-      child: const Icon(Icons.delete_outline, color: AppColors.textInverse),
+      padding: const EdgeInsets.only(right: AuroraSpacing.space9),
+      color: AuroraColors.coral,
+      child: const Icon(Icons.delete_outline, color: Colors.white),
     );
   }
 }
@@ -1174,34 +1159,34 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.attach_money_outlined,
-              size: AppSizes.iconXl,
-              color: AppColors.gray400,
+              size: 48.0,
+              color: AuroraColors.inkTertiary,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space7),
             Text(
               'Track your project budget',
-              style: AppTextStyles.displaySmall,
+              style: AuroraType.h1,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             Text(
               'Add line items to monitor spending against your budget. See totals, categories, and how actual costs compare to estimates.',
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textSecondary),
+              style: AuroraType.body
+                  .copyWith(color: AuroraColors.inkSecondary),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.xl),
+            const SizedBox(height: AuroraSpacing.space10),
             FilledButton(
               onPressed: onAdd,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                padding: AppPadding.button,
+                backgroundColor: AuroraColors.coral,
+                padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               ),
               child: const Text('+ Start Tracking'),
             ),
@@ -1220,21 +1205,21 @@ class _ErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.error_outline,
-                size: AppSizes.iconXl, color: AppColors.error),
-            const SizedBox(height: AppSizes.md),
+                size: 48.0, color: AuroraColors.coral),
+            const SizedBox(height: AuroraSpacing.space7),
             Text("Couldn't load budget",
-                style: AppTextStyles.displaySmall,
+                style: AuroraType.h1,
                 textAlign: TextAlign.center),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space9),
             FilledButton(
               onPressed: onRetry,
               style:
-                  FilledButton.styleFrom(backgroundColor: AppColors.accent),
+                  FilledButton.styleFrom(backgroundColor: AuroraColors.coral),
               child: const Text('Retry'),
             ),
           ],

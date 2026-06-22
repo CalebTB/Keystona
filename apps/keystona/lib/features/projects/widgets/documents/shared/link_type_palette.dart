@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/theme/aurora_colors.dart';
 
-import '../../../../../core/theme/app_colors.dart';
 import 'document_link_type.dart';
 
-// Local dim colors not yet in AppColors.
+// Local dim colors not yet in AuroraColors.
 // Use inline constants to avoid touching app_colors.dart (parallel agent risk).
 const Color _tealDim = Color(0x1A2C9C8E); // teal-ish at ~10% opacity
 const Color _tealFg = Color(0xFF2C9C8E); // teal foreground
@@ -45,8 +45,8 @@ abstract final class LinkTypePalette {
           foreground: _plumFg,
         ),
         DocumentLinkType.general => (
-          background: AppColors.surfaceVariant,
-          foreground: AppColors.textSecondary,
+          background: AuroraColors.butter,
+          foreground: AuroraColors.inkSecondary,
         ),
       };
 }

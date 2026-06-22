@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../models/project_journal_note.dart';
 
 /// Card displaying a single project journal note.
@@ -30,18 +30,18 @@ class JournalNoteCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.border),
+        color: AuroraColors.paper,
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(color: AuroraColors.inkBorder),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd - 1),
+        borderRadius: BorderRadius.circular(12.0 - 1),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: onTap,
             child: Padding(
-              padding: const EdgeInsets.all(AppSizes.md),
+              padding: const EdgeInsets.all(AuroraSpacing.space7),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,35 +50,35 @@ class JournalNoteCard extends StatelessWidget {
                           if (_hasTitle) ...[
                             Text(
                               note.title!,
-                              style: AppTextStyles.bodyMediumSemibold,
+                              style: AuroraType.h3,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: AppSizes.xs),
+                            const SizedBox(height: AuroraSpacing.space1),
                           ],
 
                           // Content preview
                           Text(
                             note.content,
                             style: _hasTitle
-                                ? AppTextStyles.bodySmall.copyWith(
-                                    color: AppColors.textSecondary,
+                                ? AuroraType.bodySm.copyWith(
+                                    color: AuroraColors.inkSecondary,
                                   )
-                                : AppTextStyles.bodyMedium.copyWith(
-                                    color: AppColors.textPrimary,
+                                : AuroraType.body.copyWith(
+                                    color: AuroraColors.ink,
                                   ),
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
                           ),
 
                           // Footer: date + phase badge
-                          const SizedBox(height: AppSizes.sm),
+                          const SizedBox(height: AuroraSpacing.space3),
                           Row(
                             children: [
                               Text(
                                 _dateFmt.format(note.noteDate),
-                                style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.textSecondary,
+                                style: AuroraType.bodySm.copyWith(
+                                  color: AuroraColors.inkSecondary,
                                 ),
                               ),
                               if (phaseName != null) ...[
@@ -105,17 +105,17 @@ class _PhaseBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.sm,
+        horizontal: AuroraSpacing.space3,
         vertical: 2,
       ),
       decoration: BoxDecoration(
-        color: AppColors.slateDim,
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+        color: AuroraColors.cobaltDim,
+        borderRadius: BorderRadius.circular(999.0),
       ),
       child: Text(
         name,
-        style: AppTextStyles.labelSmall.copyWith(
-          color: AppColors.slate,
+        style: AuroraType.label.copyWith(
+          color: AuroraColors.cobalt,
           fontWeight: FontWeight.w600,
         ),
       ),

@@ -2,11 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/upgrade_sheet.dart';
 import '../../../services/providers/service_providers.dart';
 import '../../subscription/providers/subscription_provider.dart';
@@ -102,7 +102,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
             // ── Page dots ───────────────────────────────────────────────────
             if (filtered.isNotEmpty && filtered.length > 1)
               ColoredBox(
-                color: AppColors.warmOffWhite,
+                color: AuroraColors.paper,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: ValueListenableBuilder<int>(
@@ -181,16 +181,16 @@ class _Header extends StatelessWidget {
             children: [
               Text(
                 'PROJECTS',
-                style: AppTextStyles.monoSection.copyWith(
+                style: AuroraType.label.copyWith(
                   fontSize: 10,
-                  color: AppColors.accent,
+                  color: AuroraColors.coral,
                   letterSpacing: 1.4,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 'Your renovations',
-                style: AppTextStyles.headlineMedium.copyWith(fontSize: 26),
+                style: AuroraType.h2.copyWith(fontSize: 26),
               ),
             ],
           ),
@@ -214,18 +214,18 @@ class _AddButton extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AuroraColors.paper,
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.border, width: 1.5),
+          border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
           boxShadow: const [
             BoxShadow(
-              color: AppColors.shadowMd,
+              color: Colors.transparent,
               blurRadius: 8,
               offset: Offset(0, 2),
             ),
           ],
         ),
-        child: const Icon(Icons.add, size: 20, color: AppColors.textPrimary),
+        child: const Icon(Icons.add, size: 20, color: AuroraColors.ink),
       ),
     );
   }
@@ -304,10 +304,10 @@ class _Chip extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.deepNavy : AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+          color: selected ? AuroraColors.ink : AuroraColors.paper,
+          borderRadius: BorderRadius.circular(999.0),
           border: Border.all(
-            color: selected ? AppColors.deepNavy : AppColors.border,
+            color: selected ? AuroraColors.ink : AuroraColors.inkBorder,
           ),
         ),
         child: Row(
@@ -315,9 +315,9 @@ class _Chip extends StatelessWidget {
           children: [
             Text(
               label,
-              style: AppTextStyles.labelSmall.copyWith(
+              style: AuroraType.label.copyWith(
                 fontWeight: FontWeight.w600,
-                color: selected ? AppColors.textInverse : AppColors.textSecondary,
+                color: selected ? Colors.white : AuroraColors.inkSecondary,
               ),
             ),
             const SizedBox(width: 5),
@@ -325,17 +325,17 @@ class _Chip extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
               decoration: BoxDecoration(
                 color: selected
-                    ? AppColors.textInverse.withValues(alpha: 0.15)
-                    : AppColors.warmFill,
+                    ? Colors.white.withValues(alpha: 0.15)
+                    : AuroraColors.butter,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 '$count',
-                style: AppTextStyles.monoSection.copyWith(
+                style: AuroraType.label.copyWith(
                   fontSize: 9,
                   color: selected
-                      ? AppColors.textInverse.withValues(alpha: 0.8)
-                      : AppColors.textSecondary,
+                      ? Colors.white.withValues(alpha: 0.8)
+                      : AuroraColors.inkSecondary,
                 ),
               ),
             ),
@@ -373,11 +373,11 @@ class _PageDots extends StatelessWidget {
             height: dotSize,
             margin: EdgeInsets.symmetric(horizontal: spacing),
             decoration: BoxDecoration(
-              color: active ? AppColors.deepNavy : Colors.transparent,
+              color: active ? AuroraColors.ink : Colors.transparent,
               borderRadius: BorderRadius.circular(dotSize),
               border: active
                   ? null
-                  : Border.all(color: AppColors.deepNavy.withValues(alpha: 0.25), width: 1),
+                  : Border.all(color: AuroraColors.ink.withValues(alpha: 0.25), width: 1),
             ),
           );
         }),
@@ -400,23 +400,23 @@ class _NoResultsState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.filter_list_off, size: AppSizes.iconXl, color: AppColors.gray400),
-            const SizedBox(height: AppSizes.md),
+            Icon(Icons.filter_list_off, size: 48.0, color: AuroraColors.inkTertiary),
+            const SizedBox(height: AuroraSpacing.space7),
             Text(
               'No ${filter?.statusLabel ?? ''} projects',
-              style: AppTextStyles.h3,
+              style: AuroraType.h3,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             TextButton(
               onPressed: onClear,
               child: Text(
                 'Clear filter',
-                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.deepNavy),
+                style: AuroraType.body.copyWith(color: AuroraColors.ink),
               ),
             ),
           ],
@@ -436,17 +436,17 @@ class _ErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: AppSizes.xxl, color: AppColors.error),
-            const SizedBox(height: AppSizes.md),
-            Text("Couldn't load projects", style: AppTextStyles.h3, textAlign: TextAlign.center),
-            const SizedBox(height: AppSizes.lg),
+            Icon(Icons.error_outline, size: 48.0, color: AuroraColors.coral),
+            const SizedBox(height: AuroraSpacing.space7),
+            Text("Couldn't load projects", style: AuroraType.h3, textAlign: TextAlign.center),
+            const SizedBox(height: AuroraSpacing.space9),
             FilledButton(
               onPressed: onRetry,
-              style: FilledButton.styleFrom(backgroundColor: AppColors.accent),
+              style: FilledButton.styleFrom(backgroundColor: AuroraColors.coral),
               child: const Text('Retry'),
             ),
           ],
@@ -541,7 +541,7 @@ class _ProjectsScreenSkeletonState extends State<_ProjectsScreenSkeleton>
                       width: double.infinity,
                       height: 120,
                       decoration: const BoxDecoration(
-                        color: AppColors.gray800,
+                        color: const Color(0xFF1E1D38),
                         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                       ),
                       padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
@@ -565,7 +565,7 @@ class _ProjectsScreenSkeletonState extends State<_ProjectsScreenSkeleton>
                     // White timeline section
                     Expanded(
                       child: Container(
-                        color: AppColors.surface,
+                        color: AuroraColors.paper,
                         padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
                         child: Column(
                           children: List.generate(4, (i) => Padding(
@@ -594,7 +594,7 @@ class _ProjectsScreenSkeletonState extends State<_ProjectsScreenSkeleton>
                       width: double.infinity,
                       height: 60,
                       decoration: const BoxDecoration(
-                        color: AppColors.warmFill,
+                        color: AuroraColors.butter,
                         borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
                       ),
                       padding: const EdgeInsets.fromLTRB(20, 14, 16, 16),
@@ -614,7 +614,7 @@ class _ProjectsScreenSkeletonState extends State<_ProjectsScreenSkeleton>
             ),
             // ── Dots shimmer ─────────────────────────────────────────────────
             ColoredBox(
-              color: AppColors.warmOffWhite,
+              color: AuroraColors.paper,
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Row(
@@ -656,8 +656,8 @@ class _ShimmerBar extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         color: dark
-            ? AppColors.textInverse.withValues(alpha: 0.15)
-            : AppColors.gray200,
+            ? Colors.white.withValues(alpha: 0.15)
+            : const Color(0xFFEEEDF2),
         borderRadius: BorderRadius.circular(radius),
       ),
     );

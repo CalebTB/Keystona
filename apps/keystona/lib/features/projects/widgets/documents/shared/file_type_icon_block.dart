@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/theme/aurora_colors.dart';
 
-import '../../../../../core/theme/app_colors.dart';
 
 /// 44×56 colored file-type block with folded corner effect.
 ///
@@ -16,29 +16,29 @@ class FileTypeIconBlock extends StatelessWidget {
     final lower = mime.toLowerCase();
     if (lower == 'application/pdf' || lower.endsWith('/pdf')) {
       return (
-        bg: AppColors.fileTypePdfBg,
-        fg: AppColors.accent,
+        bg: AuroraColors.coralDim,
+        fg: AuroraColors.coral,
         label: 'PDF',
       );
     }
     if (lower.contains('jpeg') || lower.contains('jpg')) {
       return (
-        bg: AppColors.fileTypeImageBg,
-        fg: AppColors.olive,
+        bg: AuroraColors.limeDim,
+        fg: AuroraColors.lime,
         label: 'JPG',
       );
     }
     if (lower.contains('png')) {
       return (
-        bg: AppColors.fileTypeImageBg,
-        fg: AppColors.olive,
+        bg: AuroraColors.limeDim,
+        fg: AuroraColors.lime,
         label: 'PNG',
       );
     }
     if (lower.contains('heic') || lower.contains('heif')) {
       return (
-        bg: AppColors.fileTypeHeicBg,
-        fg: AppColors.plum,
+        bg: AuroraColors.cobaltDim,
+        fg: AuroraColors.cobalt,
         label: 'HEIC',
       );
     }
@@ -47,14 +47,14 @@ class FileTypeIconBlock extends StatelessWidget {
         lower.contains('docx') ||
         lower.contains('officedocument')) {
       return (
-        bg: AppColors.fileTypeDocBg,
-        fg: AppColors.slate,
+        bg: AuroraColors.cobaltDim,
+        fg: AuroraColors.cobalt,
         label: 'DOCX',
       );
     }
     return (
-      bg: AppColors.surfaceVariant,
-      fg: AppColors.textSecondary,
+      bg: AuroraColors.butter,
+      fg: AuroraColors.inkSecondary,
       label: 'FILE',
     );
   }
@@ -118,7 +118,7 @@ class _CornerPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.deepNavy.withValues(alpha: 0.10)
+      ..color = AuroraColors.ink.withValues(alpha: 0.10)
       ..style = PaintingStyle.fill;
 
     final path = Path()

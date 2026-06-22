@@ -1,10 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../providers/project_contractors_provider.dart';
 import '../providers/project_detail_provider.dart';
 import '../widgets/contractor_form_sheet.dart';
@@ -63,8 +63,8 @@ class ProjectContractorsScreen extends ConsumerWidget {
       body: body,
       floatingActionButton: FloatingActionButton(
         onPressed: () => _onAdd(context, ref),
-        backgroundColor: AppColors.deepNavy,
-        child: const Icon(Icons.add, color: AppColors.textInverse),
+        backgroundColor: AuroraColors.ink,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -79,28 +79,28 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.people_outline,
-                size: AppSizes.iconXl, color: AppColors.gray400),
-            const SizedBox(height: AppSizes.md),
+                size: 48.0, color: AuroraColors.inkTertiary),
+            const SizedBox(height: AuroraSpacing.space7),
             Text('No contractors yet',
-                style: AppTextStyles.h3, textAlign: TextAlign.center),
-            const SizedBox(height: AppSizes.sm),
+                style: AuroraType.h3, textAlign: TextAlign.center),
+            const SizedBox(height: AuroraSpacing.space3),
             Text(
               'Add the people working on this project — your existing emergency contacts can be added with one tap.',
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textSecondary),
+              style: AuroraType.body
+                  .copyWith(color: AuroraColors.inkSecondary),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.xl),
+            const SizedBox(height: AuroraSpacing.space10),
             FilledButton(
               onPressed: onAdd,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.deepNavy,
-                padding: AppPadding.button,
+                backgroundColor: AuroraColors.ink,
+                padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               ),
               child: const Text('+ Add Contractor'),
             ),
@@ -120,20 +120,20 @@ class _ErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.error_outline,
-                size: AppSizes.iconXl, color: AppColors.error),
-            const SizedBox(height: AppSizes.md),
+                size: 48.0, color: AuroraColors.coral),
+            const SizedBox(height: AuroraSpacing.space7),
             Text("Couldn't load contractors",
-                style: AppTextStyles.h3, textAlign: TextAlign.center),
-            const SizedBox(height: AppSizes.lg),
+                style: AuroraType.h3, textAlign: TextAlign.center),
+            const SizedBox(height: AuroraSpacing.space9),
             FilledButton(
               onPressed: onRetry,
               style:
-                  FilledButton.styleFrom(backgroundColor: AppColors.deepNavy),
+                  FilledButton.styleFrom(backgroundColor: AuroraColors.ink),
               child: const Text('Retry'),
             ),
           ],

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
 
 /// Pulse-shimmer skeleton matching [ProjectCard] layout.
 ///
@@ -45,12 +45,12 @@ class _ProjectListSkeletonState extends State<ProjectListSkeleton>
       builder: (_, _) => Opacity(
         opacity: _opacity.value,
         child: ListView(
-          padding: AppPadding.screen,
+          padding: EdgeInsets.all(AuroraSpacing.screenPadH),
           children: const [
             _SkeletonCard(),
-            SizedBox(height: AppSizes.sm),
+            SizedBox(height: AuroraSpacing.space3),
             _SkeletonCard(),
-            SizedBox(height: AppSizes.sm),
+            SizedBox(height: AuroraSpacing.space3),
             _SkeletonCard(),
           ],
         ),
@@ -66,9 +66,9 @@ class _SkeletonCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AuroraColors.paper,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.gray200, width: 3),
+        border: Border.all(color: const Color(0xFFEEEDF2), width: 3),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(11),
@@ -78,7 +78,7 @@ class _SkeletonCard extends StatelessWidget {
             // Hero block
             Container(
               height: 80,
-              color: AppColors.gray300,
+              color: const Color(0xFFE0DFEA),
             ),
             // Card body
             Padding(
@@ -92,7 +92,7 @@ class _SkeletonCard extends StatelessWidget {
                       for (int i = 0; i < 5; i++) ...[
                         if (i > 0)
                           Expanded(
-                            child: Container(height: 2, color: AppColors.gray200),
+                            child: Container(height: 2, color: const Color(0xFFEEEDF2)),
                           ),
                         Container(
                           width: 7,
@@ -100,7 +100,7 @@ class _SkeletonCard extends StatelessWidget {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: AppColors.gray300,
+                              color: const Color(0xFFE0DFEA),
                               width: 1.5,
                             ),
                           ),
@@ -117,7 +117,7 @@ class _SkeletonCard extends StatelessWidget {
                         width: 100,
                         height: 11,
                         decoration: BoxDecoration(
-                          color: AppColors.gray200,
+                          color: const Color(0xFFEEEDF2),
                           borderRadius: BorderRadius.circular(3),
                         ),
                       ),
@@ -126,8 +126,8 @@ class _SkeletonCard extends StatelessWidget {
                         child: Container(
                           height: 4,
                           decoration: BoxDecoration(
-                            color: AppColors.gray200,
-                            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                            color: const Color(0xFFEEEDF2),
+                            borderRadius: BorderRadius.circular(999.0),
                           ),
                         ),
                       ),
@@ -141,7 +141,7 @@ class _SkeletonCard extends StatelessWidget {
                         width: 72,
                         height: 20,
                         decoration: BoxDecoration(
-                          color: AppColors.gray200,
+                          color: const Color(0xFFEEEDF2),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -150,7 +150,7 @@ class _SkeletonCard extends StatelessWidget {
                         width: 70,
                         height: 11,
                         decoration: BoxDecoration(
-                          color: AppColors.gray200,
+                          color: const Color(0xFFEEEDF2),
                           borderRadius: BorderRadius.circular(3),
                         ),
                       ),

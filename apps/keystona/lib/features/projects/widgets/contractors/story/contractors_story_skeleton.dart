@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/theme/aurora_colors.dart';
 
-import '../../../../../core/theme/app_colors.dart';
 
 /// Skeleton for [ContractorsStoryView].
 ///
@@ -51,7 +51,7 @@ class _ContractorsStorySkeletonState extends State<ContractorsStorySkeleton>
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Container(
             decoration: BoxDecoration(
-              color: AppColors.contractorCardBg,
+              color: AuroraColors.ink,
               borderRadius: BorderRadius.circular(16),
             ),
             padding: const EdgeInsets.all(24),
@@ -86,7 +86,7 @@ class _ContractorsStorySkeletonState extends State<ContractorsStorySkeleton>
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.contractorBlockBg,
+                    color: const Color(0xFF0E1530),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -131,7 +131,7 @@ class _ContractorsStorySkeletonState extends State<ContractorsStorySkeleton>
                 Container(
                   height: 56,
                   decoration: BoxDecoration(
-                    color: AppColors.contractorBlockBg,
+                    color: const Color(0xFF0E1530),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -203,7 +203,7 @@ class _StatCell extends StatelessWidget {
       height: 56,
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: AppColors.contractorBlockBg,
+        color: const Color(0xFF0E1530),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(

@@ -2,9 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 
 class SettingsNotificationsScreen extends StatefulWidget {
   const SettingsNotificationsScreen({super.key});
@@ -25,9 +25,9 @@ class _SettingsNotificationsScreenState
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         border: null,
         middle: const Text('Notifications'),
         leading: CupertinoButton(
@@ -44,23 +44,24 @@ class _SettingsNotificationsScreenState
             CupertinoSliverRefreshControl(onRefresh: () async {}),
             SliverToBoxAdapter(
               child: Padding(
-                padding: AppPadding.screen.copyWith(top: AppSizes.md),
+                padding: const EdgeInsets.all(AuroraSpacing.screenPadH)
+                    .copyWith(top: AuroraSpacing.space7),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _label('GENERAL'),
-                    const SizedBox(height: AppSizes.sm),
+                    const SizedBox(height: AuroraSpacing.space3),
                     _group([
                       _toggle(
                         icon: CupertinoIcons.bell,
-                        color: AppColors.sandAmber,
+                        color: AuroraColors.yellowDeep,
                         title: 'Push notifications',
                         value: _pushEnabled,
                         onChanged: (v) => setState(() => _pushEnabled = v),
                       ),
                       _toggle(
                         icon: CupertinoIcons.moon,
-                        color: AppColors.sandAmber,
+                        color: AuroraColors.yellowDeep,
                         title: 'Quiet hours',
                         subtitle: '10pm – 8am',
                         value: _quietHoursEnabled,
@@ -68,14 +69,14 @@ class _SettingsNotificationsScreenState
                       ),
                     ]),
 
-                    const SizedBox(height: AppSizes.xl),
+                    const SizedBox(height: AuroraSpacing.space10),
 
                     _label('REMINDERS'),
-                    const SizedBox(height: AppSizes.sm),
+                    const SizedBox(height: AuroraSpacing.space3),
                     _group([
                       _toggle(
                         icon: CupertinoIcons.wrench,
-                        color: AppColors.olive,
+                        color: AuroraColors.lime,
                         title: 'Maintenance reminders',
                         subtitle: 'Tasks due soon',
                         value: _maintenanceReminders,
@@ -84,7 +85,7 @@ class _SettingsNotificationsScreenState
                       ),
                       _toggle(
                         icon: CupertinoIcons.doc_text,
-                        color: AppColors.accent,
+                        color: AuroraColors.coral,
                         title: 'Expiration alerts',
                         subtitle: 'Documents expiring within 90 days',
                         value: _expirationAlerts,
@@ -93,7 +94,7 @@ class _SettingsNotificationsScreenState
                       ),
                       _toggle(
                         icon: CupertinoIcons.chart_bar,
-                        color: AppColors.plum,
+                        color: AuroraColors.cobalt,
                         title: 'Weekly digest',
                         subtitle: 'Home health summary every Sunday',
                         value: _weeklyDigest,
@@ -110,14 +111,14 @@ class _SettingsNotificationsScreenState
     );
   }
 
-  Widget _label(String text) => Text(text, style: AppTextStyles.monoSection);
+  Widget _label(String text) => Text(text, style: AuroraType.label);
 
   Widget _group(List<Widget> rows) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(AppSizes.radiusCard),
-        border: Border.all(color: AppColors.border, width: 1.5),
+        color: AuroraColors.paper,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
       ),
       child: Column(
         children: [
@@ -125,7 +126,7 @@ class _SettingsNotificationsScreenState
             rows[i],
             if (i < rows.length - 1)
               const Divider(
-                  height: 1, thickness: 1, color: AppColors.warmFill,
+                  height: 1, thickness: 1, color: AuroraColors.butter,
                   indent: 54),
           ],
         ],
@@ -159,17 +160,18 @@ class _SettingsNotificationsScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: AppTextStyles.bodyMedium),
+                Text(title, style: AuroraType.body),
                 if (subtitle != null)
                   Text(subtitle,
-                      style: AppTextStyles.bodySmall
-                          .copyWith(color: AppColors.textSecondary)),
+                      style: AuroraType.bodySm.copyWith(
+                        color: AuroraColors.inkSecondary,
+                      )),
               ],
             ),
           ),
           CupertinoSwitch(
             value: value,
-            activeTrackColor: AppColors.olive,
+            activeTrackColor: AuroraColors.lime,
             onChanged: onChanged,
           ),
         ],

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../../core/theme/aurora_colors.dart';
+import '../../../../../core/theme/aurora_typography.dart';
+import '../../../../../core/theme/aurora_spacing.dart';
 
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_sizes.dart';
-import '../../../../../core/theme/app_text_styles.dart';
 import '../../../models/project_photo.dart';
 import '../../../providers/project_detail_provider.dart';
 import '../../../providers/project_photos_provider.dart';
@@ -78,10 +78,10 @@ class _PhotosCuratedGridState extends ConsumerState<PhotosCuratedGrid> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
-                  AppSizes.md,
-                  AppSizes.md,
-                  AppSizes.md,
-                  AppSizes.xs,
+                  AuroraSpacing.space7,
+                  AuroraSpacing.space7,
+                  AuroraSpacing.space7,
+                  AuroraSpacing.space1,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,7 +93,7 @@ class _PhotosCuratedGridState extends ConsumerState<PhotosCuratedGrid> {
                           height: 5,
                           margin: const EdgeInsets.only(right: 6),
                           decoration: const BoxDecoration(
-                            color: AppColors.accent,
+                            color: AuroraColors.coral,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -104,7 +104,7 @@ class _PhotosCuratedGridState extends ConsumerState<PhotosCuratedGrid> {
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1.2,
-                            color: AppColors.textSecondary,
+                            color: AuroraColors.inkSecondary,
                             height: 1.3,
                           ),
                         ),
@@ -117,7 +117,7 @@ class _PhotosCuratedGridState extends ConsumerState<PhotosCuratedGrid> {
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.7,
-                        color: AppColors.textPrimary,
+                        color: AuroraColors.ink,
                         height: 1.1,
                       ),
                     ),
@@ -139,8 +139,8 @@ class _PhotosCuratedGridState extends ConsumerState<PhotosCuratedGrid> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(
-                  top: AppSizes.sm,
-                  bottom: AppSizes.sm,
+                  top: AuroraSpacing.space3,
+                  bottom: AuroraSpacing.space3,
                 ),
                 child: PhotosSummaryStrip(
                   pairCount: pairCount,
@@ -163,10 +163,10 @@ class _PhotosCuratedGridState extends ConsumerState<PhotosCuratedGrid> {
             else
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(
-                  AppSizes.md,
+                  AuroraSpacing.space7,
                   0,
-                  AppSizes.md,
-                  AppSizes.md,
+                  AuroraSpacing.space7,
+                  AuroraSpacing.space7,
                 ),
                 sliver: SliverGrid.builder(
                   gridDelegate:
@@ -195,7 +195,7 @@ class _PhotosCuratedGridState extends ConsumerState<PhotosCuratedGrid> {
               ),
 
             const SliverToBoxAdapter(
-              child: SizedBox(height: AppSizes.xxl + AppSizes.xl),
+              child: SizedBox(height: 48.0 + AuroraSpacing.space10),
             ),
           ],
         );
@@ -237,15 +237,15 @@ class _ErrorBody extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.error_outline,
-              size: AppSizes.iconXl, color: AppColors.error),
-          const SizedBox(height: AppSizes.md),
+              size: 48.0, color: AuroraColors.coral),
+          const SizedBox(height: AuroraSpacing.space7),
           Text("Couldn't load photos",
-              style: AppTextStyles.h3, textAlign: TextAlign.center),
-          const SizedBox(height: AppSizes.lg),
+              style: AuroraType.h3, textAlign: TextAlign.center),
+          const SizedBox(height: AuroraSpacing.space9),
           FilledButton(
             onPressed: onRetry,
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.deepNavy,
+              backgroundColor: AuroraColors.ink,
             ),
             child: const Text('Retry'),
           ),
@@ -268,31 +268,31 @@ class _EmptyFilterState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.filter_list_off,
-              size: AppSizes.iconXl,
-              color: AppColors.gray400,
+              size: 48.0,
+              color: AuroraColors.inkTertiary,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space7),
             Text(
               hasTypeFilter
                   ? 'No photos match this filter'
                   : 'No photos yet',
-              style: AppTextStyles.h3,
+              style: AuroraType.h3,
               textAlign: TextAlign.center,
             ),
             if (hasTypeFilter) ...[
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
               TextButton(
                 onPressed: onClear,
                 child: Text(
                   'Clear filter',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.deepNavy,
+                  style: AuroraType.body.copyWith(
+                    color: AuroraColors.ink,
                   ),
                 ),
               ),

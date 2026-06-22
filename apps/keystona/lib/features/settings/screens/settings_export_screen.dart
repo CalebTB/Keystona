@@ -1,9 +1,10 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/snackbar_service.dart';
 
 class SettingsExportScreen extends StatefulWidget {
@@ -28,9 +29,9 @@ class _SettingsExportScreenState extends State<SettingsExportScreen> {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         border: null,
         middle: const Text('Export My Data'),
         leading: CupertinoButton(
@@ -42,41 +43,41 @@ class _SettingsExportScreenState extends State<SettingsExportScreen> {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: AppPadding.screen.copyWith(top: AppSizes.xl),
+          padding: const EdgeInsets.all(AuroraSpacing.screenPadH)
+              .copyWith(top: AuroraSpacing.space10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Export your data', style: AppTextStyles.displaySmall),
-              const SizedBox(height: AppSizes.sm),
+              Text('Export your data', style: AuroraType.h1),
+              const SizedBox(height: AuroraSpacing.space3),
               Text(
                 'Download a copy of everything Keystona stores about your home — documents, tasks, systems, and more.',
-                style: AppTextStyles.bodyMedium
-                    .copyWith(color: AppColors.textSecondary),
+                style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
               ),
-              const SizedBox(height: AppSizes.xl),
+              const SizedBox(height: AuroraSpacing.space10),
 
               _ExportItem(
                 icon: CupertinoIcons.doc_text,
-                color: AppColors.plum,
+                color: AuroraColors.cobalt,
                 title: 'Documents',
                 subtitle: 'All uploaded files and metadata',
               ),
-              const SizedBox(height: AppSizes.cardGap),
+              const SizedBox(height: AuroraSpacing.space2),
               _ExportItem(
                 icon: CupertinoIcons.wrench,
-                color: AppColors.olive,
+                color: AuroraColors.lime,
                 title: 'Maintenance tasks',
                 subtitle: 'History and completion records',
               ),
-              const SizedBox(height: AppSizes.cardGap),
+              const SizedBox(height: AuroraSpacing.space2),
               _ExportItem(
                 icon: CupertinoIcons.house,
-                color: AppColors.accent,
+                color: AuroraColors.coral,
                 title: 'Home profile',
                 subtitle: 'Property details, systems, appliances',
               ),
 
-              const SizedBox(height: AppSizes.xl),
+              const SizedBox(height: AuroraSpacing.space10),
 
               GestureDetector(
                 onTap: _exporting ? null : _requestExport,
@@ -85,28 +86,28 @@ class _SettingsExportScreenState extends State<SettingsExportScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
                     color: _exporting
-                        ? AppColors.plum.withValues(alpha: 0.5)
-                        : AppColors.plum,
-                    borderRadius: BorderRadius.circular(AppSizes.radiusCard),
+                        ? AuroraColors.cobalt.withValues(alpha: 0.5)
+                        : AuroraColors.cobalt,
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   child: _exporting
                       ? const Center(
-                          child: CupertinoActivityIndicator(
-                              color: AppColors.textInverse))
+                          child: CupertinoActivityIndicator(color: Colors.white))
                       : Text(
                           'Request export',
                           textAlign: TextAlign.center,
-                          style: AppTextStyles.bodyMediumSemibold
-                              .copyWith(color: AppColors.textInverse),
+                          style: AuroraType.body.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
                 ),
               ),
 
-              const SizedBox(height: AppSizes.md),
+              const SizedBox(height: AuroraSpacing.space7),
               Text(
                 'You\'ll receive an email with a download link within 24 hours.',
-                style: AppTextStyles.bodySmall
-                    .copyWith(color: AppColors.textTertiary),
+                style: AuroraType.bodySm.copyWith(color: AuroraColors.inkTertiary),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -135,9 +136,9 @@ class _ExportItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.border, width: 1.5),
+        color: AuroraColors.paper,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
       ),
       child: Row(
         children: [
@@ -154,10 +155,14 @@ class _ExportItem extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: AppTextStyles.bodyMediumSemibold),
-              Text(subtitle,
-                  style: AppTextStyles.bodySmall
-                      .copyWith(color: AppColors.textSecondary)),
+              Text(
+                title,
+                style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
+              ),
+              Text(
+                subtitle,
+                style: AuroraType.bodySm.copyWith(color: AuroraColors.inkSecondary),
+              ),
             ],
           ),
         ],

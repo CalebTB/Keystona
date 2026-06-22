@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/theme/aurora_colors.dart';
+import '../../../../../core/theme/aurora_typography.dart';
+import '../../../../../core/theme/aurora_spacing.dart';
 
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_sizes.dart';
-import '../../../../../core/theme/app_text_styles.dart';
 
 /// Horizontally-scrollable type filter chip row for the photos curated grid.
 ///
@@ -31,8 +31,8 @@ class PhotosGridFilterChips extends StatelessWidget {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.xs,
+        horizontal: AuroraSpacing.space7,
+        vertical: AuroraSpacing.space1,
       ),
       child: Row(
         children: [
@@ -74,20 +74,20 @@ class _Chip extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.xs + 2,
+          horizontal: AuroraSpacing.space7,
+          vertical: AuroraSpacing.space1 + 2,
         ),
         decoration: BoxDecoration(
-          color: selected ? AppColors.deepNavy : AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+          color: selected ? AuroraColors.ink : AuroraColors.paper,
+          borderRadius: BorderRadius.circular(999.0),
           border: Border.all(
-            color: selected ? AppColors.deepNavy : AppColors.border,
+            color: selected ? AuroraColors.ink : AuroraColors.inkBorder,
           ),
         ),
         child: Text(
           label,
-          style: AppTextStyles.labelSmall.copyWith(
-            color: selected ? Colors.white : AppColors.textSecondary,
+          style: AuroraType.label.copyWith(
+            color: selected ? Colors.white : AuroraColors.inkSecondary,
             fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
           ),
         ),

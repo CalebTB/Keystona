@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 
 /// Empty state for the Projects tab — Pattern B: Showcase.
 ///
@@ -16,24 +16,24 @@ class ProjectEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: AppPadding.screen,
+      padding: EdgeInsets.all(AuroraSpacing.screenPadH),
       child: Column(
         children: [
-          const SizedBox(height: AppSizes.xl),
+          const SizedBox(height: AuroraSpacing.space10),
           Text(
             'Organize renovations with phases, budgets, and before/after photos',
-            style: AppTextStyles.h2,
+            style: AuroraType.h2,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
           Text(
             'Track every project from planning to completion.',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+            style: AuroraType.body.copyWith(
+              color: AuroraColors.inkSecondary,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: AppSizes.xl),
+          const SizedBox(height: AuroraSpacing.space10),
 
           // ── Ghosted example cards ──────────────────────────────────────
           Opacity(
@@ -49,7 +49,7 @@ class ProjectEmptyState extends StatelessWidget {
                   budget: '\$12,500',
                   status: 'In Progress',
                 ),
-                const SizedBox(height: AppSizes.sm),
+                const SizedBox(height: AuroraSpacing.space3),
                 _ExampleProjectCard(
                   emoji: '🪵',
                   name: 'Deck Build',
@@ -63,20 +63,20 @@ class ProjectEmptyState extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: AppSizes.xl),
+          const SizedBox(height: AuroraSpacing.space10),
           FilledButton(
             onPressed: onCreateProject,
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.goldAccent,
-              foregroundColor: AppColors.textInverse,
+              backgroundColor: AuroraColors.yellow,
+              foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.xl,
-                vertical: AppSizes.md,
+                horizontal: AuroraSpacing.space10,
+                vertical: AuroraSpacing.space7,
               ),
             ),
             child: const Text('+ Start a Project'),
           ),
-          const SizedBox(height: AppSizes.xl),
+          const SizedBox(height: AuroraSpacing.space10),
         ],
       ),
     );
@@ -105,11 +105,11 @@ class _ExampleProjectCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSizes.md),
+      padding: const EdgeInsets.all(AuroraSpacing.space7),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.gray200),
+        color: AuroraColors.paper,
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(color: const Color(0xFFEEEDF2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,66 +117,66 @@ class _ExampleProjectCard extends StatelessWidget {
           Row(
             children: [
               Text(emoji, style: const TextStyle(fontSize: 24)),
-              const SizedBox(width: AppSizes.sm),
+              const SizedBox(width: AuroraSpacing.space3),
               Expanded(
-                child: Text(name, style: AppTextStyles.bodyLargeSemibold),
+                child: Text(name, style: AuroraType.bodyLg.copyWith(fontWeight: FontWeight.w600)),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.sm,
+                  horizontal: AuroraSpacing.space3,
                   vertical: 3,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.deepNavy.withValues(alpha: 0.1),
+                  color: AuroraColors.ink.withValues(alpha: 0.1),
                   borderRadius:
-                      BorderRadius.circular(AppSizes.radiusFull),
+                      BorderRadius.circular(999.0),
                 ),
                 child: Text(
                   status,
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.deepNavy,
+                  style: AuroraType.label.copyWith(
+                    color: AuroraColors.ink,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSizes.xs),
+          const SizedBox(height: AuroraSpacing.space1),
           Text(
             phases,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textSecondary,
+            style: AuroraType.bodySm.copyWith(
+              color: AuroraColors.inkSecondary,
             ),
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
           Row(
             children: [
               Expanded(
                 child: ClipRRect(
                   borderRadius:
-                      BorderRadius.circular(AppSizes.radiusFull),
+                      BorderRadius.circular(999.0),
                   child: LinearProgressIndicator(
                     value: progressFraction,
                     minHeight: 6,
-                    backgroundColor: AppColors.gray200,
+                    backgroundColor: const Color(0xFFEEEDF2),
                     valueColor: AlwaysStoppedAnimation<Color>(
-                        AppColors.deepNavy),
+                        AuroraColors.ink),
                   ),
                 ),
               ),
-              const SizedBox(width: AppSizes.sm),
+              const SizedBox(width: AuroraSpacing.space3),
               Text(
                 progressLabel,
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.textSecondary,
+                style: AuroraType.label.copyWith(
+                  color: AuroraColors.inkSecondary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSizes.xs),
+          const SizedBox(height: AuroraSpacing.space1),
           Text(
             'Budget: $budget',
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textSecondary,
+            style: AuroraType.bodySm.copyWith(
+              color: AuroraColors.inkSecondary,
             ),
           ),
         ],

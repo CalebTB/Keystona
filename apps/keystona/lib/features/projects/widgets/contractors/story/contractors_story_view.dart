@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../../core/theme/aurora_colors.dart';
 
-import '../../../../../core/theme/app_colors.dart';
 import '../../../../../services/supabase_service.dart';
 import '../../../models/project.dart';
 import '../../../models/project_contractor.dart';
@@ -104,7 +104,7 @@ class _ContractorsStoryViewState extends ConsumerState<ContractorsStoryView> {
                     width: 7,
                     height: 7,
                     decoration: const BoxDecoration(
-                      color: AppColors.plum,
+                      color: AuroraColors.cobalt,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -117,7 +117,7 @@ class _ContractorsStoryViewState extends ConsumerState<ContractorsStoryView> {
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.2,
-                        color: AppColors.textSecondary,
+                        color: AuroraColors.inkSecondary,
                         height: 1.2,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -182,7 +182,7 @@ class _PageDots extends StatelessWidget {
             height: 6,
             margin: const EdgeInsets.symmetric(horizontal: 3),
             decoration: BoxDecoration(
-              color: AppColors.textPrimary.withValues(alpha: isActive ? 0.6 : 0.2),
+              color: AuroraColors.ink.withValues(alpha: isActive ? 0.6 : 0.2),
               borderRadius: BorderRadius.circular(3),
             ),
           );

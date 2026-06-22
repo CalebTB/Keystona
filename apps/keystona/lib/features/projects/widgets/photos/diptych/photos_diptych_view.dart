@@ -2,16 +2,16 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../../../../../core/theme/aurora_colors.dart';
+import '../../../../../core/theme/aurora_typography.dart';
 
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_text_styles.dart';
 import '../../../models/project_photo.dart';
 import '../shared/photo_type_tag.dart';
 
-const Color _kCardSurface = AppColors.warmOffWhite;
-const Color _kCardBorder = AppColors.border;
-const Color _kRoomTagText = AppColors.contractorStatLabel;
-const Color _kCaptionColor = AppColors.textSecondary;
+const Color _kCardSurface = AuroraColors.paper;
+const Color _kCardBorder = AuroraColors.inkBorder;
+const Color _kRoomTagText = AuroraColors.inkSecondary;
+const Color _kCaptionColor = AuroraColors.inkSecondary;
 
 /// A before/after pair resolved from grouped photos.
 class _Pair {
@@ -85,7 +85,7 @@ class PhotosDiptychView extends StatelessWidget {
                       width: 6,
                       height: 6,
                       decoration: const BoxDecoration(
-                        color: AppColors.accent,
+                        color: AuroraColors.coral,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -99,7 +99,7 @@ class PhotosDiptychView extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.2,
                           height: 1.2,
-                          color: AppColors.textSecondary,
+                          color: AuroraColors.inkSecondary,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -115,7 +115,7 @@ class PhotosDiptychView extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.7,
                     height: 1.05,
-                    color: AppColors.textPrimary,
+                    color: AuroraColors.ink,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -137,19 +137,19 @@ class PhotosDiptychView extends StatelessWidget {
                     const Icon(
                       Icons.compare_outlined,
                       size: 48,
-                      color: AppColors.gray400,
+                      color: AuroraColors.inkTertiary,
                     ),
                     const SizedBox(height: 12),
                     Text(
                       'No before & after pairs yet',
-                      style: AppTextStyles.h3,
+                      style: AuroraType.h3,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Upload a before and after photo, then pair them to see the transformation.',
-                      style: AppTextStyles.bodyMedium
-                          .copyWith(color: AppColors.textSecondary),
+                      style: AuroraType.body
+                          .copyWith(color: AuroraColors.inkSecondary),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -241,7 +241,7 @@ class _PairCard extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: AuroraColors.ink,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -254,7 +254,7 @@ class _PairCard extends StatelessWidget {
                     child: Icon(
                       Icons.more_vert,
                       size: 18,
-                      color: AppColors.gray400,
+                      color: AuroraColors.inkTertiary,
                     ),
                   ),
                 ),
@@ -304,7 +304,7 @@ class _PairCard extends StatelessWidget {
                     fontFamily: 'IBMPlexMono',
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: AuroraColors.inkSecondary,
                   ),
                 ),
                 // Slide compare CTA
@@ -317,7 +317,7 @@ class _PairCard extends StatelessWidget {
                       const Icon(
                         Icons.compare_arrows_rounded,
                         size: 14,
-                        color: AppColors.accent,
+                        color: AuroraColors.coral,
                       ),
                       const SizedBox(width: 4),
                       const Text(
@@ -327,7 +327,7 @@ class _PairCard extends StatelessWidget {
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.0,
-                          color: AppColors.accent,
+                          color: AuroraColors.coral,
                         ),
                       ),
                     ],
@@ -362,11 +362,11 @@ class _PhotoTile extends StatelessWidget {
                   imageUrl: photo.signedUrl!,
                   fit: BoxFit.cover,
                   placeholder: (_, _) =>
-                      const ColoredBox(color: AppColors.photoPlaceholder),
+                      const ColoredBox(color: AuroraColors.butter),
                   errorWidget: (_, _, _) =>
-                      const ColoredBox(color: AppColors.photoPlaceholder),
+                      const ColoredBox(color: AuroraColors.butter),
                 )
-              : const ColoredBox(color: AppColors.photoPlaceholder),
+              : const ColoredBox(color: AuroraColors.butter),
 
           // Type badge — top-left
           Positioned(
@@ -385,7 +385,7 @@ class _PhotoTile extends StatelessWidget {
                 fontFamily: 'IBMPlexMono',
                 fontSize: 9,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textInverse,
+                color: Colors.white,
               ),
             ),
           ),
@@ -406,7 +406,7 @@ class _RoomTagChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.warmFill,
+        color: AuroraColors.butter,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(

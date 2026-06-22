@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import '../../../../../core/theme/aurora_colors.dart';
 
-import '../../../../../core/theme/app_colors.dart';
 
 /// [CachedNetworkImage] wrapper for project photos.
 ///
@@ -30,11 +30,11 @@ class PhotoThumb extends StatelessWidget {
       return Container(
         width: width,
         height: height,
-        color: AppColors.surfaceVariant,
+        color: AuroraColors.butter,
         child: const Center(
           child: Icon(
             Icons.image_not_supported_outlined,
-            color: AppColors.gray400,
+            color: AuroraColors.inkTertiary,
             size: 24,
           ),
         ),
@@ -49,16 +49,16 @@ class PhotoThumb extends StatelessWidget {
       placeholder: (_, _) => Container(
         width: width,
         height: height,
-        color: AppColors.surfaceVariant,
+        color: AuroraColors.butter,
       ),
       errorWidget: (_, _, _) => Container(
         width: width,
         height: height,
-        color: AppColors.surfaceVariant,
+        color: AuroraColors.butter,
         child: const Center(
           child: Icon(
             Icons.broken_image_outlined,
-            color: AppColors.gray400,
+            color: AuroraColors.inkTertiary,
             size: 24,
           ),
         ),

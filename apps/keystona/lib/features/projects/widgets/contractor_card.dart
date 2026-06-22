@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../models/project_contractor.dart';
 
 /// Single contractor card in the project contractors list.
@@ -29,31 +29,31 @@ class ContractorCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        constraints: const BoxConstraints(minHeight: AppSizes.cardMinHeight),
+        constraints: const BoxConstraints(minHeight: 72.0),
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm + 2,
+          horizontal: AuroraSpacing.space7,
+          vertical: AuroraSpacing.space3 + 2,
         ),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: AppColors.border),
+          color: AuroraColors.paper,
+          borderRadius: BorderRadius.circular(12.0),
+          border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(
           children: [
             // Avatar.
             CircleAvatar(
               radius: 22,
-              backgroundColor: AppColors.deepNavy.withValues(alpha: 0.1),
+              backgroundColor: AuroraColors.ink.withValues(alpha: 0.1),
               child: Text(
                 initials,
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.deepNavy,
+                style: AuroraType.label.copyWith(
+                  color: AuroraColors.ink,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-            const SizedBox(width: AppSizes.md),
+            const SizedBox(width: AuroraSpacing.space7),
             // Name + role.
             Expanded(
               child: Column(
@@ -61,13 +61,13 @@ class ContractorCard extends StatelessWidget {
                 children: [
                   Text(
                     contractor.contactName,
-                    style: AppTextStyles.bodyMediumSemibold,
+                    style: AuroraType.h3,
                   ),
                   if (contractor.role != null)
                     Text(
                       ContractorRoles.labelFor(contractor.role!),
-                      style: AppTextStyles.bodySmall
-                          .copyWith(color: AppColors.textSecondary),
+                      style: AuroraType.bodySm
+                          .copyWith(color: AuroraColors.inkSecondary),
                     ),
                 ],
               ),
@@ -79,7 +79,7 @@ class ContractorCard extends StatelessWidget {
                 if (contractor.contractAmount != null)
                   Text(
                     _fmt(contractor.contractAmount!),
-                    style: AppTextStyles.bodySmall.copyWith(
+                    style: AuroraType.bodySm.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -91,14 +91,14 @@ class ContractorCard extends StatelessWidget {
                       (i) => Icon(
                         i < contractor.rating! ? Icons.star : Icons.star_border,
                         size: 12,
-                        color: AppColors.goldAccent,
+                        color: AuroraColors.yellow,
                       ),
                     ),
                   ),
               ],
             ),
-            const SizedBox(width: AppSizes.xs),
-            const Icon(Icons.chevron_right, color: AppColors.gray400, size: 18),
+            const SizedBox(width: AuroraSpacing.space1),
+            const Icon(Icons.chevron_right, color: AuroraColors.inkTertiary, size: 18),
           ],
         ),
       ),

@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/supabase_service.dart';
 import '../models/project_journal_note.dart';
@@ -186,7 +186,7 @@ class _ProjectJournalScreenState
               onPressed: () => Navigator.of(ctx).pop(true),
               child: Text(
                 'Delete',
-                style: TextStyle(color: AppColors.error),
+                style: TextStyle(color: AuroraColors.coral),
               ),
             ),
           ],
@@ -236,7 +236,7 @@ class _ProjectJournalScreenState
                     children: [
                       Icon(
                         CupertinoIcons.slider_horizontal_3,
-                        color: isFiltered ? AppColors.accent : null,
+                        color: isFiltered ? AuroraColors.coral : null,
                       ),
                       if (isFiltered)
                         Positioned(
@@ -246,7 +246,7 @@ class _ProjectJournalScreenState
                             width: 8,
                             height: 8,
                             decoration: BoxDecoration(
-                              color: AppColors.accent,
+                              color: AuroraColors.coral,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -274,7 +274,7 @@ class _ProjectJournalScreenState
             IconButton(
               icon: Icon(
                 Icons.filter_list,
-                color: isFiltered ? AppColors.accent : null,
+                color: isFiltered ? AuroraColors.coral : null,
               ),
               onPressed: () => _showFilterSheet(context, linked),
             ),
@@ -283,8 +283,8 @@ class _ProjectJournalScreenState
       body: body,
       floatingActionButton: FloatingActionButton(
         onPressed: _onAddTap,
-        backgroundColor: AppColors.accent,
-        child: const Icon(Icons.add, color: AppColors.textInverse),
+        backgroundColor: AuroraColors.coral,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -392,9 +392,9 @@ class _NoteListState extends ConsumerState<_NoteList> {
         // Search bar
         SliverToBoxAdapter(
           child: Padding(
-            padding: AppPadding.screen.copyWith(bottom: 0),
+            padding: EdgeInsets.all(AuroraSpacing.screenPadH).copyWith(bottom: 0),
             child: Padding(
-              padding: const EdgeInsets.only(bottom: AppSizes.sm),
+              padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
               child: isIOS
                   ? CupertinoSearchTextField(
                       controller: _searchCtrl,
@@ -408,18 +408,18 @@ class _NoteListState extends ConsumerState<_NoteList> {
                         hintText: 'Search notes…',
                         prefixIcon: const Icon(Icons.search, size: 20),
                         contentPadding: const EdgeInsets.symmetric(
-                          horizontal: AppSizes.md,
-                          vertical: AppSizes.sm,
+                          horizontal: AuroraSpacing.space7,
+                          vertical: AuroraSpacing.space3,
                         ),
                         border: OutlineInputBorder(
                           borderRadius:
-                              BorderRadius.circular(AppSizes.radiusMd),
-                          borderSide: BorderSide(color: AppColors.border),
+                              BorderRadius.circular(12.0),
+                          borderSide: BorderSide(color: AuroraColors.inkBorder),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius:
-                              BorderRadius.circular(AppSizes.radiusMd),
-                          borderSide: BorderSide(color: AppColors.border),
+                              BorderRadius.circular(12.0),
+                          borderSide: BorderSide(color: AuroraColors.inkBorder),
                         ),
                       ),
                     ),
@@ -431,7 +431,7 @@ class _NoteListState extends ConsumerState<_NoteList> {
         if (_query.isEmpty && widget.selectedPhaseId == null)
           SliverToBoxAdapter(
             child: Padding(
-              padding: AppPadding.screen.copyWith(bottom: 0),
+              padding: EdgeInsets.all(AuroraSpacing.screenPadH).copyWith(bottom: 0),
               child: _SummaryBar(notes: widget.notes),
             ),
           ),
@@ -442,11 +442,11 @@ class _NoteListState extends ConsumerState<_NoteList> {
             hasScrollBody: false,
             child: Center(
               child: Padding(
-                padding: AppPadding.screen,
+                padding: EdgeInsets.all(AuroraSpacing.screenPadH),
                 child: Text(
                   'No notes match "$_query"',
-                  style: AppTextStyles.bodyMedium
-                      .copyWith(color: AppColors.textSecondary),
+                  style: AuroraType.body
+                      .copyWith(color: AuroraColors.inkSecondary),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -454,7 +454,7 @@ class _NoteListState extends ConsumerState<_NoteList> {
           )
         else
           SliverPadding(
-            padding: AppPadding.screen.copyWith(top: AppSizes.sm),
+            padding: EdgeInsets.all(AuroraSpacing.screenPadH).copyWith(top: AuroraSpacing.space3),
             sliver: SliverList.builder(
               itemCount: items.length,
               itemBuilder: (ctx, i) {
@@ -462,13 +462,13 @@ class _NoteListState extends ConsumerState<_NoteList> {
                 return switch (item) {
                   _HeaderItem(:final label) => Padding(
                       padding: EdgeInsets.only(
-                        top: i == 0 ? 0 : AppSizes.md,
-                        bottom: AppSizes.sm,
+                        top: i == 0 ? 0 : AuroraSpacing.space7,
+                        bottom: AuroraSpacing.space3,
                       ),
                       child: _MonthHeader(label: label),
                     ),
                   _NoteItem(:final note) => Padding(
-                      padding: const EdgeInsets.only(bottom: AppSizes.sm),
+                      padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
                       child: Dismissible(
                         key: ValueKey(note.id),
                         direction: DismissDirection.endToStart,
@@ -495,7 +495,7 @@ class _NoteListState extends ConsumerState<_NoteList> {
           ),
 
         const SliverToBoxAdapter(
-          child: SizedBox(height: AppSizes.xxl + AppSizes.xl),
+          child: SizedBox(height: 48.0 + AuroraSpacing.space10),
         ),
       ],
     );
@@ -528,35 +528,35 @@ class _SummaryBar extends StatelessWidget {
     ];
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSizes.sm),
+      margin: const EdgeInsets.only(bottom: AuroraSpacing.space3),
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm + 2,
+        horizontal: AuroraSpacing.space7,
+        vertical: AuroraSpacing.space3 + 2,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusCard),
-        border: Border.all(color: AppColors.border),
+        color: AuroraColors.paper,
+        borderRadius: BorderRadius.circular(14.0),
+        border: Border.all(color: AuroraColors.inkBorder),
       ),
       child: Row(
         children: [
           for (var i = 0; i < parts.length; i++) ...[
             if (i > 0)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSizes.xs),
+                padding: const EdgeInsets.symmetric(horizontal: AuroraSpacing.space1),
                 child: Text(
                   '·',
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.gray400,
+                  style: AuroraType.bodySm.copyWith(
+                    color: AuroraColors.inkTertiary,
                   ),
                 ),
               ),
             Text(
               parts[i],
-              style: AppTextStyles.caption.copyWith(
+              style: AuroraType.bodySm.copyWith(
                 color: i == 0
-                    ? AppColors.textPrimary
-                    : AppColors.textSecondary,
+                    ? AuroraColors.ink
+                    : AuroraColors.inkSecondary,
                 fontWeight: i == 0 ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
@@ -579,13 +579,13 @@ class _MonthHeader extends StatelessWidget {
       children: [
         Text(
           label,
-          style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.textSecondary,
+          style: AuroraType.label.copyWith(
+            color: AuroraColors.inkSecondary,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.5,
           ),
         ),
-        const SizedBox(width: AppSizes.sm),
+        const SizedBox(width: AuroraSpacing.space3),
         const Expanded(
           child: Divider(thickness: 1),
         ),
@@ -599,12 +599,12 @@ class _DeleteBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       alignment: Alignment.centerRight,
-      padding: const EdgeInsets.only(right: AppSizes.lg),
+      padding: const EdgeInsets.only(right: AuroraSpacing.space9),
       decoration: BoxDecoration(
-        color: AppColors.error,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        color: AuroraColors.coral,
+        borderRadius: BorderRadius.circular(12.0),
       ),
-      child: const Icon(Icons.delete_outline, color: AppColors.textInverse),
+      child: const Icon(Icons.delete_outline, color: Colors.white),
     );
   }
 }
@@ -619,35 +619,35 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.menu_book_outlined,
-              size: AppSizes.iconXl,
-              color: AppColors.gray400,
+              size: 48.0,
+              color: AuroraColors.inkTertiary,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space7),
             Text(
               'Start your project journal',
-              style: AppTextStyles.h3,
+              style: AuroraType.h3,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             Text(
               'Jot down contractor quotes, material choices, or decisions as you go.',
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textSecondary),
+              style: AuroraType.body
+                  .copyWith(color: AuroraColors.inkSecondary),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.xl),
+            const SizedBox(height: AuroraSpacing.space10),
             FilledButton(
               onPressed: onAddTap,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.goldAccent,
-                foregroundColor: AppColors.textInverse,
-                padding: AppPadding.button,
+                backgroundColor: AuroraColors.yellow,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               ),
               child: const Text('+ Add Note'),
             ),
@@ -668,26 +668,26 @@ class _ErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.error_outline,
-              size: AppSizes.iconXl,
-              color: AppColors.error,
+              size: 48.0,
+              color: AuroraColors.coral,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space7),
             Text(
               "Couldn't load journal",
-              style: AppTextStyles.h3,
+              style: AuroraType.h3,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space9),
             FilledButton(
               onPressed: onRetry,
               style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accent),
+                  backgroundColor: AuroraColors.coral),
               child: const Text('Retry'),
             ),
           ],

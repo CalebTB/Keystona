@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../models/project.dart';
 import '../models/project_journal_note.dart';
@@ -21,20 +21,20 @@ import '../providers/project_phases_provider.dart';
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 Color _statusColor(String s) => switch (s) {
-      'in_progress' => AppColors.slate,
-      'planning' => AppColors.sand,
-      'on_hold' => AppColors.amber,
-      'completed' => AppColors.olive,
-      'cancelled' => AppColors.gray400,
-      _ => AppColors.gray400,
+      'in_progress' => AuroraColors.cobalt,
+      'planning' => AuroraColors.yellow,
+      'on_hold' => AuroraColors.yellow,
+      'completed' => AuroraColors.lime,
+      'cancelled' => AuroraColors.inkTertiary,
+      _ => AuroraColors.inkTertiary,
     };
 
 Color _statusDim(String s) => switch (s) {
-      'in_progress' => AppColors.slateDim,
-      'planning' => AppColors.sandDim,
-      'on_hold' => AppColors.amberDim,
-      'completed' => AppColors.oliveDim,
-      _ => AppColors.gray200,
+      'in_progress' => AuroraColors.cobaltDim,
+      'planning' => AuroraColors.yellowDim,
+      'on_hold' => AuroraColors.yellowDim,
+      'completed' => AuroraColors.limeDim,
+      _ => const Color(0xFFEEEDF2),
     };
 
 String _headerDateRange(DateTime? start, DateTime? end) {
@@ -97,20 +97,20 @@ class ProjectDetailScreen extends ConsumerWidget {
   Widget _skeleton(bool isIOS) {
     if (isIOS) {
       return CupertinoPageScaffold(
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         navigationBar: const CupertinoNavigationBar(
           middle: Text('Project'),
-          backgroundColor: AppColors.warmOffWhite,
+          backgroundColor: AuroraColors.paper,
           border: Border(),
         ),
         child: const _DetailSkeleton(),
       );
     }
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       appBar: AppBar(
         title: const Text('Project'),
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
       ),
       body: const _DetailSkeleton(),
     );
@@ -123,14 +123,14 @@ class ProjectDetailScreen extends ConsumerWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.error_outline, size: 40, color: AppColors.error),
-          const SizedBox(height: AppSizes.md),
+          Icon(Icons.error_outline, size: 40, color: AuroraColors.coral),
+          const SizedBox(height: AuroraSpacing.space7),
           Text("Couldn't load project",
-              style: AppTextStyles.h3, textAlign: TextAlign.center),
-          const SizedBox(height: AppSizes.lg),
+              style: AuroraType.h3, textAlign: TextAlign.center),
+          const SizedBox(height: AuroraSpacing.space9),
           FilledButton(
             onPressed: () => ref.invalidate(projectDetailProvider(projectId)),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.accent),
+            style: FilledButton.styleFrom(backgroundColor: AuroraColors.coral),
             child: const Text('Retry'),
           ),
         ],
@@ -139,10 +139,10 @@ class ProjectDetailScreen extends ConsumerWidget {
 
     if (isIOS) {
       return CupertinoPageScaffold(
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         navigationBar: CupertinoNavigationBar(
           middle: const Text('Project'),
-          backgroundColor: AppColors.warmOffWhite,
+          backgroundColor: AuroraColors.paper,
           border: const Border(),
           leading: CupertinoButton(
             padding: EdgeInsets.zero,
@@ -154,10 +154,10 @@ class ProjectDetailScreen extends ConsumerWidget {
       );
     }
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       appBar: AppBar(
         title: const Text('Project'),
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -193,9 +193,9 @@ class ProjectDetailScreen extends ConsumerWidget {
 
     if (isIOS) {
       return CupertinoPageScaffold(
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         navigationBar: CupertinoNavigationBar(
-          backgroundColor: AppColors.warmOffWhite,
+          backgroundColor: AuroraColors.paper,
           border: const Border(),
           leading: CupertinoButton(
             padding: EdgeInsets.zero,
@@ -203,10 +203,10 @@ class ProjectDetailScreen extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(CupertinoIcons.chevron_back,
-                    size: 20, color: AppColors.accent),
+                    size: 20, color: AuroraColors.coral),
                 Text('Projects',
-                    style: AppTextStyles.bodyMedium
-                        .copyWith(color: AppColors.accent)),
+                    style: AuroraType.body
+                        .copyWith(color: AuroraColors.coral)),
               ],
             ),
             onPressed: () => context.pop(),
@@ -218,14 +218,14 @@ class ProjectDetailScreen extends ConsumerWidget {
                 padding: EdgeInsets.zero,
                 onPressed: onEdit,
                 child: const Icon(CupertinoIcons.pencil,
-                    size: 20, color: AppColors.textSecondary),
+                    size: 20, color: AuroraColors.inkSecondary),
               ),
               const SizedBox(width: 4),
               CupertinoButton(
                 padding: EdgeInsets.zero,
                 onPressed: onEdit,
                 child: const Icon(CupertinoIcons.ellipsis,
-                    size: 20, color: AppColors.textSecondary),
+                    size: 20, color: AuroraColors.inkSecondary),
               ),
             ],
           ),
@@ -235,9 +235,9 @@ class ProjectDetailScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       appBar: AppBar(
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         title: Text(project.name, overflow: TextOverflow.ellipsis),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -270,7 +270,7 @@ class _DetailBody extends ConsumerWidget {
     final notes = notesAsync.value ?? [];
 
     return RefreshIndicator(
-      color: AppColors.accent,
+      color: AuroraColors.coral,
       onRefresh: () async {
         ref.invalidate(projectDetailProvider(projectId));
         ref.invalidate(projectPhasesProvider(projectId));
@@ -361,12 +361,12 @@ class _ProjectHeaderCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AuroraColors.paper,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AuroraColors.inkBorder),
         boxShadow: const [
           BoxShadow(
-            color: AppColors.shadowSm,
+            color: Colors.transparent,
             blurRadius: 16,
             offset: Offset(0, 4),
           ),
@@ -403,7 +403,7 @@ class _ProjectHeaderCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       project.status.statusLabel.toUpperCase(),
-                      style: AppTextStyles.monoTiny.copyWith(
+                      style: AuroraType.labelSm.copyWith(
                         color: statusColor,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.8,
@@ -416,8 +416,8 @@ class _ProjectHeaderCard extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 project.workType.workTypeLabel,
-                style: AppTextStyles.monoTiny.copyWith(
-                  color: AppColors.gray500,
+                style: AuroraType.labelSm.copyWith(
+                  color: const Color(0xFF9D9BB0),
                   letterSpacing: 0.5,
                 ),
               ),
@@ -429,10 +429,10 @@ class _ProjectHeaderCard extends StatelessWidget {
           // Project name
           Text(
             project.name,
-            style: AppTextStyles.headlineMedium.copyWith(
+            style: AuroraType.h2.copyWith(
               fontSize: 24,
               fontWeight: FontWeight.w900,
-              color: AppColors.textPrimary,
+              color: AuroraColors.ink,
               letterSpacing: -0.6,
               height: 1.15,
             ),
@@ -445,7 +445,7 @@ class _ProjectHeaderCard extends StatelessWidget {
                 (project.description != null && project.description!.isNotEmpty
                     ? ' · ${project.description!}'
                     : ''),
-            style: AppTextStyles.bodySmall.copyWith(color: AppColors.gray500),
+            style: AuroraType.bodySm.copyWith(color: const Color(0xFF9D9BB0)),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -456,12 +456,12 @@ class _ProjectHeaderCard extends StatelessWidget {
             Row(
               children: [
                 Icon(Icons.calendar_today_outlined,
-                    size: 14, color: AppColors.gray500),
+                    size: 14, color: const Color(0xFF9D9BB0)),
                 const SizedBox(width: 6),
                 Flexible(
                   child: Text(
                     dateStr,
-                    style: AppTextStyles.monoLabel.copyWith(color: AppColors.gray500),
+                    style: AuroraType.label.copyWith(color: const Color(0xFF9D9BB0)),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -484,7 +484,7 @@ class _ProjectHeaderCard extends StatelessWidget {
           // Budget strip
           if (hasBudget) ...[
             const SizedBox(height: 14),
-            const Divider(color: AppColors.warmFill, height: 1),
+            const Divider(color: AuroraColors.butter, height: 1),
             const SizedBox(height: 14),
             _BudgetStrip(project: project),
           ],
@@ -526,9 +526,9 @@ class _MiniPhaseDots extends StatelessWidget {
                     height: 2,
                     color: activeIdx != null && i <= activeIdx
                         ? (i < activeIdx
-                            ? AppColors.olive
-                            : AppColors.slate.withValues(alpha: 0.4))
-                        : AppColors.border,
+                            ? AuroraColors.lime
+                            : AuroraColors.cobalt.withValues(alpha: 0.4))
+                        : AuroraColors.inkBorder,
                   ),
                 ),
               _MiniDot(
@@ -547,10 +547,10 @@ class _MiniPhaseDots extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Phase ${activeIdx + 1} of $phaseCount · $activePhaseName',
-            style: AppTextStyles.monoLabel.copyWith(
+            style: AuroraType.label.copyWith(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: AppColors.slate,
+              color: AuroraColors.cobalt,
             ),
           ),
         ],
@@ -572,7 +572,7 @@ class _MiniDot extends StatelessWidget {
             height: 10,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.olive,
+              color: AuroraColors.lime,
             ),
           ),
         _DS.active => Container(
@@ -580,10 +580,10 @@ class _MiniDot extends StatelessWidget {
             height: 10,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.slate,
+              color: AuroraColors.cobalt,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.slate.withValues(alpha: 0.3),
+                  color: AuroraColors.cobalt.withValues(alpha: 0.3),
                   blurRadius: 0,
                   spreadRadius: 3,
                 ),
@@ -595,8 +595,8 @@ class _MiniDot extends StatelessWidget {
             height: 10,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.warmInset,
-              border: Border.all(color: AppColors.border, width: 1.5),
+              color: AuroraColors.butter,
+              border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
             ),
           ),
       };
@@ -622,7 +622,7 @@ class _BudgetStrip extends StatelessWidget {
     final spent = project.actualSpent;
     final pct = estimated > 0 ? (spent / estimated).clamp(0.0, 1.0) : 0.0;
     final isOver = spent >= estimated && estimated > 0;
-    final ringColor = isOver ? AppColors.error : AppColors.olive;
+    final ringColor = isOver ? AuroraColors.coral : AuroraColors.lime;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -633,17 +633,17 @@ class _BudgetStrip extends StatelessWidget {
             children: [
               Text(
                 '\$${NumberFormat('#,###').format(spent.toInt())}',
-                style: AppTextStyles.monoLabel.copyWith(
+                style: AuroraType.label.copyWith(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  color: isOver ? AppColors.error : AppColors.textPrimary,
+                  color: isOver ? AuroraColors.coral : AuroraColors.ink,
                   letterSpacing: -0.5,
                 ),
               ),
               Text(
                 'of ${_compact(estimated)} budget',
-                style: AppTextStyles.monoLabel
-                    .copyWith(color: AppColors.gray500, fontSize: 12),
+                style: AuroraType.label
+                    .copyWith(color: const Color(0xFF9D9BB0), fontSize: 12),
               ),
             ],
           ),
@@ -656,10 +656,10 @@ class _BudgetStrip extends StatelessWidget {
             child: Center(
               child: Text(
                 '${(pct * 100).round()}%',
-                style: AppTextStyles.monoLabel.copyWith(
+                style: AuroraType.label.copyWith(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textSecondary,
+                  color: AuroraColors.inkSecondary,
                 ),
               ),
             ),
@@ -687,7 +687,7 @@ class _BudgetRingPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeW
-        ..color = AppColors.warmInset,
+        ..color = AuroraColors.butter,
     );
 
     if (fraction > 0) {
@@ -754,21 +754,21 @@ class _SectionGrid extends StatelessWidget {
         metric: phases.isEmpty
             ? 'Add phases'
             : '${phases.length} phase${phases.length == 1 ? '' : 's'}',
-        color: AppColors.slate,
+        color: AuroraColors.cobalt,
         route: '/projects/$projectId/phases',
       ),
       (
         icon: Icons.account_balance_wallet_outlined,
         label: 'Budget',
         metric: hasBudget ? _compact(project.estimatedBudget!) : 'Not set',
-        color: isOverBudget ? AppColors.error : AppColors.olive,
+        color: isOverBudget ? AuroraColors.coral : AuroraColors.lime,
         route: '/projects/$projectId/budget',
       ),
       (
         icon: Icons.photo_library_outlined,
         label: 'Photos',
         metric: 'Progress shots',
-        color: AppColors.accent,
+        color: AuroraColors.coral,
         route: '/projects/$projectId/photos',
       ),
       (
@@ -777,7 +777,7 @@ class _SectionGrid extends StatelessWidget {
         metric: notes.isEmpty
             ? 'Start logging'
             : '${notes.length} note${notes.length == 1 ? '' : 's'}',
-        color: AppColors.sand,
+        color: AuroraColors.yellow,
         route: '/projects/$projectId/notes',
       ),
       (
@@ -786,14 +786,14 @@ class _SectionGrid extends StatelessWidget {
         metric: project.contractorIds.isEmpty
             ? 'None linked'
             : '${project.contractorIds.length} linked',
-        color: AppColors.plum,
+        color: AuroraColors.cobalt,
         route: '/projects/$projectId/contractors',
       ),
       (
         icon: Icons.folder_outlined,
         label: 'Documents',
         metric: 'Permits, quotes',
-        color: AppColors.teal,
+        color: AuroraColors.cobalt,
         route: '/projects/$projectId/documents',
       ),
     ];
@@ -839,9 +839,9 @@ class _SectionCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AuroraColors.paper,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -860,9 +860,9 @@ class _SectionCard extends StatelessWidget {
             // Label
             Text(
               section.label,
-              style: AppTextStyles.bodySmall.copyWith(
+              style: AuroraType.bodySm.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: AuroraColors.ink,
                 fontSize: 12,
               ),
               maxLines: 1,
@@ -872,9 +872,9 @@ class _SectionCard extends StatelessWidget {
             // Metric
             Text(
               section.metric,
-              style: AppTextStyles.monoLabel.copyWith(
+              style: AuroraType.label.copyWith(
                 fontSize: 10,
-                color: AppColors.gray500,
+                color: const Color(0xFF9D9BB0),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -945,8 +945,8 @@ class _TimelineSection extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 16),
             child: Text(
               'ACTIVITY',
-              style: AppTextStyles.monoTiny.copyWith(
-                color: AppColors.gray500,
+              style: AuroraType.labelSm.copyWith(
+                color: const Color(0xFF9D9BB0),
                 letterSpacing: 1.2,
                 fontWeight: FontWeight.w700,
               ),
@@ -1014,7 +1014,7 @@ class _TimelineList extends StatelessWidget {
           bottom: 0,
           child: SizedBox(
             width: 2,
-            child: ColoredBox(color: AppColors.border),
+            child: ColoredBox(color: AuroraColors.inkBorder),
           ),
         ),
 
@@ -1044,10 +1044,10 @@ class _PhaseMarkerRow extends StatelessWidget {
     final isActive = phase.status == 'in_progress';
     final isDone = phase.status == 'completed';
     final dotColor = isActive
-        ? AppColors.slate
+        ? AuroraColors.cobalt
         : isDone
-            ? AppColors.olive
-            : AppColors.gray300;
+            ? AuroraColors.lime
+            : const Color(0xFFE0DFEA);
     final dateStr = _phaseDates(phase);
 
     return Padding(
@@ -1070,7 +1070,7 @@ class _PhaseMarkerRow extends StatelessWidget {
                       ? Icons.build_outlined
                       : Icons.schedule_outlined,
               size: 12,
-              color: (isActive || isDone) ? Colors.white : AppColors.gray500,
+              color: (isActive || isDone) ? Colors.white : const Color(0xFF9D9BB0),
             ),
           ),
           const SizedBox(width: 10),
@@ -1079,10 +1079,10 @@ class _PhaseMarkerRow extends StatelessWidget {
           Expanded(
             child: Text(
               phase.name,
-              style: AppTextStyles.headlineSmall.copyWith(
+              style: AuroraType.h3.copyWith(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: AuroraColors.ink,
               ),
             ),
           ),
@@ -1091,9 +1091,9 @@ class _PhaseMarkerRow extends StatelessWidget {
           if (dateStr.isNotEmpty)
             Text(
               dateStr,
-              style: AppTextStyles.monoLabel.copyWith(
+              style: AuroraType.label.copyWith(
                 fontSize: 10,
-                color: AppColors.gray500,
+                color: const Color(0xFF9D9BB0),
               ),
             ),
         ],
@@ -1128,8 +1128,8 @@ class _NoteTimelineCard extends StatelessWidget {
                   height: 8,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.sandDim,
-                    border: Border.all(color: AppColors.sand, width: 1.5),
+                    color: AuroraColors.yellowDim,
+                    border: Border.all(color: AuroraColors.yellow, width: 1.5),
                   ),
                 ),
               ),
@@ -1141,12 +1141,12 @@ class _NoteTimelineCard extends StatelessWidget {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: AuroraColors.paper,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: AuroraColors.inkBorder),
                 boxShadow: const [
                   BoxShadow(
-                    color: AppColors.shadowXs,
+                    color: Colors.transparent,
                     blurRadius: 4,
                     offset: Offset(0, 1),
                   ),
@@ -1161,9 +1161,9 @@ class _NoteTimelineCard extends StatelessWidget {
                       children: [
                         Text(
                           _noteDate(note.noteDate),
-                          style: AppTextStyles.monoLabel.copyWith(
+                          style: AuroraType.label.copyWith(
                             fontSize: 10,
-                            color: AppColors.gray500,
+                            color: const Color(0xFF9D9BB0),
                           ),
                         ),
                         const Spacer(),
@@ -1171,13 +1171,13 @@ class _NoteTimelineCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: AppColors.sandDim,
+                            color: AuroraColors.yellowDim,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             'NOTE',
-                            style: AppTextStyles.monoTiny.copyWith(
-                              color: AppColors.sand,
+                            style: AuroraType.labelSm.copyWith(
+                              color: AuroraColors.yellow,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.5,
                               fontSize: 9,
@@ -1190,7 +1190,7 @@ class _NoteTimelineCard extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(
                         note.title!,
-                        style: AppTextStyles.bodyMediumSemibold.copyWith(
+                        style: AuroraType.h3.copyWith(
                           fontSize: 13,
                         ),
                       ),
@@ -1198,8 +1198,8 @@ class _NoteTimelineCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       note.content,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                      style: AuroraType.bodySm.copyWith(
+                        color: AuroraColors.inkSecondary,
                         height: 1.55,
                       ),
                     ),
@@ -1235,7 +1235,7 @@ class _EmptyTimeline extends StatelessWidget {
         phases.isEmpty
             ? 'Add phases and notes to track this project\'s progress.'
             : 'No notes yet. Tap "Add note" below to start the project log.',
-        style: AppTextStyles.bodySmall.copyWith(color: AppColors.gray500),
+        style: AuroraType.bodySm.copyWith(color: const Color(0xFF9D9BB0)),
       ),
     );
   }
@@ -1253,7 +1253,7 @@ class _AddEntryButton extends StatelessWidget {
       onTap: onTap,
       child: CustomPaint(
         foregroundPainter: _DashedBorderPainter(
-          color: AppColors.borderStrong,
+          color: AuroraColors.inkBorderStrong,
           radius: 12,
           strokeWidth: 1.5,
           dashLength: 5,
@@ -1263,19 +1263,19 @@ class _AddEntryButton extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AuroraColors.paper,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.add, size: 18, color: AppColors.accent),
+              Icon(Icons.add, size: 18, color: AuroraColors.coral),
               const SizedBox(width: 8),
               Text(
                 'Add note, photo, or document',
-                style: AppTextStyles.bodySmall.copyWith(
+                style: AuroraType.bodySm.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.accent,
+                  color: AuroraColors.coral,
                 ),
               ),
             ],
@@ -1374,27 +1374,27 @@ class _TemplatePromptState extends ConsumerState<_TemplatePrompt> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSizes.md),
+      padding: const EdgeInsets.all(AuroraSpacing.space7),
       decoration: BoxDecoration(
-        color: AppColors.slateDim,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.slate.withValues(alpha: 0.15)),
+        color: AuroraColors.cobaltDim,
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(color: AuroraColors.cobalt.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Start with a template',
-            style: AppTextStyles.bodyMediumSemibold,
+            style: AuroraType.h3,
           ),
-          const SizedBox(height: AppSizes.xs),
+          const SizedBox(height: AuroraSpacing.space1),
           Text(
             'Load starter phases for a '
             '${widget.project.projectType.projectTypeLabel} project.',
-            style: AppTextStyles.bodySmall
-                .copyWith(color: AppColors.textSecondary),
+            style: AuroraType.bodySm
+                .copyWith(color: AuroraColors.inkSecondary),
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
           Row(
             children: [
               Expanded(
@@ -1409,7 +1409,7 @@ class _TemplatePromptState extends ConsumerState<_TemplatePrompt> {
                       : const Text('Load Template'),
                 ),
               ),
-              const SizedBox(width: AppSizes.sm),
+              const SizedBox(width: AuroraSpacing.space3),
               TextButton(
                 onPressed: () => context.push(
                     '/projects/${widget.projectId}/phases/create'),
@@ -1471,7 +1471,7 @@ class _DetailSkeletonState extends State<_DetailSkeleton>
               Container(
                 height: 220,
                 decoration: BoxDecoration(
-                  color: AppColors.gray200,
+                  color: const Color(0xFFEEEDF2),
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
@@ -1488,7 +1488,7 @@ class _DetailSkeletonState extends State<_DetailSkeleton>
                         width: 88,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: AppColors.gray200,
+                          color: const Color(0xFFEEEDF2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
@@ -1509,7 +1509,7 @@ class _DetailSkeletonState extends State<_DetailSkeleton>
                         height: 26,
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.gray300,
+                          color: const Color(0xFFE0DFEA),
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -1517,7 +1517,7 @@ class _DetailSkeletonState extends State<_DetailSkeleton>
                         child: Container(
                           height: 80,
                           decoration: BoxDecoration(
-                            color: AppColors.gray200,
+                            color: const Color(0xFFEEEDF2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),

@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../models/project_photo.dart';
 
 /// Shows a platform-adaptive sheet for selecting photo type and optional room tag.
@@ -54,10 +54,10 @@ class _TypeSheetState extends State<_TypeSheet> {
             EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: Container(
           decoration: const BoxDecoration(
-            color: AppColors.textInverse,
+            color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          padding: AppPadding.screen,
+          padding: EdgeInsets.all(AuroraSpacing.screenPadH),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -67,47 +67,47 @@ class _TypeSheetState extends State<_TypeSheet> {
                 child: Container(
                   width: 36,
                   height: 4,
-                  margin: const EdgeInsets.only(bottom: AppSizes.md),
+                  margin: const EdgeInsets.only(bottom: AuroraSpacing.space7),
                   decoration: BoxDecoration(
-                    color: AppColors.gray300,
+                    color: const Color(0xFFE0DFEA),
                     borderRadius:
-                        BorderRadius.circular(AppSizes.radiusFull),
+                        BorderRadius.circular(999.0),
                   ),
                 ),
               ),
 
-              Text('Photo Type', style: AppTextStyles.h3),
-              const SizedBox(height: AppSizes.md),
+              Text('Photo Type', style: AuroraType.h3),
+              const SizedBox(height: AuroraSpacing.space7),
 
               Wrap(
-                spacing: AppSizes.sm,
-                runSpacing: AppSizes.sm,
+                spacing: AuroraSpacing.space3,
+                runSpacing: AuroraSpacing.space3,
                 children: PhotoTypes.all.map((t) {
                   final selected = _type == t.value;
                   return GestureDetector(
                     onTap: () => setState(() => _type = t.value),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: AppSizes.md,
-                          vertical: AppSizes.sm),
+                          horizontal: AuroraSpacing.space7,
+                          vertical: AuroraSpacing.space3),
                       decoration: BoxDecoration(
                         color: selected
-                            ? AppColors.deepNavy
-                            : AppColors.surface,
+                            ? AuroraColors.ink
+                            : AuroraColors.paper,
                         borderRadius:
-                            BorderRadius.circular(AppSizes.radiusFull),
+                            BorderRadius.circular(999.0),
                         border: Border.all(
                           color: selected
-                              ? AppColors.deepNavy
-                              : AppColors.border,
+                              ? AuroraColors.ink
+                              : AuroraColors.inkBorder,
                         ),
                       ),
                       child: Text(
                         t.label,
-                        style: AppTextStyles.labelSmall.copyWith(
+                        style: AuroraType.label.copyWith(
                           color: selected
-                              ? AppColors.textInverse
-                              : AppColors.textPrimary,
+                              ? Colors.white
+                              : AuroraColors.ink,
                           fontWeight: selected
                               ? FontWeight.w600
                               : FontWeight.normal,
@@ -118,34 +118,34 @@ class _TypeSheetState extends State<_TypeSheet> {
                 }).toList(),
               ),
 
-              const SizedBox(height: AppSizes.md),
+              const SizedBox(height: AuroraSpacing.space7),
 
               Text(
                 'Room / Area (optional)',
-                style: AppTextStyles.bodySmall
-                    .copyWith(color: AppColors.textSecondary),
+                style: AuroraType.bodySm
+                    .copyWith(color: AuroraColors.inkSecondary),
               ),
-              const SizedBox(height: AppSizes.xs),
+              const SizedBox(height: AuroraSpacing.space1),
               TextField(
                 controller: _roomCtrl,
                 textCapitalization: TextCapitalization.words,
                 decoration: InputDecoration(
                   hintText: 'e.g. Master Bathroom',
-                  hintStyle: AppTextStyles.bodyMedium
-                      .copyWith(color: AppColors.gray400),
+                  hintStyle: AuroraType.body
+                      .copyWith(color: AuroraColors.inkTertiary),
                   border: OutlineInputBorder(
                     borderRadius:
-                        BorderRadius.circular(AppSizes.radiusSm),
+                        BorderRadius.circular(8.0),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppSizes.md,
-                    vertical: AppSizes.sm,
+                    horizontal: AuroraSpacing.space7,
+                    vertical: AuroraSpacing.space3,
                   ),
                   isDense: true,
                 ),
               ),
 
-              const SizedBox(height: AppSizes.lg),
+              const SizedBox(height: AuroraSpacing.space9),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
@@ -157,13 +157,13 @@ class _TypeSheetState extends State<_TypeSheet> {
                         : _roomCtrl.text.trim(),
                   )),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.deepNavy,
-                    padding: AppPadding.button,
+                    backgroundColor: AuroraColors.ink,
+                    padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                   ),
                   child: const Text('Continue'),
                 ),
               ),
-              const SizedBox(height: AppSizes.md),
+              const SizedBox(height: AuroraSpacing.space7),
             ],
           ),
         ),

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
 /// Shimmer skeleton for the photos grid.
 class PhotosSkeleton extends StatefulWidget {
@@ -42,20 +40,20 @@ class _PhotosSkeletonState extends State<PhotosSkeleton>
       builder: (_, _) => Opacity(
         opacity: _opacity.value,
         child: Padding(
-          padding: AppPadding.screen,
+          padding: EdgeInsets.all(AuroraSpacing.screenPadH),
           child: GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
-              mainAxisSpacing: AppSizes.xs,
-              crossAxisSpacing: AppSizes.xs,
+              mainAxisSpacing: AuroraSpacing.space1,
+              crossAxisSpacing: AuroraSpacing.space1,
             ),
             itemCount: 9,
             itemBuilder: (_, _) => Container(
               decoration: BoxDecoration(
-                color: AppColors.gray200,
-                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                color: const Color(0xFFEEEDF2),
+                borderRadius: BorderRadius.circular(8.0),
               ),
             ),
           ),

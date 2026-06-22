@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/theme/aurora_colors.dart';
+import '../../../../../core/theme/aurora_spacing.dart';
 
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_sizes.dart';
 
 /// 3-segment pill toggle: Pairs | All | Unpaired.
 ///
@@ -26,12 +26,12 @@ class PhotosViewToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
+        horizontal: AuroraSpacing.space7,
+        vertical: AuroraSpacing.space3,
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surfaceVariant,
+          color: AuroraColors.butter,
           borderRadius: BorderRadius.circular(100),
         ),
         padding: const EdgeInsets.all(3),
@@ -84,12 +84,12 @@ class _Segment extends StatelessWidget {
           duration: const Duration(milliseconds: 160),
           padding: const EdgeInsets.symmetric(vertical: 7),
           decoration: BoxDecoration(
-            color: active ? AppColors.surface : Colors.transparent,
+            color: active ? AuroraColors.paper : Colors.transparent,
             borderRadius: BorderRadius.circular(97),
             boxShadow: active
                 ? [
                     BoxShadow(
-                      color: AppColors.deepNavy.withValues(alpha: 0.08),
+                      color: AuroraColors.ink.withValues(alpha: 0.08),
                       blurRadius: 3,
                       offset: const Offset(0, 1),
                     ),
@@ -106,8 +106,8 @@ class _Segment extends StatelessWidget {
                   fontWeight:
                       active ? FontWeight.w700 : FontWeight.w500,
                   color: active
-                      ? AppColors.textPrimary
-                      : AppColors.textSecondary,
+                      ? AuroraColors.ink
+                      : AuroraColors.inkSecondary,
                   height: 1.2,
                 ),
               ),
@@ -118,7 +118,7 @@ class _Segment extends StatelessWidget {
                   fontFamily: 'IBMPlexMono',
                   fontSize: 9,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
+                  color: AuroraColors.inkSecondary,
                   height: 1.2,
                 ),
               ),

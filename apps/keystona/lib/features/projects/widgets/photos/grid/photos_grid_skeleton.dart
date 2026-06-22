@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_sizes.dart';
+import '../../../../../core/theme/aurora_spacing.dart';
 
 /// Shimmer skeleton for the curated photo grid.
 ///
@@ -45,7 +43,7 @@ class _PhotosGridSkeletonState extends State<PhotosGridSkeleton>
       builder: (_, _) => Opacity(
         opacity: _opacity.value,
         child: Padding(
-          padding: AppPadding.screen,
+          padding: EdgeInsets.all(AuroraSpacing.screenPadH),
           child: GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -63,8 +61,8 @@ class _PhotosGridSkeletonState extends State<PhotosGridSkeleton>
                 aspectRatio: isTall ? 0.72 : 1.0,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: AppColors.gray200,
-                    borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                    color: const Color(0xFFEEEDF2),
+                    borderRadius: BorderRadius.circular(12.0),
                   ),
                 ),
               );

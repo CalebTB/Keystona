@@ -2,9 +2,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../models/project.dart';
 import '../models/project_phase.dart';
 import '../providers/project_phases_provider.dart';
@@ -42,11 +42,11 @@ class ProjectPhaseTimelineCard extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.warning_amber_rounded, size: 28, color: AppColors.gray400),
+                Icon(Icons.warning_amber_rounded, size: 28, color: AuroraColors.inkTertiary),
                 const SizedBox(height: 8),
                 Text(
                   "Couldn't load phases",
-                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                  style: AuroraType.bodySm.copyWith(color: AuroraColors.inkSecondary),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -98,20 +98,20 @@ class _CardShell extends StatelessWidget {
       };
 
   static Color _statusDot(String s) => switch (s) {
-        'in_progress' => AppColors.accent,
-        'planning'    => AppColors.sand,
-        'on_hold'     => AppColors.amber,
-        'completed'   => AppColors.oliveLight,
-        _             => AppColors.gray500,
+        'in_progress' => AuroraColors.coral,
+        'planning'    => AuroraColors.yellow,
+        'on_hold'     => AuroraColors.yellow,
+        'completed'   => AuroraColors.lime,
+        _             => const Color(0xFF9D9BB0),
       };
 
   static Color _statusBorderColor(String s) => switch (s) {
-        'in_progress' => AppColors.accent,
-        'planning'    => AppColors.sand,
-        'on_hold'     => AppColors.amber,
-        'completed'   => AppColors.oliveLight,
-        'cancelled'   => AppColors.gray400,
-        _             => AppColors.deepNavy,
+        'in_progress' => AuroraColors.coral,
+        'planning'    => AuroraColors.yellow,
+        'on_hold'     => AuroraColors.yellow,
+        'completed'   => AuroraColors.lime,
+        'cancelled'   => AuroraColors.inkTertiary,
+        _             => AuroraColors.ink,
       };
 
   @override
@@ -126,12 +126,12 @@ class _CardShell extends StatelessWidget {
       child: Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: AppColors.deepNavy,
+        color: AuroraColors.ink,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: _statusBorderColor(project.status).withValues(alpha: 0.7), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: AppColors.deepNavy.withValues(alpha: 0.12),
+            color: AuroraColors.ink.withValues(alpha: 0.12),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -143,14 +143,14 @@ class _CardShell extends StatelessWidget {
           // Hero header — cover photo or solid color
           Container(
             decoration: BoxDecoration(
-              color: AppColors.gray800,
+              color: const Color(0xFF1E1D38),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
               image: project.coverPhotoPath != null
                   ? DecorationImage(
                       image: CachedNetworkImageProvider(project.coverPhotoPath!),
                       fit: BoxFit.cover,
                       colorFilter: const ColorFilter.mode(
-                        AppColors.photoOverlayTint,
+                        Color(0xCC000000),
                         BlendMode.darken,
                       ),
                     )
@@ -174,8 +174,8 @@ class _CardShell extends StatelessWidget {
                     Expanded(
                       child: Text(
                         _statusLabel(project.status),
-                        style: AppTextStyles.monoSection.copyWith(
-                          color: AppColors.darkTextSecondary,
+                        style: AuroraType.label.copyWith(
+                          color: Colors.white.withValues(alpha: 0.55),
                           fontSize: 9,
                           letterSpacing: 1.0,
                         ),
@@ -188,10 +188,10 @@ class _CardShell extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   project.name,
-                  style: AppTextStyles.headlineMedium.copyWith(
+                  style: AuroraType.h2.copyWith(
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.darkText,
+                    color: Colors.white,
                     height: 1.05,
                   ),
                   maxLines: 2,
@@ -217,7 +217,7 @@ class _CardShell extends StatelessWidget {
           // Timeline — white background
           Expanded(
             child: Container(
-              color: AppColors.surface,
+              color: AuroraColors.paper,
               child: child,
             ),
           ),
@@ -254,7 +254,7 @@ class _InCardFooter extends StatelessWidget {
 
     return Container(
       decoration: const BoxDecoration(
-        color: AppColors.warmFill,
+        color: AuroraColors.butter,
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
       ),
       padding: const EdgeInsets.fromLTRB(20, 14, 16, 16),
@@ -264,18 +264,18 @@ class _InCardFooter extends StatelessWidget {
           if (remaining != null) ...[
             Text(
               _compact(remaining),
-              style: AppTextStyles.displaySmall.copyWith(
+              style: AuroraType.h1.copyWith(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
-                color: remaining > 0 ? AppColors.textPrimary : AppColors.accent,
+                color: remaining > 0 ? AuroraColors.ink : AuroraColors.coral,
               ),
             ),
             const SizedBox(width: 8),
             Text(
               'REMAINING BUDGET',
-              style: AppTextStyles.monoSection.copyWith(
+              style: AuroraType.label.copyWith(
                 fontSize: 8,
-                color: AppColors.textSecondary,
+                color: AuroraColors.inkSecondary,
                 letterSpacing: 1.0,
               ),
             ),
@@ -286,19 +286,19 @@ class _InCardFooter extends StatelessWidget {
               children: [
                 Text(
                   'CURRENT PHASE',
-                  style: AppTextStyles.monoSection.copyWith(
+                  style: AuroraType.label.copyWith(
                     fontSize: 8,
-                    color: AppColors.textSecondary,
+                    color: AuroraColors.inkSecondary,
                     letterSpacing: 1.0,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   activePhase!.name,
-                  style: AppTextStyles.headlineSmall.copyWith(
+                  style: AuroraType.h3.copyWith(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: AuroraColors.ink,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -313,7 +313,7 @@ class _InCardFooter extends StatelessWidget {
               constraints: const BoxConstraints(minHeight: 36),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.deepNavy,
+                color: AuroraColors.ink,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -321,14 +321,14 @@ class _InCardFooter extends StatelessWidget {
                 children: [
                   Text(
                     'Open',
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.textInverse,
+                    style: AuroraType.label.copyWith(
+                      color: Colors.white,
                       fontWeight: FontWeight.w600,
                       fontSize: 11,
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const Icon(Icons.arrow_forward_ios, size: 9, color: AppColors.textInverse),
+                  const Icon(Icons.arrow_forward_ios, size: 9, color: Colors.white),
                 ],
               ),
             ),
@@ -347,9 +347,9 @@ class _Stat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: AppTextStyles.monoLabel.copyWith(
+      style: AuroraType.label.copyWith(
         fontSize: 11,
-        color: AppColors.darkText.withValues(alpha: 0.75),
+        color: Colors.white.withValues(alpha: 0.75),
       ),
     );
   }
@@ -363,9 +363,9 @@ class _StatDot extends StatelessWidget {
       child: Container(
         width: 4,
         height: 4,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: AppColors.darkTextTertiary,
+          color: Colors.white.withValues(alpha: 0.35),
         ),
       ),
     );
@@ -422,9 +422,9 @@ class _PhaseRow extends StatelessWidget {
   final bool isLast;
 
   Color get _connectorColor => switch (state) {
-        _DotState.done     => AppColors.oliveLight,
-        _DotState.current  => AppColors.accent,
-        _DotState.upcoming => AppColors.borderStrong,
+        _DotState.done     => AuroraColors.lime,
+        _DotState.current  => AuroraColors.coral,
+        _DotState.upcoming => AuroraColors.inkBorderStrong,
       };
 
   // Right-side label: "DONE · JAN 15" / "NOW · 12D LEFT" / "APR 20"
@@ -433,7 +433,7 @@ class _PhaseRow extends StatelessWidget {
       case _DotState.done:
         final end = phase.actualEndDate ?? phase.plannedEndDate;
         final dateStr = end != null ? ' · ${DateFormat('MMM d').format(end).toUpperCase()}' : '';
-        return (label: 'DONE$dateStr', color: AppColors.olive);
+        return (label: 'DONE$dateStr', color: AuroraColors.lime);
 
       case _DotState.current:
         final end = phase.plannedEndDate;
@@ -448,12 +448,12 @@ class _PhaseRow extends StatelessWidget {
             suffix = ' · ${-days}D OVER';
           }
         }
-        return (label: 'NOW$suffix', color: AppColors.accent);
+        return (label: 'NOW$suffix', color: AuroraColors.coral);
 
       case _DotState.upcoming:
         final start = phase.plannedStartDate;
         final label = start != null ? DateFormat('MMM d').format(start).toUpperCase() : '';
-        return (label: label, color: AppColors.textSecondary.withValues(alpha: 0.6));
+        return (label: label, color: AuroraColors.inkSecondary.withValues(alpha: 0.6));
     }
   }
 
@@ -501,12 +501,12 @@ class _PhaseRow extends StatelessWidget {
                       Expanded(
                         child: Text(
                           phase.name,
-                          style: AppTextStyles.headlineSmall.copyWith(
+                          style: AuroraType.h3.copyWith(
                             fontSize: 14,
                             fontWeight: isDone || isCurrent ? FontWeight.w700 : FontWeight.w500,
                             color: (!isDone && !isCurrent)
-                                ? AppColors.textPrimary.withValues(alpha: 0.4)
-                                : AppColors.textPrimary,
+                                ? AuroraColors.ink.withValues(alpha: 0.4)
+                                : AuroraColors.ink,
                             fontStyle: FontStyle.normal,
                           ),
                           maxLines: 1,
@@ -517,7 +517,7 @@ class _PhaseRow extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           right.label,
-                          style: AppTextStyles.monoSection.copyWith(
+                          style: AuroraType.label.copyWith(
                             fontSize: 9,
                             color: right.color,
                             letterSpacing: 0.6,
@@ -531,9 +531,9 @@ class _PhaseRow extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 3),
                       child: Text(
                         phase.description!,
-                        style: AppTextStyles.bodySmall.copyWith(
+                        style: AuroraType.bodySm.copyWith(
                           fontSize: 10,
-                          color: AppColors.textSecondary,
+                          color: AuroraColors.inkSecondary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -563,19 +563,19 @@ class _Dot extends StatelessWidget {
           height: 22,
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.oliveLight,
+            color: AuroraColors.lime,
           ),
-          child: const Icon(Icons.check, size: 13, color: AppColors.textInverse),
+          child: const Icon(Icons.check, size: 13, color: Colors.white),
         ),
       _DotState.current => Container(
           width: 22,
           height: 22,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.accent,
+            color: AuroraColors.coral,
             boxShadow: [
               BoxShadow(
-                color: AppColors.accent.withValues(alpha: 0.5),
+                color: AuroraColors.coral.withValues(alpha: 0.5),
                 blurRadius: 8,
                 spreadRadius: 1,
               ),
@@ -584,9 +584,9 @@ class _Dot extends StatelessWidget {
           child: Center(
             child: Text(
               '$number',
-              style: AppTextStyles.monoSection.copyWith(
+              style: AuroraType.label.copyWith(
                 fontSize: 10,
-                color: AppColors.textInverse,
+                color: Colors.white,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -597,15 +597,15 @@ class _Dot extends StatelessWidget {
           height: 22,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.warmFill,
-            border: Border.all(color: AppColors.borderStrong, width: 1.5),
+            color: AuroraColors.butter,
+            border: Border.all(color: AuroraColors.inkBorderStrong, width: 1.5),
           ),
           child: Center(
             child: Text(
               '$number',
-              style: AppTextStyles.monoSection.copyWith(
+              style: AuroraType.label.copyWith(
                 fontSize: 10,
-                color: AppColors.gray500,
+                color: const Color(0xFF9D9BB0),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -627,8 +627,8 @@ class _NoPhasesMessage extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Text(
           'No phases added yet.\nOpen the project to set up your timeline.',
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.darkTextSecondary,
+          style: AuroraType.body.copyWith(
+            color: Colors.white.withValues(alpha: 0.55),
             height: 1.5,
           ),
           textAlign: TextAlign.center,
@@ -657,7 +657,7 @@ class _PhasesSkeleton extends StatelessWidget {
                   height: 22,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.textInverse.withValues(alpha: 0.12),
+                    color: Colors.white.withValues(alpha: 0.12),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -665,7 +665,7 @@ class _PhasesSkeleton extends StatelessWidget {
                   child: Container(
                     height: 14,
                     decoration: BoxDecoration(
-                      color: AppColors.textInverse.withValues(alpha: 0.10),
+                      color: Colors.white.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),

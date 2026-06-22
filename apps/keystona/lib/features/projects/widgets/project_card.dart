@@ -2,10 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../models/project.dart';
 
 /// Card for a single project — board/list shared component.
@@ -39,12 +37,12 @@ class ProjectCard extends StatelessWidget {
   };
 
   static Color _statusColor(String status) => switch (status) {
-        'in_progress' => AppColors.slate,
-        'planning'    => AppColors.sand,
-        'on_hold'     => AppColors.amber,
-        'completed'   => AppColors.olive,
-        'cancelled'   => AppColors.gray300,
-        _             => AppColors.border,
+        'in_progress' => AuroraColors.cobalt,
+        'planning'    => AuroraColors.yellow,
+        'on_hold'     => AuroraColors.yellow,
+        'completed'   => AuroraColors.lime,
+        'cancelled'   => const Color(0xFFE0DFEA),
+        _             => AuroraColors.inkBorder,
       };
 
   @override
@@ -55,7 +53,7 @@ class ProjectCard extends StatelessWidget {
     final isCancelled = project.status == 'cancelled';
 
     if (isCompleted || isCancelled) {
-      final borderColor = isCompleted ? AppColors.olive : AppColors.gray300;
+      final borderColor = isCompleted ? AuroraColors.lime : const Color(0xFFE0DFEA);
       return Opacity(
         opacity: isCompleted ? 0.72 : 0.55,
         child: GestureDetector(
@@ -70,13 +68,13 @@ class ProjectCard extends StatelessWidget {
             ),
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: AuroraColors.paper,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: _CondensedRow(
                 project: project,
                 icon: isCompleted ? Icons.check : Icons.close,
-                iconColor: isCompleted ? AppColors.olive : AppColors.gray500,
+                iconColor: isCompleted ? AuroraColors.lime : const Color(0xFF9D9BB0),
               ),
             ),
           ),
@@ -89,7 +87,7 @@ class ProjectCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AuroraColors.paper,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: borderColor, width: 3),
         ),
@@ -186,7 +184,7 @@ class _HeroSection extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.deepNavy, Color(0xFF3D3028)],
+          colors: [AuroraColors.ink, Color(0xFF3D3028)],
         ),
       ),
       child: Stack(
@@ -207,9 +205,9 @@ class _HeroSection extends StatelessWidget {
             right: 54,
             child: Text(
               project.name,
-              style: AppTextStyles.headlineMedium.copyWith(
+              style: AuroraType.h2.copyWith(
                 fontSize: 17,
-                color: AppColors.textInverse,
+                color: Colors.white,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -267,9 +265,9 @@ class _CondensedRow extends StatelessWidget {
               children: [
                 Text(
                   project.name,
-                  style: AppTextStyles.headlineSmall.copyWith(
+                  style: AuroraType.h3.copyWith(
                     fontSize: 14,
-                    color: AppColors.textPrimary,
+                    color: AuroraColors.ink,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -278,8 +276,8 @@ class _CondensedRow extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     parts.join(' · '),
-                    style: AppTextStyles.monoLabel.copyWith(
-                      color: AppColors.textSecondary,
+                    style: AuroraType.label.copyWith(
+                      color: AuroraColors.inkSecondary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -363,8 +361,8 @@ class _PhaseDots extends StatelessWidget {
                   child: Container(
                     height: 2,
                     color: hasProgress && i <= currentPhaseIndex!
-                        ? AppColors.oliveLight.withValues(alpha: 0.65)
-                        : AppColors.gray200,
+                        ? AuroraColors.lime.withValues(alpha: 0.65)
+                        : const Color(0xFFEEEDF2),
                   ),
                 ),
               _PhaseDot(
@@ -383,9 +381,9 @@ class _PhaseDots extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             'Phase ${currentPhaseIndex! + 1} of $count · $currentPhaseName',
-            style: AppTextStyles.monoLabel.copyWith(
+            style: AuroraType.label.copyWith(
               fontSize: 10,
-              color: AppColors.textSecondary,
+              color: AuroraColors.inkSecondary,
             ),
           ),
         ],
@@ -407,7 +405,7 @@ class _PhaseDot extends StatelessWidget {
           height: 9,
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.oliveLight,
+            color: AuroraColors.lime,
           ),
         ),
       _DotState.active => Container(
@@ -415,10 +413,10 @@ class _PhaseDot extends StatelessWidget {
           height: 11,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.accent,
+            color: AuroraColors.coral,
             boxShadow: [
               BoxShadow(
-                color: AppColors.accent.withValues(alpha: 0.45),
+                color: AuroraColors.coral.withValues(alpha: 0.45),
                 blurRadius: 6,
                 spreadRadius: 1,
               ),
@@ -430,7 +428,7 @@ class _PhaseDot extends StatelessWidget {
           height: 8,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: AppColors.gray300, width: 1.5),
+            border: Border.all(color: const Color(0xFFE0DFEA), width: 1.5),
           ),
         ),
     };
@@ -464,22 +462,22 @@ class _BudgetRow extends StatelessWidget {
       children: [
         Text(
           '\$${NumberFormat('#,###').format(spent.toInt())} / ${_compact(estimated)}',
-          style: AppTextStyles.monoLabel.copyWith(
+          style: AuroraType.label.copyWith(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: AuroraColors.ink,
           ),
         ),
         const SizedBox(width: 10),
         Expanded(
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+            borderRadius: BorderRadius.circular(999.0),
             child: LinearProgressIndicator(
               value: pct,
               minHeight: 4,
-              backgroundColor: AppColors.gray200,
+              backgroundColor: const Color(0xFFEEEDF2),
               valueColor: AlwaysStoppedAnimation<Color>(
-                isOver ? AppColors.error : AppColors.olive,
+                isOver ? AuroraColors.coral : AuroraColors.lime,
               ),
             ),
           ),
@@ -522,8 +520,8 @@ class _FooterRow extends StatelessWidget {
           const Spacer(),
           Text(
             dateStr,
-            style: AppTextStyles.monoLabel.copyWith(
-              color: AppColors.textSecondary,
+            style: AuroraType.label.copyWith(
+              color: AuroraColors.inkSecondary,
             ),
           ),
         ],
@@ -540,10 +538,10 @@ class _WorkTypePill extends StatelessWidget {
   final String workType;
 
   Color get _color => switch (workType) {
-        'diy'        => AppColors.olive,
-        'contractor' => AppColors.slate,
-        'mixed'      => AppColors.sand,
-        _            => AppColors.gray400,
+        'diy'        => AuroraColors.lime,
+        'contractor' => AuroraColors.cobalt,
+        'mixed'      => AuroraColors.yellow,
+        _            => AuroraColors.inkTertiary,
       };
 
   @override
@@ -558,7 +556,7 @@ class _WorkTypePill extends StatelessWidget {
       ),
       child: Text(
         workType.workTypeLabel.toUpperCase(),
-        style: AppTextStyles.monoTiny.copyWith(
+        style: AuroraType.labelSm.copyWith(
           color: color,
           letterSpacing: 1.0,
         ),

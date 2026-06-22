@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/theme/aurora_colors.dart';
 
-import '../../../../../core/theme/app_colors.dart';
 
 /// Shown when the documents screen is entered with an active contractor filter.
 ///
@@ -21,7 +21,7 @@ class ContractorFilterBanner extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.deepNavy.withValues(alpha: 0.06),
+        color: AuroraColors.ink.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -29,7 +29,7 @@ class ContractorFilterBanner extends StatelessWidget {
           const Icon(
             Icons.filter_list,
             size: 14,
-            color: AppColors.deepNavy,
+            color: AuroraColors.ink,
           ),
           const SizedBox(width: 6),
           Expanded(
@@ -39,7 +39,7 @@ class ContractorFilterBanner extends StatelessWidget {
                 fontFamily: 'IBMPlexMono',
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: AppColors.deepNavy,
+                color: AuroraColors.ink,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -54,7 +54,7 @@ class ContractorFilterBanner extends StatelessWidget {
               child: Icon(
                 Icons.close,
                 size: 14,
-                color: AppColors.textSecondary,
+                color: AuroraColors.inkSecondary,
               ),
             ),
           ),

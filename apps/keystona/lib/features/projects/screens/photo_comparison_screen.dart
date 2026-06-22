@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../models/project_photo.dart';
 
 /// Before/after comparison screen with a draggable divider.
@@ -71,7 +71,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen> {
               left: _divider * w - 1.5,
               top: 0,
               bottom: 0,
-              child: Container(width: 3, color: AppColors.surface),
+              child: Container(width: 3, color: AuroraColors.paper),
             ),
 
             // Drag hit area around the divider.
@@ -94,7 +94,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen> {
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: AuroraColors.paper,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
@@ -104,7 +104,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen> {
                         ],
                       ),
                       child: const Icon(Icons.compare_arrows,
-                          color: AppColors.deepNavy, size: 18),
+                          color: AuroraColors.ink, size: 18),
                     ),
                   ),
                 ),
@@ -124,7 +124,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen> {
         backgroundColor: Colors.black,
         navigationBar: const CupertinoNavigationBar(
           backgroundColor: Colors.black,
-          middle: Text('Compare', style: TextStyle(color: AppColors.textInverse)),
+          middle: Text('Compare', style: TextStyle(color: Colors.white)),
         ),
         child: SafeArea(bottom: false, child: content),
       );
@@ -134,7 +134,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        foregroundColor: AppColors.textInverse,
+        foregroundColor: Colors.white,
         title: const Text('Compare'),
       ),
       body: content,
@@ -156,8 +156,8 @@ class _Label extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: AppTextStyles.labelSmall
-            .copyWith(color: AppColors.textInverse, fontSize: 10),
+        style: AuroraType.label
+            .copyWith(color: Colors.white, fontSize: 10),
       ),
     );
   }

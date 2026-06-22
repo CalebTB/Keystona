@@ -1,8 +1,8 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import '../../../../../core/theme/aurora_colors.dart';
 
-import '../../../../../core/theme/app_colors.dart';
 
 /// Colored badge shown at the top-left of each photo tile.
 ///
@@ -14,14 +14,14 @@ class PhotoTypeTag extends StatelessWidget {
   final String photoType;
 
   static final Map<String, Color> _colors = {
-    'before':      AppColors.slate.withValues(alpha: 0.5),
-    'after':       AppColors.olive.withValues(alpha: 0.5),
-    'progress':    AppColors.goldAccent.withValues(alpha: 0.5),
-    'inspiration': AppColors.plum.withValues(alpha: 0.5),
-    'issue':       AppColors.accent.withValues(alpha: 0.9),
+    'before':      AuroraColors.cobalt.withValues(alpha: 0.5),
+    'after':       AuroraColors.lime.withValues(alpha: 0.5),
+    'progress':    AuroraColors.yellow.withValues(alpha: 0.5),
+    'inspiration': AuroraColors.cobalt.withValues(alpha: 0.5),
+    'issue':       AuroraColors.coral.withValues(alpha: 0.9),
   };
 
-  static final Color _fallback = AppColors.gray500.withValues(alpha: 0.5);
+  static final Color _fallback = const Color(0xFF9D9BB0).withValues(alpha: 0.5);
 
   String get _label {
     if (photoType.isEmpty) return photoType;
@@ -46,7 +46,7 @@ class PhotoTypeTag extends StatelessWidget {
               fontSize: 8.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.6,
-              color: AppColors.textInverse,
+              color: Colors.white,
               height: 1.2,
             ),
           ),

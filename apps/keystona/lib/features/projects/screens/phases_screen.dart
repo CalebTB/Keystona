@@ -2,10 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../models/project_phase.dart';
 import '../providers/project_phases_provider.dart';
@@ -63,8 +63,8 @@ class PhasesScreen extends ConsumerWidget {
       body: body,
       floatingActionButton: FloatingActionButton(
         onPressed: onAddTap,
-        backgroundColor: AppColors.accent,
-        child: const Icon(Icons.add, color: AppColors.textInverse),
+        backgroundColor: AuroraColors.coral,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -145,9 +145,9 @@ class _PhaseList extends ConsumerWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(
-                    AppSizes.md, AppSizes.md, AppSizes.md, AppSizes.xs),
+                    AuroraSpacing.space7, AuroraSpacing.space7, AuroraSpacing.space7, AuroraSpacing.space1),
                 child: Text('Move to status',
-                    style: AppTextStyles.bodyMediumSemibold),
+                    style: AuroraType.h3),
               ),
               ...next.map(
                 (s) => ListTile(
@@ -215,7 +215,7 @@ class _PhaseList extends ConsumerWidget {
                 TextButton(
                   onPressed: () => Navigator.of(ctx).pop(true),
                   child: Text('Delete',
-                      style: TextStyle(color: AppColors.error)),
+                      style: TextStyle(color: AuroraColors.coral)),
                 ),
               ],
             ),
@@ -248,12 +248,12 @@ class _PhaseList extends ConsumerWidget {
         ),
         SliverToBoxAdapter(
           child: Padding(
-            padding: AppPadding.screen.copyWith(bottom: 0),
+            padding: EdgeInsets.all(AuroraSpacing.screenPadH).copyWith(bottom: 0),
             child: _ProgressHeader(phases: phases),
           ),
         ),
         SliverPadding(
-          padding: AppPadding.screen.copyWith(top: AppSizes.sm),
+          padding: EdgeInsets.all(AuroraSpacing.screenPadH).copyWith(top: AuroraSpacing.space3),
           sliver: SliverReorderableList(
             itemCount: phases.length,
             onReorder: (oldIndex, newIndex) =>
@@ -264,7 +264,7 @@ class _PhaseList extends ConsumerWidget {
                 key: ValueKey(phase.id),
                 index: i,
                 child: Padding(
-                  padding: const EdgeInsets.only(bottom: AppSizes.sm),
+                  padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
                   child: Dismissible(
                     key: Key('dismiss_${phase.id}'),
                     direction: DismissDirection.endToStart,
@@ -283,7 +283,7 @@ class _PhaseList extends ConsumerWidget {
                       leading: Icon(
                         Icons.drag_handle,
                         size: 20,
-                        color: AppColors.gray400,
+                        color: AuroraColors.inkTertiary,
                       ),
                     ),
                   ),
@@ -293,7 +293,7 @@ class _PhaseList extends ConsumerWidget {
           ),
         ),
         const SliverToBoxAdapter(
-          child: SizedBox(height: AppSizes.xxl + AppSizes.xl),
+          child: SizedBox(height: 48.0 + AuroraSpacing.space10),
         ),
       ],
     );
@@ -320,15 +320,15 @@ class _ProgressHeader extends StatelessWidget {
     final fraction = completed / total;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSizes.sm),
+      margin: const EdgeInsets.only(bottom: AuroraSpacing.space3),
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm + 4,
+        horizontal: AuroraSpacing.space7,
+        vertical: AuroraSpacing.space3 + 4,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusCard),
-        border: Border.all(color: AppColors.border),
+        color: AuroraColors.paper,
+        borderRadius: BorderRadius.circular(14.0),
+        border: Border.all(color: AuroraColors.inkBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -337,36 +337,36 @@ class _ProgressHeader extends StatelessWidget {
             children: [
               Text(
                 '$completed of $total complete',
-                style: AppTextStyles.bodyMediumSemibold,
+                style: AuroraType.h3,
               ),
               if (inProgress > 0) ...[
-                const SizedBox(width: AppSizes.xs),
+                const SizedBox(width: AuroraSpacing.space1),
                 Text(
                   '· $inProgress in progress',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.slate,
+                  style: AuroraType.body.copyWith(
+                    color: AuroraColors.cobalt,
                   ),
                 ),
               ],
               const Spacer(),
               Text(
                 '${(fraction * 100).round()}%',
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.textSecondary,
+                style: AuroraType.label.copyWith(
+                  color: AuroraColors.inkSecondary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
           ClipRRect(
-            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+            borderRadius: BorderRadius.circular(999.0),
             child: LinearProgressIndicator(
               value: fraction,
               minHeight: 6,
-              backgroundColor: AppColors.warmInset,
+              backgroundColor: AuroraColors.butter,
               valueColor: AlwaysStoppedAnimation<Color>(
-                completed == total ? AppColors.olive : AppColors.slate,
+                completed == total ? AuroraColors.lime : AuroraColors.cobalt,
               ),
             ),
           ),
@@ -381,12 +381,12 @@ class _DeleteBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       alignment: Alignment.centerRight,
-      padding: const EdgeInsets.only(right: AppSizes.lg),
+      padding: const EdgeInsets.only(right: AuroraSpacing.space9),
       decoration: BoxDecoration(
-        color: AppColors.error,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        color: AuroraColors.coral,
+        borderRadius: BorderRadius.circular(12.0),
       ),
-      child: const Icon(Icons.delete_outline, color: AppColors.textInverse),
+      child: const Icon(Icons.delete_outline, color: Colors.white),
     );
   }
 }
@@ -401,34 +401,34 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.playlist_add_outlined,
-              size: AppSizes.iconXl,
-              color: AppColors.gray400,
+              size: 48.0,
+              color: AuroraColors.inkTertiary,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space7),
             Text(
               'Break your project into phases',
-              style: AppTextStyles.h3,
+              style: AuroraType.h3,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             Text(
               'Phases keep your project organized from start to finish.',
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textSecondary),
+              style: AuroraType.body
+                  .copyWith(color: AuroraColors.inkSecondary),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.xl),
+            const SizedBox(height: AuroraSpacing.space10),
             FilledButton(
               onPressed: onAddTap,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                padding: AppPadding.button,
+                backgroundColor: AuroraColors.coral,
+                padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               ),
               child: const Text('+ Add Phase'),
             ),
@@ -449,20 +449,20 @@ class _ErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.error_outline,
-                size: AppSizes.iconXl, color: AppColors.error),
-            const SizedBox(height: AppSizes.md),
+                size: 48.0, color: AuroraColors.coral),
+            const SizedBox(height: AuroraSpacing.space7),
             Text("Couldn't load phases",
-                style: AppTextStyles.h3, textAlign: TextAlign.center),
-            const SizedBox(height: AppSizes.lg),
+                style: AuroraType.h3, textAlign: TextAlign.center),
+            const SizedBox(height: AuroraSpacing.space9),
             FilledButton(
               onPressed: onRetry,
               style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accent),
+                  backgroundColor: AuroraColors.coral),
               child: const Text('Retry'),
             ),
           ],

@@ -2,10 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../models/project_budget_item.dart';
 import '../providers/project_budget_provider.dart';
@@ -84,10 +84,10 @@ class _BudgetItemFormScreenState extends ConsumerState<BudgetItemFormScreen> {
                   },
                   child: Text(
                     c.budgetCategoryLabel,
-                    style: AppTextStyles.bodyLarge.copyWith(
+                    style: AuroraType.bodyLg.copyWith(
                       color: _category == c
-                          ? AppColors.goldAccent
-                          : AppColors.textPrimary,
+                          ? AuroraColors.yellow
+                          : AuroraColors.ink,
                       fontWeight: _category == c
                           ? FontWeight.w600
                           : FontWeight.normal,
@@ -205,7 +205,7 @@ class _BudgetItemFormScreenState extends ConsumerState<BudgetItemFormScreen> {
         actions: [
           if (_saving)
             const Padding(
-              padding: EdgeInsets.all(AppSizes.sm),
+              padding: EdgeInsets.all(AuroraSpacing.space3),
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           else
@@ -262,13 +262,13 @@ class _FormBody extends StatelessWidget {
   InputDecoration _dec(String hint) => InputDecoration(
         hintText: hint,
         hintStyle:
-            AppTextStyles.bodyMedium.copyWith(color: AppColors.gray400),
+            AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          borderRadius: BorderRadius.circular(8.0),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
+          horizontal: AuroraSpacing.space7,
+          vertical: AuroraSpacing.space3,
         ),
       );
 
@@ -277,7 +277,7 @@ class _FormBody extends StatelessWidget {
     return Form(
       key: formKey,
       child: ListView(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         children: [
           _Label('Item name'),
           TextFormField(
@@ -288,7 +288,7 @@ class _FormBody extends StatelessWidget {
             validator: (v) =>
                 (v == null || v.trim().isEmpty) ? 'Name is required' : null,
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
 
           _Label('Category'),
           if (isIOS)
@@ -307,7 +307,7 @@ class _FormBody extends StatelessWidget {
                       value: c, child: Text(c.budgetCategoryLabel)))
                   .toList(),
             ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
 
           _Label('Estimated cost'),
           TextFormField(
@@ -325,7 +325,7 @@ class _FormBody extends StatelessWidget {
               return null;
             },
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
 
           _Label('Actual cost (optional)'),
           TextFormField(
@@ -341,7 +341,7 @@ class _FormBody extends StatelessWidget {
               return null;
             },
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
 
           _Label('Vendor (optional)'),
           TextFormField(
@@ -350,22 +350,22 @@ class _FormBody extends StatelessWidget {
             maxLength: 100,
             decoration: _dec('e.g. Home Depot, John the Plumber'),
           ),
-          const SizedBox(height: AppSizes.xs),
+          const SizedBox(height: AuroraSpacing.space1),
 
           // Paid toggle.
           Row(
             children: [
               Expanded(
-                child: Text('Mark as paid', style: AppTextStyles.bodyMedium),
+                child: Text('Mark as paid', style: AuroraType.body),
               ),
               Switch(
                 value: isPaid,
                 onChanged: onIsPaidChanged,
-                activeThumbColor: AppColors.success,
+                activeThumbColor: AuroraColors.lime,
               ),
             ],
           ),
-          const SizedBox(height: AppSizes.xl),
+          const SizedBox(height: AuroraSpacing.space10),
         ],
       ),
     );
@@ -379,11 +379,11 @@ class _Label extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.xs),
+      padding: const EdgeInsets.only(bottom: AuroraSpacing.space1),
       child: Text(
         text,
         style:
-            AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+            AuroraType.bodySm.copyWith(color: AuroraColors.inkSecondary),
       ),
     );
   }
@@ -406,12 +406,12 @@ class _TapRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm + 2,
+          horizontal: AuroraSpacing.space7,
+          vertical: AuroraSpacing.space3 + 2,
         ),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.border),
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          border: Border.all(color: AuroraColors.inkBorder),
+          borderRadius: BorderRadius.circular(8.0),
         ),
         child: Row(
           children: [
@@ -420,15 +420,15 @@ class _TapRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(label,
-                      style: AppTextStyles.bodySmall
-                          .copyWith(color: AppColors.textSecondary)),
+                      style: AuroraType.bodySm
+                          .copyWith(color: AuroraColors.inkSecondary)),
                   const SizedBox(height: 2),
-                  Text(value, style: AppTextStyles.bodyLarge),
+                  Text(value, style: AuroraType.bodyLg),
                 ],
               ),
             ),
             const Icon(Icons.chevron_right,
-                color: AppColors.gray400, size: 20),
+                color: AuroraColors.inkTertiary, size: 20),
           ],
         ),
       ),

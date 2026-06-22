@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../models/project_photo.dart';
 import '../providers/project_detail_provider.dart';
@@ -270,9 +270,9 @@ class _ProjectPhotosScreenState extends ConsumerState<ProjectPhotosScreen> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.delete_outline, color: AppColors.error),
+                leading: Icon(Icons.delete_outline, color: AuroraColors.coral),
                 title: Text('Delete Pair',
-                    style: TextStyle(color: AppColors.error)),
+                    style: TextStyle(color: AuroraColors.coral)),
                 onTap: () async {
                   Navigator.of(ctx).pop();
                   try {
@@ -541,34 +541,34 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.camera_alt_outlined,
-              size: AppSizes.iconXl,
-              color: AppColors.gray400,
+              size: 48.0,
+              color: AuroraColors.inkTertiary,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space7),
             Text(
               'Document your progress',
-              style: AppTextStyles.h3,
+              style: AuroraType.h3,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             Text(
               'Capture each phase of your project. Photos are saved to your project timeline.',
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textSecondary),
+              style: AuroraType.body
+                  .copyWith(color: AuroraColors.inkSecondary),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.xl),
+            const SizedBox(height: AuroraSpacing.space10),
             FilledButton(
               onPressed: onAdd,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                padding: AppPadding.button,
+                backgroundColor: AuroraColors.coral,
+                padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               ),
               child: const Text('+ Add Photo'),
             ),
@@ -590,15 +590,15 @@ class _ErrorState extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.error_outline,
-              size: AppSizes.iconXl, color: AppColors.error),
-          const SizedBox(height: AppSizes.md),
+              size: 48.0, color: AuroraColors.coral),
+          const SizedBox(height: AuroraSpacing.space7),
           Text("Couldn't load photos",
-              style: AppTextStyles.h3, textAlign: TextAlign.center),
-          const SizedBox(height: AppSizes.lg),
+              style: AuroraType.h3, textAlign: TextAlign.center),
+          const SizedBox(height: AuroraSpacing.space9),
           FilledButton(
             onPressed: onRetry,
             style: FilledButton.styleFrom(
-                backgroundColor: AppColors.deepNavy),
+                backgroundColor: AuroraColors.ink),
             child: const Text('Retry'),
           ),
         ],
@@ -631,7 +631,7 @@ class _PairPickerSheet extends StatelessWidget {
           maxHeight: MediaQuery.of(context).size.height * 0.55,
         ),
         decoration: const BoxDecoration(
-          color: AppColors.surface,
+          color: AuroraColors.paper,
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         ),
         child: Column(
@@ -644,7 +644,7 @@ class _PairPickerSheet extends StatelessWidget {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.border,
+                  color: AuroraColors.inkBorder,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -659,25 +659,25 @@ class _PairPickerSheet extends StatelessWidget {
                       style: GoogleFonts.outfit(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.deepNavy,
+                        color: AuroraColors.ink,
                       ),
                     ),
                   ),
                   GestureDetector(
                     onTap: () => Navigator.of(context, rootNavigator: true).pop(),
-                    child: const Icon(Icons.close, size: 20, color: AppColors.gray500),
+                    child: const Icon(Icons.close, size: 20, color: const Color(0xFF9D9BB0)),
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1, color: AppColors.gray200),
+            const Divider(height: 1, color: const Color(0xFFEEEDF2)),
             Flexible(
               child: ListView.separated(
                 shrinkWrap: true,
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 itemCount: candidates.length,
                 separatorBuilder: (_, _) =>
-                    const Divider(height: 1, indent: 72, color: AppColors.gray200),
+                    const Divider(height: 1, indent: 72, color: const Color(0xFFEEEDF2)),
                 itemBuilder: (context, i) {
                   final photo = candidates[i];
                   return ListTile(
@@ -694,7 +694,7 @@ class _PairPickerSheet extends StatelessWidget {
                                 imageUrl: photo.signedUrl!,
                                 fit: BoxFit.cover,
                               )
-                            : const ColoredBox(color: AppColors.gray400),
+                            : const ColoredBox(color: AuroraColors.inkTertiary),
                       ),
                     ),
                     title: Text(
@@ -704,7 +704,7 @@ class _PairPickerSheet extends StatelessWidget {
                       style: GoogleFonts.outfit(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textPrimary,
+                        color: AuroraColors.ink,
                       ),
                     ),
                     subtitle: Text(
@@ -712,11 +712,11 @@ class _PairPickerSheet extends StatelessWidget {
                       style: const TextStyle(
                         fontFamily: 'IBMPlexMono',
                         fontSize: 10,
-                        color: AppColors.gray500,
+                        color: const Color(0xFF9D9BB0),
                       ),
                     ),
                     trailing: const Icon(Icons.chevron_right,
-                        size: 18, color: AppColors.gray500),
+                        size: 18, color: const Color(0xFF9D9BB0)),
                     onTap: () => onSelected(photo),
                   );
                 },
@@ -777,7 +777,7 @@ class _PairEditFormSheetState extends State<_PairEditFormSheet> {
           maxHeight: MediaQuery.of(context).size.height * 0.6,
         ),
         decoration: const BoxDecoration(
-          color: AppColors.surface,
+          color: AuroraColors.paper,
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         ),
         child: Padding(
@@ -796,7 +796,7 @@ class _PairEditFormSheetState extends State<_PairEditFormSheet> {
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.border,
+                      color: AuroraColors.inkBorder,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -812,7 +812,7 @@ class _PairEditFormSheetState extends State<_PairEditFormSheet> {
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.deepNavy,
+                          color: AuroraColors.ink,
                         ),
                       ),
                     ),
@@ -820,12 +820,12 @@ class _PairEditFormSheetState extends State<_PairEditFormSheet> {
                       onTap: () =>
                           Navigator.of(context, rootNavigator: true).pop(),
                       child: const Icon(Icons.close,
-                          size: 20, color: AppColors.gray500),
+                          size: 20, color: const Color(0xFF9D9BB0)),
                     ),
                   ],
                 ),
               ),
-              const Divider(height: 1, color: AppColors.gray200),
+              const Divider(height: 1, color: const Color(0xFFEEEDF2)),
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -858,7 +858,7 @@ class _PairEditFormSheetState extends State<_PairEditFormSheet> {
                           _captionCtrl.text.trim(),
                         ),
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.deepNavy,
+                          backgroundColor: AuroraColors.ink,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
                         child: const Text('Save Changes'),
@@ -877,25 +877,25 @@ class _PairEditFormSheetState extends State<_PairEditFormSheet> {
   InputDecoration _inputDecoration(String hint) => InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(
-          color: AppColors.textDisabled,
+          color: AuroraColors.inkTertiary,
           fontSize: 14,
         ),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.deepNavy, width: 1.5),
+          borderSide: const BorderSide(color: AuroraColors.ink, width: 1.5),
         ),
         filled: true,
-        fillColor: AppColors.gray50,
+        fillColor: const Color(0xFFF8F8FA),
       );
 }
 
@@ -911,7 +911,7 @@ class _FieldLabel extends StatelessWidget {
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.5,
-          color: AppColors.textSecondary,
+          color: AuroraColors.inkSecondary,
         ),
       );
 }
@@ -939,10 +939,10 @@ class _PhotoViewer extends StatelessWidget {
                 child: CachedNetworkImage(
                   imageUrl: photo.signedUrl!,
                   fit: BoxFit.contain,
-                  placeholder: (_, _) => const Center(
+                  placeholder: (_, _) => Center(
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: AppColors.darkTextSecondary,
+                      color: Colors.white.withValues(alpha: 0.55),
                     ),
                   ),
                   errorWidget: (_, _, _) => const Icon(

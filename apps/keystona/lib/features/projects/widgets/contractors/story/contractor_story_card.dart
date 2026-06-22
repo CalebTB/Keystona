@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../../core/theme/aurora_colors.dart';
 
-import '../../../../../core/theme/app_colors.dart';
 import '../../../models/project.dart';
 import '../../../models/project_contractor.dart';
 
@@ -70,9 +70,9 @@ class ContractorStoryCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.contractorCardBg,
+          color: AuroraColors.ink,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.contractorCardBorder, width: 1.5),
+          border: Border.all(color: const Color(0xFF141D3B), width: 1.5),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,7 +92,7 @@ class ContractorStoryCard extends StatelessWidget {
                     style: GoogleFonts.fraunces(
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textInverse,
+                      color: Colors.white,
                       height: 1.05,
                       letterSpacing: -0.3,
                     ),
@@ -113,7 +113,7 @@ class ContractorStoryCard extends StatelessWidget {
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
-                  color: AppColors.gray100,
+                  color: AuroraColors.butter,
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(16),
                     bottomRight: Radius.circular(16),
@@ -172,7 +172,7 @@ class _TopRow extends StatelessWidget {
           width: 52,
           height: 52,
           decoration: const BoxDecoration(
-            color: AppColors.contractorAvatarBg,
+            color: Color(0xFF2D3A6B),
             shape: BoxShape.circle,
           ),
           alignment: Alignment.center,
@@ -181,7 +181,7 @@ class _TopRow extends StatelessWidget {
             style: GoogleFonts.fraunces(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: AppColors.textInverse,
+              color: Colors.white,
               height: 1,
             ),
           ),
@@ -191,7 +191,7 @@ class _TopRow extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.contractorLeadBg,
+              color: AuroraColors.cobaltDim,
               borderRadius: BorderRadius.circular(5),
             ),
             child: const Text(
@@ -201,7 +201,7 @@ class _TopRow extends StatelessWidget {
                 fontSize: 9,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.0,
-                color: AppColors.contractorCardBg,
+                color: AuroraColors.ink,
               ),
             ),
           ),
@@ -233,7 +233,7 @@ class _Subtitle extends StatelessWidget {
         fontSize: 10,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.6,
-        color: AppColors.contractorMuted,
+        color: AuroraColors.inkTertiary,
       ),
       overflow: TextOverflow.ellipsis,
     );
@@ -259,7 +259,7 @@ class _QuoteBlock extends StatelessWidget {
         style: GoogleFonts.inter(
           fontSize: 13,
           fontStyle: FontStyle.italic,
-          color: AppColors.textInverse.withValues(alpha: 0.35),
+          color: Colors.white.withValues(alpha: 0.35),
         ),
       );
     }
@@ -277,7 +277,7 @@ class _QuoteBlock extends StatelessWidget {
             fontSize: 13,
             fontWeight: FontWeight.w400,
             fontStyle: FontStyle.italic,
-            color: AppColors.textInverse.withValues(alpha: 0.8),
+            color: Colors.white.withValues(alpha: 0.8),
             height: 1.5,
           ),
           maxLines: 4,
@@ -291,7 +291,7 @@ class _QuoteBlock extends StatelessWidget {
             fontSize: 9,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.5,
-            color: AppColors.textInverse.withValues(alpha: 0.55),
+            color: Colors.white.withValues(alpha: 0.55),
           ),
         ),
       ],
@@ -354,9 +354,9 @@ class _StatCell extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       constraints: const BoxConstraints(minHeight: 72),
       decoration: BoxDecoration(
-        color: AppColors.warmInset,
+        color: AuroraColors.butter,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.borderStrong, width: 1),
+        border: Border.all(color: AuroraColors.inkBorderStrong, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,7 +369,7 @@ class _StatCell extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.8,
-              color: AppColors.contractorStatLabel,
+              color: AuroraColors.inkSecondary,
             ),
           ),
           const SizedBox(height: 5),
@@ -379,7 +379,7 @@ class _StatCell extends StatelessWidget {
               fontFamily: 'IBMPlexMono',
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: AuroraColors.ink,
             ),
           ),
         ],
@@ -399,9 +399,9 @@ class _RatingCell extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       constraints: const BoxConstraints(minHeight: 72),
       decoration: BoxDecoration(
-        color: AppColors.warmInset,
+        color: AuroraColors.butter,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.borderStrong, width: 1),
+        border: Border.all(color: AuroraColors.inkBorderStrong, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -414,7 +414,7 @@ class _RatingCell extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.8,
-              color: AppColors.contractorStatLabel,
+              color: AuroraColors.inkSecondary,
             ),
           ),
           const SizedBox(height: 5),
@@ -423,7 +423,7 @@ class _RatingCell extends StatelessWidget {
               return Icon(
                 i < rating ? Icons.star_rounded : Icons.star_outline_rounded,
                 size: 15,
-                color: AppColors.goldAccent,
+                color: AuroraColors.yellow,
               );
             }),
           ),
@@ -444,9 +444,9 @@ class _PhoneCell extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       constraints: const BoxConstraints(minHeight: 72),
       decoration: BoxDecoration(
-        color: AppColors.warmInset,
+        color: AuroraColors.butter,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.borderStrong, width: 1),
+        border: Border.all(color: AuroraColors.inkBorderStrong, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -459,7 +459,7 @@ class _PhoneCell extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.8,
-              color: AppColors.contractorStatLabel,
+              color: AuroraColors.inkSecondary,
             ),
           ),
           const SizedBox(height: 5),
@@ -469,7 +469,7 @@ class _PhoneCell extends StatelessWidget {
               fontFamily: 'IBMPlexMono',
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: AuroraColors.ink,
             ),
             overflow: TextOverflow.ellipsis,
           ),
@@ -491,7 +491,7 @@ class _ProjectsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final isActive =
         project.status == 'in_progress' || project.status == 'planning';
-    final dotColor = isActive ? AppColors.accent : AppColors.gray400;
+    final dotColor = isActive ? AuroraColors.coral : AuroraColors.inkTertiary;
     final contractAmt = contractor.contractAmount ?? 0.0;
 
     return Column(
@@ -503,7 +503,7 @@ class _ProjectsSection extends StatelessWidget {
               width: 6,
               height: 6,
               decoration: const BoxDecoration(
-                color: AppColors.gray400,
+                color: AuroraColors.inkTertiary,
                 shape: BoxShape.circle,
               ),
             ),
@@ -515,7 +515,7 @@ class _ProjectsSection extends StatelessWidget {
                 fontSize: 9,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.0,
-                color: AppColors.gray500,
+                color: const Color(0xFF9D9BB0),
               ),
             ),
           ],
@@ -541,7 +541,7 @@ class _ProjectsSection extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: AuroraColors.ink,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -551,7 +551,7 @@ class _ProjectsSection extends StatelessWidget {
                     style: const TextStyle(
                       fontFamily: 'IBMPlexMono',
                       fontSize: 10,
-                      color: AppColors.gray500,
+                      color: Color(0xFF9D9BB0),
                     ),
                   ),
                 ],
@@ -564,7 +564,7 @@ class _ProjectsSection extends StatelessWidget {
                 fontFamily: 'IBMPlexMono',
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: AuroraColors.ink,
               ),
             ),
           ],
@@ -643,11 +643,11 @@ class _PillButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bg = enabled
-        ? AppColors.contractorCardBg
-        : AppColors.contractorCardBg.withValues(alpha: 0.35);
+        ? AuroraColors.ink
+        : AuroraColors.ink.withValues(alpha: 0.35);
     final fg = enabled
-        ? AppColors.textInverse
-        : AppColors.textInverse.withValues(alpha: 0.5);
+        ? Colors.white
+        : Colors.white.withValues(alpha: 0.5);
 
     return GestureDetector(
       onTap: enabled ? onTap : null,

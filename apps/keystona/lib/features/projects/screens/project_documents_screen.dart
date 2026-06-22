@@ -2,11 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../providers/project_documents_provider.dart';
 import '../providers/project_detail_provider.dart';
@@ -121,8 +121,8 @@ class _ProjectDocumentsScreenState
       floatingActionButton: asyncLinks.value?.isNotEmpty == true
           ? FloatingActionButton(
               onPressed: _onLink,
-              backgroundColor: AppColors.deepNavy,
-              child: const Icon(Icons.link, color: AppColors.textInverse),
+              backgroundColor: AuroraColors.ink,
+              child: const Icon(Icons.link, color: Colors.white),
             )
           : null,
     );
@@ -137,16 +137,16 @@ class _ContractorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: AppColors.deepNavy.withValues(alpha: 0.07),
+      color: AuroraColors.ink.withValues(alpha: 0.07),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Row(
         children: [
-          const Icon(Icons.person_outline, size: 14, color: AppColors.deepNavy),
+          const Icon(Icons.person_outline, size: 14, color: AuroraColors.ink),
           const SizedBox(width: 6),
           Text(
             'Filtered by $name',
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.deepNavy,
+            style: AuroraType.bodySm.copyWith(
+              color: AuroraColors.ink,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -164,23 +164,23 @@ class _ContractorEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.description_outlined,
-                size: AppSizes.iconXl, color: AppColors.gray400),
-            const SizedBox(height: AppSizes.md),
+                size: 48.0, color: AuroraColors.inkTertiary),
+            const SizedBox(height: AuroraSpacing.space7),
             Text(
               'No documents linked to $contractorName yet.',
-              style: AppTextStyles.h3,
+              style: AuroraType.h3,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             Text(
               'Link a document and assign it to this contractor.',
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textSecondary),
+              style: AuroraType.body
+                  .copyWith(color: AuroraColors.inkSecondary),
               textAlign: TextAlign.center,
             ),
           ],
@@ -198,28 +198,28 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.link_outlined,
-                size: AppSizes.iconXl, color: AppColors.gray400),
-            const SizedBox(height: AppSizes.md),
+                size: 48.0, color: AuroraColors.inkTertiary),
+            const SizedBox(height: AuroraSpacing.space7),
             Text('Link your project documents',
-                style: AppTextStyles.h3, textAlign: TextAlign.center),
-            const SizedBox(height: AppSizes.sm),
+                style: AuroraType.h3, textAlign: TextAlign.center),
+            const SizedBox(height: AuroraSpacing.space3),
             Text(
               'Attach receipts, permits, contracts, and more from your Document Vault.',
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textSecondary),
+              style: AuroraType.body
+                  .copyWith(color: AuroraColors.inkSecondary),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.xl),
+            const SizedBox(height: AuroraSpacing.space10),
             FilledButton(
               onPressed: onLink,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.deepNavy,
-                padding: AppPadding.button,
+                backgroundColor: AuroraColors.ink,
+                padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               ),
               child: const Text('+ Link Document'),
             ),
@@ -238,20 +238,20 @@ class _ErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.error_outline,
-                size: AppSizes.iconXl, color: AppColors.error),
-            const SizedBox(height: AppSizes.md),
+                size: 48.0, color: AuroraColors.coral),
+            const SizedBox(height: AuroraSpacing.space7),
             Text("Couldn't load documents",
-                style: AppTextStyles.h3, textAlign: TextAlign.center),
-            const SizedBox(height: AppSizes.lg),
+                style: AuroraType.h3, textAlign: TextAlign.center),
+            const SizedBox(height: AuroraSpacing.space9),
             FilledButton(
               onPressed: onRetry,
               style:
-                  FilledButton.styleFrom(backgroundColor: AppColors.deepNavy),
+                  FilledButton.styleFrom(backgroundColor: AuroraColors.ink),
               child: const Text('Retry'),
             ),
           ],
