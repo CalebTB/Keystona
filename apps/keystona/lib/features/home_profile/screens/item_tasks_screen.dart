@@ -246,8 +246,8 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
                   decoration: BoxDecoration(
                     color: AuroraColors.ink,
                     borderRadius: BorderRadius.circular(999),
-                    boxShadow: const [
-                      BoxShadow(
+                    boxShadow: [
+                      const BoxShadow(
                         color: Color(0x59FF3B62),
                         blurRadius: 12,
                         offset: Offset(0, 4),
@@ -278,8 +278,8 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
           decoration: BoxDecoration(
             color: AuroraColors.ink,
             borderRadius: BorderRadius.circular(999),
-            boxShadow: const [
-              BoxShadow(
+            boxShadow: [
+              const BoxShadow(
                 color: Color(0x59FF3B62),
                 blurRadius: 12,
                 offset: Offset(0, 4),

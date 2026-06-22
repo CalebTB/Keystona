@@ -327,8 +327,8 @@ class _DetailContentState extends ConsumerState<_DetailContent> {
                             const BorderRadius.all(Radius.circular(16)),
                         border: Border.all(
                             color: AuroraColors.inkBorder, width: 1.5),
-                        boxShadow: const [
-                          BoxShadow(
+                        boxShadow: [
+                          const BoxShadow(
                             color: Color(0x0A071238),
                             blurRadius: 8,
                             offset: Offset(0, 2),
