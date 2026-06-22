@@ -3,9 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../models/maintenance_task.dart';
 
 /// A list-item card representing a single maintenance task.
@@ -14,11 +13,11 @@ import '../models/maintenance_task.dart';
 ///   [Priority stripe | Name + Category + Due date row | Status badge]
 ///
 /// The left border color follows the task urgency:
-///   - Overdue → red
-///   - Due today → orange
-///   - Due this week → amber
-///   - Upcoming / Scheduled → navy
-///   - Completed → green
+///   - Overdue → coral
+///   - Due today → yellowDeep
+///   - Due this week → yellow
+///   - Upcoming / Scheduled → cobalt
+///   - Completed → limeDeep
 ///
 /// Tapping the card navigates to the task detail route (#32).
 class TaskCard extends StatelessWidget {
@@ -31,8 +30,8 @@ class TaskCard extends StatelessWidget {
     final stripeColor = _stripeColor(task);
 
     return Material(
-      color: AppColors.surface,
-      borderRadius: AppRadius.card,
+      color: AuroraColors.paper,
+      borderRadius: const BorderRadius.all(Radius.circular(14)),
       child: InkWell(
         onTap: () {
           final path = AppRoutes.maintenanceTaskDetail.replaceFirst(
@@ -41,48 +40,48 @@ class TaskCard extends StatelessWidget {
           );
           context.push(path);
         },
-        borderRadius: AppRadius.card,
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         child: Container(
-        decoration: BoxDecoration(
-          borderRadius: AppRadius.card,
-          border: Border.all(color: AppColors.border, width: 1.5),
-          boxShadow: const [
-            BoxShadow(
-              color: AppColors.shadowSm,
-              blurRadius: 4,
-              offset: Offset(0, 1),
-            ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Priority urgency stripe.
-              Container(
-                width: 4,
-                color: stripeColor,
-              ),
-              // Content.
-              Expanded(
-                child: Padding(
-                  padding: AppPadding.card,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: _TaskInfo(task: task),
-                      ),
-                      const SizedBox(width: AppSizes.sm),
-                      _DueDateBadge(task: task),
-                    ],
-                  ),
-                ),
+          decoration: BoxDecoration(
+            borderRadius: const BorderRadius.all(Radius.circular(14)),
+            border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0x0D071238),
+                blurRadius: 4,
+                offset: const Offset(0, 1),
               ),
             ],
           ),
-        ),
+          clipBehavior: Clip.antiAlias,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Priority urgency stripe.
+                Container(
+                  width: 4,
+                  color: stripeColor,
+                ),
+                // Content.
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: _TaskInfo(task: task),
+                        ),
+                        const SizedBox(width: 8),
+                        _DueDateBadge(task: task),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -95,15 +94,15 @@ class TaskCard extends StatelessWidget {
     final weekEnd = todayMidnight.add(const Duration(days: 7));
     final due = task.dueDate.toLocal();
 
-    if (task.status == TaskStatus.completed) return AppColors.statusCompleted;
+    if (task.status == TaskStatus.completed) return AuroraColors.limeDeep;
     if (task.status == TaskStatus.overdue || due.isBefore(todayMidnight)) {
-      return AppColors.statusOverdue;
+      return AuroraColors.coral;
     }
     if (!due.isBefore(todayMidnight) && due.isBefore(tomorrowMidnight)) {
-      return AppColors.statusDueToday;
+      return AuroraColors.yellowDeep;
     }
-    if (due.isBefore(weekEnd)) return AppColors.statusDueSoon;
-    return AppColors.statusScheduled;
+    if (due.isBefore(weekEnd)) return AuroraColors.yellow;
+    return AuroraColors.cobalt;
   }
 }
 
@@ -122,19 +121,19 @@ class _TaskInfo extends StatelessWidget {
       children: [
         Text(
           task.name,
-          style: AppTextStyles.bodyMediumSemibold,
+          style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: AppSizes.xs),
+        const SizedBox(height: 4),
         Row(
           children: [
             // Category label.
             Flexible(
               child: Text(
                 task.category,
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textSecondary,
+                style: AuroraType.bodySm.copyWith(
+                  color: AuroraColors.inkSecondary,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -142,27 +141,27 @@ class _TaskInfo extends StatelessWidget {
             ),
             // Linked system chip — shown when available.
             if (task.linkedSystemName != null) ...[
-              const SizedBox(width: AppSizes.xs),
-              const Text(
+              const SizedBox(width: 4),
+              Text(
                 '·',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                style: TextStyle(color: AuroraColors.inkSecondary, fontSize: 12),
               ),
-              const SizedBox(width: AppSizes.xs),
+              const SizedBox(width: 4),
               Flexible(
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.home_repair_service_outlined,
                       size: 11,
-                      color: AppColors.textSecondary,
+                      color: AuroraColors.inkSecondary,
                     ),
                     const SizedBox(width: 2),
                     Flexible(
                       child: Text(
                         task.linkedSystemName!,
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textSecondary,
+                        style: AuroraType.bodySm.copyWith(
+                          color: AuroraColors.inkSecondary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -180,16 +179,16 @@ class _TaskInfo extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.schedule_outlined,
                 size: 11,
-                color: AppColors.textSecondary,
+                color: AuroraColors.inkSecondary,
               ),
               const SizedBox(width: 2),
               Text(
                 _formatMinutes(task.estimatedMinutes!),
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textSecondary,
+                style: AuroraType.bodySm.copyWith(
+                  color: AuroraColors.inkSecondary,
                 ),
               ),
             ],
@@ -221,7 +220,7 @@ class _DueDateBadge extends StatelessWidget {
     final due = task.dueDate.toLocal();
 
     if (task.status == TaskStatus.completed) {
-      return _Badge(label: 'Done', color: AppColors.statusCompleted);
+      return _Badge(label: 'Done', color: AuroraColors.limeDeep);
     }
 
     if (due.isBefore(todayMidnight) ||
@@ -229,25 +228,25 @@ class _DueDateBadge extends StatelessWidget {
       final days = todayMidnight.difference(due).inDays;
       return _Badge(
         label: days == 0 ? 'Today' : '${days}d ago',
-        color: AppColors.statusOverdue,
+        color: AuroraColors.coral,
       );
     }
 
     final daysUntil = due.difference(todayMidnight).inDays;
     if (daysUntil == 0) {
-      return _Badge(label: 'Today', color: AppColors.statusDueToday);
+      return _Badge(label: 'Today', color: AuroraColors.yellowDeep);
     }
 
     if (daysUntil <= 7) {
       return _Badge(
         label: DateFormat('MMM d').format(due),
-        color: AppColors.statusDueSoon,
+        color: AuroraColors.yellow,
       );
     }
 
     return _Badge(
       label: DateFormat('MMM d').format(due),
-      color: AppColors.statusScheduled,
+      color: AuroraColors.cobalt,
     );
   }
 }
@@ -261,18 +260,15 @@ class _Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.sm,
-        vertical: 4,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withAlpha(25),
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: color.withAlpha(80)),
       ),
       child: Text(
         label,
-        style: AppTextStyles.labelSmall.copyWith(color: color),
+        style: AuroraType.labelSm.copyWith(color: color),
       ),
     );
   }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../models/maintenance_task.dart';
 
 /// Compact overdue strip shown below the day header when overdue tasks exist.
@@ -27,22 +27,22 @@ class OverdueBanner extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: AppColors.accentDim,
+          color: AuroraColors.coralDim,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.goldAccent.withValues(alpha: 0.125), width: 1),
+          border: Border.all(color: AuroraColors.yellow.withValues(alpha: 0.125), width: 1),
         ),
         child: Row(
           children: [
-            const Icon(
+            Icon(
               Icons.warning_amber_rounded,
               size: 14,
-              color: AppColors.accent,
+              color: AuroraColors.coral,
             ),
             const SizedBox(width: 6),
             Text(
               '$count overdue',
-              style: AppTextStyles.monoLabel.copyWith(
-                color: AppColors.accent,
+              style: AuroraType.label.copyWith(
+                color: AuroraColors.coral,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
               ),
@@ -51,18 +51,18 @@ class OverdueBanner extends StatelessWidget {
             Expanded(
               child: Text(
                 names,
-                style: AppTextStyles.monoLabel.copyWith(
-                  color: AppColors.textTertiary,
+                style: AuroraType.label.copyWith(
+                  color: AuroraColors.inkTertiary,
                   fontSize: 11,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right,
               size: 14,
-              color: AppColors.accent,
+              color: AuroraColors.coral,
             ),
           ],
         ),

@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../models/insurance_policy.dart';
 
 /// Insurance quick reference section on the Emergency Hub main screen.
-///
-/// Shows all policy summaries (type icon + carrier + policy number).
-/// Full CRUD + tap-to-call implemented by [#47 Insurance Quick Reference].
 class InsuranceSection extends StatelessWidget {
   const InsuranceSection({
     super.key,
@@ -26,13 +24,14 @@ class InsuranceSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section header.
         Row(
           children: [
             Text(
               'Insurance',
-              style: AppTextStyles.labelLarge.copyWith(
+              style: GoogleFonts.inter(
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
+                color: AuroraColors.ink,
               ),
             ),
             const Spacer(),
@@ -41,21 +40,22 @@ class InsuranceSection extends StatelessWidget {
                 onTap: onSeeAll,
                 child: Text(
                   'See all (${policies.length})',
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.deepNavy,
+                  style: AuroraType.bodySm.copyWith(
+                    fontSize: 10,
                     fontWeight: FontWeight.w600,
+                    color: AuroraColors.ink,
                   ),
                 ),
               ),
           ],
         ),
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: AuroraSpacing.space3),
 
         if (policies.isEmpty)
           _EmptyInsurance(onAdd: onAddPolicy)
         else ...[
           ...policies.map((p) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSizes.sm),
+                padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
                 child: _PolicyRow(policy: p),
               )),
         ],
@@ -73,51 +73,51 @@ class _PolicyRow extends StatelessWidget {
     final expiring = _isExpiringSoon;
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        color: AuroraColors.paper,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: expiring ? AppColors.healthFair : AppColors.border,
+          color: expiring ? AuroraColors.yellowDeep : AuroraColors.inkBorder,
         ),
       ),
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
+        horizontal: AuroraSpacing.space7,
+        vertical: AuroraSpacing.space3,
       ),
       child: Row(
         children: [
-          // Policy type icon.
           Container(
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppColors.deepNavy.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+              color: AuroraColors.ink.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               _policyIcon,
               size: 20,
-              color: AppColors.deepNavy,
+              color: AuroraColors.ink,
             ),
           ),
-          const SizedBox(width: AppSizes.md),
+          const SizedBox(width: AuroraSpacing.space7),
 
-          // Carrier + policy number.
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   '${policy.policyType.policyTypeLabel} · ${policy.carrier}',
-                  style: AppTextStyles.labelLarge.copyWith(
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
+                    color: AuroraColors.ink,
                   ),
                 ),
                 if (policy.policyNumber != null) ...[
                   const SizedBox(height: 2),
                   Text(
                     policy.policyNumber!,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+                    style: AuroraType.bodySm.copyWith(
+                      color: AuroraColors.inkSecondary,
                     ),
                   ),
                 ],
@@ -128,13 +128,14 @@ class _PolicyRow extends StatelessWidget {
                       Icon(
                         Icons.warning_amber_rounded,
                         size: 12,
-                        color: AppColors.healthFair,
+                        color: AuroraColors.yellowDeep,
                       ),
                       const SizedBox(width: 3),
                       Text(
                         'Expiring soon',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.healthFair,
+                        style: AuroraType.bodySm.copyWith(
+                          fontSize: 10,
+                          color: AuroraColors.yellowDeep,
                         ),
                       ),
                     ],
@@ -146,7 +147,7 @@ class _PolicyRow extends StatelessWidget {
           Icon(
             Icons.chevron_right,
             size: 18,
-            color: AppColors.textSecondary,
+            color: AuroraColors.inkSecondary,
           ),
         ],
       ),
@@ -177,25 +178,25 @@ class _EmptyInsurance extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSizes.md),
+      padding: const EdgeInsets.all(AuroraSpacing.space7),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.border),
+        color: AuroraColors.paper,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AuroraColors.inkBorder),
       ),
       child: Row(
         children: [
           Icon(
             Icons.shield_outlined,
             size: 20,
-            color: AppColors.textSecondary,
+            color: AuroraColors.inkSecondary,
           ),
-          const SizedBox(width: AppSizes.sm),
+          const SizedBox(width: AuroraSpacing.space3),
           Expanded(
             child: Text(
               'No insurance info yet',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+              style: AuroraType.body.copyWith(
+                color: AuroraColors.inkSecondary,
               ),
             ),
           ),
@@ -203,9 +204,10 @@ class _EmptyInsurance extends StatelessWidget {
             onTap: onAdd,
             child: Text(
               '+ Add',
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.deepNavy,
+              style: AuroraType.bodySm.copyWith(
+                fontSize: 10,
                 fontWeight: FontWeight.w600,
+                color: AuroraColors.ink,
               ),
             ),
           ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
 class InsuranceListSkeleton extends StatefulWidget {
   const InsuranceListSkeleton({super.key});
@@ -38,15 +38,15 @@ class _InsuranceListSkeletonState extends State<InsuranceListSkeleton>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _opacity,
-      builder: (context, child) => Opacity(
+      builder: (_, _) => Opacity(
         opacity: _opacity.value,
         child: const Padding(
-          padding: AppPadding.screen,
+          padding: EdgeInsets.all(AuroraSpacing.screenPadH),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _PolicyCardSkeleton(),
-              SizedBox(height: AppSizes.sm),
+              SizedBox(height: AuroraSpacing.space3),
               _PolicyCardSkeleton(),
             ],
           ),
@@ -64,16 +64,16 @@ class _PolicyCardSkeleton extends StatelessWidget {
     return Container(
       height: 96,
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.border),
+        color: AuroraColors.paper,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AuroraColors.inkBorder),
       ),
-      padding: const EdgeInsets.all(AppSizes.md),
+      padding: const EdgeInsets.all(AuroraSpacing.space7),
       child: const Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SkeletonBox(width: 40, height: 40, radius: AppSizes.radiusSm),
-          SizedBox(width: AppSizes.md),
+          _SkeletonBox(width: 40, height: 40, radius: 8),
+          SizedBox(width: AuroraSpacing.space7),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,19 +82,19 @@ class _PolicyCardSkeleton extends StatelessWidget {
                 FractionallySizedBox(
                   widthFactor: 0.55,
                   alignment: Alignment.centerLeft,
-                  child: _SkeletonBox(height: 11, radius: AppSizes.radiusSm),
+                  child: _SkeletonBox(height: 11, radius: 8),
                 ),
                 SizedBox(height: 6),
                 FractionallySizedBox(
                   widthFactor: 0.40,
                   alignment: Alignment.centerLeft,
-                  child: _SkeletonBox(height: 9, radius: AppSizes.radiusSm),
+                  child: _SkeletonBox(height: 9, radius: 8),
                 ),
                 SizedBox(height: 6),
                 FractionallySizedBox(
                   widthFactor: 0.70,
                   alignment: Alignment.centerLeft,
-                  child: _SkeletonBox(height: 9, radius: AppSizes.radiusSm),
+                  child: _SkeletonBox(height: 9, radius: 8),
                 ),
               ],
             ),
@@ -118,7 +118,7 @@ class _SkeletonBox extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: AppColors.gray200,
+        color: AuroraColors.ink.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(radius),
       ),
     );

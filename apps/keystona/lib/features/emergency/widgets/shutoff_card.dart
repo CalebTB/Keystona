@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../models/utility_shutoff.dart';
 
 /// Card showing a single utility shutoff's setup status.
-///
-/// Tapping navigates to the shutoff detail screen ([AppRoutes.emergencyShutoffDetail]).
-/// The [onTap] callback is provided by the parent screen.
 class ShutoffCard extends StatelessWidget {
   const ShutoffCard({
     super.key,
@@ -19,10 +17,7 @@ class ShutoffCard extends StatelessWidget {
 
   /// 'water', 'gas', or 'electrical'
   final String utilityType;
-
-  /// The shutoff record, or null if not yet set up.
   final UtilityShutoff? shutoff;
-
   final VoidCallback onTap;
 
   @override
@@ -34,22 +29,21 @@ class ShutoffCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          color: AuroraColors.paper,
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isComplete ? AppColors.healthGood : AppColors.border,
+            color: isComplete ? AuroraColors.limeDeep : AuroraColors.inkBorder,
           ),
         ),
-        padding: const EdgeInsets.all(AppSizes.md),
+        padding: const EdgeInsets.all(AuroraSpacing.space7),
         child: Row(
           children: [
-            // Utility icon.
             Container(
               width: 40,
               height: 40,
               decoration: BoxDecoration(
                 color: _iconBg(isComplete),
-                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 _icon,
@@ -57,25 +51,26 @@ class ShutoffCard extends StatelessWidget {
                 color: _iconColor(isComplete),
               ),
             ),
-            const SizedBox(width: AppSizes.md),
+            const SizedBox(width: AuroraSpacing.space7),
 
-            // Label + description.
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     utilityType.utilityLabel,
-                    style: AppTextStyles.labelLarge.copyWith(
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
+                      color: AuroraColors.ink,
                     ),
                   ),
                   if (isSetUp) ...[
                     const SizedBox(height: 2),
                     Text(
                       shutoff!.locationDescription,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                      style: AuroraType.bodySm.copyWith(
+                        color: AuroraColors.inkSecondary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -84,23 +79,22 @@ class ShutoffCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       'Tap to set up',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                      style: AuroraType.bodySm.copyWith(
+                        color: AuroraColors.inkSecondary,
                       ),
                     ),
                   ],
                 ],
               ),
             ),
-            const SizedBox(width: AppSizes.sm),
+            const SizedBox(width: AuroraSpacing.space3),
 
-            // Status badge.
             _StatusBadge(isComplete: isComplete, isSetUp: isSetUp),
-            const SizedBox(width: AppSizes.xs),
+            const SizedBox(width: AuroraSpacing.space1),
             Icon(
               Icons.chevron_right,
               size: 18,
-              color: AppColors.textSecondary,
+              color: AuroraColors.inkSecondary,
             ),
           ],
         ),
@@ -116,11 +110,11 @@ class ShutoffCard extends StatelessWidget {
       };
 
   Color _iconBg(bool complete) => complete
-      ? AppColors.healthGood.withValues(alpha: 0.12)
-      : AppColors.deepNavy.withValues(alpha: 0.08);
+      ? AuroraColors.limeDeep.withValues(alpha: 0.12)
+      : AuroraColors.ink.withValues(alpha: 0.08);
 
   Color _iconColor(bool complete) =>
-      complete ? AppColors.healthGood : AppColors.deepNavy;
+      complete ? AuroraColors.limeDeep : AuroraColors.ink;
 }
 
 class _StatusBadge extends StatelessWidget {
@@ -134,13 +128,14 @@ class _StatusBadge extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
-          color: AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+          color: AuroraColors.butter,
+          borderRadius: BorderRadius.circular(100),
         ),
         child: Text(
           'Not set up',
-          style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.textSecondary,
+          style: AuroraType.bodySm.copyWith(
+            fontSize: 10,
+            color: AuroraColors.inkSecondary,
           ),
         ),
       );
@@ -149,14 +144,15 @@ class _StatusBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: isComplete
-            ? AppColors.healthGood.withValues(alpha: 0.12)
-            : AppColors.healthFair.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+            ? AuroraColors.limeDeep.withValues(alpha: 0.12)
+            : AuroraColors.yellowDeep.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(100),
       ),
       child: Text(
         isComplete ? 'Complete' : 'Incomplete',
-        style: AppTextStyles.labelSmall.copyWith(
-          color: isComplete ? AppColors.healthGood : AppColors.healthFair,
+        style: AuroraType.bodySm.copyWith(
+          fontSize: 10,
+          color: isComplete ? AuroraColors.limeDeep : AuroraColors.yellowDeep,
           fontWeight: FontWeight.w600,
         ),
       ),

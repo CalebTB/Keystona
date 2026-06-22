@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
 /// Shimmer loading placeholder that matches the [TaskCard] layout exactly.
 ///
@@ -14,23 +14,23 @@ class TaskListSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: AppColors.gray200,
-      highlightColor: AppColors.gray100,
+      baseColor: AuroraColors.butter,
+      highlightColor: AuroraColors.paper,
       child: ListView(
-        padding: AppPadding.screen,
+        padding: const EdgeInsets.all(AuroraSpacing.screenPadH),
         children: [
           // Section header placeholder.
           Container(
             height: 14,
             width: 100,
-            margin: const EdgeInsets.only(bottom: AppSizes.sm),
-            color: AppColors.gray200,
+            margin: const EdgeInsets.only(bottom: AuroraSpacing.space3),
+            color: AuroraColors.butter,
           ),
-          const SizedBox(height: AppSizes.xs),
+          const SizedBox(height: AuroraSpacing.space1),
           const _SkeletonCard(),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
           const _SkeletonCard(),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
           const _SkeletonCard(),
         ],
       ),
@@ -45,10 +45,10 @@ class _SkeletonCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 80,
-      padding: AppPadding.card,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.md,
+      padding: const EdgeInsets.all(14),
+      decoration: const BoxDecoration(
+        color: AuroraColors.paper,
+        borderRadius: BorderRadius.all(Radius.circular(12)),
       ),
       child: Row(
         children: [
@@ -57,45 +57,33 @@ class _SkeletonCard extends StatelessWidget {
             width: 4,
             height: double.infinity,
             decoration: BoxDecoration(
-              color: AppColors.gray200,
+              color: AuroraColors.butter,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(width: AppSizes.md),
+          const SizedBox(width: AuroraSpacing.space5),
           // Text column — name, category, due date.
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  height: 14,
-                  width: double.infinity,
-                  color: AppColors.gray200,
-                ),
+                Container(height: 14, width: double.infinity, color: AuroraColors.butter),
                 const SizedBox(height: 6),
-                Container(
-                  height: 11,
-                  width: 120,
-                  color: AppColors.gray200,
-                ),
+                Container(height: 11, width: 120, color: AuroraColors.butter),
                 const SizedBox(height: 6),
-                Container(
-                  height: 11,
-                  width: 80,
-                  color: AppColors.gray200,
-                ),
+                Container(height: 11, width: 80, color: AuroraColors.butter),
               ],
             ),
           ),
-          const SizedBox(width: AppSizes.sm),
+          const SizedBox(width: AuroraSpacing.space3),
           // Due date badge placeholder.
           Container(
             width: 60,
             height: 28,
             decoration: BoxDecoration(
-              color: AppColors.gray200,
-              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+              color: AuroraColors.butter,
+              borderRadius: BorderRadius.circular(8),
             ),
           ),
         ],

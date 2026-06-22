@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../models/emergency_contact.dart';
 
 /// Contacts preview section on the Emergency Hub main screen.
-///
-/// Shows up to 3 favorite contacts with tap-to-call.
-/// Full contact list + CRUD implemented by [#46 Emergency Contacts].
 class ContactsSection extends StatelessWidget {
   const ContactsSection({
     super.key,
@@ -28,13 +26,14 @@ class ContactsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section header.
         Row(
           children: [
             Text(
               'Emergency Contacts',
-              style: AppTextStyles.labelLarge.copyWith(
+              style: GoogleFonts.inter(
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
+                color: AuroraColors.ink,
               ),
             ),
             const Spacer(),
@@ -43,21 +42,22 @@ class ContactsSection extends StatelessWidget {
                 onTap: onSeeAll,
                 child: Text(
                   'See all ($totalCount)',
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.deepNavy,
+                  style: AuroraType.bodySm.copyWith(
+                    fontSize: 10,
                     fontWeight: FontWeight.w600,
+                    color: AuroraColors.ink,
                   ),
                 ),
               ),
           ],
         ),
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: AuroraSpacing.space3),
 
         if (favorites.isEmpty)
           _EmptyContacts(onAdd: onAddContact)
         else ...[
           ...favorites.map((c) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSizes.sm),
+                padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
                 child: _ContactRow(contact: c),
               )),
         ],
@@ -74,22 +74,21 @@ class _ContactRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.border),
+        color: AuroraColors.paper,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AuroraColors.inkBorder),
       ),
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
+        horizontal: AuroraSpacing.space7,
+        vertical: AuroraSpacing.space3,
       ),
       child: Row(
         children: [
-          // Avatar circle with initial.
           Container(
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: AppColors.deepNavy.withValues(alpha: 0.1),
+              color: AuroraColors.ink.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -97,39 +96,40 @@ class _ContactRow extends StatelessWidget {
                 contact.name.isNotEmpty
                     ? contact.name[0].toUpperCase()
                     : '?',
-                style: AppTextStyles.labelLarge.copyWith(
-                  color: AppColors.deepNavy,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
                   fontWeight: FontWeight.w700,
+                  color: AuroraColors.ink,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: AppSizes.md),
+          const SizedBox(width: AuroraSpacing.space7),
 
-          // Name + category.
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   contact.name,
-                  style: AppTextStyles.labelLarge.copyWith(
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
+                    color: AuroraColors.ink,
                   ),
                 ),
                 Text(
                   contact.is24x7
                       ? '${contact.category.categoryLabel} · 24/7'
                       : contact.category.categoryLabel,
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
+                  style: AuroraType.bodySm.copyWith(
+                    color: AuroraColors.inkSecondary,
                   ),
                 ),
               ],
             ),
           ),
 
-          // Call button.
           _CallButton(phone: contact.phonePrimary, name: contact.name),
         ],
       ),
@@ -150,21 +150,19 @@ class _CallButton extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: AppColors.healthGood.withValues(alpha: 0.12),
+          color: AuroraColors.limeDeep.withValues(alpha: 0.12),
           shape: BoxShape.circle,
         ),
-        child: Icon(
+        child: const Icon(
           Icons.phone_outlined,
           size: 18,
-          color: AppColors.healthGood,
+          color: AuroraColors.limeDeep,
         ),
       ),
     );
   }
 
   Future<void> _call(BuildContext context) async {
-    // [#46] Full tap-to-call with url_launcher implemented in Emergency Contacts.
-    // For now, show a placeholder snackbar.
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Calling $name — $phone')),
     );
@@ -178,25 +176,25 @@ class _EmptyContacts extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSizes.md),
+      padding: const EdgeInsets.all(AuroraSpacing.space7),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.border),
+        color: AuroraColors.paper,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AuroraColors.inkBorder),
       ),
       child: Row(
         children: [
           Icon(
             Icons.phone_outlined,
             size: 20,
-            color: AppColors.textSecondary,
+            color: AuroraColors.inkSecondary,
           ),
-          const SizedBox(width: AppSizes.sm),
+          const SizedBox(width: AuroraSpacing.space3),
           Expanded(
             child: Text(
               'No emergency contacts yet',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+              style: AuroraType.body.copyWith(
+                color: AuroraColors.inkSecondary,
               ),
             ),
           ),
@@ -204,9 +202,10 @@ class _EmptyContacts extends StatelessWidget {
             onTap: onAdd,
             child: Text(
               '+ Add',
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.deepNavy,
+              style: AuroraType.bodySm.copyWith(
+                fontSize: 10,
                 fontWeight: FontWeight.w600,
+                color: AuroraColors.ink,
               ),
             ),
           ),

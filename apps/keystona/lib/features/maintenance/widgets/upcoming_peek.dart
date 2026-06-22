@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../models/maintenance_task.dart';
 
 /// "Coming this week" peek section below the tip card.
@@ -28,7 +27,7 @@ class UpcomingPeek extends StatelessWidget {
       children: [
         Text(
           'COMING THIS WEEK',
-          style: AppTextStyles.monoSection,
+          style: AuroraType.label,
         ),
         const SizedBox(height: 10),
         ...shown.asMap().entries.map((entry) {
@@ -37,8 +36,8 @@ class UpcomingPeek extends StatelessWidget {
           return Column(
             children: [
               if (i > 0)
-                const Divider(
-                  color: AppColors.warmFill,
+                Divider(
+                  color: AuroraColors.butter,
                   height: 1,
                   thickness: 1,
                 ),
@@ -50,10 +49,9 @@ class UpcomingPeek extends StatelessWidget {
                       width: 44,
                       child: Text(
                         _dateFmt.format(task.dueDate.toLocal()),
-                        style: GoogleFonts.ibmPlexMono(
-                          fontSize: 11,
+                        style: AuroraType.labelSm.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textTertiary,
+                          color: AuroraColors.inkTertiary,
                         ),
                       ),
                     ),
@@ -70,10 +68,9 @@ class UpcomingPeek extends StatelessWidget {
                     Expanded(
                       child: Text(
                         task.name,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
+                        style: AuroraType.bodySm.copyWith(
                           fontWeight: FontWeight.w500,
-                          color: AppColors.textPrimary,
+                          color: AuroraColors.ink,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -91,18 +88,18 @@ class UpcomingPeek extends StatelessWidget {
 
   static Color _categoryColor(String cat) {
     if (cat == 'hvac' || cat == 'heating' || cat == 'cooling') {
-      return AppColors.slate;
+      return AuroraColors.cobalt;
     } else if (cat == 'plumbing' || cat == 'water') {
-      return AppColors.teal;
+      return AuroraColors.cobalt;
     } else if (cat == 'electrical') {
-      return AppColors.sand;
+      return AuroraColors.yellow;
     } else if (cat == 'safety' || cat == 'security') {
-      return AppColors.sandAmber;
+      return AuroraColors.yellowDeep;
     } else if (cat == 'exterior' || cat == 'roofing' || cat == 'landscaping') {
-      return AppColors.olive;
+      return AuroraColors.limeDeep;
     } else if (cat == 'interior' || cat == 'kitchen' || cat == 'bathroom') {
-      return AppColors.plum;
+      return AuroraColors.cobalt;
     }
-    return AppColors.textSecondary;
+    return AuroraColors.inkSecondary;
   }
 }

@@ -3,9 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../models/home_health_score.dart';
 import '../providers/home_health_score_provider.dart';
 import 'health_score_skeleton.dart';
@@ -16,9 +15,9 @@ import 'health_score_skeleton.dart';
 ///   [Circular arc gauge] [Score label + trend] [Stats row: completed/overdue/upcoming]
 ///
 /// Color bands:
-///   score 71–100 → [AppColors.healthGood]   (green)
-///   score 40–70  → [AppColors.healthFair]   (amber)
-///   score 0–39   → [AppColors.healthPoor]   (red)
+///   score 71–100 → limeDeep (green)
+///   score 40–70  → yellow (amber)
+///   score 0–39   → coral (red)
 class HealthScoreWidget extends ConsumerWidget {
   const HealthScoreWidget({super.key, this.compact = false});
 
@@ -49,21 +48,21 @@ class _ScoreCard extends StatelessWidget {
   Widget _row() => Row(
         children: [
           _GaugePainter(score: score.score),
-          const SizedBox(width: AppSizes.md),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 _TrendRow(trend: score.trend),
-                const SizedBox(height: AppSizes.xs),
+                const SizedBox(height: 4),
                 Text(
                   'Home Maintenance Score',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.textSecondary,
+                  style: AuroraType.label.copyWith(
+                    color: AuroraColors.inkSecondary,
                   ),
                 ),
-                const SizedBox(height: AppSizes.sm),
+                const SizedBox(height: 8),
                 _StatsRow(score: score),
               ],
             ),
@@ -75,28 +74,19 @@ class _ScoreCard extends StatelessWidget {
   Widget build(BuildContext context) {
     if (compact) {
       return Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.md,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         child: _row(),
       );
     }
     return Padding(
-      padding: AppPadding.screenHorizontal.copyWith(
-        top: AppSizes.sm,
-        bottom: AppSizes.sm,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: AppColors.border),
+          color: AuroraColors.paper,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AuroraColors.inkBorder),
         ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.md,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         child: _row(),
       ),
     );
@@ -110,9 +100,9 @@ class _GaugePainter extends StatelessWidget {
   final int score;
 
   Color get _color {
-    if (score > 70) return AppColors.healthGood;
-    if (score >= 40) return AppColors.healthFair;
-    return AppColors.healthPoor;
+    if (score > 70) return AuroraColors.limeDeep;
+    if (score >= 40) return AuroraColors.yellow;
+    return AuroraColors.coral;
   }
 
   @override
@@ -124,12 +114,12 @@ class _GaugePainter extends StatelessWidget {
         painter: _ArcPainter(
           score: score,
           activeColor: _color,
-          trackColor: AppColors.gray200,
+          trackColor: AuroraColors.butter,
         ),
         child: Center(
           child: Text(
             '$score',
-            style: AppTextStyles.h3.copyWith(
+            style: AuroraType.h3.copyWith(
               color: _color,
               fontWeight: FontWeight.w700,
               fontSize: 22,
@@ -198,17 +188,17 @@ class _TrendRow extends StatelessWidget {
   ({IconData icon, Color color, String label}) get _meta => switch (trend) {
         'improving' => (
             icon: Icons.arrow_upward,
-            color: AppColors.healthGood,
+            color: AuroraColors.limeDeep,
             label: 'Improving',
           ),
         'declining' => (
             icon: Icons.arrow_downward,
-            color: AppColors.healthPoor,
+            color: AuroraColors.coral,
             label: 'Declining',
           ),
         _ => (
             icon: Icons.arrow_forward,
-            color: AppColors.textSecondary,
+            color: AuroraColors.inkSecondary,
             label: 'Stable',
           ),
       };
@@ -223,7 +213,7 @@ class _TrendRow extends StatelessWidget {
         const SizedBox(width: 3),
         Text(
           meta.label,
-          style: AppTextStyles.labelSmall.copyWith(color: meta.color),
+          style: AuroraType.labelSm.copyWith(color: meta.color),
         ),
       ],
     );
@@ -240,15 +230,15 @@ class _StatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _Stat(value: score.completed, label: 'Done', color: AppColors.healthGood),
-        const SizedBox(width: AppSizes.md),
+        _Stat(value: score.completed, label: 'Done', color: AuroraColors.limeDeep),
+        const SizedBox(width: 12),
         _Stat(
           value: score.overdue,
           label: 'Overdue',
-          color: score.overdue > 0 ? AppColors.healthPoor : AppColors.textSecondary,
+          color: score.overdue > 0 ? AuroraColors.coral : AuroraColors.inkSecondary,
         ),
-        const SizedBox(width: AppSizes.md),
-        _Stat(value: score.upcoming, label: 'Upcoming', color: AppColors.textSecondary),
+        const SizedBox(width: 12),
+        _Stat(value: score.upcoming, label: 'Upcoming', color: AuroraColors.inkSecondary),
       ],
     );
   }
@@ -273,15 +263,15 @@ class _Stat extends StatelessWidget {
       children: [
         Text(
           '$value',
-          style: AppTextStyles.labelLarge.copyWith(
+          style: AuroraType.bodySm.copyWith(
             color: color,
             fontWeight: FontWeight.w700,
           ),
         ),
         Text(
           label,
-          style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.textSecondary,
+          style: AuroraType.labelSm.copyWith(
+            color: AuroraColors.inkSecondary,
           ),
         ),
       ],

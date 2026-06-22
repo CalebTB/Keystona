@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
 
 /// Spring maintenance tip card shown below the agenda on the Tasks screen.
 class TipCard extends StatelessWidget {
@@ -13,9 +12,9 @@ class TipCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.oliveDim,
+        color: AuroraColors.limeDim,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.olive.withValues(alpha: 0.10), width: 1),
+        border: Border.all(color: AuroraColors.limeDeep.withValues(alpha: 0.10), width: 1),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -28,18 +27,17 @@ class TipCard extends StatelessWidget {
               children: [
                 Text(
                   'Spring maintenance tip',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
+                  style: AuroraType.label.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: AppColors.olive,
+                    color: AuroraColors.limeDeep,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'After the last frost, check outdoor faucets for leaks from '
                   'winter freeze damage before regular use.',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.textSecondary,
+                  style: AuroraType.label.copyWith(
+                    color: AuroraColors.inkSecondary,
                     fontWeight: FontWeight.w400,
                     height: 1.5,
                   ),

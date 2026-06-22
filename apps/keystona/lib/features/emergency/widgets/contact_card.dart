@@ -2,22 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../models/emergency_contact.dart';
 import '../providers/contacts_list_provider.dart';
 
 /// A 60px-content-height row card for a single [EmergencyContact].
-///
-/// Displays:
-///   - Circle avatar with first initial
-///   - Name (bold), category label, company name
-///   - Favorite star toggle (calls updateContact)
-///   - Phone call button (launches tel: URI, then increments times_used)
 class ContactCard extends ConsumerWidget {
   const ContactCard({
     super.key,
@@ -26,8 +21,6 @@ class ContactCard extends ConsumerWidget {
   });
 
   final EmergencyContact contact;
-
-  /// Optional tap callback — used by the list screen to navigate to edit form.
   final VoidCallback? onTap;
 
   @override
@@ -36,21 +29,19 @@ class ContactCard extends ConsumerWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: AppColors.border),
+          color: AuroraColors.paper,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AuroraColors.inkBorder),
         ),
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
+          horizontal: AuroraSpacing.space7,
+          vertical: AuroraSpacing.space3,
         ),
         child: Row(
           children: [
-            // Circle avatar with first initial.
             _Avatar(name: contact.name, isFavorite: contact.isFavorite),
-            const SizedBox(width: AppSizes.md),
+            const SizedBox(width: AuroraSpacing.space7),
 
-            // Name + category + company.
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,8 +49,10 @@ class ContactCard extends ConsumerWidget {
                 children: [
                   Text(
                     contact.name,
-                    style: AppTextStyles.labelLarge.copyWith(
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
                       fontWeight: FontWeight.w700,
+                      color: AuroraColors.ink,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -67,8 +60,8 @@ class ContactCard extends ConsumerWidget {
                   const SizedBox(height: 2),
                   Text(
                     _subtitle,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+                    style: AuroraType.bodySm.copyWith(
+                      color: AuroraColors.inkSecondary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -76,16 +69,14 @@ class ContactCard extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(width: AppSizes.sm),
+            const SizedBox(width: AuroraSpacing.space3),
 
-            // Favorite star toggle.
             _FavoriteButton(
               isFavorite: contact.isFavorite,
               onToggle: () => _toggleFavorite(context, ref),
             ),
-            const SizedBox(width: AppSizes.xs),
+            const SizedBox(width: AuroraSpacing.space1),
 
-            // Phone call button.
             _PhoneButton(
               phone: contact.phonePrimary,
               onCall: () => _call(context, ref),
@@ -129,8 +120,6 @@ class ContactCard extends ConsumerWidget {
       return;
     }
 
-    // Fire-and-forget: increment times_used after a successful call launch.
-    // Non-fatal if it fails.
     unawaited(
       ref
           .read(contactsListProvider.notifier)
@@ -156,16 +145,17 @@ class _Avatar extends StatelessWidget {
       height: 44,
       decoration: BoxDecoration(
         color: isFavorite
-            ? AppColors.goldAccent.withValues(alpha: 0.15)
-            : AppColors.deepNavy.withValues(alpha: 0.1),
+            ? AuroraColors.yellow.withValues(alpha: 0.15)
+            : AuroraColors.ink.withValues(alpha: 0.1),
         shape: BoxShape.circle,
       ),
       child: Center(
         child: Text(
           name.isNotEmpty ? name[0].toUpperCase() : '?',
-          style: AppTextStyles.labelLarge.copyWith(
-            color: isFavorite ? AppColors.goldAccent : AppColors.deepNavy,
+          style: GoogleFonts.inter(
+            fontSize: 13,
             fontWeight: FontWeight.w700,
+            color: isFavorite ? AuroraColors.yellowDeep : AuroraColors.ink,
           ),
         ),
       ),
@@ -189,11 +179,11 @@ class _FavoriteButton extends StatelessWidget {
       onTap: onToggle,
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.all(AppSizes.xs),
+        padding: const EdgeInsets.all(AuroraSpacing.space1),
         child: Icon(
           isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
           size: 22,
-          color: isFavorite ? AppColors.goldAccent : AppColors.gray400,
+          color: isFavorite ? AuroraColors.yellow : AuroraColors.inkSecondary,
         ),
       ),
     );
@@ -215,13 +205,13 @@ class _PhoneButton extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: AppColors.healthGood.withValues(alpha: 0.12),
+          color: AuroraColors.limeDeep.withValues(alpha: 0.12),
           shape: BoxShape.circle,
         ),
         child: const Icon(
           Icons.phone_outlined,
           size: 18,
-          color: AppColors.healthGood,
+          color: AuroraColors.limeDeep,
         ),
       ),
     );

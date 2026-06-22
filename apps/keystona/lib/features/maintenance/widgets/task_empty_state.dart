@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../services/supabase_service.dart';
 import '../providers/maintenance_tasks_provider.dart';
 
@@ -77,52 +76,52 @@ class _TaskEmptyStateState extends ConsumerState<TaskEmptyState> {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.handyman_outlined,
               size: 120,
-              color: AppColors.accent.withAlpha(180),
+              color: AuroraColors.coral.withAlpha(180),
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: 16),
             Text(
               'Stay ahead of home repairs',
-              style: AppTextStyles.h2,
+              style: AuroraType.h2,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: 8),
             Text(
               "We'll build a personalized maintenance plan based on your "
               "home's systems and climate. Add your first system to get started.",
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+              style: AuroraType.body.copyWith(
+                color: AuroraColors.inkSecondary,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.xl),
+            const SizedBox(height: 20),
             FilledButton.icon(
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                foregroundColor: AppColors.textInverse,
+                backgroundColor: AuroraColors.coral,
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.lg,
-                  vertical: AppSizes.md,
+                  horizontal: 16,
+                  vertical: 12,
                 ),
               ),
               onPressed: widget.onAddSystem,
               icon: const Icon(Icons.add),
               label: const Text('Add a System'),
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: 12),
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.accent,
-                side: const BorderSide(color: AppColors.accent),
+                foregroundColor: AuroraColors.coral,
+                side: BorderSide(color: AuroraColors.coral),
                 padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.lg,
-                  vertical: AppSizes.md,
+                  horizontal: 16,
+                  vertical: 12,
                 ),
               ),
               onPressed: _generating ? null : _generateTasks,
@@ -156,27 +155,27 @@ class TaskCaughtUpState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.check_circle_outline,
               size: 120,
-              color: AppColors.success,
+              color: AuroraColors.limeDeep,
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: 16),
             Text(
               'All caught up! Nothing due right now',
-              style: AppTextStyles.h2,
+              style: AuroraType.h2,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: 8),
             Text(
               "Great work keeping your home in shape. We'll let you know "
               'when something\'s coming up.',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+              style: AuroraType.body.copyWith(
+                color: AuroraColors.inkSecondary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -195,26 +194,26 @@ class TaskFilterEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.filter_list_off,
               size: 64,
-              color: AppColors.gray400,
+              color: AuroraColors.inkTertiary,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: 12),
             Text(
               'No tasks match this filter',
-              style: AppTextStyles.bodyMediumSemibold,
+              style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.xs),
+            const SizedBox(height: 4),
             Text(
               'Try selecting a different filter.',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+              style: AuroraType.body.copyWith(
+                color: AuroraColors.inkSecondary,
               ),
               textAlign: TextAlign.center,
             ),

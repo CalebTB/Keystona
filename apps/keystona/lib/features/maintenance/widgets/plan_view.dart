@@ -6,9 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../models/maintenance_task.dart';
 import '../providers/maintenance_tasks_provider.dart';
 import '../providers/task_detail_provider.dart';
@@ -25,10 +24,10 @@ bool _sameMonth(DateTime a, DateTime b) =>
     a.year == b.year && a.month == b.month;
 
 Color _priorityDot(TaskPriority p) => switch (p) {
-      TaskPriority.critical => AppColors.accent,
-      TaskPriority.high => AppColors.sandAmber,
-      TaskPriority.medium => AppColors.slate,
-      TaskPriority.low => AppColors.gray400,
+      TaskPriority.critical => AuroraColors.coral,
+      TaskPriority.high => AuroraColors.yellowDeep,
+      TaskPriority.medium => AuroraColors.cobalt,
+      TaskPriority.low => AuroraColors.inkTertiary,
     };
 
 // ── Main sliver widget ─────────────────────────────────────────────────────────
@@ -106,16 +105,15 @@ class _PlanViewState extends ConsumerState<PlanView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Month strip ──────────────────────────────────────────────────
-          const SizedBox(height: AppSizes.md),
+          const SizedBox(height: 12),
           SizedBox(
             height: 72,
             child: ListView.separated(
               controller: _monthScrollController,
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.screenPadding),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: 12,
-              separatorBuilder: (_, _) => const SizedBox(width: AppSizes.xs),
+              separatorBuilder: (_, _) => const SizedBox(width: 4),
               itemBuilder: (_, i) {
                 final m = _monthStart(i);
                 final selected = i == _selectedMonthOffset;
@@ -140,45 +138,43 @@ class _PlanViewState extends ConsumerState<PlanView> {
               },
             ),
           ),
-          const SizedBox(height: AppSizes.md),
+          const SizedBox(height: 12),
 
           // ── Section header ────────────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.screenPadding),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
                 Text(
                   DateFormat('MMMM').format(selectedMonth).toUpperCase(),
-                  style: AppTextStyles.monoSection,
+                  style: AuroraType.label,
                 ),
-                const SizedBox(width: AppSizes.sm),
+                const SizedBox(width: 8),
                 Text(
                   '$totalForMonth task${totalForMonth == 1 ? '' : 's'}',
-                  style: AppTextStyles.monoSection
-                      .copyWith(color: AppColors.textSecondary),
+                  style: AuroraType.label
+                      .copyWith(color: AuroraColors.inkSecondary),
                 ),
                 if (overdueInMonth > 0) ...[
-                  const SizedBox(width: AppSizes.sm),
+                  const SizedBox(width: 8),
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppColors.accent.withValues(alpha: 0.12),
-                      borderRadius:
-                          BorderRadius.circular(AppSizes.radiusXs),
+                      color: AuroraColors.coral.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       '$overdueInMonth overdue',
-                      style: AppTextStyles.monoSection
-                          .copyWith(color: AppColors.accent),
+                      style: AuroraType.label
+                          .copyWith(color: AuroraColors.coral),
                     ),
                   ),
                 ],
               ],
             ),
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: 8),
 
           // ── Task list — directional slide when switching months ───────────
           AnimatedSwitcher(
@@ -212,7 +208,7 @@ class _PlanViewState extends ConsumerState<PlanView> {
                     onReschedule: _showReschedulePicker,
                   ),
           ),
-          const SizedBox(height: AppSizes.xl),
+          const SizedBox(height: 20),
         ],
       );
   }
@@ -227,16 +223,15 @@ class _PlanViewState extends ConsumerState<PlanView> {
         type: MaterialType.transparency,
         child: Container(
           height: 300,
-          color: AppColors.surface,
+          color: AuroraColors.paper,
           child: Column(
             children: [
               // Header
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppSizes.md, vertical: AppSizes.sm),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   border: Border(
-                      bottom: BorderSide(color: AppColors.border, width: 1)),
+                      bottom: BorderSide(color: AuroraColors.inkBorder, width: 1)),
                 ),
                 child: Row(
                   children: [
@@ -245,11 +240,11 @@ class _PlanViewState extends ConsumerState<PlanView> {
                       onPressed: () =>
                           Navigator.of(context, rootNavigator: true).pop(),
                       child: Text('Cancel',
-                          style: AppTextStyles.bodyMedium
-                              .copyWith(color: AppColors.textSecondary)),
+                          style: AuroraType.body
+                              .copyWith(color: AuroraColors.inkSecondary)),
                     ),
                     const Spacer(),
-                    Text('Reschedule', style: AppTextStyles.bodyMediumSemibold),
+                    Text('Reschedule', style: AuroraType.body.copyWith(fontWeight: FontWeight.w600)),
                     const Spacer(),
                     CupertinoButton(
                       padding: EdgeInsets.zero,
@@ -259,8 +254,10 @@ class _PlanViewState extends ConsumerState<PlanView> {
                         Navigator.of(context, rootNavigator: true).pop();
                       },
                       child: Text('Done',
-                          style: AppTextStyles.bodyMediumSemibold
-                              .copyWith(color: AppColors.accent)),
+                          style: AuroraType.body.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AuroraColors.coral,
+                          )),
                     ),
                   ],
                 ),
@@ -325,12 +322,12 @@ class _MonthTaskList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: AppRadius.card,
-          border: Border.all(color: AppColors.border, width: 1.5),
+          color: AuroraColors.paper,
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
+          border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
         ),
         child: Column(
           children: [
@@ -348,7 +345,7 @@ class _MonthTaskList extends StatelessWidget {
                 Divider(
                     height: 1,
                     thickness: 1,
-                    color: AppColors.warmFill,
+                    color: AuroraColors.butter,
                     indent: 38),
             ],
           ],
@@ -396,35 +393,35 @@ class _MonthChip extends StatelessWidget {
         width: 58,
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.deepNavy : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          color: selected ? AuroraColors.ink : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
           border: selected
               ? null
-              : Border.all(color: AppColors.border, width: 1.5),
+              : Border.all(color: AuroraColors.inkBorder, width: 1.5),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               DateFormat('MMM').format(month),
-              style: AppTextStyles.labelMedium.copyWith(
+              style: AuroraType.label.copyWith(
                 color: selected
-                    ? AppColors.textInverse
+                    ? Colors.white
                     : isPast
-                        ? AppColors.gray400
-                        : AppColors.textPrimary,
+                        ? AuroraColors.inkTertiary
+                        : AuroraColors.ink,
               ),
             ),
             const SizedBox(height: 4),
             if (taskCount > 0)
               Text(
                 '$taskCount',
-                style: AppTextStyles.monoTiny.copyWith(
+                style: AuroraType.labelSm.copyWith(
                   color: selected
-                      ? AppColors.darkTextSecondary
+                      ? Colors.white.withValues(alpha: 0.6)
                       : overdueCount > 0
-                          ? AppColors.accent
-                          : AppColors.textSecondary,
+                          ? AuroraColors.coral
+                          : AuroraColors.inkSecondary,
                 ),
               )
             else
@@ -433,8 +430,8 @@ class _MonthChip extends StatelessWidget {
                 height: 4,
                 decoration: BoxDecoration(
                   color: selected
-                      ? AppColors.darkTextTertiary
-                      : AppColors.gray300,
+                      ? Colors.white.withValues(alpha: 0.4)
+                      : AuroraColors.inkBorder,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -474,7 +471,7 @@ class _PlanTaskRow extends StatelessWidget {
               height: 36,
               margin: const EdgeInsets.only(right: 11),
               decoration: BoxDecoration(
-                color: isOver ? AppColors.accent : Colors.transparent,
+                color: isOver ? AuroraColors.coral : Colors.transparent,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -482,7 +479,7 @@ class _PlanTaskRow extends StatelessWidget {
               width: 8,
               height: 8,
               decoration: BoxDecoration(
-                color: isOver ? AppColors.accent : dot,
+                color: isOver ? AuroraColors.coral : dot,
                 shape: BoxShape.circle,
               ),
             ),
@@ -491,17 +488,17 @@ class _PlanTaskRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(task.name, style: AppTextStyles.bodyMedium),
+                  Text(task.name, style: AuroraType.body),
                   Row(
                     children: [
-                      Text(task.category, style: AppTextStyles.caption),
-                      Text(' · ', style: AppTextStyles.caption),
+                      Text(task.category, style: AuroraType.bodySm),
+                      Text(' · ', style: AuroraType.bodySm),
                       Text(
                         dueFmt,
-                        style: AppTextStyles.caption.copyWith(
+                        style: AuroraType.bodySm.copyWith(
                           color: isOver
-                              ? AppColors.accent
-                              : AppColors.textSecondary,
+                              ? AuroraColors.coral
+                              : AuroraColors.inkSecondary,
                         ),
                       ),
                     ],
@@ -511,12 +508,12 @@ class _PlanTaskRow extends StatelessWidget {
                     Row(
                       children: [
                         Icon(Icons.repeat_rounded,
-                            size: 10, color: AppColors.textTertiary),
+                            size: 10, color: AuroraColors.inkTertiary),
                         const SizedBox(width: 3),
                         Text(
                           task.recurrence.label,
-                          style: AppTextStyles.monoLabel.copyWith(
-                            color: AppColors.textTertiary,
+                          style: AuroraType.label.copyWith(
+                            color: AuroraColors.inkTertiary,
                             fontSize: 10,
                           ),
                         ),
@@ -532,13 +529,13 @@ class _PlanTaskRow extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.warmFill,
-                  borderRadius: BorderRadius.circular(AppSizes.radiusXs),
+                  color: AuroraColors.butter,
+                  borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   'Reschedule',
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.textSecondary,
+                  style: AuroraType.labelSm.copyWith(
+                    color: AuroraColors.inkSecondary,
                   ),
                 ),
               ),
@@ -560,29 +557,29 @@ class _EmptyMonthState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(AppSizes.xl),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: AppRadius.card,
-          border: Border.all(color: AppColors.border, width: 1.5),
+          color: AuroraColors.paper,
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
+          border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
         ),
         child: Column(
           children: [
             Icon(Icons.calendar_today_outlined,
-                size: 28, color: AppColors.gray400),
-            const SizedBox(height: AppSizes.sm),
+                size: 28, color: AuroraColors.inkTertiary),
+            const SizedBox(height: 8),
             Text(
               'Nothing in ${DateFormat('MMMM').format(month)}',
-              style: AppTextStyles.bodyMediumSemibold,
+              style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 4),
             Text(
               'No tasks due this month.',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
+              style: AuroraType.bodySm.copyWith(
+                color: AuroraColors.inkSecondary,
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -599,40 +596,39 @@ class _PlanSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: AppColors.gray200,
-      highlightColor: AppColors.gray100,
+      baseColor: AuroraColors.butter,
+      highlightColor: AuroraColors.paper,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: AppSizes.md),
+          const SizedBox(height: 12),
           SizedBox(
             height: 72,
             child: Row(
               children: [
-                const SizedBox(width: AppSizes.screenPadding),
+                const SizedBox(width: 16),
                 for (int i = 0; i < 5; i++) ...[
                   Container(
                     width: 58,
                     height: 64,
                     decoration: BoxDecoration(
-                      color: AppColors.gray200,
-                      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                      color: AuroraColors.butter,
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  if (i < 4) const SizedBox(width: AppSizes.xs),
+                  if (i < 4) const SizedBox(width: 4),
                 ],
               ],
             ),
           ),
-          const SizedBox(height: AppSizes.md),
+          const SizedBox(height: 12),
           Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.screenPadding),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Container(
               height: 200,
               decoration: BoxDecoration(
-                color: AppColors.gray200,
-                borderRadius: AppRadius.card,
+                color: AuroraColors.butter,
+                borderRadius: const BorderRadius.all(Radius.circular(14)),
               ),
             ),
           ),

@@ -5,9 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/error_view.dart';
 import '../models/maintenance_task.dart';
 import '../providers/maintenance_tasks_provider.dart';
@@ -95,7 +94,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
 
   Widget _buildIOS(BuildContext context) {
     return CupertinoPageScaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       child: CustomScrollView(
         controller: _scrollController,
         slivers: [
@@ -103,13 +102,10 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
             child: SafeArea(
               bottom: false,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSizes.screenPadding, 12,
-                  AppSizes.screenPadding, 0,
-                ),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: Row(
                   children: [
-                    Text('Tasks', style: AppTextStyles.headlineMedium),
+                    Text('Tasks', style: AuroraType.h2),
                     const Spacer(),
                     _HeaderButtons(),
                   ],
@@ -129,18 +125,18 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
 
   Widget _buildAndroid(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       body: RefreshIndicator(
-        color: AppColors.accent,
+        color: AuroraColors.coral,
         onRefresh: () =>
             ref.read(maintenanceTasksProvider.notifier).refresh(),
         child: CustomScrollView(
           controller: _scrollController,
           slivers: [
             SliverAppBar(
-              title: Text('Tasks', style: AppTextStyles.headlineSmall),
+              title: Text('Tasks', style: AuroraType.h3),
               floating: true,
-              backgroundColor: AppColors.warmOffWhite,
+              backgroundColor: AuroraColors.paper,
               scrolledUnderElevation: 0,
               elevation: 0,
               actions: [_HeaderButtons()],
@@ -251,16 +247,15 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSizes.screenPadding, 14, AppSizes.screenPadding, 0,
-          ),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
             child: Row(
               children: [
                 Text(
                   monthLabel,
-                  style: AppTextStyles.bodyMediumSemibold.copyWith(
+                  style: AuroraType.body.copyWith(
+                    fontWeight: FontWeight.w600,
                     fontSize: 15,
-                    color: AppColors.textPrimary,
+                    color: AuroraColors.ink,
                   ),
                 ),
                 const Spacer(),
@@ -272,7 +267,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
           ),
           const SizedBox(height: 10),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: WeekStrip(
               tasks: tasks,
               weekStart: _weekStart,
@@ -281,7 +276,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          const Divider(color: AppColors.border, thickness: 1, height: 1),
+          Divider(color: AuroraColors.inkBorder, thickness: 1, height: 1),
         ],
       );
   }
@@ -321,19 +316,19 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
     return Padding(
       padding: const EdgeInsets.only(
         top: 14,
-        left: AppSizes.screenPadding,
-        right: AppSizes.screenPadding,
+        left: 16,
+        right: 16,
         bottom: 10,
       ),
       child: Row(
         children: [
-          Text(dayLabel, style: AppTextStyles.headlineMedium),
+          Text(dayLabel, style: AuroraType.h2),
           if (sub.isNotEmpty) ...[
             const SizedBox(width: 8),
             Text(
               sub,
-              style: AppTextStyles.monoLabel.copyWith(
-                color: AppColors.textTertiary,
+              style: AuroraType.label.copyWith(
+                color: AuroraColors.inkTertiary,
                 fontSize: 11,
               ),
             ),
@@ -361,7 +356,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
     if (overdueTasks.isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: OverdueBanner(overdueTasks: overdueTasks),
     );
   }
@@ -388,8 +383,8 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
     return Padding(
       padding: const EdgeInsets.only(
         top: 18,
-        left: AppSizes.screenPadding,
-        right: AppSizes.screenPadding,
+        left: 16,
+        right: 16,
       ),
       child: UpcomingPeek(tasks: upcoming),
     );
@@ -432,18 +427,18 @@ class _CircleIconButton extends StatelessWidget {
         width: 38,
         height: 38,
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AuroraColors.paper,
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.border, width: 1.5),
+          border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
           boxShadow: const [
             BoxShadow(
-              color: AppColors.shadowXs,
+              color: Color(0x0A071238),
               blurRadius: 4,
               offset: Offset(0, 1),
             ),
           ],
         ),
-        child: Icon(icon, size: 18, color: AppColors.textPrimary),
+        child: Icon(icon, size: 18, color: AuroraColors.ink),
       ),
     );
   }
@@ -465,11 +460,11 @@ class _NavButton extends StatelessWidget {
         width: 28,
         height: 28,
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AuroraColors.paper,
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.border, width: 1),
+          border: Border.all(color: AuroraColors.inkBorder, width: 1),
         ),
-        child: Icon(icon, size: 16, color: AppColors.textPrimary),
+        child: Icon(icon, size: 16, color: AuroraColors.ink),
       ),
     );
   }
@@ -492,11 +487,11 @@ class _AgendaWidget extends ConsumerWidget {
 
     return tasksAsync.when(
       loading: () => const Padding(
-        padding: EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+        padding: EdgeInsets.symmetric(horizontal: 16),
         child: _AgendaSkeleton(),
       ),
       error: (e, _) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: ErrorView(
           message: "Couldn't load tasks.",
           onRetry: () =>
@@ -514,8 +509,7 @@ class _AgendaWidget extends ConsumerWidget {
         }).toList();
 
         return Padding(
-          padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.screenPadding),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -524,8 +518,8 @@ class _AgendaWidget extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: Text(
                     'Nothing scheduled for this day',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textTertiary,
+                    style: AuroraType.bodySm.copyWith(
+                      color: AuroraColors.inkTertiary,
                     ),
                   ),
                 )
@@ -556,17 +550,17 @@ class _AgendaSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: AppColors.gray200,
-      highlightColor: AppColors.gray100,
+      baseColor: AuroraColors.butter,
+      highlightColor: AuroraColors.paper,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(height: 10, width: 110, color: AppColors.gray200),
+          Container(height: 10, width: 110, color: AuroraColors.butter),
           const SizedBox(height: 10),
           _SkeletonAgendaCard(),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: 8),
           _SkeletonAgendaCard(),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: 8),
           _SkeletonAgendaCard(),
         ],
       ),
@@ -582,21 +576,21 @@ class _SkeletonAgendaCard extends StatelessWidget {
     return Container(
       height: 68,
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.card,
+        color: AuroraColors.paper,
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
       ),
       child: Row(
         children: [
-          Container(width: 56, color: AppColors.gray200),
+          Container(width: 56, color: AuroraColors.butter),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(height: 13, width: double.infinity, color: AppColors.gray200),
+                Container(height: 13, width: double.infinity, color: AuroraColors.butter),
                 const SizedBox(height: 6),
-                Container(height: 10, width: 140, color: AppColors.gray200),
+                Container(height: 10, width: 140, color: AuroraColors.butter),
               ],
             ),
           ),
@@ -625,12 +619,12 @@ class _TabStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: AuroraColors.inkBorder, width: 1)),
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: _TaskViewTab.values.map((tab) {
             final selected = tab == current;
@@ -643,17 +637,17 @@ class _TabStrip extends StatelessWidget {
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: selected ? AppColors.accent : Colors.transparent,
+                      color: selected ? AuroraColors.coral : Colors.transparent,
                       width: 2,
                     ),
                   ),
                 ),
                 child: Text(
                   _labels[tab]!,
-                  style: AppTextStyles.bodyMedium.copyWith(
+                  style: AuroraType.body.copyWith(
                     color: selected
-                        ? AppColors.textPrimary
-                        : AppColors.textSecondary,
+                        ? AuroraColors.ink
+                        : AuroraColors.inkSecondary,
                     fontWeight:
                         selected ? FontWeight.w600 : FontWeight.w400,
                     fontSize: 14,
@@ -667,4 +661,3 @@ class _TabStrip extends StatelessWidget {
     );
   }
 }
-

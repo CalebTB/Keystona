@@ -1,30 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-/// Shimmer loading placeholder that matches the [ContactCard] layout exactly.
-///
-/// Displayed on the first frame while [ContactsListNotifier] resolves.
-/// Shows 4 skeleton contact rows (avatar + name line + subtitle line + icon).
+/// Shimmer loading placeholder matching the [ContactCard] layout.
 class ContactsListSkeleton extends StatelessWidget {
   const ContactsListSkeleton({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: AppColors.gray200,
-      highlightColor: AppColors.gray100,
+      baseColor: AuroraColors.butter,
+      highlightColor: AuroraColors.paper,
       child: ListView(
-        padding: AppPadding.screen,
+        padding: const EdgeInsets.all(AuroraSpacing.screenPadH),
         children: const [
           _SkeletonContactCard(),
-          SizedBox(height: AppSizes.sm),
+          SizedBox(height: AuroraSpacing.space3),
           _SkeletonContactCard(),
-          SizedBox(height: AppSizes.sm),
+          SizedBox(height: AuroraSpacing.space3),
           _SkeletonContactCard(),
-          SizedBox(height: AppSizes.sm),
+          SizedBox(height: AuroraSpacing.space3),
           _SkeletonContactCard(),
         ],
       ),
@@ -32,8 +29,6 @@ class ContactsListSkeleton extends StatelessWidget {
   }
 }
 
-/// Single skeleton card row — matches [ContactCard] height (60px content +
-/// 16px vertical card padding = 92px total).
 class _SkeletonContactCard extends StatelessWidget {
   const _SkeletonContactCard();
 
@@ -42,70 +37,58 @@ class _SkeletonContactCard extends StatelessWidget {
     return Container(
       height: 76,
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
+        horizontal: AuroraSpacing.space7,
+        vertical: AuroraSpacing.space3,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        color: AuroraColors.paper,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          // Circle avatar placeholder.
           Container(
             width: 44,
             height: 44,
             decoration: const BoxDecoration(
-              color: AppColors.gray200,
+              color: AuroraColors.butter,
               shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: AppSizes.md),
+          const SizedBox(width: AuroraSpacing.space7),
 
-          // Name + category text column.
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Name line.
                 FractionallySizedBox(
                   widthFactor: 0.55,
-                  child: Container(
-                    height: 14,
-                    color: AppColors.gray200,
-                  ),
+                  child: Container(height: 14, color: AuroraColors.butter),
                 ),
                 const SizedBox(height: 6),
-                // Category / company subtitle line.
                 FractionallySizedBox(
                   widthFactor: 0.38,
-                  child: Container(
-                    height: 11,
-                    color: AppColors.gray200,
-                  ),
+                  child: Container(height: 11, color: AuroraColors.butter),
                 ),
               ],
             ),
           ),
 
-          // Favorite star placeholder.
           Container(
             width: 28,
             height: 28,
             decoration: const BoxDecoration(
-              color: AppColors.gray200,
+              color: AuroraColors.butter,
               shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: AppSizes.sm),
+          const SizedBox(width: AuroraSpacing.space3),
 
-          // Phone button placeholder.
           Container(
             width: 36,
             height: 36,
             decoration: const BoxDecoration(
-              color: AppColors.gray200,
+              color: AuroraColors.butter,
               shape: BoxShape.circle,
             ),
           ),

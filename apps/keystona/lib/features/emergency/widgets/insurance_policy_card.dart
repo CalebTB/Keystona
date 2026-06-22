@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../models/insurance_policy.dart';
 
 /// Card displaying an insurance policy summary.
-///
-/// Shows type icon, carrier, policy number, coverage/deductible/premium,
-/// expiration date with a warning badge when expiring within 30 days,
-/// and tap-to-call buttons for claims and agent phones.
 class InsurancePolicyCard extends StatelessWidget {
   const InsurancePolicyCard({
     super.key,
@@ -64,17 +60,17 @@ class InsurancePolicyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final expiringSoon = _isExpiringSoon;
     final borderColor =
-        expiringSoon ? AppColors.healthFair : AppColors.border;
+        expiringSoon ? AuroraColors.yellowDeep : AuroraColors.inkBorder;
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          color: AuroraColors.paper,
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: borderColor, width: expiringSoon ? 1.5 : 1),
         ),
-        padding: const EdgeInsets.all(AppSizes.md),
+        padding: const EdgeInsets.all(AuroraSpacing.space7),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -86,23 +82,23 @@ class InsurancePolicyCard extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppColors.deepNavy.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                    color: AuroraColors.ink.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     _iconFor(policy.policyType),
-                    size: AppSizes.iconMd,
-                    color: AppColors.deepNavy,
+                    size: 24,
+                    color: AuroraColors.ink,
                   ),
                 ),
-                const SizedBox(width: AppSizes.sm),
+                const SizedBox(width: AuroraSpacing.space3),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         '${policy.policyType.policyTypeLabel} · ${policy.carrier}',
-                        style: AppTextStyles.bodyMediumSemibold,
+                        style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -110,28 +106,28 @@ class InsurancePolicyCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           'Policy #${policy.policyNumber}',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
+                          style: AuroraType.bodySm.copyWith(
+                            color: AuroraColors.inkSecondary,
                           ),
                         ),
                       ],
                     ],
                   ),
                 ),
-                const SizedBox(width: AppSizes.xs),
+                const SizedBox(width: AuroraSpacing.space1),
                 const Icon(
                   Icons.chevron_right,
-                  size: AppSizes.iconMd,
-                  color: AppColors.textSecondary,
+                  size: 24,
+                  color: AuroraColors.inkSecondary,
                 ),
               ],
             ),
 
-            // ── Coverage / Deductible / Premium row ─────────────────────────
+            // ── Coverage / Deductible / Premium ─────────────────────────────
             if (policy.coverageAmount != null ||
                 policy.deductible != null ||
                 policy.premiumAnnual != null) ...[
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
               Row(
                 children: [
                   if (policy.coverageAmount != null)
@@ -140,14 +136,14 @@ class InsurancePolicyCard extends StatelessWidget {
                       value: _formatCurrency(policy.coverageAmount!),
                     ),
                   if (policy.deductible != null) ...[
-                    const SizedBox(width: AppSizes.sm),
+                    const SizedBox(width: AuroraSpacing.space3),
                     _MetricChip(
                       label: 'Deductible',
                       value: _formatCurrency(policy.deductible!),
                     ),
                   ],
                   if (policy.premiumAnnual != null) ...[
-                    const SizedBox(width: AppSizes.sm),
+                    const SizedBox(width: AuroraSpacing.space3),
                     _MetricChip(
                       label: 'Premium/yr',
                       value: _formatCurrency(policy.premiumAnnual!),
@@ -159,40 +155,41 @@ class InsurancePolicyCard extends StatelessWidget {
 
             // ── Expiration date ──────────────────────────────────────────────
             if (policy.expirationDate != null) ...[
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
               Row(
                 children: [
                   Icon(
                     Icons.calendar_today_outlined,
                     size: 12,
                     color: expiringSoon
-                        ? AppColors.healthFair
-                        : AppColors.textSecondary,
+                        ? AuroraColors.yellowDeep
+                        : AuroraColors.inkSecondary,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     'Expires ${_formatDate(policy.expirationDate!)}',
-                    style: AppTextStyles.bodySmall.copyWith(
+                    style: AuroraType.bodySm.copyWith(
                       color: expiringSoon
-                          ? AppColors.healthFair
-                          : AppColors.textSecondary,
+                          ? AuroraColors.yellowDeep
+                          : AuroraColors.inkSecondary,
                     ),
                   ),
                   if (expiringSoon) ...[
-                    const SizedBox(width: AppSizes.xs),
+                    const SizedBox(width: AuroraSpacing.space1),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 6,
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.warningLight,
-                        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                        color: AuroraColors.yellowDim,
+                        borderRadius: BorderRadius.circular(100),
                       ),
                       child: Text(
                         'Expiring soon',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.healthFair,
+                        style: AuroraType.bodySm.copyWith(
+                          fontSize: 10,
+                          color: AuroraColors.yellowDeep,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -204,9 +201,9 @@ class InsurancePolicyCard extends StatelessWidget {
 
             // ── Call buttons ─────────────────────────────────────────────────
             if (policy.claimsPhone != null || policy.agentPhone != null) ...[
-              const SizedBox(height: AppSizes.sm),
-              const Divider(height: 1, color: AppColors.divider),
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
+              const Divider(height: 1, color: AuroraColors.inkBorder),
+              const SizedBox(height: AuroraSpacing.space3),
               Row(
                 children: [
                   if (policy.claimsPhone != null)
@@ -216,7 +213,7 @@ class InsurancePolicyCard extends StatelessWidget {
                       onTap: () => _callPhone(context, policy.claimsPhone!),
                     ),
                   if (policy.claimsPhone != null && policy.agentPhone != null)
-                    const SizedBox(width: AppSizes.sm),
+                    const SizedBox(width: AuroraSpacing.space3),
                   if (policy.agentPhone != null)
                     _CallButton(
                       label: 'Agent',
@@ -246,22 +243,24 @@ class _MetricChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+        color: AuroraColors.butter,
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.textSecondary,
+            style: AuroraType.bodySm.copyWith(
+              color: AuroraColors.inkSecondary,
             ),
           ),
           Text(
             value,
-            style: AppTextStyles.labelMedium.copyWith(
+            style: AuroraType.bodySm.copyWith(
+              fontSize: 11,
               fontWeight: FontWeight.w600,
+              color: AuroraColors.ink,
             ),
           ),
         ],
@@ -291,13 +290,13 @@ class _CallButton extends StatelessWidget {
           const Icon(
             Icons.phone_outlined,
             size: 14,
-            color: AppColors.deepNavy,
+            color: AuroraColors.ink,
           ),
           const SizedBox(width: 4),
           Text(
             '$label: $phone',
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.deepNavy,
+            style: AuroraType.bodySm.copyWith(
+              color: AuroraColors.ink,
               fontWeight: FontWeight.w500,
             ),
           ),

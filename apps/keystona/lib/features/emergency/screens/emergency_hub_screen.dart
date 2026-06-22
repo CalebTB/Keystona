@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/error_view.dart';
 import '../providers/emergency_hub_provider.dart';
 import '../widgets/contacts_section.dart';
@@ -17,16 +17,6 @@ import '../widgets/shutoff_card.dart';
 /// Emergency Hub main screen — lives at [AppRoutes.emergency].
 ///
 /// Accessed via a quick-action button on the Home tab (NOT a bottom nav tab).
-///
-/// Shows:
-///   • Three utility shutoff cards (Water / Gas / Electrical) with completion status
-///   • Emergency contacts preview (favorites, "See all" link)
-///   • Insurance quick reference (policy summaries, "See all" link)
-///   • "Last synced" timestamp stub (implemented by #50 Offline Sync)
-///
-/// Adaptive layout:
-///   iOS  → CupertinoPageScaffold + CupertinoSliverNavigationBar (large title)
-///   Android → Scaffold + SliverAppBar
 class EmergencyHubScreen extends ConsumerWidget {
   const EmergencyHubScreen({super.key});
 
@@ -55,7 +45,7 @@ class _IOSLayout extends ConsumerWidget {
                 ref.read(emergencyHubProvider.notifier).refresh(),
           ),
           const _ContentSliver(),
-          const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
+          const SliverToBoxAdapter(child: SizedBox(height: AuroraSpacing.space10)),
         ],
       ),
     );
@@ -70,21 +60,21 @@ class _AndroidLayout extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       body: RefreshIndicator(
-        color: AppColors.deepNavy,
+        color: AuroraColors.ink,
         onRefresh: () => ref.read(emergencyHubProvider.notifier).refresh(),
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
-              title: Text('Emergency Hub', style: AppTextStyles.h3),
+              title: Text('Emergency Hub', style: AuroraType.h3),
               floating: true,
-              backgroundColor: AppColors.warmOffWhite,
+              backgroundColor: AuroraColors.paper,
               scrolledUnderElevation: 0,
               elevation: 0,
             ),
             const _ContentSliver(),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
+            const SliverToBoxAdapter(child: SizedBox(height: AuroraSpacing.space10)),
           ],
         ),
       ),
@@ -114,17 +104,14 @@ class _ContentSliver extends ConsumerWidget {
         ),
       ),
       data: (overview) => SliverPadding(
-        padding: AppPadding.screen,
+        padding: const EdgeInsets.all(AuroraSpacing.screenPadH),
         sliver: SliverList.list(
           children: [
-            // ── Utility Shutoffs ────────────────────────────────────────────
             Text(
               'Utility Shutoffs',
-              style: AppTextStyles.labelLarge.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: AuroraType.body.copyWith(fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             ShutoffCard(
               utilityType: 'water',
               shutoff: overview.shutoffFor('water'),
@@ -132,7 +119,7 @@ class _ContentSliver extends ConsumerWidget {
                 AppRoutes.emergencyShutoffDetail.replaceFirst(':type', 'water'),
               ),
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             ShutoffCard(
               utilityType: 'gas',
               shutoff: overview.shutoffFor('gas'),
@@ -140,7 +127,7 @@ class _ContentSliver extends ConsumerWidget {
                 AppRoutes.emergencyShutoffDetail.replaceFirst(':type', 'gas'),
               ),
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             ShutoffCard(
               utilityType: 'electrical',
               shutoff: overview.shutoffFor('electrical'),
@@ -149,9 +136,8 @@ class _ContentSliver extends ConsumerWidget {
                     .replaceFirst(':type', 'electrical'),
               ),
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space9),
 
-            // ── Emergency Contacts ──────────────────────────────────────────
             ContactsSection(
               favorites: overview.favoriteContacts,
               totalCount: overview.totalContactCount,
@@ -159,17 +145,15 @@ class _ContentSliver extends ConsumerWidget {
               onAddContact: () =>
                   context.push(AppRoutes.emergencyContactsAdd),
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space9),
 
-            // ── Insurance ───────────────────────────────────────────────────
             InsuranceSection(
               policies: overview.policies,
               onSeeAll: () => context.push(AppRoutes.emergencyInsurance),
               onAddPolicy: () => context.push(AppRoutes.emergencyInsurance),
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space9),
 
-            // ── Last synced timestamp (stub for #50) ────────────────────────
             _LastSyncedRow(lastSyncedAt: overview.lastSyncedAt),
           ],
         ),
@@ -196,13 +180,15 @@ class _LastSyncedRow extends StatelessWidget {
         Icon(
           Icons.sync_outlined,
           size: 13,
-          color: AppColors.textSecondary,
+          color: AuroraColors.inkSecondary,
         ),
         const SizedBox(width: 4),
         Text(
           label,
-          style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.textSecondary,
+          style: AuroraType.bodySm.copyWith(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: AuroraColors.inkSecondary,
           ),
         ),
       ],

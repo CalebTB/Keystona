@@ -1,18 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
 /// Pulse-shimmer skeleton matching the shutoff detail form layout.
-///
-/// Mirrors the field groups rendered by [ShutoffDetailScreen]:
-///   - Nav bar title area
-///   - "General" section: location + special instructions bars
-///   - Utility-specific section: two additional field bars
-///   - Tools section: a multi-line bar
-///   - Save button bar at bottom
-///
-/// Displayed on frame 1 while [EmergencyHubNotifier.getShutoff()] resolves.
 class ShutoffDetailSkeleton extends StatefulWidget {
   const ShutoffDetailSkeleton({super.key});
 
@@ -33,8 +24,6 @@ class _ShutoffDetailSkeletonState extends State<ShutoffDetailSkeleton>
       duration: const Duration(milliseconds: 900),
     );
     _opacity = Tween<double>(begin: 0.3, end: 0.7).animate(_ctrl);
-    // Defer repeat() until after the first frame to avoid scheduling a frame
-    // during an in-progress navigation transition.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _ctrl.repeat(reverse: true);
     });
@@ -53,44 +42,39 @@ class _ShutoffDetailSkeletonState extends State<ShutoffDetailSkeleton>
       builder: (_, _) => Opacity(
         opacity: _opacity.value,
         child: Padding(
-          padding: AppPadding.screen,
+          padding: const EdgeInsets.all(AuroraSpacing.screenPadH),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
 
-              // ── General section ─────────────────────────────────────────
               _SectionLabelBar(),
-              const SizedBox(height: AppSizes.sm),
-              _FieldBar(),
-              const SizedBox(height: AppSizes.sm),
-              _FieldBar(),
-              const SizedBox(height: AppSizes.lg),
+              const SizedBox(height: AuroraSpacing.space3),
+              const _FieldBar(),
+              const SizedBox(height: AuroraSpacing.space3),
+              const _FieldBar(),
+              const SizedBox(height: AuroraSpacing.space9),
 
-              // ── Utility-specific section ────────────────────────────────
               _SectionLabelBar(),
-              const SizedBox(height: AppSizes.sm),
-              _FieldBar(),
-              const SizedBox(height: AppSizes.sm),
-              _FieldBar(),
-              const SizedBox(height: AppSizes.lg),
+              const SizedBox(height: AuroraSpacing.space3),
+              const _FieldBar(),
+              const SizedBox(height: AuroraSpacing.space3),
+              const _FieldBar(),
+              const SizedBox(height: AuroraSpacing.space9),
 
-              // ── Tools section ───────────────────────────────────────────
               _SectionLabelBar(),
-              const SizedBox(height: AppSizes.sm),
-              _MultilineBar(),
-              const SizedBox(height: AppSizes.lg),
+              const SizedBox(height: AuroraSpacing.space3),
+              const _MultilineBar(),
+              const SizedBox(height: AuroraSpacing.space9),
 
-              // ── Special instructions ────────────────────────────────────
               _SectionLabelBar(),
-              const SizedBox(height: AppSizes.sm),
-              _MultilineBar(),
+              const SizedBox(height: AuroraSpacing.space3),
+              const _MultilineBar(),
 
               const Spacer(),
 
-              // ── Save button ─────────────────────────────────────────────
-              _SaveButtonBar(),
-              const SizedBox(height: AppSizes.md),
+              const _SaveButtonBar(),
+              const SizedBox(height: AuroraSpacing.space7),
             ],
           ),
         ),
@@ -99,63 +83,60 @@ class _ShutoffDetailSkeletonState extends State<ShutoffDetailSkeleton>
   }
 }
 
-// ── Private skeleton primitives ───────────────────────────────────────────────
-
 class _SectionLabelBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return _SkeletonBar(
-      height: 13,
-      widthFraction: 0.35,
-    );
+    return const _SkeletonBar(height: 13, widthFraction: 0.35);
   }
 }
 
 class _FieldBar extends StatelessWidget {
+  const _FieldBar();
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: AppSizes.inputHeight,
+      height: 50,
       decoration: BoxDecoration(
-        color: AppColors.gray200,
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-        border: Border.all(color: AppColors.border),
+        color: AuroraColors.ink.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AuroraColors.inkBorder),
       ),
     );
   }
 }
 
 class _MultilineBar extends StatelessWidget {
+  const _MultilineBar();
+
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 88,
       decoration: BoxDecoration(
-        color: AppColors.gray200,
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-        border: Border.all(color: AppColors.border),
+        color: AuroraColors.ink.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AuroraColors.inkBorder),
       ),
     );
   }
 }
 
 class _SaveButtonBar extends StatelessWidget {
+  const _SaveButtonBar();
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: AppSizes.buttonHeight,
+      height: 48,
       decoration: BoxDecoration(
-        color: AppColors.gray200,
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+        color: AuroraColors.ink.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
       ),
     );
   }
 }
 
-/// A skeleton bar whose width is a fraction of the available horizontal space.
-///
-/// Uses [FractionallySizedBox] so bars scale correctly on all screen widths
-/// without requiring a [LayoutBuilder] pass.
 class _SkeletonBar extends StatelessWidget {
   const _SkeletonBar({required this.height, required this.widthFraction});
   final double height;
@@ -169,8 +150,8 @@ class _SkeletonBar extends StatelessWidget {
       child: Container(
         height: height,
         decoration: BoxDecoration(
-          color: AppColors.gray200,
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          color: AuroraColors.ink.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(8),
         ),
       ),
     );

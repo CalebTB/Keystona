@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../models/maintenance_task.dart';
 
 /// Horizontal 7-day week strip with dot indicators per day.
 ///
 /// Displays Mon–Sun for the given [weekStart]. Each day shows task dots
-/// grouped by urgency: overdue (accent), due soon (sand), scheduled (slate).
+/// grouped by urgency: overdue (coral), due soon (yellow), scheduled (cobalt).
 class WeekStrip extends StatelessWidget {
   const WeekStrip({
     super.key,
@@ -71,14 +71,14 @@ class _DayCol extends StatelessWidget {
     final Color bg;
     final Color textColor;
     if (isToday) {
-      bg = AppColors.deepNavy;
-      textColor = AppColors.textInverse;
+      bg = AuroraColors.ink;
+      textColor = Colors.white;
     } else if (isSelected) {
-      bg = AppColors.accent;
-      textColor = AppColors.textInverse;
+      bg = AuroraColors.coral;
+      textColor = Colors.white;
     } else {
       bg = Colors.transparent;
-      textColor = AppColors.textPrimary;
+      textColor = AuroraColors.ink;
     }
 
     final dots = _dotsForDate(date, tasks);
@@ -98,19 +98,18 @@ class _DayCol extends StatelessWidget {
           children: [
             Text(
               dayName.toUpperCase(),
-              style: GoogleFonts.ibmPlexMono(
-                fontSize: 10,
+              style: AuroraType.labelSm.copyWith(
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.2,
                 color: (isToday || isSelected)
-                    ? AppColors.textInverse.withValues(alpha: 0.7)
-                    : AppColors.textTertiary,
+                    ? Colors.white.withValues(alpha: 0.7)
+                    : AuroraColors.inkTertiary,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               '${date.day}',
-              style: GoogleFonts.ibmPlexMono(
+              style: AuroraType.label.copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
@@ -191,9 +190,9 @@ class _DotsRow extends StatelessWidget {
       }
     }
 
-    addDots(dots.overdue, AppColors.accent);
-    addDots(dots.dueSoon, AppColors.sand);
-    addDots(dots.scheduled, AppColors.slate);
+    addDots(dots.overdue, AuroraColors.coral);
+    addDots(dots.dueSoon, AuroraColors.yellow);
+    addDots(dots.scheduled, AuroraColors.cobalt);
 
     if (items.isEmpty) {
       return const SizedBox(height: _dotSize);

@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../services/providers/service_providers.dart';
 
 class SettingsDeleteAccountScreen extends ConsumerStatefulWidget {
@@ -52,7 +52,6 @@ class _SettingsDeleteAccountScreenState
     );
     if (ok != true || !mounted) return;
     setState(() => _deleting = true);
-    // Stub: call Edge Function to delete account data, then sign out.
     await Future.delayed(const Duration(seconds: 1));
     if (!mounted) return;
     await ref.read(authServiceProvider).signOut();
@@ -61,9 +60,9 @@ class _SettingsDeleteAccountScreenState
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         border: null,
         middle: const Text('Delete Account'),
         leading: CupertinoButton(
@@ -75,7 +74,8 @@ class _SettingsDeleteAccountScreenState
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: AppPadding.screen.copyWith(top: AppSizes.xl),
+          padding: const EdgeInsets.all(AuroraSpacing.screenPadH)
+              .copyWith(top: AuroraSpacing.space10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -83,45 +83,44 @@ class _SettingsDeleteAccountScreenState
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: AppColors.accent.withValues(alpha: 0.1),
+                  color: AuroraColors.coral.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Icon(CupertinoIcons.exclamationmark_triangle,
-                    size: 26, color: AppColors.accent),
+                    size: 26, color: AuroraColors.coral),
               ),
-              const SizedBox(height: AppSizes.md),
-              Text('Delete your account', style: AppTextStyles.displaySmall),
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space7),
+              Text('Delete your account', style: AuroraType.h1),
+              const SizedBox(height: AuroraSpacing.space3),
               Text(
                 'This will permanently delete your account and all associated data including documents, tasks, systems, and home history. This cannot be undone.',
-                style: AppTextStyles.bodyMedium
-                    .copyWith(color: AppColors.textSecondary),
+                style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
               ),
 
-              const SizedBox(height: AppSizes.xl),
+              const SizedBox(height: AuroraSpacing.space10),
 
               Text(
-                'Type DELETE to confirm',
-                style: AppTextStyles.monoSection,
+                'TYPE DELETE TO CONFIRM',
+                style: AuroraType.label,
               ),
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.cardBackground,
-                  borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-                  border: Border.all(color: AppColors.border, width: 1.5),
+                  color: AuroraColors.paper,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
                 ),
                 padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
                 child: TextField(
                   controller: _confirmController,
-                  style: AppTextStyles.bodyLarge,
+                  style: AuroraType.bodyLg,
                   decoration: null,
                   textCapitalization: TextCapitalization.characters,
                   onChanged: (_) => setState(() {}),
                 ),
               ),
 
-              const SizedBox(height: AppSizes.xl),
+              const SizedBox(height: AuroraSpacing.space10),
 
               GestureDetector(
                 onTap: (_confirmed && !_deleting) ? _delete : null,
@@ -131,19 +130,20 @@ class _SettingsDeleteAccountScreenState
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
                     color: _confirmed
-                        ? AppColors.accent
-                        : AppColors.accent.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(AppSizes.radiusCard),
+                        ? AuroraColors.coral
+                        : AuroraColors.coral.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   child: _deleting
                       ? const Center(
-                          child: CupertinoActivityIndicator(
-                              color: AppColors.textInverse))
+                          child: CupertinoActivityIndicator(color: Colors.white))
                       : Text(
                           'Delete my account',
                           textAlign: TextAlign.center,
-                          style: AppTextStyles.bodyMediumSemibold
-                              .copyWith(color: AppColors.textInverse),
+                          style: AuroraType.body.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
                 ),
               ),

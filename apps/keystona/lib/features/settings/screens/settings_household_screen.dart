@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 
 class SettingsHouseholdScreen extends StatelessWidget {
   const SettingsHouseholdScreen({super.key});
@@ -11,9 +11,9 @@ class SettingsHouseholdScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         border: null,
         middle: const Text('Household'),
         leading: CupertinoButton(
@@ -25,28 +25,28 @@ class SettingsHouseholdScreen extends StatelessWidget {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: AppPadding.screen.copyWith(top: AppSizes.xl),
+          padding: const EdgeInsets.all(AuroraSpacing.screenPadH)
+              .copyWith(top: AuroraSpacing.space10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Household members',
-                style: AppTextStyles.displaySmall,
+                style: AuroraType.h1,
               ),
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
               Text(
                 'Invite people to access your home profile. Coming soon.',
-                style: AppTextStyles.bodyMedium
-                    .copyWith(color: AppColors.textSecondary),
+                style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
               ),
-              const SizedBox(height: AppSizes.xl),
+              const SizedBox(height: AuroraSpacing.space10),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(AppSizes.xl),
+                padding: const EdgeInsets.all(AuroraSpacing.space10),
                 decoration: BoxDecoration(
-                  color: AppColors.cardBackground,
-                  borderRadius: BorderRadius.circular(AppSizes.radiusCard),
-                  border: Border.all(color: AppColors.border, width: 1.5),
+                  color: AuroraColors.paper,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
                 ),
                 child: Column(
                   children: [
@@ -54,20 +54,23 @@ class SettingsHouseholdScreen extends StatelessWidget {
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
-                        color: AppColors.olive.withValues(alpha: 0.1),
+                        color: AuroraColors.lime.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: const Icon(CupertinoIcons.person_2,
-                          size: 26, color: AppColors.olive),
+                          size: 26, color: AuroraColors.lime),
                     ),
-                    const SizedBox(height: AppSizes.md),
-                    Text('No members yet',
-                        style: AppTextStyles.bodyMediumSemibold),
+                    const SizedBox(height: AuroraSpacing.space7),
+                    Text(
+                      'No members yet',
+                      style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       'Household sharing will be available\nin a future update.',
-                      style: AppTextStyles.bodySmall
-                          .copyWith(color: AppColors.textSecondary),
+                      style: AuroraType.bodySm.copyWith(
+                        color: AuroraColors.inkSecondary,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ],

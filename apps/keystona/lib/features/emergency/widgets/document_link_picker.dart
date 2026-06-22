@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../services/supabase_service.dart';
 
 Future<({String id, String name})?> showDocumentLinkPicker(
@@ -18,12 +18,10 @@ Future<({String id, String name})?> showDocumentLinkPicker(
   } else {
     return showModalBottomSheet<({String id, String name})?>(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: AuroraColors.paper,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSizes.radiusLg),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (_) => const _DocumentPickerSheet(),
     );
@@ -99,36 +97,34 @@ class _DocumentPickerSheetState extends State<_DocumentPickerSheet> {
           top: false,
           child: Container(
             decoration: const BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.vertical(
-                top: Radius.circular(AppSizes.radiusLg),
-              ),
+              color: AuroraColors.paper,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(top: AppSizes.sm),
+                  padding: const EdgeInsets.only(top: AuroraSpacing.space3),
                   child: Container(
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.gray300,
-                      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                      color: AuroraColors.inkBorder,
+                      borderRadius: BorderRadius.circular(100),
                     ),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: AppSizes.md,
-                    vertical: AppSizes.md,
+                    horizontal: AuroraSpacing.space7,
+                    vertical: AuroraSpacing.space7,
                   ),
                   child: Row(
                     children: [
                       Expanded(
                         child: Text(
                           'Link Policy Document',
-                          style: AppTextStyles.h3,
+                          style: AuroraType.h3,
                         ),
                       ),
                       GestureDetector(
@@ -138,15 +134,15 @@ class _DocumentPickerSheetState extends State<_DocumentPickerSheet> {
                         ).pop(null),
                         child: Text(
                           'Cancel',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.deepNavy,
+                          style: AuroraType.body.copyWith(
+                            color: AuroraColors.ink,
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Divider(height: 1),
+                const Divider(height: 1, color: AuroraColors.inkBorder),
                 Flexible(child: _buildContent()),
               ],
             ),
@@ -159,13 +155,13 @@ class _DocumentPickerSheetState extends State<_DocumentPickerSheet> {
   Widget _buildContent() {
     if (_loading) {
       return const Padding(
-        padding: EdgeInsets.all(AppSizes.xl),
+        padding: EdgeInsets.all(AuroraSpacing.space10),
         child: Center(child: CupertinoActivityIndicator()),
       );
     }
     if (_error != null) {
       return Padding(
-        padding: const EdgeInsets.all(AppSizes.lg),
+        padding: const EdgeInsets.all(AuroraSpacing.space9),
         child: Center(
           child: Text(_error!, textAlign: TextAlign.center),
         ),
@@ -174,14 +170,12 @@ class _DocumentPickerSheetState extends State<_DocumentPickerSheet> {
     final docs = _docs ?? [];
     if (docs.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.all(AppSizes.lg),
+        padding: const EdgeInsets.all(AuroraSpacing.space9),
         child: Center(
           child: Text(
             'No PDF documents yet. Upload your policy as a PDF to link it here.',
             textAlign: TextAlign.center,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
           ),
         ),
       );
@@ -189,17 +183,17 @@ class _DocumentPickerSheetState extends State<_DocumentPickerSheet> {
     return ListView.separated(
       shrinkWrap: true,
       itemCount: docs.length,
-      separatorBuilder: (context, index) => const Divider(height: 1),
+      separatorBuilder: (_, _) => const Divider(height: 1, color: AuroraColors.inkBorder),
       itemBuilder: (_, i) {
         final doc = docs[i];
         return ListTile(
           leading: const Icon(
             Icons.picture_as_pdf_outlined,
-            color: AppColors.deepNavy,
+            color: AuroraColors.ink,
           ),
           title: Text(
             doc['name'] as String,
-            style: AppTextStyles.bodyMedium,
+            style: AuroraType.body,
           ),
           onTap: () => Navigator.of(context, rootNavigator: true).pop(
             (id: doc['id'] as String, name: doc['name'] as String),

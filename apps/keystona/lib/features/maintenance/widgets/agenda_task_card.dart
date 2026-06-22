@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../models/maintenance_task.dart';
 
-const _kSuccessGreen = AppColors.iosSuccessGreen;
+final _kSuccessGreen = AuroraColors.limeDeep;
 
 /// A single task card in the Daily agenda view.
 ///
@@ -102,20 +101,20 @@ class _AgendaTaskCardState extends State<AgendaTaskCard>
                     clipBehavior: Clip.hardEdge,
                     decoration: BoxDecoration(
                       color: isOverdue
-                          ? AppColors.overdueTaskBg
-                          : AppColors.surface,
+                          ? AuroraColors.coralDim
+                          : AuroraColors.paper,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isOverdue
-                            ? AppColors.overdueTaskBorder
-                            : AppColors.border,
+                            ? AuroraColors.coral.withValues(alpha: 0.2)
+                            : AuroraColors.inkBorder,
                         width: 1.5,
                       ),
-                      boxShadow: const [
+                      boxShadow: [
                         BoxShadow(
-                          color: AppColors.shadowSm,
+                          color: const Color(0x0D071238),
                           blurRadius: 4,
-                          offset: Offset(0, 1),
+                          offset: const Offset(0, 1),
                         ),
                       ],
                     ),
@@ -155,14 +154,14 @@ class _AgendaTaskCardState extends State<AgendaTaskCard>
                                 children: [
                                   Text(
                                     widget.task.name,
-                                    style: AppTextStyles.bodyMediumSemibold
-                                        .copyWith(
+                                    style: AuroraType.body.copyWith(
+                                      fontWeight: FontWeight.w600,
                                       fontSize: 14,
-                                      color: AppColors.textPrimary,
+                                      color: AuroraColors.ink,
                                       decoration: _completing
                                           ? TextDecoration.lineThrough
                                           : null,
-                                      decorationColor: AppColors.textSecondary,
+                                      decorationColor: AuroraColors.inkSecondary,
                                       decorationThickness: 1.5,
                                     ),
                                     maxLines: 1,
@@ -174,9 +173,8 @@ class _AgendaTaskCardState extends State<AgendaTaskCard>
                                       Flexible(
                                         child: Text(
                                           widget.task.category,
-                                          style: AppTextStyles.monoLabel
-                                              .copyWith(
-                                            color: AppColors.textTertiary,
+                                          style: AuroraType.label.copyWith(
+                                            color: AuroraColors.inkTertiary,
                                             fontSize: 11,
                                           ),
                                           maxLines: 1,
@@ -191,9 +189,8 @@ class _AgendaTaskCardState extends State<AgendaTaskCard>
                                         const SizedBox(width: 6),
                                         Text(
                                           '~${widget.task.estimatedMinutes}min',
-                                          style: AppTextStyles.monoLabel
-                                              .copyWith(
-                                            color: AppColors.textTertiary,
+                                          style: AuroraType.label.copyWith(
+                                            color: AuroraColors.inkTertiary,
                                             fontSize: 10,
                                           ),
                                         ),
@@ -205,8 +202,8 @@ class _AgendaTaskCardState extends State<AgendaTaskCard>
                                     Text(
                                       DateFormat('MMM d').format(
                                           widget.task.dueDate.toLocal()),
-                                      style: AppTextStyles.monoLabel.copyWith(
-                                        color: AppColors.textTertiary,
+                                      style: AuroraType.label.copyWith(
+                                        color: AuroraColors.inkTertiary,
                                         fontSize: 10,
                                       ),
                                     ),
@@ -237,7 +234,7 @@ class _AgendaTaskCardState extends State<AgendaTaskCard>
                                     border: Border.all(
                                       color: _completing
                                           ? _kSuccessGreen
-                                          : AppColors.border,
+                                          : AuroraColors.inkBorder,
                                       width: 2,
                                     ),
                                   ),
@@ -247,7 +244,7 @@ class _AgendaTaskCardState extends State<AgendaTaskCard>
                                       child: const Icon(
                                         Icons.check_rounded,
                                         size: 15,
-                                        color: AppColors.textInverse,
+                                        color: Colors.white,
                                       ),
                                     ),
                                   ),
@@ -266,61 +263,61 @@ class _AgendaTaskCardState extends State<AgendaTaskCard>
   }
 
   static Color _stripeColor(MaintenanceTask task) {
-    if (task.status == TaskStatus.overdue) return AppColors.accent;
+    if (task.status == TaskStatus.overdue) return AuroraColors.coral;
     return switch (task.priority) {
-      TaskPriority.critical => AppColors.accent,
-      TaskPriority.high => AppColors.sand,
-      TaskPriority.medium => AppColors.slate,
-      TaskPriority.low => AppColors.border,
+      TaskPriority.critical => AuroraColors.coral,
+      TaskPriority.high => AuroraColors.yellow,
+      TaskPriority.medium => AuroraColors.cobalt,
+      TaskPriority.low => AuroraColors.inkBorder,
     };
   }
 
   static _CategoryStyle _categoryStyle(String cat) {
     if (cat == 'hvac' || cat == 'heating' || cat == 'cooling') {
-      return const _CategoryStyle(
+      return _CategoryStyle(
         icon: Icons.air,
-        iconColor: AppColors.slate,
-        bgColor: AppColors.slateDim,
+        iconColor: AuroraColors.cobalt,
+        bgColor: AuroraColors.cobaltDim,
       );
     } else if (cat == 'plumbing' || cat == 'water') {
-      return const _CategoryStyle(
+      return _CategoryStyle(
         icon: Icons.water_drop_outlined,
-        iconColor: AppColors.teal,
-        bgColor: AppColors.tealDim,
+        iconColor: AuroraColors.cobalt,
+        bgColor: AuroraColors.cobaltDim,
       );
     } else if (cat == 'electrical') {
-      return const _CategoryStyle(
+      return _CategoryStyle(
         icon: Icons.bolt_outlined,
-        iconColor: AppColors.sand,
-        bgColor: AppColors.sandDim,
+        iconColor: AuroraColors.yellow,
+        bgColor: AuroraColors.yellowDim,
       );
     } else if (cat == 'safety' || cat == 'security') {
-      return const _CategoryStyle(
+      return _CategoryStyle(
         icon: Icons.security_outlined,
-        iconColor: AppColors.sandAmber,
-        bgColor: AppColors.sandDim,
+        iconColor: AuroraColors.yellowDeep,
+        bgColor: AuroraColors.yellowDim,
       );
     } else if (cat == 'exterior' ||
         cat == 'roofing' ||
         cat == 'landscaping') {
-      return const _CategoryStyle(
+      return _CategoryStyle(
         icon: Icons.park_outlined,
-        iconColor: AppColors.olive,
-        bgColor: AppColors.oliveDim,
+        iconColor: AuroraColors.limeDeep,
+        bgColor: AuroraColors.limeDim,
       );
     } else if (cat == 'interior' ||
         cat == 'kitchen' ||
         cat == 'bathroom') {
-      return const _CategoryStyle(
+      return _CategoryStyle(
         icon: Icons.home_outlined,
-        iconColor: AppColors.plum,
-        bgColor: AppColors.plumDim,
+        iconColor: AuroraColors.cobalt,
+        bgColor: AuroraColors.cobaltDim,
       );
     }
-    return const _CategoryStyle(
+    return _CategoryStyle(
       icon: Icons.build_outlined,
-      iconColor: AppColors.textSecondary,
-      bgColor: AppColors.warmFill,
+      iconColor: AuroraColors.inkSecondary,
+      bgColor: AuroraColors.butter,
     );
   }
 }
@@ -328,7 +325,7 @@ class _AgendaTaskCardState extends State<AgendaTaskCard>
 // ── Category style record ──────────────────────────────────────────────────────
 
 class _CategoryStyle {
-  const _CategoryStyle({
+  _CategoryStyle({
     required this.icon,
     required this.iconColor,
     required this.bgColor,
@@ -351,15 +348,15 @@ class _DiyProBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
       decoration: BoxDecoration(
-        color: isPro ? AppColors.slateDim : AppColors.oliveDim,
+        color: isPro ? AuroraColors.cobaltDim : AuroraColors.limeDim,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         isPro ? 'PRO' : 'DIY',
-        style: GoogleFonts.ibmPlexMono(
+        style: AuroraType.labelSm.copyWith(
           fontSize: 9,
           fontWeight: FontWeight.w700,
-          color: isPro ? AppColors.slate : AppColors.olive,
+          color: isPro ? AuroraColors.cobalt : AuroraColors.limeDeep,
           letterSpacing: 0.5,
         ),
       ),

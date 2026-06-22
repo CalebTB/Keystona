@@ -4,9 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../home_profile/providers/home_profile_provider.dart';
 import '../models/maintenance_task.dart';
 import '../providers/maintenance_tasks_provider.dart';
@@ -122,11 +121,11 @@ class SeasonalView extends ConsumerWidget {
         final zone = profileAsync.value?.property.climateZone;
 
         return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: AppSizes.md),
+                const SizedBox(height: 12),
                 _HeroCard(
                   season: season,
                   total: total,
@@ -136,10 +135,10 @@ class SeasonalView extends ConsumerWidget {
                   climateZone: zone,
                 ),
                 if (urgent != null) ...[
-                  const SizedBox(height: AppSizes.sm),
+                  const SizedBox(height: 8),
                   _SpotlightCard(task: urgent),
                 ],
-                const SizedBox(height: AppSizes.lg),
+                const SizedBox(height: 16),
                 if (total == 0) ...[
                   _EmptyState(season: season),
                 ] else ...[
@@ -147,26 +146,26 @@ class SeasonalView extends ConsumerWidget {
                     children: [
                       Text(
                         '${season.toUpperCase()} CHECKLIST',
-                        style: AppTextStyles.monoSection,
+                        style: AuroraType.label,
                       ),
-                      const SizedBox(width: AppSizes.sm),
+                      const SizedBox(width: 8),
                       Text(
                         '${upNext.length} of $total',
-                        style: AppTextStyles.monoSection.copyWith(
-                          color: AppColors.textSecondary,
+                        style: AuroraType.label.copyWith(
+                          color: AuroraColors.inkSecondary,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppSizes.sm),
-                  Text('Up next.', style: AppTextStyles.headlineMedium),
-                  const SizedBox(height: AppSizes.md),
+                  const SizedBox(height: 8),
+                  Text('Up next.', style: AuroraType.h2),
+                  const SizedBox(height: 12),
                   if (upNext.isEmpty)
                     _AllDoneCard()
                   else
                     ...upNext.map(
                       (t) => Padding(
-                        padding: const EdgeInsets.only(bottom: AppSizes.sm),
+                        padding: const EdgeInsets.only(bottom: 8),
                         child: _SeasonalTaskCard(
                           task: t,
                           onTap: () => context.push(
@@ -176,7 +175,7 @@ class SeasonalView extends ConsumerWidget {
                       ),
                     ),
                 ],
-                const SizedBox(height: AppSizes.xl),
+                const SizedBox(height: 20),
               ],
             ),
           );
@@ -221,10 +220,10 @@ class _HeroCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSizes.lg),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.forestGreen,
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        color: AuroraColors.ink,
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,47 +234,46 @@ class _HeroCard extends StatelessWidget {
                 width: 8,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: AppColors.olive,
+                  color: AuroraColors.limeDeep,
                   shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: AppSizes.xs),
+              const SizedBox(width: 4),
               Text(
                 '$phase · IN SEASON',
-                style: AppTextStyles.monoSection.copyWith(
-                  color: AppColors.forestGreenLight,
+                style: AuroraType.label.copyWith(
+                  color: Colors.white.withValues(alpha: 0.7),
                   letterSpacing: 0.8,
                 ),
               ),
               const Spacer(),
-              Icon(icon, size: 28, color: AppColors.forestGreenLight),
+              Icon(icon, size: 28, color: Colors.white.withValues(alpha: 0.7)),
             ],
           ),
-          const SizedBox(height: AppSizes.md),
+          const SizedBox(height: 12),
           Text(
             '$month\nchecklist.',
-            style: AppTextStyles.displayMedium.copyWith(
-              color: AppColors.warmOffWhite,
+            style: AuroraType.h1.copyWith(
+              color: AuroraColors.paper,
               height: 1.1,
             ),
           ),
           if (locationLine.isNotEmpty) ...[
-            const SizedBox(height: AppSizes.xs),
+            const SizedBox(height: 4),
             Text(
               locationLine,
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.darkTextSecondary,
-                fontFamily: 'IBM Plex Mono',
+              style: AuroraType.bodySm.copyWith(
+                color: Colors.white.withValues(alpha: 0.6),
               ),
             ),
           ],
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: 16),
           Row(
             children: [
               _StatBlock(value: '$total', label: 'IN SEASON'),
-              const SizedBox(width: AppSizes.lg),
+              const SizedBox(width: 16),
               _StatBlock(value: '$completed', label: 'DONE'),
-              const SizedBox(width: AppSizes.lg),
+              const SizedBox(width: 16),
               _StatBlock(value: '$progress%', label: 'PROGRESS'),
             ],
           ),
@@ -298,15 +296,15 @@ class _StatBlock extends StatelessWidget {
       children: [
         Text(
           value,
-          style: AppTextStyles.monoDisplay.copyWith(
-            color: AppColors.warmOffWhite,
+          style: AuroraType.number.copyWith(
+            color: AuroraColors.paper,
             fontSize: 22,
           ),
         ),
         Text(
           label,
-          style: AppTextStyles.monoTiny.copyWith(
-            color: AppColors.darkTextSecondary,
+          style: AuroraType.labelSm.copyWith(
+            color: Colors.white.withValues(alpha: 0.6),
           ),
         ),
       ],
@@ -336,12 +334,11 @@ class _SpotlightCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isOverdue = _tag == 'OVERDUE';
     return Container(
-      padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.cardPadding, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.border, width: 1.5),
+        color: AuroraColors.paper,
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
       ),
       child: Row(
         children: [
@@ -350,14 +347,14 @@ class _SpotlightCard extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               color: isOverdue
-                  ? AppColors.accent.withValues(alpha: 0.12)
-                  : AppColors.olive.withValues(alpha: 0.12),
+                  ? AuroraColors.coral.withValues(alpha: 0.12)
+                  : AuroraColors.limeDeep.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: Icon(
               isOverdue ? Icons.schedule_outlined : Icons.arrow_upward,
               size: 18,
-              color: isOverdue ? AppColors.accent : AppColors.olive,
+              color: isOverdue ? AuroraColors.coral : AuroraColors.limeDeep,
             ),
           ),
           const SizedBox(width: 12),
@@ -367,14 +364,14 @@ class _SpotlightCard extends StatelessWidget {
               children: [
                 Text(
                   _tag,
-                  style: AppTextStyles.monoSection.copyWith(
-                    color: isOverdue ? AppColors.accent : AppColors.olive,
+                  style: AuroraType.label.copyWith(
+                    color: isOverdue ? AuroraColors.coral : AuroraColors.limeDeep,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   task.name,
-                  style: AppTextStyles.bodyMediumSemibold,
+                  style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -387,12 +384,12 @@ class _SpotlightCard extends StatelessWidget {
               children: [
                 Text(
                   'Start',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.accent,
+                  style: AuroraType.label.copyWith(
+                    color: AuroraColors.coral,
                   ),
                 ),
                 const SizedBox(width: 2),
-                Icon(Icons.chevron_right, size: 16, color: AppColors.accent),
+                Icon(Icons.chevron_right, size: 16, color: AuroraColors.coral),
               ],
             ),
           ),
@@ -418,11 +415,11 @@ class _SeasonalTaskCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(AppSizes.cardPadding),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: AppRadius.card,
-          border: Border.all(color: AppColors.border, width: 1.5),
+          color: AuroraColors.paper,
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
+          border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -431,10 +428,10 @@ class _SeasonalTaskCard extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: AppColors.warmFill,
-                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                color: AuroraColors.butter,
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, size: 20, color: AppColors.textSecondary),
+              child: Icon(icon, size: 20, color: AuroraColors.inkSecondary),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -446,7 +443,7 @@ class _SeasonalTaskCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           task.name,
-                          style: AppTextStyles.bodyMediumSemibold,
+                          style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -458,8 +455,8 @@ class _SeasonalTaskCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       task.description!,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                      style: AuroraType.bodySm.copyWith(
+                        color: AuroraColors.inkSecondary,
                         fontWeight: FontWeight.w400,
                       ),
                       maxLines: 2,
@@ -470,12 +467,12 @@ class _SeasonalTaskCard extends StatelessWidget {
                   Row(
                     children: [
                       if (timeLabel.isNotEmpty)
-                        _Tag(label: timeLabel, color: AppColors.sandAmber),
+                        _Tag(label: timeLabel, color: AuroraColors.yellowDeep),
                       if (timeLabel.isNotEmpty) const SizedBox(width: 6),
                       _Tag(
                         label: task.category.toUpperCase(),
-                        color: AppColors.textSecondary,
-                        background: AppColors.warmFill,
+                        color: AuroraColors.inkSecondary,
+                        background: AuroraColors.butter,
                       ),
                     ],
                   ),
@@ -497,10 +494,10 @@ class _DiyProBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (diyOrPro == DiyOrPro.diy) {
-      return _Tag(label: 'DIY', color: AppColors.olive);
+      return _Tag(label: 'DIY', color: AuroraColors.limeDeep);
     }
     if (diyOrPro == DiyOrPro.professional) {
-      return _Tag(label: 'PRO', color: AppColors.slate);
+      return _Tag(label: 'PRO', color: AuroraColors.cobalt);
     }
     return const SizedBox.shrink();
   }
@@ -523,11 +520,11 @@ class _Tag extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: background ?? color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(AppSizes.radiusXs),
+        borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         label,
-        style: AppTextStyles.monoSection.copyWith(color: color),
+        style: AuroraType.label.copyWith(color: color),
       ),
     );
   }
@@ -540,26 +537,28 @@ class _AllDoneCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSizes.xl),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.olive.withValues(alpha: 0.08),
-        borderRadius: AppRadius.card,
+        color: AuroraColors.limeDeep.withValues(alpha: 0.08),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         border: Border.all(
-            color: AppColors.olive.withValues(alpha: 0.2), width: 1.5),
+            color: AuroraColors.limeDeep.withValues(alpha: 0.2), width: 1.5),
       ),
       child: Column(
         children: [
           Icon(Icons.check_circle_outline,
-              size: 32, color: AppColors.olive),
-          const SizedBox(height: AppSizes.sm),
+              size: 32, color: AuroraColors.limeDeep),
+          const SizedBox(height: 8),
           Text("You're all caught up!",
-              style:
-                  AppTextStyles.bodyMediumSemibold.copyWith(color: AppColors.olive)),
+              style: AuroraType.body.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AuroraColors.limeDeep,
+              )),
           const SizedBox(height: 4),
           Text(
             'All seasonal tasks are done for this season.',
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textSecondary,
+            style: AuroraType.bodySm.copyWith(
+              color: AuroraColors.inkSecondary,
               fontWeight: FontWeight.w400,
             ),
             textAlign: TextAlign.center,
@@ -581,23 +580,23 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSizes.xl),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.border, width: 1.5),
+        color: AuroraColors.paper,
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
       ),
       child: Column(
         children: [
-          Icon(_seasonIcon(season), size: 32, color: AppColors.gray400),
-          const SizedBox(height: AppSizes.sm),
+          Icon(_seasonIcon(season), size: 32, color: AuroraColors.inkTertiary),
+          const SizedBox(height: 8),
           Text('No seasonal tasks yet',
-              style: AppTextStyles.bodyMediumSemibold),
+              style: AuroraType.body.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
           Text(
             'Tasks tagged for $season will appear here.',
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textSecondary,
+            style: AuroraType.bodySm.copyWith(
+              color: AuroraColors.inkSecondary,
               fontWeight: FontWeight.w400,
             ),
             textAlign: TextAlign.center,
@@ -614,30 +613,30 @@ class _SeasonalSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: AppColors.gray200,
-      highlightColor: AppColors.gray100,
+      baseColor: AuroraColors.butter,
+      highlightColor: AuroraColors.paper,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: 12),
             Container(
               height: 196,
               decoration: BoxDecoration(
-                color: AppColors.gray200,
-                borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+                color: AuroraColors.butter,
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
-            const SizedBox(height: AppSizes.lg),
-            Container(height: 10, width: 140, color: AppColors.gray200),
-            const SizedBox(height: AppSizes.sm),
-            Container(height: 18, width: 100, color: AppColors.gray200),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: 16),
+            Container(height: 10, width: 140, color: AuroraColors.butter),
+            const SizedBox(height: 8),
+            Container(height: 18, width: 100, color: AuroraColors.butter),
+            const SizedBox(height: 12),
             _SkeletonTaskCard(),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: 8),
             _SkeletonTaskCard(),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: 8),
             _SkeletonTaskCard(),
           ],
         ),
@@ -654,8 +653,8 @@ class _SkeletonTaskCard extends StatelessWidget {
     return Container(
       height: 96,
       decoration: BoxDecoration(
-        color: AppColors.gray200,
-        borderRadius: AppRadius.card,
+        color: AuroraColors.butter,
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
       ),
     );
   }

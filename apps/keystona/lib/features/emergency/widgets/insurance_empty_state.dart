@@ -1,39 +1,64 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 
 class InsuranceEmptyState extends StatelessWidget {
-  const InsuranceEmptyState({super.key});
+  const InsuranceEmptyState({super.key, this.onAddPolicy});
+
+  final VoidCallback? onAddPolicy;
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSizes.xl),
+        padding: const EdgeInsets.all(AuroraSpacing.space10),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(
               Icons.shield_outlined,
               size: 80,
-              color: AppColors.textSecondary,
+              color: AuroraColors.inkSecondary,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space7),
             Text(
               'No insurance info yet',
-              style: AppTextStyles.h3,
+              style: AuroraType.h3,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             Text(
               'Add your policy number and claims phone for quick access during emergencies.',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+              style: AuroraType.body.copyWith(
+                color: AuroraColors.inkSecondary,
               ),
               textAlign: TextAlign.center,
             ),
+            if (onAddPolicy != null) ...[
+              const SizedBox(height: AuroraSpacing.space9),
+              GestureDetector(
+                onTap: onAddPolicy,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AuroraSpacing.space9,
+                    vertical: AuroraSpacing.space3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AuroraColors.ink,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Add Policy',
+                    style: AuroraType.body.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
