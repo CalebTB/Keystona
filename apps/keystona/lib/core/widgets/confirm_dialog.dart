@@ -55,7 +55,7 @@ class ConfirmDialog extends StatelessWidget {
       context: context,
       isScrollControlled: false,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: AuroraRadius.xl),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (_) => ConfirmDialog(
         title: title,

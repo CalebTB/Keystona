@@ -6,11 +6,15 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+
+
+
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../maintenance/models/maintenance_task.dart';
@@ -60,14 +64,14 @@ class ApplianceDetailScreen extends ConsumerWidget {
       );
     }
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       appBar: AppBar(
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         elevation: 0,
         scrolledUnderElevation: 0,
         title: detailState.maybeWhen(
-          data: (d) => Text(d.appliance.name, style: AppTextStyles.h3),
-          orElse: () => Text('Appliance', style: AppTextStyles.h3),
+          data: (d) => Text(d.appliance.name, style: AuroraType.h3),
+          orElse: () => Text('Appliance', style: AuroraType.h3),
         ),
         actions: [
           detailState.maybeWhen(
@@ -226,7 +230,7 @@ class _ContentState extends ConsumerState<_Content> {
             ),
             TextButton(
               style:
-                  TextButton.styleFrom(foregroundColor: AppColors.error),
+                  TextButton.styleFrom(foregroundColor: AuroraColors.coral),
               onPressed: () => Navigator.of(context).pop(true),
               child: const Text('Delete'),
             ),
@@ -363,22 +367,22 @@ class _ContentState extends ConsumerState<_Content> {
                 photoUrlBuilder: (path) =>
                     widget.detail.photoUrls[path] ?? path,
               ),
-              const SizedBox(height: AppSizes.xl),
+              const SizedBox(height: AuroraSpacing.space8),
 
               // ── 8. Delete button ───────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: AppSizes.screenPadding),
+                    horizontal: AuroraSpacing.screenPadH),
                 child: OutlinedButton(
                   onPressed: _deleting ? null : _confirmDelete,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.error,
-                    side: const BorderSide(color: AppColors.error),
+                    foregroundColor: AuroraColors.coral,
+                    side: const BorderSide(color: AuroraColors.coral),
                     minimumSize:
-                        const Size.fromHeight(AppSizes.buttonHeight),
+                        const Size.fromHeight(52.0),
                     shape: RoundedRectangleBorder(
                       borderRadius:
-                          BorderRadius.circular(AppSizes.radiusSm),
+                          const BorderRadius.all(Radius.circular(8)),
                     ),
                   ),
                   child: _deleting
@@ -387,13 +391,13 @@ class _ContentState extends ConsumerState<_Content> {
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: AppColors.error,
+                            color: AuroraColors.coral,
                           ),
                         )
                       : const Text('Delete Appliance'),
                 ),
               ),
-              const SizedBox(height: AppSizes.xl),
+              const SizedBox(height: AuroraSpacing.space8),
             ],
           ),
         ),
@@ -415,13 +419,13 @@ IconData _applianceIcon(ApplianceCategory cat) => switch (cat) {
     };
 
 Color _applianceCategoryColor(ApplianceCategory cat) => switch (cat) {
-      ApplianceCategory.kitchen => AppColors.teal,
-      ApplianceCategory.laundry => AppColors.slate,
-      ApplianceCategory.climate => AppColors.sandAmber,
-      ApplianceCategory.cleaning => AppColors.olive,
-      ApplianceCategory.outdoor => AppColors.sand,
-      ApplianceCategory.bathroom => AppColors.amber,
-      ApplianceCategory.other => AppColors.gray400,
+      ApplianceCategory.kitchen => AuroraColors.cobalt,
+      ApplianceCategory.laundry => AuroraColors.cobalt,
+      ApplianceCategory.climate => AuroraColors.yellowDeep,
+      ApplianceCategory.cleaning => AuroraColors.lime,
+      ApplianceCategory.outdoor => AuroraColors.yellow,
+      ApplianceCategory.bathroom => AuroraColors.yellow,
+      ApplianceCategory.other => AuroraColors.inkTertiary,
     };
 
 /// Parse notes into (label, value) pairs by splitting lines on first ":".
@@ -489,21 +493,21 @@ class _HeroCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.fromLTRB(
-          AppSizes.screenPadding, 0, AppSizes.screenPadding, 12),
+          AuroraSpacing.screenPadH, 0, AuroraSpacing.screenPadH, 12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-        border: Border.all(color: AppColors.border, width: 1.5),
+        color: AuroraColors.paper,
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
+        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
         boxShadow: const [
           BoxShadow(
-            color: AppColors.shadowXs,
+            color: Color(0x0A071238),
             blurRadius: 8,
             offset: Offset(0, 2),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg - 1.5),
+        borderRadius: BorderRadius.circular(16 - 1.5),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -531,7 +535,7 @@ class _HeroCard extends StatelessWidget {
                     children: [
                       Text(
                         eyebrow,
-                        style: GoogleFonts.ibmPlexMono(
+                        style: GoogleFonts.jetBrainsMono(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.2,
@@ -541,8 +545,8 @@ class _HeroCard extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         name,
-                        style: AppTextStyles.headlineMedium.copyWith(
-                          color: AppColors.textPrimary,
+                        style: AuroraType.h1.copyWith(
+                          color: AuroraColors.ink,
                           fontSize: 21,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -551,10 +555,10 @@ class _HeroCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           subtitle,
-                          style: GoogleFonts.ibmPlexMono(
+                          style: GoogleFonts.jetBrainsMono(
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
-                            color: AppColors.textSecondary,
+                            color: AuroraColors.inkSecondary,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -570,7 +574,7 @@ class _HeroCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: categoryColor.withAlpha(14),
               borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(AppSizes.radiusLg - 1.5),
+                bottom: Radius.circular(16 - 1.5),
               ),
               border: Border(
                 top: BorderSide(
@@ -626,19 +630,19 @@ class _StatCell extends StatelessWidget {
         children: [
           Text(
             label,
-            style: GoogleFonts.ibmPlexMono(
+            style: GoogleFonts.jetBrainsMono(
               fontSize: 9,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
-              color: AppColors.textTertiary,
+              color: AuroraColors.inkTertiary,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: AppTextStyles.bodyMediumSemibold.copyWith(
-              color: AppColors.textPrimary,
+            style: AuroraType.body.copyWith(fontWeight: FontWeight.w600).copyWith(
+              color: AuroraColors.ink,
             ),
             textAlign: TextAlign.center,
           ),
@@ -671,10 +675,10 @@ class _WarrantyCalloutCard extends StatelessWidget {
           : null,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.oliveDim,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          color: AuroraColors.limeDim,
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
           border: Border.all(
-            color: AppColors.olive.withAlpha(51), // 0.2 opacity
+            color: AuroraColors.lime.withAlpha(51), // 0.2 opacity
           ),
         ),
         padding: const EdgeInsets.all(14),
@@ -684,12 +688,12 @@ class _WarrantyCalloutCard extends StatelessWidget {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: AppColors.olive.withAlpha(38),
+                color: AuroraColors.lime.withAlpha(38),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.shield_outlined,
-                color: AppColors.olive,
+                color: AuroraColors.lime,
                 size: 18,
               ),
             ),
@@ -700,23 +704,23 @@ class _WarrantyCalloutCard extends StatelessWidget {
                 children: [
                   Text(
                     'MANUFACTURER WARRANTY',
-                    style: GoogleFonts.ibmPlexMono(
+                    style: GoogleFonts.jetBrainsMono(
                       fontSize: 9,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.8,
-                      color: AppColors.textTertiary,
+                      color: AuroraColors.inkTertiary,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     statusLabel,
-                    style: AppTextStyles.bodyMediumSemibold,
+                    style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
                   ),
                   if (expiryCaption.isNotEmpty) ...[
                     const SizedBox(height: 2),
                     Text(
                       expiryCaption,
-                      style: AppTextStyles.caption,
+                      style: AuroraType.bodySm,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -727,7 +731,7 @@ class _WarrantyCalloutCard extends StatelessWidget {
               const Icon(
                 Icons.chevron_right,
                 size: 20,
-                color: AppColors.textTertiary,
+                color: AuroraColors.inkTertiary,
               ),
           ],
         ),
@@ -766,9 +770,9 @@ class _QuickActionRow extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.border, width: 1.5),
+        color: AuroraColors.paper,
+        borderRadius: AuroraRadius.xl,
+        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
       ),
       child: IntrinsicHeight(
         child: Row(
@@ -785,7 +789,7 @@ class _QuickActionRow extends StatelessWidget {
               ),
             ),
             VerticalDivider(
-              color: AppColors.border,
+              color: AuroraColors.inkBorder,
               width: 1,
               thickness: 1,
             ),
@@ -803,7 +807,7 @@ class _QuickActionRow extends StatelessWidget {
               ),
             ),
             VerticalDivider(
-              color: AppColors.border,
+              color: AuroraColors.inkBorder,
               width: 1,
               thickness: 1,
             ),
@@ -844,16 +848,16 @@ class _QuickActionCell extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 24, color: AppColors.deepNavy),
+            Icon(icon, size: 24, color: AuroraColors.ink),
             const SizedBox(height: 6),
-            Text(label, style: AppTextStyles.labelSmall),
+            Text(label, style: AuroraType.labelSm),
             const SizedBox(height: 2),
             Text(
               subtitle,
-              style: GoogleFonts.ibmPlexMono(
+              style: GoogleFonts.jetBrainsMono(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textTertiary,
+                color: AuroraColors.inkTertiary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -879,14 +883,14 @@ class _SectionLabel2 extends StatelessWidget {
             width: 6,
             height: 6,
             decoration: const BoxDecoration(
-              color: AppColors.deepNavy,
+              color: AuroraColors.ink,
               shape: BoxShape.circle,
             ),
           ),
           const SizedBox(width: 6),
           Text(
             title,
-            style: AppTextStyles.monoSection,
+            style: AuroraType.label,
           ),
         ],
       ),
@@ -927,9 +931,9 @@ class _InfoCard2State extends State<_InfoCard2> {
     if (widget.rows.isEmpty) return const SizedBox.shrink();
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.border, width: 1.5),
+        color: AuroraColors.paper,
+        borderRadius: AuroraRadius.xl,
+        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
       ),
       child: Column(
         children: [
@@ -947,15 +951,15 @@ class _InfoCard2State extends State<_InfoCard2> {
                       width: 110,
                       child: Text(
                         widget.rows[i].label,
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textSecondary,
+                        style: AuroraType.bodySm.copyWith(
+                          color: AuroraColors.inkSecondary,
                         ),
                       ),
                     ),
                     Expanded(
                       child: Text(
                         widget.rows[i].value,
-                        style: AppTextStyles.bodyMediumSemibold,
+                        style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
                       ),
                     ),
                     if (widget.rows[i].copyable)
@@ -966,13 +970,13 @@ class _InfoCard2State extends State<_InfoCard2> {
                                 Icons.check_circle,
                                 key: ValueKey('check'),
                                 size: 14,
-                                color: AppColors.olive,
+                                color: AuroraColors.lime,
                               )
                             : const Icon(
                                 Icons.copy_outlined,
                                 key: ValueKey('copy'),
                                 size: 14,
-                                color: AppColors.textTertiary,
+                                color: AuroraColors.inkTertiary,
                               ),
                       ),
                   ],
@@ -992,13 +996,13 @@ class _InfoCard2State extends State<_InfoCard2> {
 (String, Color, String) _computeHealth(
     String? purchaseDateStr, int? lifespanYears) {
   if (purchaseDateStr == null) {
-    return ('Good', AppColors.darkTextSecondary, '—');
+    return ('Good', AuroraColors.inkSecondary, '—');
   }
   final DateTime purchase;
   try {
     purchase = DateTime.parse(purchaseDateStr);
   } catch (_) {
-    return ('Good', AppColors.darkTextSecondary, '—');
+    return ('Good', AuroraColors.inkSecondary, '—');
   }
   final ageYears =
       DateTime.now().difference(purchase).inDays / 365.25;
@@ -1006,15 +1010,15 @@ class _InfoCard2State extends State<_InfoCard2> {
       '${ageYears.toStringAsFixed(1)} yr old';
 
   if (lifespanYears == null || lifespanYears <= 0) {
-    return ('Good', AppColors.darkTextSecondary, ageLabel);
+    return ('Good', AuroraColors.inkSecondary, ageLabel);
   }
   final pct = ageYears / lifespanYears * 100;
   if (pct < 50) {
-    return ('Healthy', AppColors.olive, ageLabel);
+    return ('Healthy', AuroraColors.lime, ageLabel);
   } else if (pct <= 75) {
-    return ('Aging', AppColors.sandAmber, ageLabel);
+    return ('Aging', AuroraColors.yellowDeep, ageLabel);
   } else {
-    return ('Near End', AppColors.accent, ageLabel);
+    return ('Near End', AuroraColors.coral, ageLabel);
   }
 }
 

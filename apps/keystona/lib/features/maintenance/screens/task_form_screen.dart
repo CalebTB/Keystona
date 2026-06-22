@@ -4,9 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/supabase_service.dart';
 import '../models/maintenance_task.dart';
@@ -247,7 +246,7 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
       context: context,
       builder: (_) => Container(
         height: 300,
-        color: AppColors.surface,
+        color: AuroraColors.paper,
         child: Column(
           children: [
             Row(
@@ -355,17 +354,17 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
     } else {
       await showModalBottomSheet<void>(
         context: context,
-        backgroundColor: AppColors.surface,
+        backgroundColor: AuroraColors.paper,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppSizes.radiusLg)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         ),
         builder: (_) => SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
-                padding: AppPadding.card,
-                child: Text(title, style: AppTextStyles.h3),
+                padding: const EdgeInsets.all(14),
+                child: Text(title, style: AuroraType.h3),
               ),
               ListTile(
                 title: const Text('None'),
@@ -378,7 +377,7 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
                 (opt) => ListTile(
                   title: Text(opt.name),
                   trailing: opt.id == currentId
-                      ? const Icon(Icons.check, color: AppColors.deepNavy)
+                      ? Icon(Icons.check, color: AuroraColors.ink)
                       : null,
                   onTap: () {
                     onSelected(opt.id);
@@ -535,14 +534,14 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
 
   Widget _buildAndroid() {
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       appBar: AppBar(
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         scrolledUnderElevation: 0,
         elevation: 0,
         title: Text(
           _isEditing ? 'Edit Task' : 'New Task',
-          style: AppTextStyles.h3,
+          style: AuroraType.h3,
         ),
         leading: IconButton(
           icon: const Icon(Icons.close),
@@ -550,23 +549,23 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: AppSizes.sm),
+            padding: const EdgeInsets.only(right: 8),
             child: _saving
-                ? const Center(
+                ? Center(
                     child: SizedBox.square(
                       dimension: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppColors.deepNavy,
+                        color: AuroraColors.ink,
                       ),
                     ),
                   )
                 : TextButton(
                     onPressed: _save,
-                    child: const Text(
+                    child: Text(
                       'Save',
                       style: TextStyle(
-                        color: AppColors.deepNavy,
+                        color: AuroraColors.ink,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -595,10 +594,10 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
         onCategoryTap: () async {
           final result = await showModalBottomSheet<String>(
             context: context,
-            backgroundColor: AppColors.surface,
+            backgroundColor: AuroraColors.paper,
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(
-                top: Radius.circular(AppSizes.radiusLg),
+                top: Radius.circular(16),
               ),
             ),
             builder: (_) => _CategoryPicker(current: _category),
@@ -609,10 +608,10 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
         onRecurrenceTap: () async {
           final result = await showModalBottomSheet<RecurrenceType>(
             context: context,
-            backgroundColor: AppColors.surface,
+            backgroundColor: AuroraColors.paper,
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(
-                top: Radius.circular(AppSizes.radiusLg),
+                top: Radius.circular(16),
               ),
             ),
             builder: (_) => _EnumPicker<RecurrenceType>(
@@ -626,10 +625,10 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
         onPriorityTap: () async {
           final result = await showModalBottomSheet<TaskPriority>(
             context: context,
-            backgroundColor: AppColors.surface,
+            backgroundColor: AuroraColors.paper,
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(
-                top: Radius.circular(AppSizes.radiusLg),
+                top: Radius.circular(16),
               ),
             ),
             builder: (_) => _EnumPicker<TaskPriority>(
@@ -647,10 +646,10 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
         onDifficultyTap: () async {
           final result = await showModalBottomSheet<TaskDifficulty>(
             context: context,
-            backgroundColor: AppColors.surface,
+            backgroundColor: AuroraColors.paper,
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(
-                top: Radius.circular(AppSizes.radiusLg),
+                top: Radius.circular(16),
               ),
             ),
             builder: (_) => _EnumPicker<TaskDifficulty>(
@@ -669,10 +668,10 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
         onDiyOrProTap: () async {
           final result = await showModalBottomSheet<DiyOrPro>(
             context: context,
-            backgroundColor: AppColors.surface,
+            backgroundColor: AuroraColors.paper,
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(
-                top: Radius.circular(AppSizes.radiusLg),
+                top: Radius.circular(16),
               ),
             ),
             builder: (_) => _EnumPicker<DiyOrPro>(
@@ -768,7 +767,7 @@ class _FormBody extends ConsumerWidget {
     return Form(
       key: formKey,
       child: ListView(
-        padding: AppPadding.screen.copyWith(bottom: 48),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 48),
         children: [
           // ── Section: Task info ─────────────────────────────────────────
           _SectionHeader(label: 'Task Info'),
@@ -931,33 +930,33 @@ class _FormBody extends ConsumerWidget {
 
   static InputDecoration _inputDecoration(String hint) => InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: AppColors.textSecondary),
+        hintStyle: TextStyle(color: AuroraColors.inkSecondary),
         filled: true,
-        fillColor: AppColors.surface,
-        counterStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+        fillColor: AuroraColors.paper,
+        counterStyle: TextStyle(color: AuroraColors.inkSecondary, fontSize: 12),
         border: OutlineInputBorder(
-          borderRadius: AppRadius.sm,
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: const BorderRadius.all(Radius.circular(8)),
+          borderSide: BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: AppRadius.sm,
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: const BorderRadius.all(Radius.circular(8)),
+          borderSide: BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: AppRadius.sm,
-          borderSide: const BorderSide(color: AppColors.deepNavy),
+          borderRadius: const BorderRadius.all(Radius.circular(8)),
+          borderSide: BorderSide(color: AuroraColors.ink),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: AppRadius.sm,
-          borderSide: const BorderSide(color: AppColors.error),
+          borderRadius: const BorderRadius.all(Radius.circular(8)),
+          borderSide: BorderSide(color: AuroraColors.coral),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: AppRadius.sm,
-          borderSide: const BorderSide(color: AppColors.error),
+          borderRadius: const BorderRadius.all(Radius.circular(8)),
+          borderSide: BorderSide(color: AuroraColors.coral),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
+          horizontal: 12,
+          vertical: 8,
         ),
       );
 
@@ -991,11 +990,11 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: AppSizes.lg, bottom: AppSizes.xs),
+      padding: const EdgeInsets.only(top: 16, bottom: 4),
       child: Text(
         label.toUpperCase(),
-        style: AppTextStyles.labelSmall.copyWith(
-          color: AppColors.textSecondary,
+        style: AuroraType.labelSm.copyWith(
+          color: AuroraColors.inkSecondary,
           letterSpacing: 0.8,
         ),
       ),
@@ -1011,13 +1010,13 @@ class _FormField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.md),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(bottom: AppSizes.xs),
-            child: Text(label, style: AppTextStyles.labelMedium),
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Text(label, style: AuroraType.label),
           ),
           child,
         ],
@@ -1038,30 +1037,30 @@ class _TapRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm + 2,
+          horizontal: 12,
+          vertical: 10,
         ),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: AppRadius.sm,
-          border: Border.all(color: AppColors.border),
+          color: AuroraColors.paper,
+          borderRadius: const BorderRadius.all(Radius.circular(8)),
+          border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(
           children: [
             Expanded(
               child: Text(
                 value,
-                style: AppTextStyles.bodyMedium.copyWith(
+                style: AuroraType.body.copyWith(
                   color: onTap == null
-                      ? AppColors.textSecondary
-                      : AppColors.textPrimary,
+                      ? AuroraColors.inkSecondary
+                      : AuroraColors.ink,
                 ),
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right,
               size: 18,
-              color: AppColors.textSecondary,
+              color: AuroraColors.inkSecondary,
             ),
           ],
         ),
@@ -1083,19 +1082,19 @@ class _CategoryPicker extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: AppPadding.card,
-            child: Text('Category', style: AppTextStyles.h3),
+            padding: const EdgeInsets.all(14),
+            child: Text('Category', style: AuroraType.h3),
           ),
           ...TaskCategories.all.map(
             (c) => ListTile(
               title: Text(c.label),
               trailing: c.value == current
-                  ? const Icon(Icons.check, color: AppColors.deepNavy)
+                  ? Icon(Icons.check, color: AuroraColors.ink)
                   : null,
               onTap: () => Navigator.of(context).pop(c.value),
             ),
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: 8),
         ],
       ),
     );
@@ -1120,19 +1119,19 @@ class _EnumPicker<T> extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: AppPadding.card,
-            child: Text(title, style: AppTextStyles.h3),
+            padding: const EdgeInsets.all(14),
+            child: Text(title, style: AuroraType.h3),
           ),
           ...options.map(
             (opt) => ListTile(
               title: Text(opt.$2),
               trailing: opt.$1 == current
-                  ? const Icon(Icons.check, color: AppColors.deepNavy)
+                  ? Icon(Icons.check, color: AuroraColors.ink)
                   : null,
               onTap: () => Navigator.of(context).pop(opt.$1),
             ),
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: 8),
         ],
       ),
     );

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
+
+
 
 /// Pulse-shimmer skeleton matching the [SystemCard] layout exactly.
 ///
@@ -50,19 +52,19 @@ class _SystemListSkeletonState extends State<SystemListSkeleton>
       builder: (_, _) => Opacity(
         opacity: _opacity.value,
         child: Padding(
-          padding: AppPadding.screen,
+          padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Category header placeholder.
               _Bar(widthFactor: 0.25, height: 12),
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
               const _SkeletonCard(),
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
               const _SkeletonCard(),
-              const SizedBox(height: AppSizes.lg),
+              const SizedBox(height: AuroraSpacing.space7),
               _Bar(widthFactor: 0.2, height: 12),
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
               const _SkeletonCard(),
             ],
           ),
@@ -79,11 +81,11 @@ class _SkeletonCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 72,
-      padding: AppPadding.card,
+      padding: const EdgeInsets.all(AuroraSpacing.space6),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.border),
+        color: AuroraColors.paper,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AuroraColors.inkBorder),
       ),
       child: Row(
         children: [
@@ -92,11 +94,11 @@ class _SkeletonCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.gray200,
-              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+              color: AuroraColors.inkBorder,
+              borderRadius: BorderRadius.circular(8),
             ),
           ),
-          const SizedBox(width: AppSizes.md),
+          const SizedBox(width: AuroraSpacing.space5),
           // Name and type text.
           Expanded(
             child: Column(
@@ -104,7 +106,7 @@ class _SkeletonCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _Bar(widthFactor: 0.65, height: 13),
-                const SizedBox(height: AppSizes.xs),
+                const SizedBox(height: AuroraSpacing.space1),
                 _Bar(widthFactor: 0.45, height: 11),
               ],
             ),
@@ -114,8 +116,8 @@ class _SkeletonCard extends StatelessWidget {
             width: 52,
             height: 22,
             decoration: BoxDecoration(
-              color: AppColors.gray200,
-              borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+              color: AuroraColors.inkBorder,
+              borderRadius: BorderRadius.circular(999),
             ),
           ),
         ],
@@ -138,8 +140,8 @@ class _Bar extends StatelessWidget {
       child: Container(
         height: height,
         decoration: BoxDecoration(
-          color: AppColors.gray200,
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          color: AuroraColors.inkBorder,
+          borderRadius: BorderRadius.circular(8),
         ),
       ),
     );

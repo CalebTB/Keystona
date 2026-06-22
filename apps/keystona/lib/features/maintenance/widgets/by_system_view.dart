@@ -5,9 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../home_profile/models/appliance.dart' hide ItemStatus;
 import '../../home_profile/models/system.dart';
 import '../../home_profile/providers/appliances_provider.dart';
@@ -31,22 +30,22 @@ IconData _systemIcon(SystemCategory cat) => switch (cat) {
     };
 
 Color _systemColor(SystemCategory cat) => switch (cat) {
-      SystemCategory.hvac => AppColors.slate,
-      SystemCategory.plumbing => AppColors.teal,
-      SystemCategory.electrical => AppColors.sandAmber,
-      SystemCategory.roofing => AppColors.sand,
-      SystemCategory.foundation => AppColors.gray500,
-      SystemCategory.siding => AppColors.olive,
-      SystemCategory.windowsDoors => AppColors.slate,
-      SystemCategory.insulation => AppColors.amber,
-      SystemCategory.garage => AppColors.gray400,
-      SystemCategory.other => AppColors.gray400,
+      SystemCategory.hvac => AuroraColors.cobalt,
+      SystemCategory.plumbing => AuroraColors.cobalt,
+      SystemCategory.electrical => AuroraColors.yellowDeep,
+      SystemCategory.roofing => AuroraColors.yellow,
+      SystemCategory.foundation => AuroraColors.inkTertiary,
+      SystemCategory.siding => AuroraColors.limeDeep,
+      SystemCategory.windowsDoors => AuroraColors.cobalt,
+      SystemCategory.insulation => AuroraColors.yellow,
+      SystemCategory.garage => AuroraColors.inkTertiary,
+      SystemCategory.other => AuroraColors.inkTertiary,
     };
 
 Color _healthColor(HomeSystem system) => switch (system.status) {
-      ItemStatus.active => AppColors.oliveLight,
-      ItemStatus.needsRepair => AppColors.sand,
-      _ => AppColors.gray400,
+      ItemStatus.active => AuroraColors.limeDim,
+      ItemStatus.needsRepair => AuroraColors.yellow,
+      _ => AuroraColors.inkTertiary,
     };
 
 IconData _applianceIcon(ApplianceCategory cat) => switch (cat) {
@@ -60,29 +59,29 @@ IconData _applianceIcon(ApplianceCategory cat) => switch (cat) {
     };
 
 Color _applianceColor(ApplianceCategory cat) => switch (cat) {
-      ApplianceCategory.kitchen => AppColors.teal,
-      ApplianceCategory.laundry => AppColors.slate,
-      ApplianceCategory.climate => AppColors.sandAmber,
-      ApplianceCategory.cleaning => AppColors.olive,
-      ApplianceCategory.outdoor => AppColors.sand,
-      ApplianceCategory.bathroom => AppColors.amber,
-      ApplianceCategory.other => AppColors.gray400,
+      ApplianceCategory.kitchen => AuroraColors.cobalt,
+      ApplianceCategory.laundry => AuroraColors.cobalt,
+      ApplianceCategory.climate => AuroraColors.yellowDeep,
+      ApplianceCategory.cleaning => AuroraColors.limeDeep,
+      ApplianceCategory.outdoor => AuroraColors.yellow,
+      ApplianceCategory.bathroom => AuroraColors.yellow,
+      ApplianceCategory.other => AuroraColors.inkTertiary,
     };
 
 Color _taskDotColor(MaintenanceTask t) {
-  if (t.status == TaskStatus.completed) return AppColors.olive;
-  if (t.status == TaskStatus.skipped) return AppColors.gray300;
+  if (t.status == TaskStatus.completed) return AuroraColors.limeDeep;
+  if (t.status == TaskStatus.skipped) return AuroraColors.inkBorder;
   final today = DateTime.now();
   final todayMid = DateTime(today.year, today.month, today.day);
   final due = t.dueDate.toLocal();
   final dueMid = DateTime(due.year, due.month, due.day);
   if (t.status == TaskStatus.overdue || dueMid.isBefore(todayMid)) {
-    return AppColors.accent;
+    return AuroraColors.coral;
   }
-  if (dueMid == todayMid) return AppColors.sandAmber;
+  if (dueMid == todayMid) return AuroraColors.yellowDeep;
   final weekOut = todayMid.add(const Duration(days: 7));
-  if (dueMid.isBefore(weekOut)) return AppColors.sand;
-  return AppColors.slate;
+  if (dueMid.isBefore(weekOut)) return AuroraColors.yellow;
+  return AuroraColors.cobalt;
 }
 
 // ── Context label ──────────────────────────────────────────────────────────────
@@ -105,24 +104,24 @@ DateTime? _nextDueDate(MaintenanceTask t) {
 _Label _contextLabel(MaintenanceTask t) {
   if (t.status == TaskStatus.completed) {
     final next = _nextDueDate(t);
-    if (next == null) return (text: 'Done', color: AppColors.olive);
+    if (next == null) return (text: 'Done', color: AuroraColors.limeDeep);
     final today = DateTime.now();
     final todayMid = DateTime(today.year, today.month, today.day);
     final nextMid = DateTime(next.year, next.month, next.day);
     final diff = nextMid.difference(todayMid).inDays;
-    if (diff <= 0) return (text: 'Due again', color: AppColors.sandAmber);
-    if (diff == 1) return (text: 'Due tomorrow', color: AppColors.sandAmber);
-    if (diff <= 7) return (text: 'Good for $diff days', color: AppColors.slate);
+    if (diff <= 0) return (text: 'Due again', color: AuroraColors.yellowDeep);
+    if (diff == 1) return (text: 'Due tomorrow', color: AuroraColors.yellowDeep);
+    if (diff <= 7) return (text: 'Good for $diff days', color: AuroraColors.cobalt);
     if (diff <= 60) {
       final weeks = (diff / 7).round();
-      return (text: 'Good for $weeks wk', color: AppColors.slate);
+      return (text: 'Good for $weeks wk', color: AuroraColors.cobalt);
     }
     final months = (diff / 30).round();
-    if (months < 12) return (text: 'Good for $months mo', color: AppColors.olive);
-    return (text: '~1 year', color: AppColors.olive);
+    if (months < 12) return (text: 'Good for $months mo', color: AuroraColors.limeDeep);
+    return (text: '~1 year', color: AuroraColors.limeDeep);
   }
   if (t.status == TaskStatus.skipped) {
-    return (text: 'Skipped', color: AppColors.gray400);
+    return (text: 'Skipped', color: AuroraColors.inkTertiary);
   }
 
   final today = DateTime.now();
@@ -133,33 +132,33 @@ _Label _contextLabel(MaintenanceTask t) {
 
   if (t.status == TaskStatus.overdue || dueMid.isBefore(todayMid)) {
     final daysAgo = todayMid.difference(dueMid).inDays;
-    if (daysAgo <= 1) return (text: 'Overdue', color: AppColors.accent);
-    if (daysAgo <= 14) return (text: '${daysAgo}d overdue', color: AppColors.accent);
+    if (daysAgo <= 1) return (text: 'Overdue', color: AuroraColors.coral);
+    if (daysAgo <= 14) return (text: '${daysAgo}d overdue', color: AuroraColors.coral);
     final weeks = (daysAgo / 7).round();
-    if (weeks <= 8) return (text: '${weeks}wk overdue', color: AppColors.accent);
+    if (weeks <= 8) return (text: '${weeks}wk overdue', color: AuroraColors.coral);
     final months = (daysAgo / 30).round();
-    return (text: '${months}mo overdue', color: AppColors.accent);
+    return (text: '${months}mo overdue', color: AuroraColors.coral);
   }
-  if (diff == 0) return (text: 'Due today', color: AppColors.sandAmber);
-  if (diff == 1) return (text: 'Due tomorrow', color: AppColors.sandAmber);
-  if (diff <= 7) return (text: 'Due this week', color: AppColors.sandAmber);
-  if (diff <= 31) return (text: 'Due this month', color: AppColors.sand);
+  if (diff == 0) return (text: 'Due today', color: AuroraColors.yellowDeep);
+  if (diff == 1) return (text: 'Due tomorrow', color: AuroraColors.yellowDeep);
+  if (diff <= 7) return (text: 'Due this week', color: AuroraColors.yellowDeep);
+  if (diff <= 31) return (text: 'Due this month', color: AuroraColors.yellow);
   if (diff <= 60) {
     final weeks = (diff / 7).round();
-    return (text: 'Good for $weeks wk', color: AppColors.slate);
+    return (text: 'Good for $weeks wk', color: AuroraColors.cobalt);
   }
   final months = (diff / 30).round();
-  if (months < 12) return (text: 'Good for $months mo', color: AppColors.slate);
-  return (text: '~1 year', color: AppColors.olive);
+  if (months < 12) return (text: 'Good for $months mo', color: AuroraColors.cobalt);
+  return (text: '~1 year', color: AuroraColors.limeDeep);
 }
 
 int _taskSortKey(MaintenanceTask t) {
   if (t.status == TaskStatus.skipped) return 5;
   if (t.status == TaskStatus.completed) return 4;
   final dot = _taskDotColor(t);
-  if (dot == AppColors.accent) return 0;
-  if (dot == AppColors.sandAmber) return 1;
-  if (dot == AppColors.sand) return 2;
+  if (dot == AuroraColors.coral) return 0;
+  if (dot == AuroraColors.yellowDeep) return 1;
+  if (dot == AuroraColors.yellow) return 2;
   return 3;
 }
 
@@ -191,7 +190,6 @@ class BySystemView extends ConsumerWidget {
     final todayMid = DateTime(today.year, today.month, today.day);
     final thirtyDaysOut = todayMid.add(const Duration(days: 30));
 
-    // Group tasks by system, appliance, or uncategorized.
     final Map<String, List<MaintenanceTask>> systemGrouped = {};
     final Map<String, List<MaintenanceTask>> applianceGrouped = {};
     final List<MaintenanceTask> uncategorized = [];
@@ -211,16 +209,10 @@ class BySystemView extends ConsumerWidget {
 
     bool isAllClear(List<MaintenanceTask> list) {
       for (final t in list) {
-        if (t.status == TaskStatus.completed ||
-            t.status == TaskStatus.skipped) {
-          continue;
-        }
+        if (t.status == TaskStatus.completed || t.status == TaskStatus.skipped) continue;
         final due = t.dueDate.toLocal();
         final dueMid = DateTime(due.year, due.month, due.day);
-        if (t.status == TaskStatus.overdue ||
-            dueMid.isBefore(thirtyDaysOut)) {
-          return false;
-        }
+        if (t.status == TaskStatus.overdue || dueMid.isBefore(thirtyDaysOut)) return false;
       }
       return true;
     }
@@ -231,7 +223,6 @@ class BySystemView extends ConsumerWidget {
           return t.status == TaskStatus.overdue || dueMid.isBefore(todayMid);
         }).length;
 
-    // Systems and appliances needing attention (tasks due within 30 days).
     final attentionSystems = systems
         .where((s) => systemGrouped.containsKey(s.id) && !isAllClear(systemGrouped[s.id]!))
         .toList()
@@ -244,7 +235,6 @@ class BySystemView extends ConsumerWidget {
       ..sort((a, b) => overdueCount(applianceGrouped[b.id]!)
           .compareTo(overdueCount(applianceGrouped[a.id]!)));
 
-    // All-clear: systems/appliances with no tasks or all tasks 30+ days out.
     final clearSystems = systems.where((s) =>
         isAllClear(systemGrouped[s.id] ?? [])).toList();
     final clearAppliances = appliances.where((a) =>
@@ -256,82 +246,72 @@ class BySystemView extends ConsumerWidget {
         if (systemGrouped.containsKey(s.id)) s.id: systemGrouped[s.id]!,
     };
 
-    // Only show "no systems" empty state when truly nothing to show.
     if (systems.isEmpty && appliances.isEmpty) {
       return _NoSystemsEmptyState();
     }
 
     return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: AppSizes.md),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            children: [
+              ...attentionSystems.map(
+                (system) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: _SystemCard(
+                    system: system,
+                    tasks: systemGrouped[system.id]!,
+                  ),
+                ),
+              ),
+              ...attentionAppliances.map(
+                (appliance) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: _ApplianceCard(
+                    appliance: appliance,
+                    tasks: applianceGrouped[appliance.id]!,
+                  ),
+                ),
+              ),
+              if (uncategorized.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: _UncategorizedCard(tasks: uncategorized),
+                ),
+            ],
+          ),
+        ),
+        if (clearSystems.isNotEmpty || clearAppliances.isNotEmpty) ...[
+          const SizedBox(height: 4),
           Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.screenPadding),
-            child: Column(
-              children: [
-                // Systems needing attention
-                ...attentionSystems.map(
-                  (system) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppSizes.sm),
-                    child: _SystemCard(
-                      system: system,
-                      tasks: systemGrouped[system.id]!,
-                    ),
-                  ),
-                ),
-                // Appliances needing attention
-                ...attentionAppliances.map(
-                  (appliance) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppSizes.sm),
-                    child: _ApplianceCard(
-                      appliance: appliance,
-                      tasks: applianceGrouped[appliance.id]!,
-                    ),
-                  ),
-                ),
-                // Truly uncategorized tasks (no system, no appliance link)
-                if (uncategorized.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: AppSizes.sm),
-                    child: _UncategorizedCard(tasks: uncategorized),
-                  ),
-              ],
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _AllClearCard(
+              systems: clearSystems,
+              tasksBySystem: clearSystemTasks,
+              appliances: clearAppliances,
+              tasksByAppliance: {
+                for (final a in clearAppliances)
+                  if (applianceGrouped.containsKey(a.id))
+                    a.id: applianceGrouped[a.id]!,
+              },
             ),
           ),
-          // All Clear — systems + appliances with all tasks 30+ days out
-          if (clearSystems.isNotEmpty || clearAppliances.isNotEmpty) ...[
-            const SizedBox(height: AppSizes.xs),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.screenPadding),
-              child: _AllClearCard(
-                systems: clearSystems,
-                tasksBySystem: clearSystemTasks,
-                appliances: clearAppliances,
-                tasksByAppliance: {
-                  for (final a in clearAppliances)
-                    if (applianceGrouped.containsKey(a.id))
-                      a.id: applianceGrouped[a.id]!,
-                },
-              ),
-            ),
-          ],
-          const SizedBox(height: AppSizes.xl),
         ],
-      );
+        const SizedBox(height: 20),
+      ],
+    );
   }
 }
 
 // ── System card (has tasks) ────────────────────────────────────────────────────
 
-
 class _SystemCard extends StatefulWidget {
   const _SystemCard({required this.system, required this.tasks});
-
   final HomeSystem system;
   final List<MaintenanceTask> tasks;
-
   @override
   State<_SystemCard> createState() => _SystemCardState();
 }
@@ -343,13 +323,11 @@ class _SystemCardState extends State<_SystemCard> {
   Widget build(BuildContext context) {
     final color = _systemColor(widget.system.category);
     final icon = _systemIcon(widget.system.category);
-
     final sorted = [...widget.tasks]..sort((a, b) {
         final keyCmp = _taskSortKey(a).compareTo(_taskSortKey(b));
         if (keyCmp != 0) return keyCmp;
         return a.dueDate.compareTo(b.dueDate);
       });
-
     final systemName = widget.system.brand != null
         ? '${widget.system.brand} ${widget.system.name}'
         : widget.system.name;
@@ -359,22 +337,21 @@ class _SystemCardState extends State<_SystemCard> {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.border, width: 1.5),
-        boxShadow: const [
+        color: AuroraColors.paper,
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
+        boxShadow: [
           BoxShadow(
-            color: AppColors.shadowXs,
+            color: const Color(0x0A071238),
             blurRadius: 4,
-            offset: Offset(0, 1),
+            offset: const Offset(0, 1),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: AppRadius.card,
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         child: Column(
           children: [
-            // ── Header — tap to collapse/expand ──────────────────────
             GestureDetector(
               onTap: () {
                 HapticFeedback.lightImpact();
@@ -385,10 +362,8 @@ class _SystemCardState extends State<_SystemCard> {
                 padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
                 child: Row(
                   children: [
-                    // Icon badge — tap to open system detail
                     GestureDetector(
-                      onTap: () =>
-                          context.push('/home/systems/${widget.system.id}'),
+                      onTap: () => context.push('/home/systems/${widget.system.id}'),
                       child: Container(
                         width: 42,
                         height: 42,
@@ -406,7 +381,7 @@ class _SystemCardState extends State<_SystemCard> {
                         children: [
                           Text(
                             systemName,
-                            style: AppTextStyles.bodyMediumSemibold,
+                            style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 3),
                           Row(
@@ -420,27 +395,26 @@ class _SystemCardState extends State<_SystemCard> {
                                 ),
                               ),
                               const SizedBox(width: 5),
-                              if (location != null &&
-                                  location.isNotEmpty) ...[
+                              if (location != null && location.isNotEmpty) ...[
                                 Text(
                                   location,
-                                  style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.textSecondary,
+                                  style: AuroraType.bodySm.copyWith(
+                                    color: AuroraColors.inkSecondary,
                                   ),
                                 ),
                                 if (year != null)
                                   Text(
                                     '  ·  ',
-                                    style: AppTextStyles.caption.copyWith(
-                                      color: AppColors.textTertiary,
+                                    style: AuroraType.bodySm.copyWith(
+                                      color: AuroraColors.inkTertiary,
                                     ),
                                   ),
                               ],
                               if (year != null)
                                 Text(
                                   year,
-                                  style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.textSecondary,
+                                  style: AuroraType.bodySm.copyWith(
+                                    color: AuroraColors.inkSecondary,
                                   ),
                                 ),
                             ],
@@ -448,22 +422,17 @@ class _SystemCardState extends State<_SystemCard> {
                         ],
                       ),
                     ),
-                    // Task count — always visible
                     Container(
                       margin: const EdgeInsets.only(right: 8),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 7, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppColors.warmFill,
+                        color: AuroraColors.butter,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                            color: AppColors.border, width: 1),
+                        border: Border.all(color: AuroraColors.inkBorder, width: 1),
                       ),
                       child: Text(
                         '$count',
-                        style: AppTextStyles.monoTiny.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
+                        style: AuroraType.labelSm.copyWith(color: AuroraColors.inkSecondary),
                       ),
                     ),
                     AnimatedRotation(
@@ -473,14 +442,13 @@ class _SystemCardState extends State<_SystemCard> {
                       child: Icon(
                         Icons.keyboard_arrow_down_rounded,
                         size: 20,
-                        color: AppColors.textSecondary,
+                        color: AuroraColors.inkSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            // ── Task list — collapses on header tap ───────────────────
             ClipRect(
               child: AnimatedAlign(
                 alignment: Alignment.topCenter,
@@ -489,10 +457,7 @@ class _SystemCardState extends State<_SystemCard> {
                 curve: Curves.easeInOutCubic,
                 child: Column(
                   children: [
-                    const Divider(
-                        height: 1,
-                        thickness: 1,
-                        color: AppColors.border),
+                    Divider(height: 1, thickness: 1, color: AuroraColors.inkBorder),
                     ...sorted.map((t) => _TaskRow(task: t)),
                   ],
                 ),
@@ -505,7 +470,7 @@ class _SystemCardState extends State<_SystemCard> {
   }
 }
 
-// ── Appliance card (has tasks) ────────────────────────────────────────────────
+// ── Appliance card ─────────────────────────────────────────────────────────────
 
 class _ApplianceCard extends StatefulWidget {
   const _ApplianceCard({required this.appliance, required this.tasks});
@@ -534,15 +499,15 @@ class _ApplianceCardState extends State<_ApplianceCard> {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.border, width: 1.5),
-        boxShadow: const [
-          BoxShadow(color: AppColors.shadowXs, blurRadius: 4, offset: Offset(0, 1)),
+        color: AuroraColors.paper,
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
+        boxShadow: [
+          BoxShadow(color: const Color(0x0A071238), blurRadius: 4, offset: const Offset(0, 1)),
         ],
       ),
       child: ClipRRect(
-        borderRadius: AppRadius.card,
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         child: Column(
           children: [
             GestureDetector(
@@ -556,8 +521,7 @@ class _ApplianceCardState extends State<_ApplianceCard> {
                 child: Row(
                   children: [
                     GestureDetector(
-                      onTap: () => context.push(
-                          '/home/appliances/${widget.appliance.id}'),
+                      onTap: () => context.push('/home/appliances/${widget.appliance.id}'),
                       child: Container(
                         width: 42,
                         height: 42,
@@ -573,12 +537,11 @@ class _ApplianceCardState extends State<_ApplianceCard> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(name, style: AppTextStyles.bodyMediumSemibold),
+                          Text(name, style: AuroraType.body.copyWith(fontWeight: FontWeight.w600)),
                           const SizedBox(height: 3),
                           Text(
                             widget.appliance.category.label,
-                            style: AppTextStyles.caption.copyWith(
-                                color: AppColors.textSecondary),
+                            style: AuroraType.bodySm.copyWith(color: AuroraColors.inkSecondary),
                           ),
                         ],
                       ),
@@ -587,20 +550,19 @@ class _ApplianceCardState extends State<_ApplianceCard> {
                       margin: const EdgeInsets.only(right: 8),
                       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppColors.warmFill,
+                        color: AuroraColors.butter,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.border, width: 1),
+                        border: Border.all(color: AuroraColors.inkBorder, width: 1),
                       ),
                       child: Text('$count',
-                          style: AppTextStyles.monoTiny.copyWith(
-                              color: AppColors.textSecondary)),
+                          style: AuroraType.labelSm.copyWith(color: AuroraColors.inkSecondary)),
                     ),
                     AnimatedRotation(
                       turns: _collapsed ? 0.25 : 0,
                       duration: const Duration(milliseconds: 260),
                       curve: Curves.easeInOutCubic,
                       child: Icon(Icons.keyboard_arrow_down_rounded,
-                          size: 20, color: AppColors.textSecondary),
+                          size: 20, color: AuroraColors.inkSecondary),
                     ),
                   ],
                 ),
@@ -614,7 +576,7 @@ class _ApplianceCardState extends State<_ApplianceCard> {
                 curve: Curves.easeInOutCubic,
                 child: Column(
                   children: [
-                    const Divider(height: 1, thickness: 1, color: AppColors.border),
+                    Divider(height: 1, thickness: 1, color: AuroraColors.inkBorder),
                     ...sorted.map((t) => _TaskRow(task: t)),
                   ],
                 ),
@@ -627,7 +589,7 @@ class _ApplianceCardState extends State<_ApplianceCard> {
   }
 }
 
-// ── Task row ──────────────────────────────────────────────────────────────────
+// ── Task row ───────────────────────────────────────────────────────────────────
 
 class _TaskRow extends StatelessWidget {
   const _TaskRow({required this.task});
@@ -650,32 +612,28 @@ class _TaskRow extends StatelessWidget {
               child: Row(
                 children: [
                   if (isDone && task.status == TaskStatus.completed) ...[
-                    Icon(Icons.check_circle_outline,
-                        size: 14, color: AppColors.olive),
+                    Icon(Icons.check_circle_outline, size: 14, color: AuroraColors.limeDeep),
                     const SizedBox(width: 10),
                   ],
                   Expanded(
                     child: Text(
                       task.name,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        decoration:
-                            isDone ? TextDecoration.lineThrough : null,
-                        decorationColor: AppColors.textSecondary,
+                      style: AuroraType.body.copyWith(
+                        decoration: isDone ? TextDecoration.lineThrough : null,
+                        decorationColor: AuroraColors.inkSecondary,
                       ),
                     ),
                   ),
                   const SizedBox(width: 10),
-                  // Status label pill
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                     decoration: BoxDecoration(
                       color: label.color.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       label.text,
-                      style: AppTextStyles.labelSmall.copyWith(
+                      style: AuroraType.labelSm.copyWith(
                         color: label.color,
                         fontSize: 11,
                       ),
@@ -685,24 +643,18 @@ class _TaskRow extends StatelessWidget {
               ),
             ),
           ),
-          Divider(
-              height: 1,
-              thickness: 1,
-              color: AppColors.warmFill,
-              indent: 42),
+          Divider(height: 1, thickness: 1, color: AuroraColors.butter, indent: 42),
         ],
       ),
     );
   }
 }
 
-
-// ── Uncategorized tasks card ───────────────────────────────────────────────────
+// ── Uncategorized card ─────────────────────────────────────────────────────────
 
 class _UncategorizedCard extends StatefulWidget {
   const _UncategorizedCard({required this.tasks});
   final List<MaintenanceTask> tasks;
-
   @override
   State<_UncategorizedCard> createState() => _UncategorizedCardState();
 }
@@ -717,27 +669,21 @@ class _UncategorizedCardState extends State<_UncategorizedCard> {
         if (keyCmp != 0) return keyCmp;
         return a.dueDate.compareTo(b.dueDate);
       });
-
     final count = sorted.length;
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.border, width: 1.5),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadowXs,
-            blurRadius: 4,
-            offset: Offset(0, 1),
-          ),
+        color: AuroraColors.paper,
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
+        boxShadow: [
+          BoxShadow(color: const Color(0x0A071238), blurRadius: 4, offset: const Offset(0, 1)),
         ],
       ),
       child: ClipRRect(
-        borderRadius: AppRadius.card,
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         child: Column(
           children: [
-            // Header — tap to collapse/expand
             GestureDetector(
               onTap: () {
                 HapticFeedback.lightImpact();
@@ -752,11 +698,10 @@ class _UncategorizedCardState extends State<_UncategorizedCard> {
                       width: 42,
                       height: 42,
                       decoration: BoxDecoration(
-                        color: AppColors.warmFill,
+                        color: AuroraColors.butter,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(Icons.checklist_rounded,
-                          size: 20, color: AppColors.gray400),
+                      child: Icon(Icons.checklist_rounded, size: 20, color: AuroraColors.inkTertiary),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -765,44 +710,33 @@ class _UncategorizedCardState extends State<_UncategorizedCard> {
                         children: [
                           Text(
                             'General Tasks',
-                            style: AppTextStyles.bodyMediumSemibold,
+                            style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 3),
                           Text(
                             'No system linked',
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
+                            style: AuroraType.bodySm.copyWith(color: AuroraColors.inkSecondary),
                           ),
                         ],
                       ),
                     ),
                     Container(
                       margin: const EdgeInsets.only(right: 8),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 7, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppColors.warmFill,
+                        color: AuroraColors.butter,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                            color: AppColors.border, width: 1),
+                        border: Border.all(color: AuroraColors.inkBorder, width: 1),
                       ),
-                      child: Text(
-                        '$count',
-                        style: AppTextStyles.monoTiny.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
+                      child: Text('$count',
+                          style: AuroraType.labelSm.copyWith(color: AuroraColors.inkSecondary)),
                     ),
                     AnimatedRotation(
                       turns: _collapsed ? 0.25 : 0,
                       duration: const Duration(milliseconds: 260),
                       curve: Curves.easeInOutCubic,
-                      child: Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        size: 20,
-                        color: AppColors.textSecondary,
-                      ),
+                      child: Icon(Icons.keyboard_arrow_down_rounded,
+                          size: 20, color: AuroraColors.inkSecondary),
                     ),
                   ],
                 ),
@@ -816,10 +750,7 @@ class _UncategorizedCardState extends State<_UncategorizedCard> {
                 curve: Curves.easeInOutCubic,
                 child: Column(
                   children: [
-                    const Divider(
-                        height: 1,
-                        thickness: 1,
-                        color: AppColors.border),
+                    Divider(height: 1, thickness: 1, color: AuroraColors.inkBorder),
                     ...sorted.map((t) => _TaskRow(task: t)),
                   ],
                 ),
@@ -849,14 +780,15 @@ class _AllClearCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final total = systems.length + appliances.length;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSizes.md),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.oliveDim,
-        borderRadius: AppRadius.card,
+        color: AuroraColors.limeDim,
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
         border: Border.all(
-          color: AppColors.olive.withValues(alpha: 0.2),
+          color: AuroraColors.limeDeep.withValues(alpha: 0.2),
           width: 1.5,
         ),
       ),
@@ -869,129 +801,52 @@ class _AllClearCard extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: AppColors.olive.withValues(alpha: 0.15),
+                  color: AuroraColors.limeDeep.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.check_rounded,
-                  size: 18,
-                  color: AppColors.olive,
-                ),
+                child: Icon(Icons.check_rounded, size: 18, color: AuroraColors.limeDeep),
               ),
               const SizedBox(width: 10),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${systems.length + appliances.length} item${systems.length + appliances.length == 1 ? '' : 's'} in good standing',
-                    style: AppTextStyles.bodyMediumSemibold.copyWith(
-                      color: AppColors.olive,
+                    '$total item${total == 1 ? '' : 's'} in good standing',
+                    style: AuroraType.body.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AuroraColors.limeDeep,
                     ),
                   ),
                   Text(
                     'All tasks 30+ days out',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+                    style: AuroraType.bodySm.copyWith(color: AuroraColors.inkSecondary),
                   ),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: 8),
           Wrap(
             spacing: 6,
             runSpacing: 6,
             children: [
               ...systems.map((s) {
-              final color = _systemColor(s.category);
-              final icon = _systemIcon(s.category);
-
-              // Find the soonest upcoming task for this system.
-              final sysTasks = tasksBySystem[s.id] ?? [];
-              final pending = sysTasks
-                  .where((t) =>
-                      t.status != TaskStatus.completed &&
-                      t.status != TaskStatus.skipped)
-                  .toList()
-                ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
-              final nextDue = pending.isEmpty ? null : pending.first.dueDate.toLocal();
-
-              return GestureDetector(
-                onTap: () => context.push('/home/systems/${s.id}'),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.border, width: 1),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(icon, size: 13, color: color.withValues(alpha: 0.7)),
-                      const SizedBox(width: 6),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            s.name,
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.textPrimary,
-                              fontSize: 11,
-                            ),
-                          ),
-                          if (nextDue != null)
-                            Text(
-                              'Next ${DateFormat('MMM d').format(nextDue)}',
-                              style: AppTextStyles.monoLabel.copyWith(
-                                color: AppColors.textTertiary,
-                                fontSize: 10,
-                              ),
-                            )
-                          else
-                            Text(
-                              'No tasks yet',
-                              style: AppTextStyles.monoLabel.copyWith(
-                                color: AppColors.textTertiary,
-                                fontSize: 10,
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.chevron_right,
-                        size: 13,
-                        color: AppColors.textTertiary,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-              }),
-              ...appliances.map((a) {
-                final color = _applianceColor(a.category);
-                final icon = _applianceIcon(a.category);
-                final appTasks = tasksByAppliance[a.id] ?? [];
-                final pending = appTasks
-                    .where((t) =>
-                        t.status != TaskStatus.completed &&
-                        t.status != TaskStatus.skipped)
+                final color = _systemColor(s.category);
+                final icon = _systemIcon(s.category);
+                final sysTasks = tasksBySystem[s.id] ?? [];
+                final pending = sysTasks
+                    .where((t) => t.status != TaskStatus.completed && t.status != TaskStatus.skipped)
                     .toList()
-                  ..sort((x, y) => x.dueDate.compareTo(y.dueDate));
-                final nextDue =
-                    pending.isEmpty ? null : pending.first.dueDate.toLocal();
+                  ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+                final nextDue = pending.isEmpty ? null : pending.first.dueDate.toLocal();
                 return GestureDetector(
-                  onTap: () => context.push('/home/appliances/${a.id}'),
+                  onTap: () => context.push('/home/systems/${s.id}'),
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: AuroraColors.paper,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.border, width: 1),
+                      border: Border.all(color: AuroraColors.inkBorder, width: 1),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -1002,26 +857,66 @@ class _AllClearCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              a.name,
-                              style: AppTextStyles.labelSmall.copyWith(
-                                color: AppColors.textPrimary,
-                                fontSize: 11,
-                              ),
-                            ),
+                            Text(s.name,
+                                style: AuroraType.labelSm.copyWith(
+                                    color: AuroraColors.ink, fontSize: 11)),
                             Text(
                               nextDue != null
                                   ? 'Next ${DateFormat('MMM d').format(nextDue)}'
                                   : 'No tasks yet',
-                              style: AppTextStyles.monoLabel.copyWith(
-                                color: AppColors.textTertiary,
-                                fontSize: 10,
-                              ),
+                              style: AuroraType.label.copyWith(
+                                  color: AuroraColors.inkTertiary, fontSize: 10),
                             ),
                           ],
                         ),
                         const SizedBox(width: 4),
-                        Icon(Icons.chevron_right, size: 13, color: AppColors.textTertiary),
+                        Icon(Icons.chevron_right, size: 13, color: AuroraColors.inkTertiary),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+              ...appliances.map((a) {
+                final color = _applianceColor(a.category);
+                final icon = _applianceIcon(a.category);
+                final appTasks = tasksByAppliance[a.id] ?? [];
+                final pending = appTasks
+                    .where((t) => t.status != TaskStatus.completed && t.status != TaskStatus.skipped)
+                    .toList()
+                  ..sort((x, y) => x.dueDate.compareTo(y.dueDate));
+                final nextDue = pending.isEmpty ? null : pending.first.dueDate.toLocal();
+                return GestureDetector(
+                  onTap: () => context.push('/home/appliances/${a.id}'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: AuroraColors.paper,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AuroraColors.inkBorder, width: 1),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(icon, size: 13, color: color.withValues(alpha: 0.7)),
+                        const SizedBox(width: 6),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(a.name,
+                                style: AuroraType.labelSm.copyWith(
+                                    color: AuroraColors.ink, fontSize: 11)),
+                            Text(
+                              nextDue != null
+                                  ? 'Next ${DateFormat('MMM d').format(nextDue)}'
+                                  : 'No tasks yet',
+                              style: AuroraType.label.copyWith(
+                                  color: AuroraColors.inkTertiary, fontSize: 10),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(Icons.chevron_right, size: 13, color: AuroraColors.inkTertiary),
                       ],
                     ),
                   ),
@@ -1041,17 +936,17 @@ class _NoSystemsEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
-          const SizedBox(height: AppSizes.xl),
+          const SizedBox(height: 20),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(AppSizes.xl),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: AppRadius.card,
-              border: Border.all(color: AppColors.border, width: 1.5),
+              color: AuroraColors.paper,
+              borderRadius: const BorderRadius.all(Radius.circular(14)),
+              border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
             ),
             child: Column(
               children: [
@@ -1059,20 +954,20 @@ class _NoSystemsEmptyState extends StatelessWidget {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: AppColors.slate.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                    color: AuroraColors.cobalt.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(Icons.home_repair_service_outlined,
-                      size: 26, color: AppColors.slate),
+                      size: 26, color: AuroraColors.cobalt),
                 ),
-                const SizedBox(height: AppSizes.md),
+                const SizedBox(height: 12),
                 Text('No systems added yet',
-                    style: AppTextStyles.bodyMediumSemibold),
+                    style: AuroraType.body.copyWith(fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
                 Text(
                   'Add your home systems in Home Profile\nto see tasks organized by system.',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
+                  style: AuroraType.bodySm.copyWith(
+                    color: AuroraColors.inkSecondary,
                     fontWeight: FontWeight.w400,
                   ),
                   textAlign: TextAlign.center,
@@ -1092,19 +987,19 @@ class _BySystemSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: AppColors.gray200,
-      highlightColor: AppColors.gray100,
+      baseColor: AuroraColors.butter,
+      highlightColor: AuroraColors.paper,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: AppSizes.md),
-            const _SkeletonSystemCard(),
-            const SizedBox(height: AppSizes.sm),
-            const _SkeletonSystemCard(),
-            const SizedBox(height: AppSizes.sm),
-            const _SkeletonSystemCard(),
+          children: const [
+            SizedBox(height: 12),
+            _SkeletonSystemCard(),
+            SizedBox(height: 8),
+            _SkeletonSystemCard(),
+            SizedBox(height: 8),
+            _SkeletonSystemCard(),
           ],
         ),
       ),
@@ -1118,19 +1013,13 @@ class _SkeletonSystemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: AppRadius.card,
+      borderRadius: const BorderRadius.all(Radius.circular(14)),
       child: Column(
         children: [
-          // Dark header skeleton
+          Container(height: 72, color: AuroraColors.inkBorder),
           Container(
-            height: 72,
-            color: AppColors.gray300,
-          ),
-          // Task row skeletons
-          Container(
-            color: AppColors.surface,
-            padding: const EdgeInsets.symmetric(
-                horizontal: 16, vertical: 12),
+            color: AuroraColors.paper,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Column(
               children: [
                 _SkeletonTaskRow(),
@@ -1153,18 +1042,18 @@ class _SkeletonTaskRow extends StatelessWidget {
     return Row(
       children: [
         Container(
-            width: 7, height: 7, decoration: const BoxDecoration(
-          color: AppColors.gray200, shape: BoxShape.circle)),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Container(height: 12, color: AppColors.gray200),
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(color: AuroraColors.butter, shape: BoxShape.circle),
         ),
+        const SizedBox(width: 10),
+        Expanded(child: Container(height: 12, color: AuroraColors.butter)),
         const SizedBox(width: 10),
         Container(
           width: 64,
           height: 20,
           decoration: BoxDecoration(
-            color: AppColors.gray200,
+            color: AuroraColors.butter,
             borderRadius: BorderRadius.circular(6),
           ),
         ),

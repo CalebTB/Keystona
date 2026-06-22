@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+
+
+
 
 /// Empty state shown when the authenticated user has no property row yet.
 ///
@@ -21,32 +24,32 @@ class HomeProfileEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.home_outlined,
               size: 72,
-              color: AppColors.textSecondary.withValues(alpha: 0.4),
+              color: AuroraColors.inkSecondary.withValues(alpha: 0.4),
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
             Text(
               'Set up your home profile',
-              style: AppTextStyles.h3,
+              style: AuroraType.h3,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             Text(
               'Your home profile stores key details about your property — '
               'systems, appliances, and more. Complete onboarding to get started.',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+              style: AuroraType.body.copyWith(
+                color: AuroraColors.inkSecondary,
               ),
               textAlign: TextAlign.center,
             ),
             if (onSetup != null) ...[
-              const SizedBox(height: AppSizes.lg),
+              const SizedBox(height: AuroraSpacing.space7),
               FilledButton(
                 onPressed: onSetup,
                 child: const Text('Set Up Property'),

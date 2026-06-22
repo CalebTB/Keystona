@@ -2,11 +2,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+
+
+
 import '../../../core/widgets/error_view.dart';
 import '../../../services/providers/service_providers.dart';
 import '../models/appliance.dart';
@@ -50,12 +53,12 @@ class _IOSLayout extends ConsumerWidget {
             ],
           ),
           Positioned(
-            right: AppSizes.lg,
-            bottom: AppSizes.xl,
+            right: AuroraSpacing.space7,
+            bottom: AuroraSpacing.space8,
             child: FloatingActionButton(
               onPressed: () => context.push(AppRoutes.homeAppliancesAdd),
-              backgroundColor: AppColors.deepNavy,
-              foregroundColor: AppColors.textInverse,
+              backgroundColor: AuroraColors.ink,
+              foregroundColor: Colors.white,
               elevation: 3,
               child: const Icon(Icons.add),
             ),
@@ -72,27 +75,27 @@ class _AndroidLayout extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push(AppRoutes.homeAppliancesAdd),
-        backgroundColor: AppColors.deepNavy,
-        foregroundColor: AppColors.textInverse,
+        backgroundColor: AuroraColors.ink,
+        foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
       body: RefreshIndicator(
-        color: AppColors.deepNavy,
+        color: AuroraColors.ink,
         onRefresh: () => ref.read(appliancesProvider.notifier).refresh(),
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
-              title: Text('Appliances', style: AppTextStyles.h3),
+              title: Text('Appliances', style: AuroraType.h3),
               floating: true,
-              backgroundColor: AppColors.warmOffWhite,
+              backgroundColor: AuroraColors.paper,
               scrolledUnderElevation: 0,
               elevation: 0,
             ),
             const _ContentSliver(),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
+            const SliverToBoxAdapter(child: SizedBox(height: AuroraSpacing.space8)),
           ],
         ),
       ),
@@ -144,13 +147,13 @@ class _ContentSliver extends ConsumerWidget {
         final showBanner =
             !isPremium && appliances.length >= _kFreeLimitWarningAt;
         return SliverPadding(
-          padding: AppPadding.screen,
+          padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
           sliver: SliverList.builder(
             itemCount: items.length + (showBanner ? 1 : 0),
             itemBuilder: (context, index) {
               if (showBanner && index == 0) {
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: AppSizes.sm),
+                  padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
                   child: _LimitBanner(count: appliances.length),
                 );
               }
@@ -159,19 +162,19 @@ class _ContentSliver extends ConsumerWidget {
               if (item is _SectionHeader) {
                 return Padding(
                   padding: const EdgeInsets.only(
-                    top: AppSizes.md,
-                    bottom: AppSizes.xs,
+                    top: AuroraSpacing.space5,
+                    bottom: AuroraSpacing.space1,
                   ),
                   child: Text(
                     item.title,
-                    style: AppTextStyles.labelLarge
-                        .copyWith(color: AppColors.textSecondary),
+                    style: AuroraType.label
+                        .copyWith(color: AuroraColors.inkSecondary),
                   ),
                 );
               }
               if (item is _ApplianceItem) {
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: AppSizes.sm),
+                  padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
                   child: ApplianceCard(appliance: item.appliance),
                 );
               }
@@ -204,36 +207,36 @@ class _LimitBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
+        horizontal: AuroraSpacing.space5,
+        vertical: AuroraSpacing.space3,
       ),
       decoration: BoxDecoration(
-        color: AppColors.warningLight,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+        color: AuroraColors.yellowDim,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AuroraColors.yellow.withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
-          Icon(Icons.lock_outline, size: 18, color: AppColors.warning),
-          const SizedBox(width: AppSizes.sm),
+          Icon(Icons.lock_outline, size: 18, color: AuroraColors.yellow),
+          const SizedBox(width: AuroraSpacing.space3),
           Expanded(
             child: Text(
               "You're using $count of 10 free appliances. Upgrade to PRO for unlimited.",
               style:
-                  AppTextStyles.bodySmall.copyWith(color: AppColors.warning),
+                  AuroraType.bodySm.copyWith(color: AuroraColors.yellow),
             ),
           ),
           TextButton(
             onPressed: () {},
             style: TextButton.styleFrom(
-              foregroundColor: AppColors.warning,
+              foregroundColor: AuroraColors.yellow,
               padding: EdgeInsets.zero,
               minimumSize: Size.zero,
             ),
             child: Text(
               'Upgrade',
-              style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.warning,
+              style: AuroraType.label.copyWith(
+                color: AuroraColors.yellow,
                 fontWeight: FontWeight.w700,
               ),
             ),

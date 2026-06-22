@@ -11,10 +11,13 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+
+
+
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/providers/service_providers.dart';
 import '../../../services/supabase_service.dart';
@@ -51,18 +54,18 @@ const int _kOptionalFieldCount = 8;
 // ── Card decorations ──────────────────────────────────────────────────────────
 
 const BoxDecoration _kCardDecoration = BoxDecoration(
-  color: AppColors.cardBackground,
-  borderRadius: BorderRadius.all(Radius.circular(AppSizes.radiusMd)),
+  color: AuroraColors.paper,
+  borderRadius: BorderRadius.all(Radius.circular(14)),
   border: Border.fromBorderSide(
-    BorderSide(color: AppColors.border, width: 1.5),
+    BorderSide(color: AuroraColors.inkBorder, width: 1.5),
   ),
 );
 
 final BoxDecoration _kClimateCardDecoration = BoxDecoration(
-  color: AppColors.oliveDim,
-  borderRadius: const BorderRadius.all(Radius.circular(AppSizes.radiusMd)),
+  color: AuroraColors.limeDim,
+  borderRadius: const BorderRadius.all(Radius.circular(14)),
   border: Border.fromBorderSide(
-    BorderSide(color: AppColors.olive.withValues(alpha: 0.13), width: 1.5),
+    BorderSide(color: AuroraColors.lime.withValues(alpha: 0.13), width: 1.5),
   ),
 );
 
@@ -491,9 +494,9 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
     }
 
     return CupertinoPageScaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         border: null,
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
@@ -521,9 +524,9 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
 
   Widget _buildAndroid() {
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       appBar: AppBar(
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         elevation: 0,
         scrolledUnderElevation: 0,
         title: const Text('Edit Property'),
@@ -570,7 +573,7 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
     return ListView(
       controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: AppPadding.screen.copyWith(top: AppSizes.md),
+      padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH).copyWith(top: AuroraSpacing.space5),
       children: [
         _PhotoSlot(
           localFile: _localPhoto,
@@ -578,22 +581,22 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
           onTap: _pickPhoto,
         ),
 
-        const SizedBox(height: AppSizes.md),
+        const SizedBox(height: AuroraSpacing.space5),
 
         _CompletionBar(filled: _filledOptional, total: _kOptionalFieldCount),
 
-        const SizedBox(height: AppSizes.xl),
+        const SizedBox(height: AuroraSpacing.space8),
 
         // ╔═══════════════════════════════════════════════════════════════════╗
         // ║  IDENTITY                                                         ║
         // ╚═══════════════════════════════════════════════════════════════════╝
         _SectionHeader(
-          dot: AppColors.accent,
+          dot: AuroraColors.coral,
           eyebrow: 'IDENTITY',
           title: 'Where is it?',
         ),
 
-        const SizedBox(height: AppSizes.md),
+        const SizedBox(height: AuroraSpacing.space5),
 
         _FieldCard(
           label: 'ADDRESS',
@@ -607,7 +610,7 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
           ),
         ),
 
-        const SizedBox(height: AppSizes.cardGap),
+        const SizedBox(height: AuroraSpacing.space3),
 
         _FieldCard(
           label: 'UNIT / APT / SUITE',
@@ -619,7 +622,7 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
           ),
         ),
 
-        const SizedBox(height: AppSizes.cardGap),
+        const SizedBox(height: AuroraSpacing.space3),
 
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -637,7 +640,7 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: AppSizes.cardGap),
+            const SizedBox(width: AuroraSpacing.space3),
             Expanded(
               flex: 2,
               child: _FieldCard(
@@ -655,7 +658,7 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: AppSizes.cardGap),
+            const SizedBox(width: AuroraSpacing.space3),
             Expanded(
               flex: 3,
               child: _FieldCard(
@@ -667,7 +670,7 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
                         height: 14,
                         child: CircularProgressIndicator(
                           strokeWidth: 1.5,
-                          color: AppColors.textTertiary,
+                          color: AuroraColors.inkTertiary,
                         ),
                       )
                     : null,
@@ -685,29 +688,29 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
         ),
 
         if (zoneData != null) ...[
-          const SizedBox(height: AppSizes.cardGap),
+          const SizedBox(height: AuroraSpacing.space3),
           _ClimateZoneCard(
             zoneLabel: zoneData.label,
             zoneSub: zoneData.subtitle,
             onTap: _showZonePicker,
           ),
         ] else ...[
-          const SizedBox(height: AppSizes.cardGap),
+          const SizedBox(height: AuroraSpacing.space3),
           _SetClimateZoneHint(onTap: _showZonePicker),
         ],
 
-        const SizedBox(height: AppSizes.xl),
+        const SizedBox(height: AuroraSpacing.space8),
 
         // ╔═══════════════════════════════════════════════════════════════════╗
         // ║  SPECS                                                            ║
         // ╚═══════════════════════════════════════════════════════════════════╝
         _SectionHeader(
-          dot: AppColors.olive,
+          dot: AuroraColors.lime,
           eyebrow: 'SPECS',
           title: 'About the house',
         ),
 
-        const SizedBox(height: AppSizes.md),
+        const SizedBox(height: AuroraSpacing.space5),
 
         _FieldCard(
           label: 'PROPERTY TYPE',
@@ -718,11 +721,11 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
             hint: Text(
               'Select',
               style:
-                  AppTextStyles.bodyLarge.copyWith(color: AppColors.textTertiary),
+                  AuroraType.bodyLg.copyWith(color: AuroraColors.inkTertiary),
             ),
-            style: AppTextStyles.bodyLarge,
+            style: AuroraType.bodyLg,
             icon: const Icon(Icons.keyboard_arrow_down,
-                size: 18, color: AppColors.textTertiary),
+                size: 18, color: AuroraColors.inkTertiary),
             items: _kPropertyTypes
                 .map((t) => DropdownMenuItem<String>(
                       value: t.value,
@@ -733,7 +736,7 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
           ),
         ),
 
-        const SizedBox(height: AppSizes.cardGap),
+        const SizedBox(height: AuroraSpacing.space3),
 
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -751,7 +754,7 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: AppSizes.cardGap),
+            const SizedBox(width: AuroraSpacing.space3),
             Expanded(
               child: _FieldCard(
                 label: 'SQUARE FEET',
@@ -768,7 +771,7 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
           ],
         ),
 
-        const SizedBox(height: AppSizes.cardGap),
+        const SizedBox(height: AuroraSpacing.space3),
 
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -786,7 +789,7 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: AppSizes.cardGap),
+            const SizedBox(width: AuroraSpacing.space3),
             Expanded(
               child: _FieldCard(
                 label: 'BATH',
@@ -806,26 +809,26 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
           ],
         ),
 
-        const SizedBox(height: AppSizes.xl),
+        const SizedBox(height: AuroraSpacing.space8),
 
         // ╔═══════════════════════════════════════════════════════════════════╗
         // ║  PURCHASE                                                         ║
         // ╚═══════════════════════════════════════════════════════════════════╝
         _SectionHeader(
-          dot: AppColors.sandAmber,
+          dot: AuroraColors.yellowDeep,
           eyebrow: 'PURCHASE',
           title: 'Optional history',
         ),
 
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: AuroraSpacing.space3),
 
         Text(
           'Adds context for the Home History Report. Stays private.',
           style:
-              AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+              AuroraType.bodySm.copyWith(color: AuroraColors.inkSecondary),
         ),
 
-        const SizedBox(height: AppSizes.md),
+        const SizedBox(height: AuroraSpacing.space5),
 
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -839,24 +842,24 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
                       ? GestureDetector(
                           onTap: () => setState(() => _purchaseDate = null),
                           child: const Icon(Icons.close,
-                              size: 16, color: AppColors.textTertiary),
+                              size: 16, color: AuroraColors.inkTertiary),
                         )
                       : const Icon(Icons.calendar_today_outlined,
-                          size: 14, color: AppColors.textTertiary),
+                          size: 14, color: AuroraColors.inkTertiary),
                   child: Text(
                     _purchaseDate != null
                         ? DateFormat('MMM d, yyyy').format(_purchaseDate!)
                         : '—',
-                    style: AppTextStyles.bodyLarge.copyWith(
+                    style: AuroraType.bodyLg.copyWith(
                       color: _purchaseDate != null
-                          ? AppColors.textPrimary
-                          : AppColors.textTertiary,
+                          ? AuroraColors.ink
+                          : AuroraColors.inkTertiary,
                     ),
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: AppSizes.cardGap),
+            const SizedBox(width: AuroraSpacing.space3),
             Expanded(
               child: _FieldCard(
                 label: 'PRICE',
@@ -864,8 +867,8 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
                   children: [
                     Text(
                       r'$',
-                      style: AppTextStyles.bodyLarge
-                          .copyWith(color: AppColors.textSecondary),
+                      style: AuroraType.bodyLg
+                          .copyWith(color: AuroraColors.inkSecondary),
                     ),
                     const SizedBox(width: 4),
                     Expanded(
@@ -887,7 +890,7 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
           ],
         ),
 
-        const SizedBox(height: AppSizes.xl),
+        const SizedBox(height: AuroraSpacing.space8),
       ],
     );
   }
@@ -945,11 +948,11 @@ class _SectionHeader extends StatelessWidget {
               decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
             ),
             const SizedBox(width: 6),
-            Text(eyebrow, style: AppTextStyles.monoSection),
+            Text(eyebrow, style: AuroraType.label),
           ],
         ),
         const SizedBox(height: 6),
-        Text(title, style: AppTextStyles.displaySmall),
+        Text(title, style: AuroraType.h2),
       ],
     );
   }
@@ -1004,12 +1007,12 @@ class _FieldCardState extends State<_FieldCard> {
           AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
-              color: AppColors.cardBackground,
+              color: AuroraColors.paper,
               borderRadius:
-                  const BorderRadius.all(Radius.circular(AppSizes.radiusMd)),
+                  const BorderRadius.all(Radius.circular(14)),
               border: Border.fromBorderSide(
                 BorderSide(
-                  color: _focused ? AppColors.deepNavy : AppColors.border,
+                  color: _focused ? AuroraColors.ink : AuroraColors.inkBorder,
                   width: _focused ? 2.0 : 1.5,
                 ),
               ),
@@ -1021,7 +1024,7 @@ class _FieldCardState extends State<_FieldCard> {
               children: [
                 Row(
                   children: [
-                    Text(widget.label, style: AppTextStyles.monoSection),
+                    Text(widget.label, style: AuroraType.label),
                     if (widget.suffix != null) ...[
                       const Spacer(),
                       widget.suffix!,
@@ -1040,7 +1043,7 @@ class _FieldCardState extends State<_FieldCard> {
                 widget.error!,
                 style: TextStyle(
                   fontSize: 10,
-                  color: AppColors.accent,
+                  color: AuroraColors.coral,
                   height: 1.4,
                 ),
               ),
@@ -1081,7 +1084,7 @@ class _TextInput extends StatelessWidget {
         children: [
           TextField(
             controller: controller,
-            style: AppTextStyles.bodyLarge,
+            style: AuroraType.bodyLg,
             // decoration: null bypasses InputDecorator entirely — zero left offset
             decoration: null,
             keyboardType: keyboardType,
@@ -1090,15 +1093,15 @@ class _TextInput extends StatelessWidget {
             maxLength: maxLength,
             maxLengthEnforcement: MaxLengthEnforcement.enforced,
             onChanged: onChanged,
-            cursorColor: AppColors.deepNavy,
+            cursorColor: AuroraColors.ink,
             cursorWidth: 1.5,
           ),
           if (value.text.isEmpty)
             IgnorePointer(
               child: Text(
                 hint,
-                style: AppTextStyles.bodyLarge
-                    .copyWith(color: AppColors.textTertiary),
+                style: AuroraType.bodyLg
+                    .copyWith(color: AuroraColors.inkTertiary),
               ),
             ),
         ],
@@ -1131,11 +1134,11 @@ class _ClimateZoneCard extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: AppColors.olive.withValues(alpha: 0.15),
+                color: AuroraColors.lime.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(9),
               ),
               child: const Icon(Icons.thermostat_outlined,
-                  size: 18, color: AppColors.olive),
+                  size: 18, color: AuroraColors.lime),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -1143,18 +1146,18 @@ class _ClimateZoneCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('CLIMATE ZONE',
-                      style: AppTextStyles.monoSection
-                          .copyWith(color: AppColors.olive)),
+                      style: AuroraType.label
+                          .copyWith(color: AuroraColors.lime)),
                   const SizedBox(height: 2),
                   Text('$zoneLabel · $zoneSub',
-                      style: AppTextStyles.bodyMediumSemibold
-                          .copyWith(color: AppColors.olive)),
+                      style: AuroraType.body.copyWith(fontWeight: FontWeight.w600)
+                          .copyWith(color: AuroraColors.lime)),
                 ],
               ),
             ),
             Text('Change',
                 style:
-                    AppTextStyles.labelMedium.copyWith(color: AppColors.olive)),
+                    AuroraType.label.copyWith(color: AuroraColors.lime)),
           ],
         ),
       ),
@@ -1176,14 +1179,14 @@ class _SetClimateZoneHint extends StatelessWidget {
         child: Row(
           children: [
             const Icon(Icons.thermostat_outlined,
-                size: 16, color: AppColors.textTertiary),
+                size: 16, color: AuroraColors.inkTertiary),
             const SizedBox(width: 8),
             Text('Set climate zone',
-                style: AppTextStyles.bodyMedium
-                    .copyWith(color: AppColors.textTertiary)),
+                style: AuroraType.body
+                    .copyWith(color: AuroraColors.inkTertiary)),
             const Spacer(),
             const Icon(Icons.keyboard_arrow_right,
-                size: 16, color: AppColors.textTertiary),
+                size: 16, color: AuroraColors.inkTertiary),
           ],
         ),
       ),
@@ -1208,9 +1211,9 @@ class _CompletionBar extends StatelessWidget {
           child: LinearProgressIndicator(
             value: pct,
             minHeight: 4,
-            backgroundColor: AppColors.warmInset,
+            backgroundColor: AuroraColors.butter,
             valueColor: AlwaysStoppedAnimation<Color>(
-              isComplete ? AppColors.olive : AppColors.sand,
+              isComplete ? AuroraColors.lime : AuroraColors.yellow,
             ),
           ),
         ),
@@ -1221,7 +1224,7 @@ class _CompletionBar extends StatelessWidget {
               : '$filled of $total optional fields filled',
           style: TextStyle(
             fontSize: 11,
-            color: isComplete ? AppColors.olive : AppColors.textTertiary,
+            color: isComplete ? AuroraColors.lime : AuroraColors.inkTertiary,
             fontWeight: isComplete ? FontWeight.w600 : FontWeight.w400,
           ),
         ),
@@ -1250,7 +1253,7 @@ class _PhotoSlot extends StatelessWidget {
         fit: BoxFit.cover,
         placeholder: (_, _) => const Center(
           child: CircularProgressIndicator(
-              strokeWidth: 2, color: AppColors.textSecondary),
+              strokeWidth: 2, color: AuroraColors.inkSecondary),
         ),
         errorWidget: (_, _, _) => _placeholder(),
       );
@@ -1261,7 +1264,7 @@ class _PhotoSlot extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         child: Stack(
           children: [
             AspectRatio(
@@ -1273,26 +1276,26 @@ class _PhotoSlot extends StatelessWidget {
             Positioned.fill(
               child: Container(
                 color: hasPhoto
-                    ? AppColors.textPrimary.withValues(alpha: 0.22)
+                    ? AuroraColors.ink.withValues(alpha: 0.22)
                     : Colors.transparent,
                 child: Center(
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: AppColors.textPrimary.withValues(alpha: 0.42),
+                      color: AuroraColors.ink.withValues(alpha: 0.42),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.camera_alt_outlined,
-                            size: 16, color: AppColors.textInverse),
+                            size: 16, color: Colors.white),
                         const SizedBox(width: 6),
                         Text(
                           hasPhoto ? 'Change Photo' : 'Add Cover Photo',
                           style: const TextStyle(
-                            color: AppColors.textInverse,
+                            color: Colors.white,
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
@@ -1310,10 +1313,10 @@ class _PhotoSlot extends StatelessWidget {
   }
 
   Widget _placeholder() => Container(
-        color: AppColors.cardBackground,
+        color: AuroraColors.paper,
         child: const Center(
           child: Icon(Icons.home_outlined,
-              size: 48, color: AppColors.textTertiary),
+              size: 48, color: AuroraColors.inkTertiary),
         ),
       );
 }
@@ -1324,10 +1327,10 @@ class _DashedBorderPainter extends CustomPainter {
     const dashWidth = 6.0;
     const dashGap = 4.0;
     const strokeWidth = 1.5;
-    const radius = Radius.circular(AppSizes.radiusLg);
+    const radius = Radius.circular(16);
 
     final paint = Paint()
-      ..color = AppColors.border
+      ..color = AuroraColors.inkBorder
       ..strokeWidth = strokeWidth
       ..style = PaintingStyle.stroke;
 

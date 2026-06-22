@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
+
+
 
 class ApplianceListSkeleton extends StatefulWidget {
   const ApplianceListSkeleton({super.key});
@@ -41,17 +43,17 @@ class _ApplianceListSkeletonState extends State<ApplianceListSkeleton>
       builder: (context, _) => Opacity(
         opacity: _opacity.value,
         child: Padding(
-          padding: AppPadding.screen,
+          padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
           child: Column(
             children: [
               const _SkeletonCard(),
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
               const _SkeletonCard(),
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
               const _SkeletonCard(),
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
               const _SkeletonCard(),
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
               const _SkeletonCard(),
             ],
           ),
@@ -67,15 +69,15 @@ class _SkeletonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minHeight: AppSizes.cardMinHeight),
+      constraints: const BoxConstraints(minHeight: 72),
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
+        horizontal: AuroraSpacing.space5,
+        vertical: AuroraSpacing.space3,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.border),
+        color: AuroraColors.paper,
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        border: Border.all(color: AuroraColors.inkBorder),
       ),
       child: Row(
         children: [
@@ -83,11 +85,11 @@ class _SkeletonCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.gray200,
-              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+              color: AuroraColors.inkBorder,
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
             ),
           ),
-          const SizedBox(width: AppSizes.md),
+          const SizedBox(width: AuroraSpacing.space5),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -99,8 +101,8 @@ class _SkeletonCard extends StatelessWidget {
                   child: Container(
                     height: 13,
                     decoration: BoxDecoration(
-                      color: AppColors.gray200,
-                      borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                      color: AuroraColors.inkBorder,
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
                   ),
                 ),
@@ -111,21 +113,21 @@ class _SkeletonCard extends StatelessWidget {
                   child: Container(
                     height: 11,
                     decoration: BoxDecoration(
-                      color: AppColors.gray200,
-                      borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                      color: AuroraColors.inkBorder,
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: AppSizes.sm),
+          const SizedBox(width: AuroraSpacing.space3),
           Container(
             width: 56,
             height: 22,
             decoration: BoxDecoration(
-              color: AppColors.gray200,
-              borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+              color: AuroraColors.inkBorder,
+              borderRadius: const BorderRadius.all(Radius.circular(999)),
             ),
           ),
         ],

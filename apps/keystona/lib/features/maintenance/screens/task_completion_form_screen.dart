@@ -7,9 +7,10 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../documents/providers/documents_provider.dart';
 import '../providers/task_detail_provider.dart';
 
@@ -178,9 +179,9 @@ class _TaskCompletionFormScreenState
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(
-            content: Text("Couldn't save completion. Try again."),
-            backgroundColor: AppColors.error,
+          SnackBar(
+            content: const Text("Couldn't save completion. Try again."),
+            backgroundColor: AuroraColors.coral,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -247,16 +248,16 @@ class _TaskCompletionFormScreenState
 
   Widget _buildAndroid(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       appBar: AppBar(
-        title: Text('Complete Task', style: AppTextStyles.h3),
-        backgroundColor: AppColors.warmOffWhite,
+        title: Text('Complete Task', style: AuroraType.h3),
+        backgroundColor: AuroraColors.paper,
         elevation: 0,
         scrolledUnderElevation: 0,
         actions: [
           if (_isSaving)
             const Padding(
-              padding: EdgeInsets.only(right: AppSizes.md),
+              padding: EdgeInsets.only(right: AuroraSpacing.space7),
               child: Center(
                 child: SizedBox(
                   width: 20,
@@ -270,8 +271,9 @@ class _TaskCompletionFormScreenState
               onPressed: _save,
               child: Text(
                 'Save',
-                style: AppTextStyles.bodyMediumSemibold.copyWith(
-                  color: AppColors.deepNavy,
+                style: AuroraType.body.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AuroraColors.ink,
                 ),
               ),
             ),
@@ -350,71 +352,71 @@ class _FormBody extends StatelessWidget {
 
     return SingleChildScrollView(
       padding: EdgeInsets.only(
-        left: AppSizes.screenPadding,
-        right: AppSizes.screenPadding,
-        top: AppSizes.md,
-        bottom: AppSizes.screenPadding +
+        left: AuroraSpacing.screenPadH,
+        right: AuroraSpacing.screenPadH,
+        top: AuroraSpacing.space5,
+        bottom: AuroraSpacing.screenPadH +
             MediaQuery.of(context).padding.bottom +
-            AppSizes.xl,
+            AuroraSpacing.space8,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Date completed ──────────────────────────────────────────────────
           _SectionLabel(text: 'Date Completed'),
-          const SizedBox(height: AppSizes.xs),
+          const SizedBox(height: AuroraSpacing.space1),
           _TappableRow(
             label: DateFormat('MMMM d, y').format(completedDate),
             icon: Icons.calendar_today_outlined,
             onTap: onPickDate,
           ),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AuroraSpacing.space7),
           const _Divider(),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AuroraSpacing.space7),
 
           // ── Completed by ────────────────────────────────────────────────────
           _SectionLabel(text: 'Completed By'),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
           _SegmentedToggle(
             selected: completedBy,
             options: const {'diy': 'DIY', 'contractor': 'Contractor'},
             onChanged: onToggleCompletedBy,
           ),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AuroraSpacing.space7),
 
           // ── Contractor info (conditional) ───────────────────────────────────
           if (showContractor) ...[
             const _Divider(),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space7),
             _SectionLabel(text: 'Contractor Info'),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             _FormField(
               controller: contractorNameController,
               label: 'Name',
               maxLength: 200,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             _FormField(
               controller: contractorCompanyController,
               label: 'Company (optional)',
               maxLength: 200,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             _FormField(
               controller: contractorPhoneController,
               label: 'Phone (optional)',
               keyboardType: TextInputType.phone,
               maxLength: 20,
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space7),
           ],
 
           const _Divider(),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AuroraSpacing.space7),
 
           // ── Costs ───────────────────────────────────────────────────────────
           _SectionLabel(text: 'Cost (optional)'),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
           Row(
             children: [
               Expanded(
@@ -427,7 +429,7 @@ class _FormBody extends StatelessWidget {
                   validator: _validateCost,
                 ),
               ),
-              const SizedBox(width: AppSizes.sm),
+              const SizedBox(width: AuroraSpacing.space3),
               Expanded(
                 child: _FormField(
                   controller: materialsCostController,
@@ -440,73 +442,73 @@ class _FormBody extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AuroraSpacing.space7),
           const _Divider(),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AuroraSpacing.space7),
 
           // ── Time spent ──────────────────────────────────────────────────────
           _SectionLabel(text: 'Time Spent (optional)'),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
           _FormField(
             controller: timeMinutesController,
             label: 'Minutes',
             keyboardType: TextInputType.number,
             validator: _validateMinutes,
           ),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AuroraSpacing.space7),
           const _Divider(),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AuroraSpacing.space7),
 
           // ── Notes ───────────────────────────────────────────────────────────
           _SectionLabel(text: 'Notes (optional)'),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
           _FormField(
             controller: notesController,
             label: 'Add notes…',
             maxLines: 4,
             maxLength: 5000,
           ),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AuroraSpacing.space7),
           const _Divider(),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AuroraSpacing.space7),
 
           // ── Photos ──────────────────────────────────────────────────────────
           _SectionLabel(text: 'Photos (optional)'),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
           if (photos.isNotEmpty)
             _PhotoGrid(photos: photos, onRemove: onRemovePhoto),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
           OutlinedButton.icon(
             onPressed: onPickPhotos,
             icon: const Icon(Icons.add_a_photo_outlined, size: 18),
             label: Text(
               photos.isEmpty ? 'Add Photos' : 'Add More Photos',
-              style: AppTextStyles.bodySmall,
+              style: AuroraType.bodySm,
             ),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.accent,
-              side: const BorderSide(color: AppColors.accent),
-              shape: RoundedRectangleBorder(borderRadius: AppRadius.md),
+              foregroundColor: AuroraColors.coral,
+              side: const BorderSide(color: AuroraColors.coral),
+              shape: RoundedRectangleBorder(borderRadius: AuroraRadius.md),
               padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.md,
-                vertical: AppSizes.sm,
+                horizontal: AuroraSpacing.space5,
+                vertical: AuroraSpacing.space3,
               ),
             ),
           ),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AuroraSpacing.space7),
           const _Divider(),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AuroraSpacing.space7),
 
           // ── Linked receipts ─────────────────────────────────────────────────
           _SectionLabel(text: 'Link Receipt (optional)'),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
           if (linkedDocumentIds.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(bottom: AppSizes.sm),
+              padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
               child: Text(
                 '${linkedDocumentIds.length} receipt${linkedDocumentIds.length == 1 ? '' : 's'} linked',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.success,
+                style: AuroraType.bodySm.copyWith(
+                  color: AuroraColors.lime,
                 ),
               ),
             ),
@@ -517,15 +519,15 @@ class _FormBody extends StatelessWidget {
               linkedDocumentIds.isEmpty
                   ? 'Link from Document Vault'
                   : 'Change Linked Receipts',
-              style: AppTextStyles.bodySmall,
+              style: AuroraType.bodySm,
             ),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.accent,
-              side: const BorderSide(color: AppColors.accent),
-              shape: RoundedRectangleBorder(borderRadius: AppRadius.md),
+              foregroundColor: AuroraColors.coral,
+              side: const BorderSide(color: AuroraColors.coral),
+              shape: RoundedRectangleBorder(borderRadius: AuroraRadius.md),
               padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.md,
-                vertical: AppSizes.sm,
+                horizontal: AuroraSpacing.space5,
+                vertical: AuroraSpacing.space3,
               ),
             ),
           ),
@@ -563,8 +565,8 @@ class _PhotoGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: AppSizes.sm,
-      runSpacing: AppSizes.sm,
+      spacing: AuroraSpacing.space3,
+      runSpacing: AuroraSpacing.space3,
       children: [
         for (int i = 0; i < photos.length; i++)
           _PhotoThumbnail(photo: photos[i], onRemove: () => onRemove(i)),
@@ -584,7 +586,7 @@ class _PhotoThumbnail extends StatelessWidget {
     return Stack(
       children: [
         ClipRRect(
-          borderRadius: AppRadius.sm,
+          borderRadius: AuroraRadius.sm,
           child: Image.file(
             File(photo.path),
             width: 80,
@@ -593,8 +595,8 @@ class _PhotoThumbnail extends StatelessWidget {
             errorBuilder: (_, _, _) => Container(
               width: 80,
               height: 80,
-              color: AppColors.gray200,
-              child: const Icon(Icons.image_outlined, color: AppColors.gray400),
+              color: AuroraColors.inkBorder,
+              child: const Icon(Icons.image_outlined, color: AuroraColors.inkTertiary),
             ),
           ),
         ),
@@ -607,10 +609,10 @@ class _PhotoThumbnail extends StatelessWidget {
               width: 20,
               height: 20,
               decoration: const BoxDecoration(
-                color: AppColors.error,
+                color: AuroraColors.coral,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.close, size: 12, color: AppColors.textInverse),
+              child: const Icon(Icons.close, size: 12, color: Colors.white),
             ),
           ),
         ),
@@ -652,10 +654,10 @@ class _ReceiptPickerSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet<List<String>>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: AuroraColors.paper,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSizes.radiusLg),
+          top: Radius.circular(16),
         ),
       ),
       builder: (_) => DraggableScrollableSheet(
@@ -707,9 +709,9 @@ class _ReceiptPickerSheetState extends ConsumerState<_ReceiptPickerSheet> {
 
     return Container(
       decoration: const BoxDecoration(
-        color: AppColors.surface,
+        color: AuroraColors.paper,
         borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSizes.radiusLg),
+          top: Radius.circular(16),
         ),
       ),
       child: Column(
@@ -717,9 +719,9 @@ class _ReceiptPickerSheetState extends ConsumerState<_ReceiptPickerSheet> {
           // Handle + header
           Padding(
             padding: const EdgeInsets.fromLTRB(
-              AppSizes.screenPadding,
-              AppSizes.md,
-              AppSizes.screenPadding,
+              AuroraSpacing.screenPadH,
+              AuroraSpacing.space5,
+              AuroraSpacing.screenPadH,
               0,
             ),
             child: Column(
@@ -729,33 +731,33 @@ class _ReceiptPickerSheetState extends ConsumerState<_ReceiptPickerSheet> {
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.gray300,
+                      color: AuroraColors.inkBorder,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                 ),
-                const SizedBox(height: AppSizes.md),
+                const SizedBox(height: AuroraSpacing.space5),
                 Row(
                   children: [
                     Expanded(
-                      child: Text('Link Receipt', style: AppTextStyles.h3),
+                      child: Text('Link Receipt', style: AuroraType.h3),
                     ),
                     TextButton(
                       onPressed: _cancel,
                       child: Text(
                         'Cancel',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
+                        style: AuroraType.body.copyWith(
+                          color: AuroraColors.inkSecondary,
                         ),
                       ),
                     ),
-                    const SizedBox(width: AppSizes.sm),
+                    const SizedBox(width: AuroraSpacing.space3),
                     FilledButton(
                       onPressed: _confirm,
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.accent,
+                        backgroundColor: AuroraColors.coral,
                         shape: RoundedRectangleBorder(
-                          borderRadius: AppRadius.md,
+                          borderRadius: AuroraRadius.md,
                         ),
                       ),
                       child: const Text('Done'),
@@ -775,8 +777,8 @@ class _ReceiptPickerSheetState extends ConsumerState<_ReceiptPickerSheet> {
               error: (_, _) => Center(
                 child: Text(
                   'Couldn\'t load documents.',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
+                  style: AuroraType.body.copyWith(
+                    color: AuroraColors.inkSecondary,
                   ),
                 ),
               ),
@@ -789,13 +791,14 @@ class _ReceiptPickerSheetState extends ConsumerState<_ReceiptPickerSheet> {
                         const Icon(
                           Icons.folder_outlined,
                           size: 48,
-                          color: AppColors.gray400,
+                          color: AuroraColors.inkTertiary,
                         ),
-                        const SizedBox(height: AppSizes.sm),
+                        const SizedBox(height: AuroraSpacing.space3),
                         Text(
                           'No documents in your vault yet',
-                          style: AppTextStyles.bodyMediumSemibold.copyWith(
-                            color: AppColors.textSecondary,
+                          style: AuroraType.body.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AuroraColors.inkSecondary,
                           ),
                         ),
                       ],
@@ -822,21 +825,21 @@ class _ReceiptPickerSheetState extends ConsumerState<_ReceiptPickerSheet> {
                       },
                       title: Text(
                         doc.name,
-                        style: AppTextStyles.bodyMedium,
+                        style: AuroraType.body,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       subtitle: doc.notes != null && doc.notes!.isNotEmpty
                           ? Text(
                               doc.notes!,
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.textSecondary,
+                              style: AuroraType.bodySm.copyWith(
+                                color: AuroraColors.inkSecondary,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             )
                           : null,
-                      activeColor: AppColors.deepNavy,
+                      activeColor: AuroraColors.ink,
                       controlAffinity: ListTileControlAffinity.trailing,
                     );
                   },
@@ -861,8 +864,8 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text.toUpperCase(),
-      style: AppTextStyles.labelSmall.copyWith(
-        color: AppColors.textSecondary,
+      style: AuroraType.labelSm.copyWith(
+        color: AuroraColors.inkSecondary,
         letterSpacing: 0.8,
       ),
     );
@@ -874,7 +877,7 @@ class _Divider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Divider(height: 1, thickness: 1, color: AppColors.divider);
+    return const Divider(height: 1, thickness: 1, color: AuroraColors.inkBorder);
   }
 }
 
@@ -895,25 +898,25 @@ class _TappableRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
+          horizontal: AuroraSpacing.space5,
+          vertical: AuroraSpacing.space3,
         ),
         decoration: BoxDecoration(
-          color: AppColors.gray50,
-          borderRadius: AppRadius.md,
-          border: Border.all(color: AppColors.border),
+          color: AuroraColors.butter,
+          borderRadius: AuroraRadius.md,
+          border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 16, color: AppColors.textSecondary),
-            const SizedBox(width: AppSizes.sm),
+            Icon(icon, size: 16, color: AuroraColors.inkSecondary),
+            const SizedBox(width: AuroraSpacing.space3),
             Expanded(
-              child: Text(label, style: AppTextStyles.bodyMedium),
+              child: Text(label, style: AuroraType.body),
             ),
             const Icon(
               Icons.chevron_right,
               size: 16,
-              color: AppColors.textSecondary,
+              color: AuroraColors.inkSecondary,
             ),
           ],
         ),
@@ -944,23 +947,24 @@ class _SegmentedToggle extends StatelessWidget {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
               margin: EdgeInsets.only(
-                right: entry.key != options.keys.last ? AppSizes.xs : 0,
+                right: entry.key != options.keys.last ? AuroraSpacing.space1 : 0,
               ),
-              padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
+              padding: const EdgeInsets.symmetric(vertical: AuroraSpacing.space3),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.deepNavy : AppColors.surface,
-                borderRadius: AppRadius.md,
+                color: isSelected ? AuroraColors.ink : AuroraColors.paper,
+                borderRadius: AuroraRadius.md,
                 border: Border.all(
-                  color: isSelected ? AppColors.deepNavy : AppColors.border,
+                  color: isSelected ? AuroraColors.ink : AuroraColors.inkBorder,
                 ),
               ),
               child: Center(
                 child: Text(
                   entry.value,
-                  style: AppTextStyles.bodyMediumSemibold.copyWith(
+                  style: AuroraType.body.copyWith(
+                    fontWeight: FontWeight.w600,
                     color: isSelected
-                        ? AppColors.textInverse
-                        : AppColors.textPrimary,
+                        ? Colors.white
+                        : AuroraColors.ink,
                   ),
                 ),
               ),
@@ -999,40 +1003,40 @@ class _FormField extends StatelessWidget {
       maxLines: maxLines,
       maxLength: maxLength,
       validator: validator,
-      style: AppTextStyles.bodyMedium,
+      style: AuroraType.body,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: AppTextStyles.bodyMedium.copyWith(
-          color: AppColors.textSecondary,
+        labelStyle: AuroraType.body.copyWith(
+          color: AuroraColors.inkSecondary,
         ),
         prefixText: prefix,
-        prefixStyle: AppTextStyles.bodyMedium,
+        prefixStyle: AuroraType.body,
         counterText: '',
         border: OutlineInputBorder(
-          borderRadius: AppRadius.md,
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: AppRadius.md,
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: AppRadius.md,
-          borderSide: const BorderSide(color: AppColors.deepNavy),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.ink),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: AppRadius.md,
-          borderSide: const BorderSide(color: AppColors.error),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.coral),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: AppRadius.md,
-          borderSide: const BorderSide(color: AppColors.error),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.coral),
         ),
         filled: true,
-        fillColor: AppColors.gray50,
+        fillColor: AuroraColors.butter,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
+          horizontal: AuroraSpacing.space5,
+          vertical: AuroraSpacing.space3,
         ),
       ),
     );

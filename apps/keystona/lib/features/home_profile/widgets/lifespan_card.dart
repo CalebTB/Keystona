@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+
+
+
 import '../models/system_lifespan_entry.dart';
 
 /// Card displaying lifespan data for a single system.
@@ -20,10 +23,10 @@ class LifespanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSizes.md),
+      padding: const EdgeInsets.all(AuroraSpacing.space5),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        color: AuroraColors.paper,
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -34,38 +37,38 @@ class LifespanCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   entry.name,
-                  style: AppTextStyles.bodyLarge,
+                  style: AuroraType.bodyLg,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(width: AppSizes.sm),
+              const SizedBox(width: AuroraSpacing.space3),
               _HealthChip(entry: entry),
             ],
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
 
           // ── Progress bar ────────────────────────────────────────────────
           _LifespanBar(entry: entry),
-          const SizedBox(height: AppSizes.xs),
+          const SizedBox(height: AuroraSpacing.space1),
 
           // ── Age / years remaining ───────────────────────────────────────
           Row(
             children: [
               Text(
                 _ageLabel(entry),
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
+                style: AuroraType.bodySm.copyWith(
+                  color: AuroraColors.inkSecondary,
                 ),
               ),
               const Spacer(),
               if (!entry.isUnknown)
                 Text(
                   _yearsRemainingLabel(entry),
-                  style: AppTextStyles.bodySmall.copyWith(
+                  style: AuroraType.bodySm.copyWith(
                     color: entry.isEndOfLife
-                        ? AppColors.error
-                        : AppColors.textSecondary,
+                        ? AuroraColors.coral
+                        : AuroraColors.inkSecondary,
                   ),
                 ),
             ],
@@ -73,11 +76,11 @@ class LifespanCard extends StatelessWidget {
 
           // ── Replacement cost ────────────────────────────────────────────
           if (entry.estimatedReplacementCost != null) ...[
-            const SizedBox(height: AppSizes.xs),
+            const SizedBox(height: AuroraSpacing.space1),
             Text(
               'Est. replacement: \$${_formatCost(entry.estimatedReplacementCost!)}',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
+              style: AuroraType.bodySm.copyWith(
+                color: AuroraColors.inkSecondary,
               ),
             ),
           ],
@@ -121,13 +124,13 @@ class _LifespanBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+      borderRadius: BorderRadius.circular(999),
       child: LinearProgressIndicator(
         value: entry.isUnknown ? 0.0 : entry.barFraction,
         minHeight: 8,
-        backgroundColor: AppColors.gray200,
+        backgroundColor: AuroraColors.inkBorder,
         valueColor: AlwaysStoppedAnimation<Color>(
-          entry.isUnknown ? AppColors.gray300 : entry.healthColor,
+          entry.isUnknown ? AuroraColors.inkBorder : entry.healthColor,
         ),
       ),
     );
@@ -145,16 +148,16 @@ class _HealthChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.sm,
+        horizontal: AuroraSpacing.space3,
         vertical: 3,
       ),
       decoration: BoxDecoration(
         color: entry.healthColor.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         entry.healthLabel,
-        style: AppTextStyles.labelSmall.copyWith(color: entry.healthColor),
+        style: AuroraType.labelSm.copyWith(color: entry.healthColor),
       ),
     );
   }

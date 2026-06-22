@@ -8,11 +8,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+
+
+
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/trial_banner.dart';
 import '../../../services/providers/service_providers.dart';
@@ -28,14 +31,14 @@ import '../widgets/home_profile_skeleton.dart';
 // ── Card decoration constant ──────────────────────────────────────────────────
 
 const BoxDecoration _kCardDecoration = BoxDecoration(
-  color: AppColors.cardBackground,
-  borderRadius: BorderRadius.all(Radius.circular(AppSizes.radiusCard)),
+  color: AuroraColors.paper,
+  borderRadius: BorderRadius.all(Radius.circular(14)),
   border: Border.fromBorderSide(
-    BorderSide(color: AppColors.border, width: 1.5),
+    BorderSide(color: AuroraColors.inkBorder, width: 1.5),
   ),
   boxShadow: [
     BoxShadow(
-      color: AppColors.shadowSm,
+      color: Color(0x0D071238),
       blurRadius: 4,
       offset: Offset(0, 1),
     ),
@@ -87,21 +90,21 @@ String _healthLabel(double pct) {
 }
 
 Color _healthColor(double pct) {
-  if (pct >= 1.0) return AppColors.accent;
-  if (pct >= 0.75) return AppColors.sand;
-  return AppColors.olive;
+  if (pct >= 1.0) return AuroraColors.coral;
+  if (pct >= 0.75) return AuroraColors.yellow;
+  return AuroraColors.lime;
 }
 
 Color _barColor(double pct) {
-  if (pct >= 1.0) return AppColors.accent;
-  if (pct >= 0.75) return AppColors.sand;
-  return AppColors.olive;
+  if (pct >= 1.0) return AuroraColors.coral;
+  if (pct >= 0.75) return AuroraColors.yellow;
+  return AuroraColors.lime;
 }
 
 Color _healthBgColor(double pct) {
-  if (pct >= 1.0) return AppColors.accentDim;
-  if (pct >= 0.75) return AppColors.sandDim;
-  return AppColors.oliveDim;
+  if (pct >= 1.0) return AuroraColors.coralDim;
+  if (pct >= 0.75) return AuroraColors.yellowDim;
+  return AuroraColors.limeDim;
 }
 
 // ── Category style helpers ────────────────────────────────────────────────────
@@ -110,53 +113,53 @@ Color _healthBgColor(double pct) {
         SystemCategory cat) =>
     switch (cat) {
       SystemCategory.hvac => (
-          bg: AppColors.slateDim,
-          fg: AppColors.slate,
+          bg: AuroraColors.cobaltDim,
+          fg: AuroraColors.cobalt,
           icon: Icons.air_outlined
         ),
       SystemCategory.plumbing => (
-          bg: AppColors.tealDim,
-          fg: AppColors.teal,
+          bg: AuroraColors.cobaltDim,
+          fg: AuroraColors.cobalt,
           icon: Icons.water_drop_outlined
         ),
       SystemCategory.electrical => (
-          bg: AppColors.sandDim,
-          fg: AppColors.sand,
+          bg: AuroraColors.yellowDim,
+          fg: AuroraColors.yellow,
           icon: Icons.bolt_outlined
         ),
       SystemCategory.roofing => (
-          bg: AppColors.accentDim,
-          fg: AppColors.accent,
+          bg: AuroraColors.coralDim,
+          fg: AuroraColors.coral,
           icon: Icons.roofing_outlined
         ),
       SystemCategory.foundation => (
-          bg: AppColors.slateDim,
-          fg: AppColors.slate,
+          bg: AuroraColors.cobaltDim,
+          fg: AuroraColors.cobalt,
           icon: Icons.foundation_outlined
         ),
       SystemCategory.siding => (
-          bg: AppColors.oliveDim,
-          fg: AppColors.olive,
+          bg: AuroraColors.limeDim,
+          fg: AuroraColors.lime,
           icon: Icons.home_work_outlined
         ),
       SystemCategory.windowsDoors => (
-          bg: AppColors.plumDim,
-          fg: AppColors.plum,
+          bg: AuroraColors.cobaltDim,
+          fg: AuroraColors.cobalt,
           icon: Icons.window_outlined
         ),
       SystemCategory.insulation => (
-          bg: AppColors.sandDim,
-          fg: AppColors.sand,
+          bg: AuroraColors.yellowDim,
+          fg: AuroraColors.yellow,
           icon: Icons.thermostat_outlined
         ),
       SystemCategory.garage => (
-          bg: AppColors.slateDim,
-          fg: AppColors.slate,
+          bg: AuroraColors.cobaltDim,
+          fg: AuroraColors.cobalt,
           icon: Icons.garage_outlined
         ),
       SystemCategory.other => (
-          bg: AppColors.warmFill,
-          fg: AppColors.textSecondary,
+          bg: AuroraColors.paper,
+          fg: AuroraColors.inkSecondary,
           icon: Icons.build_outlined
         ),
     };
@@ -165,38 +168,38 @@ Color _healthBgColor(double pct) {
         ApplianceCategory cat) =>
     switch (cat) {
       ApplianceCategory.kitchen => (
-          bg: AppColors.plumDim,
-          fg: AppColors.plum,
+          bg: AuroraColors.cobaltDim,
+          fg: AuroraColors.cobalt,
           icon: Icons.kitchen_outlined
         ),
       ApplianceCategory.laundry => (
-          bg: AppColors.tealDim,
-          fg: AppColors.teal,
+          bg: AuroraColors.cobaltDim,
+          fg: AuroraColors.cobalt,
           icon: Icons.local_laundry_service_outlined
         ),
       ApplianceCategory.climate => (
-          bg: AppColors.slateDim,
-          fg: AppColors.slate,
+          bg: AuroraColors.cobaltDim,
+          fg: AuroraColors.cobalt,
           icon: Icons.ac_unit_outlined
         ),
       ApplianceCategory.cleaning => (
-          bg: AppColors.oliveDim,
-          fg: AppColors.olive,
+          bg: AuroraColors.limeDim,
+          fg: AuroraColors.lime,
           icon: Icons.cleaning_services_outlined
         ),
       ApplianceCategory.outdoor => (
-          bg: AppColors.oliveDim,
-          fg: AppColors.olive,
+          bg: AuroraColors.limeDim,
+          fg: AuroraColors.lime,
           icon: Icons.yard_outlined
         ),
       ApplianceCategory.bathroom => (
-          bg: AppColors.tealDim,
-          fg: AppColors.teal,
+          bg: AuroraColors.cobaltDim,
+          fg: AuroraColors.cobalt,
           icon: Icons.bathtub_outlined
         ),
       ApplianceCategory.other => (
-          bg: AppColors.warmFill,
-          fg: AppColors.textSecondary,
+          bg: AuroraColors.paper,
+          fg: AuroraColors.inkSecondary,
           icon: Icons.devices_other_outlined
         ),
     };
@@ -212,14 +215,14 @@ Color _healthBgColor(double pct) {
   if (expiry.isBefore(DateTime.now())) {
     return (
       label: 'WARRANTY EXPIRED',
-      text: AppColors.accent,
-      bg: AppColors.accentDim,
+      text: AuroraColors.coral,
+      bg: AuroraColors.coralDim,
     );
   }
   return (
     label: 'WARRANTY ${expiry.year}',
-    text: AppColors.olive,
-    bg: AppColors.oliveDim,
+    text: AuroraColors.lime,
+    bg: AuroraColors.limeDim,
   );
 }
 
@@ -261,7 +264,7 @@ class _IOSLayout extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return CupertinoPageScaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       child: Stack(
         children: [
           CustomScrollView(
@@ -269,17 +272,17 @@ class _IOSLayout extends ConsumerWidget {
               CupertinoSliverNavigationBar(
                 largeTitle: Text(
                   'Home Profile',
-                  style: AppTextStyles.displayMedium,
+                  style: AuroraType.h1,
                 ),
-                backgroundColor: AppColors.warmOffWhite,
+                backgroundColor: AuroraColors.paper,
                 border: null,
                 trailing: CupertinoButton(
                   padding: EdgeInsets.zero,
                   onPressed: () => ref.read(authServiceProvider).signOut(),
                   child: Text(
                     'Sign Out',
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: AppColors.accent,
+                    style: AuroraType.label.copyWith(
+                      color: AuroraColors.coral,
                     ),
                   ),
                 ),
@@ -318,14 +321,14 @@ class _AndroidLayout extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddSheet(context),
-        backgroundColor: AppColors.accent,
-        child: const Icon(Icons.add, color: AppColors.textInverse),
+        backgroundColor: AuroraColors.coral,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
       body: RefreshIndicator(
-        color: AppColors.accent,
+        color: AuroraColors.coral,
         onRefresh: () async {
           ref.invalidate(homeProfileProvider);
           ref.invalidate(systemsProvider);
@@ -335,9 +338,9 @@ class _AndroidLayout extends ConsumerWidget {
           slivers: [
             SliverAppBar(
               title:
-                  Text('Home Profile', style: AppTextStyles.displayMedium),
+                  Text('Home Profile', style: AuroraType.h1),
               floating: true,
-              backgroundColor: AppColors.warmOffWhite,
+              backgroundColor: AuroraColors.paper,
               scrolledUnderElevation: 0,
               elevation: 0,
               actions: [
@@ -345,8 +348,8 @@ class _AndroidLayout extends ConsumerWidget {
                   onPressed: () => ref.read(authServiceProvider).signOut(),
                   child: Text(
                     'Sign Out',
-                    style: AppTextStyles.labelMedium
-                        .copyWith(color: AppColors.accent),
+                    style: AuroraType.label
+                        .copyWith(color: AuroraColors.coral),
                   ),
                 ),
               ],
@@ -394,7 +397,7 @@ class _ContentSliver extends ConsumerWidget {
       },
       data: (overview) => SliverPadding(
         padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.screenPadding),
+            horizontal: AuroraSpacing.screenPadH),
         sliver: SliverList.list(
           children: [
             const TrialBanner(),
@@ -403,7 +406,7 @@ class _ContentSliver extends ConsumerWidget {
               property: overview.property,
               exteriorPhotoUrl: overview.exteriorPhotoSignedUrl,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             // 2. 5-year replacement forecast strip (conditional).
             _ForecastStrip(),
@@ -411,11 +414,11 @@ class _ContentSliver extends ConsumerWidget {
 
             // 3. Systems section.
             _SystemsSection(),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space7),
 
             // 4. Appliances section.
             _AppliancesSection(),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
           ],
         ),
@@ -443,11 +446,11 @@ class _PropertyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: AppColors.darkBackground,
+        color: AuroraColors.ink,
         borderRadius:
-            BorderRadius.all(Radius.circular(AppSizes.radiusLg + 2)), // 18px
+            BorderRadius.all(Radius.circular(16 + 2)), // 18px
       ),
-      padding: const EdgeInsets.all(AppSizes.md + 4), // 20px
+      padding: const EdgeInsets.all(AuroraSpacing.space5 + 4), // 20px
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -460,7 +463,7 @@ class _PropertyCard extends StatelessWidget {
                 child: Container(
                   width: 64,
                   height: 64,
-                  color: AppColors.darkBorder,
+                  color: const Color(0x1AFFFFFF),
                   child: exteriorPhotoUrl != null
                       ? CachedNetworkImage(
                           imageUrl: exteriorPhotoUrl!,
@@ -468,19 +471,19 @@ class _PropertyCard extends StatelessWidget {
                           placeholder: (_, _) => const Center(
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: AppColors.darkTextSecondary,
+                              color: AuroraColors.inkSecondary,
                             ),
                           ),
                           errorWidget: (_, _, _) => const Icon(
                             Icons.home_outlined,
                             size: 28,
-                            color: AppColors.darkTextSecondary,
+                            color: AuroraColors.inkSecondary,
                           ),
                         )
                       : const Icon(
                           Icons.home_outlined,
                           size: 28,
-                          color: AppColors.darkTextSecondary,
+                          color: AuroraColors.inkSecondary,
                         ),
                 ),
               ),
@@ -491,8 +494,8 @@ class _PropertyCard extends StatelessWidget {
                   children: [
                     Text(
                       _streetLine,
-                      style: AppTextStyles.headlineMedium.copyWith(
-                        color: AppColors.darkText,
+                      style: AuroraType.h1.copyWith(
+                        color: const Color(0xFFFFFFFF),
                         fontWeight: FontWeight.w800,
                         fontSize: 18,
                       ),
@@ -500,8 +503,8 @@ class _PropertyCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       _cityLine,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.darkTextTertiary,
+                      style: AuroraType.bodySm.copyWith(
+                        color: const Color(0x59FFFFFF),
                         fontSize: 12,
                       ),
                     ),
@@ -515,14 +518,14 @@ class _PropertyCard extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: const BoxDecoration(
-                    color: AppColors.darkBorder,
+                    color: Color(0x1AFFFFFF),
                     borderRadius: BorderRadius.all(
-                        Radius.circular(AppSizes.radiusFull)),
+                        Radius.circular(999)),
                   ),
                   child: const Icon(
                     Icons.edit_outlined,
                     size: 15,
-                    color: AppColors.darkTextSecondary,
+                    color: AuroraColors.inkSecondary,
                   ),
                 ),
               ),
@@ -600,13 +603,13 @@ class _StatCell extends StatelessWidget {
         Text(
           value,
           style:
-              AppTextStyles.monoDisplay.copyWith(color: AppColors.darkText),
+              AuroraType.number.copyWith(color: const Color(0xFFFFFFFF)),
         ),
         const SizedBox(height: 2),
         Text(
           label.toUpperCase(),
-          style: AppTextStyles.monoTiny.copyWith(
-            color: AppColors.darkTextTertiary,
+          style: AuroraType.labelSm.copyWith(
+            color: const Color(0x59FFFFFF),
           ),
         ),
       ],
@@ -656,11 +659,11 @@ class _ForecastStrip extends ConsumerWidget {
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: AppColors.sandDim,
+                color: AuroraColors.yellowDim,
                 borderRadius:
-                    BorderRadius.circular(AppSizes.radiusCard),
+                    const BorderRadius.all(Radius.circular(14)),
                 border: Border.all(
-                  color: AppColors.sand.withValues(alpha: 0.2),
+                  color: AuroraColors.yellow.withValues(alpha: 0.2),
                   width: 1.5,
                 ),
               ),
@@ -672,13 +675,13 @@ class _ForecastStrip extends ConsumerWidget {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: AppColors.sand.withValues(alpha: 0.15),
+                      color: AuroraColors.yellow.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(9),
                     ),
                     child: const Icon(
                       Icons.schedule_outlined,
                       size: 18,
-                      color: AppColors.sand,
+                      color: AuroraColors.yellow,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -688,8 +691,8 @@ class _ForecastStrip extends ConsumerWidget {
                       children: [
                         Text(
                           '5-Year Replacement Forecast',
-                          style: AppTextStyles.titleSmall.copyWith(
-                            color: AppColors.sand,
+                          style: AuroraType.h3.copyWith(
+                            color: AuroraColors.yellow,
                             fontSize: 13,
                           ),
                         ),
@@ -697,8 +700,8 @@ class _ForecastStrip extends ConsumerWidget {
                         Text(
                           '${forecastSystems.length} system${forecastSystems.length == 1 ? '' : 's'} due for replacement'
                           '${costStr != null ? ' · $costStr total' : ''}',
-                          style: AppTextStyles.monoLabel.copyWith(
-                            color: AppColors.sand.withValues(alpha: 0.8),
+                          style: AuroraType.label.copyWith(
+                            color: AuroraColors.yellow.withValues(alpha: 0.8),
                             fontSize: 10,
                           ),
                         ),
@@ -708,12 +711,12 @@ class _ForecastStrip extends ConsumerWidget {
                   Icon(
                     Icons.chevron_right,
                     size: 16,
-                    color: AppColors.sand.withValues(alpha: 0.7),
+                    color: AuroraColors.yellow.withValues(alpha: 0.7),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
           ],
         );
       },
@@ -747,7 +750,7 @@ class _SystemsSection extends ConsumerWidget {
           else
             ...systems.map((s) => Padding(
                   padding:
-                      const EdgeInsets.only(bottom: AppSizes.cardGap),
+                      const EdgeInsets.only(bottom: AuroraSpacing.space3),
                   child: _SystemCard(system: s),
                 )),
         ],
@@ -781,7 +784,7 @@ class _AppliancesSection extends ConsumerWidget {
           else
             ...appliances.map((a) => Padding(
                   padding:
-                      const EdgeInsets.only(bottom: AppSizes.cardGap),
+                      const EdgeInsets.only(bottom: AuroraSpacing.space3),
                   child: _ApplianceCard(appliance: a),
                 )),
         ],
@@ -803,18 +806,18 @@ class _SectionHeader extends StatelessWidget {
       children: [
         Text(
           label,
-          style: GoogleFonts.fraunces(
+          style: GoogleFonts.inter(
             fontSize: 17,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.2,
-            color: AppColors.textPrimary,
+            color: AuroraColors.ink,
           ),
         ),
         const Spacer(),
         Text(
           '$count tracked',
-          style: AppTextStyles.monoLabel.copyWith(
-            color: AppColors.textTertiary,
+          style: AuroraType.label.copyWith(
+            color: AuroraColors.inkTertiary,
             fontSize: 11,
           ),
         ),
@@ -832,11 +835,11 @@ class _StatusLegend extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: const [
-        _LegendDot(color: AppColors.olive, label: 'Healthy'),
+        _LegendDot(color: AuroraColors.lime, label: 'Healthy'),
         SizedBox(width: 14),
-        _LegendDot(color: AppColors.sand, label: 'Aging'),
+        _LegendDot(color: AuroraColors.yellow, label: 'Aging'),
         SizedBox(width: 14),
-        _LegendDot(color: AppColors.accent, label: 'End of Life'),
+        _LegendDot(color: AuroraColors.coral, label: 'End of Life'),
       ],
     );
   }
@@ -893,7 +896,7 @@ class _SystemCard extends StatelessWidget {
 
     String? ageText;
     String? remainingText;
-    Color remainingColor = AppColors.textTertiary;
+    Color remainingColor = AuroraColors.inkTertiary;
 
     if (system.installationDate != null) {
       final ageYears =
@@ -913,12 +916,12 @@ class _SystemCard extends StatelessWidget {
       if (avg > 0) {
         if (pct >= 1.0) {
           remainingText = 'Past expected';
-          remainingColor = AppColors.accent;
+          remainingColor = AuroraColors.coral;
         } else {
           final remaining = avg - ageYears;
           if (remaining < 1) {
             remainingText = '< 1 yr left';
-            remainingColor = AppColors.sand;
+            remainingColor = AuroraColors.yellow;
           } else {
             final lo = math.max(0, remaining.floor());
             final hi = remaining.ceil();
@@ -969,7 +972,7 @@ class _SystemCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               system.name,
-                              style: AppTextStyles.titleSmall,
+                              style: AuroraType.h3,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -987,7 +990,7 @@ class _SystemCard extends StatelessWidget {
                             ),
                             child: Text(
                               healthLbl,
-                              style: GoogleFonts.ibmPlexMono(
+                              style: GoogleFonts.jetBrainsMono(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.5,
@@ -1000,8 +1003,8 @@ class _SystemCard extends StatelessWidget {
                       if (system.category.label.isNotEmpty)
                         Text(
                           system.category.label,
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.textTertiary,
+                          style: AuroraType.bodySm.copyWith(
+                            color: AuroraColors.inkTertiary,
                             fontSize: 11,
                           ),
                         ),
@@ -1019,7 +1022,7 @@ class _SystemCard extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w400,
-                  color: AppColors.textTertiary,
+                  color: AuroraColors.inkTertiary,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -1034,7 +1037,7 @@ class _SystemCard extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: barValue,
                   minHeight: 5,
-                  backgroundColor: AppColors.warmInset,
+                  backgroundColor: AuroraColors.butter,
                   valueColor: AlwaysStoppedAnimation<Color>(barColor),
                 ),
               ),
@@ -1045,17 +1048,17 @@ class _SystemCard extends StatelessWidget {
                   if (ageText != null)
                     Text(
                       ageText,
-                      style: GoogleFonts.ibmPlexMono(
+                      style: GoogleFonts.jetBrainsMono(
                         fontSize: 10,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textTertiary,
+                        color: AuroraColors.inkTertiary,
                       ),
                     ),
                   const Spacer(),
                   if (remainingText != null)
                     Text(
                       remainingText,
-                      style: GoogleFonts.ibmPlexMono(
+                      style: GoogleFonts.jetBrainsMono(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                         color: remainingColor,
@@ -1067,7 +1070,7 @@ class _SystemCard extends StatelessWidget {
 
             // Divider.
             const SizedBox(height: 8),
-            const Divider(color: AppColors.warmFill, height: 1),
+            const Divider(color: AuroraColors.paper, height: 1),
             const SizedBox(height: 8),
 
             // Cost tag + warranty badge row.
@@ -1080,14 +1083,14 @@ class _SystemCard extends StatelessWidget {
                       const Icon(
                         Icons.attach_money,
                         size: 12,
-                        color: AppColors.textTertiary,
+                        color: AuroraColors.inkTertiary,
                       ),
                       Text(
                         '${_fmtCost(system.estimatedReplacementCost!)} replacement',
                         style: GoogleFonts.inter(
                           fontSize: 10,
                           fontWeight: FontWeight.w400,
-                          color: AppColors.textTertiary,
+                          color: AuroraColors.inkTertiary,
                         ),
                       ),
                     ],
@@ -1103,7 +1106,7 @@ class _SystemCard extends StatelessWidget {
                     ),
                     child: Text(
                       badge.label,
-                      style: GoogleFonts.ibmPlexMono(
+                      style: GoogleFonts.jetBrainsMono(
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.3,
@@ -1139,7 +1142,7 @@ class _ApplianceCard extends StatelessWidget {
 
     String? ageText;
     String? remainingText;
-    Color remainingColor = AppColors.textTertiary;
+    Color remainingColor = AuroraColors.inkTertiary;
 
     if (appliance.purchaseDate != null) {
       final ageYears =
@@ -1157,12 +1160,12 @@ class _ApplianceCard extends StatelessWidget {
       if (avg > 0) {
         if (pct >= 1.0) {
           remainingText = 'Past expected';
-          remainingColor = AppColors.accent;
+          remainingColor = AuroraColors.coral;
         } else {
           final remaining = avg - ageYears;
           if (remaining < 1) {
             remainingText = '< 1 yr left';
-            remainingColor = AppColors.sand;
+            remainingColor = AuroraColors.yellow;
           } else {
             final lo = math.max(0, remaining.floor());
             final hi = remaining.ceil();
@@ -1214,7 +1217,7 @@ class _ApplianceCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               appliance.name,
-                              style: AppTextStyles.titleSmall,
+                              style: AuroraType.h3,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -1230,7 +1233,7 @@ class _ApplianceCard extends StatelessWidget {
                             ),
                             child: Text(
                               healthLbl,
-                              style: GoogleFonts.ibmPlexMono(
+                              style: GoogleFonts.jetBrainsMono(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.5,
@@ -1242,8 +1245,8 @@ class _ApplianceCard extends StatelessWidget {
                       ),
                       Text(
                         appliance.category.label,
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textTertiary,
+                        style: AuroraType.bodySm.copyWith(
+                          color: AuroraColors.inkTertiary,
                           fontSize: 11,
                         ),
                       ),
@@ -1261,7 +1264,7 @@ class _ApplianceCard extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w400,
-                  color: AppColors.textTertiary,
+                  color: AuroraColors.inkTertiary,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -1276,7 +1279,7 @@ class _ApplianceCard extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: barValue,
                   minHeight: 5,
-                  backgroundColor: AppColors.warmInset,
+                  backgroundColor: AuroraColors.butter,
                   valueColor: AlwaysStoppedAnimation<Color>(barColor),
                 ),
               ),
@@ -1286,17 +1289,17 @@ class _ApplianceCard extends StatelessWidget {
                   if (ageText != null)
                     Text(
                       ageText,
-                      style: GoogleFonts.ibmPlexMono(
+                      style: GoogleFonts.jetBrainsMono(
                         fontSize: 10,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textTertiary,
+                        color: AuroraColors.inkTertiary,
                       ),
                     ),
                   const Spacer(),
                   if (remainingText != null)
                     Text(
                       remainingText,
-                      style: GoogleFonts.ibmPlexMono(
+                      style: GoogleFonts.jetBrainsMono(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                         color: remainingColor,
@@ -1308,7 +1311,7 @@ class _ApplianceCard extends StatelessWidget {
 
             // Divider.
             const SizedBox(height: 8),
-            const Divider(color: AppColors.warmFill, height: 1),
+            const Divider(color: AuroraColors.paper, height: 1),
             const SizedBox(height: 8),
 
             // Cost tag + warranty badge row.
@@ -1321,14 +1324,14 @@ class _ApplianceCard extends StatelessWidget {
                       const Icon(
                         Icons.attach_money,
                         size: 12,
-                        color: AppColors.textTertiary,
+                        color: AuroraColors.inkTertiary,
                       ),
                       Text(
                         '${_fmtCost(appliance.estimatedReplacementCost!)} purchased',
                         style: GoogleFonts.inter(
                           fontSize: 10,
                           fontWeight: FontWeight.w400,
-                          color: AppColors.textTertiary,
+                          color: AuroraColors.inkTertiary,
                         ),
                       ),
                     ],
@@ -1344,7 +1347,7 @@ class _ApplianceCard extends StatelessWidget {
                     ),
                     child: Text(
                       badge.label,
-                      style: GoogleFonts.ibmPlexMono(
+                      style: GoogleFonts.jetBrainsMono(
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.3,
@@ -1404,8 +1407,8 @@ class _AddFab extends StatelessWidget {
   Widget build(BuildContext context) {
     return FloatingActionButton(
       onPressed: onPressed,
-      backgroundColor: AppColors.accent,
-      child: const Icon(Icons.add, color: AppColors.textInverse),
+      backgroundColor: AuroraColors.coral,
+      child: const Icon(Icons.add, color: Colors.white),
     );
   }
 }
@@ -1425,10 +1428,10 @@ class _SectionLoadingPlaceholder extends StatelessWidget {
           children: [
             Text(
               label,
-              style: GoogleFonts.fraunces(
+              style: GoogleFonts.inter(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: AuroraColors.ink,
               ),
             ),
           ],
@@ -1455,9 +1458,9 @@ class _EmptySectionHint extends StatelessWidget {
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: AppColors.warmFill,
-          borderRadius: BorderRadius.circular(AppSizes.radiusCard),
-          border: Border.all(color: AppColors.border, width: 1.5),
+          color: AuroraColors.paper,
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
+          border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: Row(
@@ -1466,13 +1469,13 @@ class _EmptySectionHint extends StatelessWidget {
             const Icon(
               Icons.add_circle_outline,
               size: 16,
-              color: AppColors.textTertiary,
+              color: AuroraColors.inkTertiary,
             ),
             const SizedBox(width: 8),
             Text(
               label,
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textTertiary,
+              style: AuroraType.bodySm.copyWith(
+                color: AuroraColors.inkTertiary,
               ),
             ),
           ],

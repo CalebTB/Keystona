@@ -4,10 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+
+
+
 import '../../../services/supabase_service.dart';
 import '../../maintenance/models/maintenance_task.dart';
 import '../../maintenance/providers/maintenance_tasks_provider.dart';
@@ -122,7 +126,7 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
             ),
             TextButton(
               style: TextButton.styleFrom(
-                  foregroundColor: AppColors.error),
+                  foregroundColor: AuroraColors.coral),
               onPressed: () => Navigator.of(context).pop(true),
               child: const Text('Remove'),
             ),
@@ -193,18 +197,18 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       appBar: AppBar(
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: Text(widget.itemName, style: AppTextStyles.h3),
+        title: Text(widget.itemName, style: AuroraType.h3),
       ),
       floatingActionButton: tasks != null && tasks.isNotEmpty
           ? FloatingActionButton(
               onPressed: _addTask,
-              backgroundColor: AppColors.deepNavy,
-              child: const Icon(Icons.add, color: AppColors.textInverse),
+              backgroundColor: AuroraColors.ink,
+              child: const Icon(Icons.add, color: Colors.white),
             )
           : null,
       body: RefreshIndicator(
@@ -231,8 +235,8 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
           _EmptyState(onAdd: _addTask),
           if (isIOS)
             Positioned(
-              bottom: AppSizes.lg + MediaQuery.of(context).padding.bottom,
-              right: AppSizes.md,
+              bottom: AuroraSpacing.space7 + MediaQuery.of(context).padding.bottom,
+              right: AuroraSpacing.space5,
               child: CupertinoButton(
                 padding: EdgeInsets.zero,
                 onPressed: _addTask,
@@ -240,11 +244,11 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
                   width: 52,
                   height: 52,
                   decoration: BoxDecoration(
-                    color: AppColors.deepNavy,
-                    borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                    color: AuroraColors.ink,
+                    borderRadius: BorderRadius.circular(999),
                     boxShadow: const [
                       BoxShadow(
-                        color: AppColors.fabShadow,
+                        color: Color(0x59FF3B62),
                         blurRadius: 12,
                         offset: Offset(0, 4),
                       ),
@@ -252,7 +256,7 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
                   ),
                   child: const Icon(
                     Icons.add,
-                    color: AppColors.textInverse,
+                    color: Colors.white,
                     size: 26,
                   ),
                 ),
@@ -263,8 +267,8 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
     }
 
     final fab = Positioned(
-      bottom: AppSizes.lg + MediaQuery.of(context).padding.bottom,
-      right: AppSizes.md,
+      bottom: AuroraSpacing.space7 + MediaQuery.of(context).padding.bottom,
+      right: AuroraSpacing.space5,
       child: CupertinoButton(
         padding: EdgeInsets.zero,
         onPressed: _addTask,
@@ -272,17 +276,17 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-            color: AppColors.deepNavy,
-            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+            color: AuroraColors.ink,
+            borderRadius: BorderRadius.circular(999),
             boxShadow: const [
               BoxShadow(
-                color: AppColors.fabShadow,
+                color: Color(0x59FF3B62),
                 blurRadius: 12,
                 offset: Offset(0, 4),
               ),
             ],
           ),
-          child: const Icon(Icons.add, color: AppColors.textInverse, size: 26),
+          child: const Icon(Icons.add, color: Colors.white, size: 26),
         ),
       ),
     );
@@ -296,10 +300,10 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
               CupertinoSliverRefreshControl(onRefresh: _onRefresh),
               SliverPadding(
                 padding: EdgeInsets.fromLTRB(
-                  AppSizes.screenPadding,
-                  AppSizes.md,
-                  AppSizes.screenPadding,
-                  AppSizes.xxl + MediaQuery.of(context).padding.bottom,
+                  AuroraSpacing.screenPadH,
+                  AuroraSpacing.space5,
+                  AuroraSpacing.screenPadH,
+                  AuroraSpacing.space9 + MediaQuery.of(context).padding.bottom,
                 ),
                 sliver: SliverList.builder(
                   itemCount: tasks.length,
@@ -323,10 +327,10 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
     return ListView.builder(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.fromLTRB(
-        AppSizes.screenPadding,
-        AppSizes.md,
-        AppSizes.screenPadding,
-        AppSizes.xxl + MediaQuery.of(context).padding.bottom,
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.space5,
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.space9 + MediaQuery.of(context).padding.bottom,
       ),
       itemCount: tasks.length,
       itemBuilder: (context, index) => _ItemTaskRow(
@@ -349,26 +353,26 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(
               Icons.task_alt_outlined,
-              size: AppSizes.iconXl,
-              color: AppColors.gray400,
+              size: AuroraSpacing.space9,
+              color: AuroraColors.inkTertiary,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
             Text(
               'No tasks yet',
-              style: AppTextStyles.bodyMediumSemibold,
+              style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.xs),
+            const SizedBox(height: AuroraSpacing.space1),
             Text(
               'Tap + to add a task linked to this item.',
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textSecondary,
+              style: AuroraType.bodySm.copyWith(
+                color: AuroraColors.inkSecondary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -407,12 +411,12 @@ class _ItemTaskRow extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: AppRadius.card,
-          border: Border.all(color: AppColors.border, width: 1.5),
+          color: AuroraColors.paper,
+          borderRadius: AuroraRadius.xl,
+          border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
         ),
         child: ClipRRect(
-          borderRadius: AppRadius.card,
+          borderRadius: AuroraRadius.xl,
           child: IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -420,7 +424,7 @@ class _ItemTaskRow extends StatelessWidget {
                 // Left accent stripe (grey when disabled)
                 Container(
                     width: 4,
-                    color: enabled ? accentColor : AppColors.gray300),
+                    color: enabled ? accentColor : AuroraColors.inkBorder),
                 // Content
                 Expanded(
                   child: Padding(
@@ -430,14 +434,14 @@ class _ItemTaskRow extends StatelessWidget {
                       children: [
                         Text(
                           task.name,
-                          style: AppTextStyles.bodyMediumSemibold,
+                          style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: 4),
                         if (!enabled)
                           Text(
                             'Hidden from Tasks tab',
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.textTertiary,
+                            style: AuroraType.bodySm.copyWith(
+                              color: AuroraColors.inkTertiary,
                               fontStyle: FontStyle.italic,
                             ),
                           )
@@ -453,8 +457,8 @@ class _ItemTaskRow extends StatelessWidget {
                               const SizedBox(width: 8),
                               Text(
                                 DateFormat('MMM d').format(task.dueDate),
-                                style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.textSecondary,
+                                style: AuroraType.bodySm.copyWith(
+                                  color: AuroraColors.inkSecondary,
                                 ),
                               ),
                             ],
@@ -474,7 +478,7 @@ class _ItemTaskRow extends StatelessWidget {
                         scale: 0.75,
                         child: CupertinoSwitch(
                           value: enabled,
-                          activeTrackColor: AppColors.olive,
+                          activeTrackColor: AuroraColors.lime,
                           onChanged: onToggle,
                         ),
                       ),
@@ -484,12 +488,12 @@ class _ItemTaskRow extends StatelessWidget {
                         children: [
                           _IconBtn(
                             icon: Icons.edit_outlined,
-                            color: AppColors.textSecondary,
+                            color: AuroraColors.inkSecondary,
                             onTap: onEdit,
                           ),
                           _IconBtn(
                             icon: Icons.delete_outline,
-                            color: AppColors.error,
+                            color: AuroraColors.coral,
                             onTap: () {
                               HapticFeedback.lightImpact();
                               onDelete();
@@ -512,17 +516,17 @@ class _ItemTaskRow extends StatelessWidget {
 Color _accentColor(MaintenanceTask task, DateTime today) {
   if (task.status == TaskStatus.completed ||
       task.status == TaskStatus.skipped) {
-    return AppColors.olive;
+    return AuroraColors.lime;
   }
   if (task.status == TaskStatus.overdue ||
       task.dueDate.toLocal().isBefore(today)) {
-    return AppColors.accent;
+    return AuroraColors.coral;
   }
   final sevenDays = today.add(const Duration(days: 7));
   if (task.dueDate.toLocal().isBefore(sevenDays)) {
-    return AppColors.amber;
+    return AuroraColors.yellow;
   }
-  return AppColors.slate;
+  return AuroraColors.cobalt;
 }
 
 // ── Status badge ───────────────────────────────────────────────────────────────
@@ -534,21 +538,21 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg, label) = switch (status) {
-      TaskStatus.overdue => (AppColors.accentDim, AppColors.accent, 'Overdue'),
-      TaskStatus.due => (AppColors.amberDim, AppColors.amber, 'Due'),
+      TaskStatus.overdue => (AuroraColors.coralDim, AuroraColors.coral, 'Overdue'),
+      TaskStatus.due => (AuroraColors.yellowDim, AuroraColors.yellow, 'Due'),
       TaskStatus.scheduled =>
-        (AppColors.warmFill, AppColors.textSecondary, 'Scheduled'),
+        (AuroraColors.paper, AuroraColors.inkSecondary, 'Scheduled'),
       TaskStatus.completed =>
-        (AppColors.oliveDim, AppColors.olive, 'Completed'),
+        (AuroraColors.limeDim, AuroraColors.lime, 'Completed'),
       TaskStatus.skipped =>
-        (AppColors.gray200, AppColors.gray500, 'Skipped'),
+        (AuroraColors.inkBorder, AuroraColors.inkTertiary, 'Skipped'),
     };
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(AppSizes.radiusXs),
+        borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         label,
@@ -573,15 +577,15 @@ class _RecurrenceBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: AppColors.slateDim,
-        borderRadius: BorderRadius.circular(AppSizes.radiusXs),
+        color: AuroraColors.cobaltDim,
+        borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         recurrence.label,
         style: const TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w500,
-          color: AppColors.slate,
+          color: AuroraColors.cobalt,
         ),
       ),
     );

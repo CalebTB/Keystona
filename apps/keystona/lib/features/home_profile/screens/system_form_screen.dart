@@ -5,11 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+
+
+
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 
 import '../../../core/widgets/scan_label_button.dart';
 import '../../../core/widgets/snackbar_service.dart';
@@ -168,7 +171,7 @@ class _SystemFormScreenState extends ConsumerState<SystemFormScreen> {
                 : Text(
                     _isEditing ? 'Save' : 'Add',
                     style: const TextStyle(
-                      color: AppColors.goldAccent,
+                      color: AuroraColors.yellow,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -218,10 +221,10 @@ class _SystemFormScreenState extends ConsumerState<SystemFormScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       appBar: AppBar(
-        title: Text(title, style: AppTextStyles.h3),
-        backgroundColor: AppColors.warmOffWhite,
+        title: Text(title, style: AuroraType.h3),
+        backgroundColor: AuroraColors.paper,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
@@ -239,8 +242,8 @@ class _SystemFormScreenState extends ConsumerState<SystemFormScreen> {
                   )
                 : Text(
                     _isEditing ? 'Save' : 'Add',
-                    style: AppTextStyles.bodyMediumSemibold.copyWith(
-                      color: AppColors.deepNavy,
+                    style: AuroraType.body.copyWith(fontWeight: FontWeight.w600).copyWith(
+                      color: AuroraColors.ink,
                     ),
                   ),
           ),
@@ -498,10 +501,10 @@ class _FormBody extends StatelessWidget {
       key: formKey,
       child: SingleChildScrollView(
         padding: EdgeInsets.only(
-          left: AppSizes.screenPadding,
-          right: AppSizes.screenPadding,
-          top: AppSizes.md,
-          bottom: MediaQuery.of(context).viewInsets.bottom + AppSizes.xl,
+          left: AuroraSpacing.screenPadH,
+          right: AuroraSpacing.screenPadH,
+          top: AuroraSpacing.space5,
+          bottom: MediaQuery.of(context).viewInsets.bottom + AuroraSpacing.space8,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -544,7 +547,7 @@ class _FormBody extends StatelessWidget {
               },
               onPhotoReady: onPhotoReady,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             // ── Required fields ───────────────────────────────────────────────
             _FormSectionLabel(label: 'Required'),
@@ -555,7 +558,7 @@ class _FormBody extends StatelessWidget {
               value: category,
               onChanged: onCategoryChanged,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             // Display name.
             _FieldLabel(label: 'Name'),
@@ -566,7 +569,7 @@ class _FormBody extends StatelessWidget {
                   ? 'Name is required'
                   : null,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             // System type.
             _FieldLabel(label: 'System Type'),
@@ -577,7 +580,7 @@ class _FormBody extends StatelessWidget {
                   ? 'System type is required'
                   : null,
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space7),
 
             // ── Identification ────────────────────────────────────────────────
             _FormSectionLabel(label: 'Identification'),
@@ -586,7 +589,7 @@ class _FormBody extends StatelessWidget {
               controller: brandCtrl,
               hint: 'e.g. Carrier, Rheem',
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             _FieldLabel(label: 'Model Number'),
             _TextField(
@@ -596,7 +599,7 @@ class _FormBody extends StatelessWidget {
                 FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9\-_\. ]')),
               ],
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             _FieldLabel(label: 'Serial Number'),
             _TextField(
@@ -606,14 +609,14 @@ class _FormBody extends StatelessWidget {
                 FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9\-_]')),
               ],
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             _FieldLabel(label: 'Location'),
             _TextField(
               controller: locationCtrl,
               hint: 'e.g. Basement, Attic, Garage',
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space7),
 
             // ── Installation ──────────────────────────────────────────────────
             _FormSectionLabel(label: 'Installation'),
@@ -623,14 +626,14 @@ class _FormBody extends StatelessWidget {
               hint: 'Select date',
               onChanged: onInstallationDateChanged,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             _FieldLabel(label: 'Installer'),
             _TextField(
               controller: installerCtrl,
               hint: 'Company or person who installed',
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             _FieldLabel(label: 'Purchase Price'),
             _TextField(
@@ -641,7 +644,7 @@ class _FormBody extends StatelessWidget {
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
               ],
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space7),
 
             // ── Lifespan ──────────────────────────────────────────────────────
             _FormSectionLabel(label: 'Lifespan'),
@@ -663,7 +666,7 @@ class _FormBody extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: AppSizes.md),
+                const SizedBox(width: AuroraSpacing.space5),
                 Flexible(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -682,7 +685,7 @@ class _FormBody extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             _FieldLabel(label: 'Custom Lifespan Override (years)'),
             _TextField(
@@ -691,7 +694,7 @@ class _FormBody extends StatelessWidget {
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             _FieldLabel(label: 'Estimated Replacement Cost'),
             _TextField(
@@ -702,7 +705,7 @@ class _FormBody extends StatelessWidget {
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
               ],
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space7),
 
             // ── Warranty ──────────────────────────────────────────────────────
             _FormSectionLabel(label: 'Warranty'),
@@ -712,14 +715,14 @@ class _FormBody extends StatelessWidget {
               hint: 'Select date',
               onChanged: onWarrantyExpirationChanged,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             _FieldLabel(label: 'Warranty Provider'),
             _TextField(
               controller: warrantyProviderCtrl,
               hint: 'e.g. Carrier, HomeServe',
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space7),
 
             // ── Status ────────────────────────────────────────────────────────
             _FormSectionLabel(label: 'Status'),
@@ -727,7 +730,7 @@ class _FormBody extends StatelessWidget {
               value: status,
               onChanged: onStatusChanged,
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space7),
 
             // ── Notes ─────────────────────────────────────────────────────────
             _FormSectionLabel(label: 'Notes'),
@@ -753,11 +756,11 @@ class _FormSectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.sm),
+      padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
       child: Text(
         label.toUpperCase(),
-        style: AppTextStyles.labelSmall.copyWith(
-          color: AppColors.textSecondary,
+        style: AuroraType.labelSm.copyWith(
+          color: AuroraColors.inkSecondary,
           letterSpacing: 0.8,
         ),
       ),
@@ -774,7 +777,7 @@ class _FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
-      child: Text(label, style: AppTextStyles.labelLarge),
+      child: Text(label, style: AuroraType.label),
     );
   }
 }
@@ -806,30 +809,30 @@ class _TextField extends StatelessWidget {
       maxLines: maxLines,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: AppTextStyles.bodyMedium.copyWith(
-          color: AppColors.textDisabled,
+        hintStyle: AuroraType.body.copyWith(
+          color: AuroraColors.inkTertiary,
         ),
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: AuroraColors.paper,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.deepNavy),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AuroraColors.ink),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.error),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AuroraColors.coral),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
+          horizontal: AuroraSpacing.space5,
+          vertical: AuroraSpacing.space3,
         ),
       ),
     );
@@ -848,29 +851,29 @@ class _CategoryDropdown extends StatelessWidget {
       initialValue: value,
       decoration: InputDecoration(
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: AuroraColors.paper,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.deepNavy),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AuroraColors.ink),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
+          horizontal: AuroraSpacing.space5,
+          vertical: AuroraSpacing.space3,
         ),
       ),
       items: SystemCategory.values
           .map(
             (c) => DropdownMenuItem(
               value: c,
-              child: Text(c.label, style: AppTextStyles.bodyMedium),
+              child: Text(c.label, style: AuroraType.body),
             ),
           )
           .toList(),
@@ -893,29 +896,29 @@ class _StatusDropdown extends StatelessWidget {
       initialValue: value,
       decoration: InputDecoration(
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: AuroraColors.paper,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.deepNavy),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AuroraColors.ink),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
+          horizontal: AuroraSpacing.space5,
+          vertical: AuroraSpacing.space3,
         ),
       ),
       items: ItemStatus.values
           .map(
             (s) => DropdownMenuItem(
               value: s,
-              child: Text(s.label, style: AppTextStyles.bodyMedium),
+              child: Text(s.label, style: AuroraType.body),
             ),
           )
           .toList(),
@@ -956,12 +959,12 @@ class _DatePickerField extends StatelessWidget {
     return GestureDetector(
       onTap: () => _pick(context),
       child: Container(
-        height: AppSizes.inputHeight,
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
+        height: 48.0,
+        padding: const EdgeInsets.symmetric(horizontal: AuroraSpacing.space5),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: AppColors.border),
+          color: AuroraColors.paper,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(
           children: [
@@ -969,16 +972,16 @@ class _DatePickerField extends StatelessWidget {
               child: Text(
                 _display,
                 style: value != null
-                    ? AppTextStyles.bodyMedium
-                    : AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textDisabled,
+                    ? AuroraType.body
+                    : AuroraType.body.copyWith(
+                        color: AuroraColors.inkTertiary,
                       ),
               ),
             ),
             const Icon(
               Icons.calendar_today_outlined,
               size: 18,
-              color: AppColors.textSecondary,
+              color: AuroraColors.inkSecondary,
             ),
           ],
         ),
@@ -997,7 +1000,7 @@ class _DatePickerField extends StatelessWidget {
       lastDate: DateTime(2100),
       builder: (context, child) => Theme(
         data: ThemeData.light().copyWith(
-          colorScheme: const ColorScheme.light(primary: AppColors.deepNavy),
+          colorScheme: const ColorScheme.light(primary: AuroraColors.ink),
         ),
         child: child!,
       ),
