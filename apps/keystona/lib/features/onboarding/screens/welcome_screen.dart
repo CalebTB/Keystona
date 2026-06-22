@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../providers/onboarding_provider.dart';
 
@@ -20,49 +20,49 @@ class WelcomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
+          padding: const EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
           child: Column(
             children: [
               const Spacer(),
 
-              // ── App name ────────────────────────────────────────────────────
+              // ── App name ──────────────────────────────────────────────────
               Text(
                 'Keystona',
-                style: AppTextStyles.displayLarge,
+                style: AuroraType.displayLg,
                 textAlign: TextAlign.center,
               ),
 
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
 
-              // ── Tagline ─────────────────────────────────────────────────────
+              // ── Tagline ───────────────────────────────────────────────────
               Text(
                 'The smart way to manage your home.',
-                style: AppTextStyles.bodyLarge.copyWith(
-                  color: AppColors.textSecondary,
+                style: AuroraType.bodyLg.copyWith(
+                  color: AuroraColors.inkSecondary,
                 ),
                 textAlign: TextAlign.center,
               ),
 
               const Spacer(),
 
-              // ── Get Started CTA ─────────────────────────────────────────────
+              // ── Get Started CTA ───────────────────────────────────────────
               ElevatedButton(
                 onPressed: () => context.go(AppRoutes.onboardingProperty),
                 child: const Text('Get Started'),
               ),
 
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
 
-              // ── Skip setup ──────────────────────────────────────────────────
+              // ── Skip setup ────────────────────────────────────────────────
               TextButton(
                 onPressed: () => _skip(context),
                 child: const Text('Skip setup'),
               ),
 
-              const SizedBox(height: AppSizes.md),
+              const SizedBox(height: AuroraSpacing.space7),
             ],
           ),
         ),
@@ -77,7 +77,6 @@ class WelcomeScreen extends ConsumerWidget {
         context.go(AppRoutes.home);
       }
     } catch (_) {
-      // Onboarding completion is best-effort — navigate anyway.
       if (context.mounted) {
         SnackbarService.showError(
           context,

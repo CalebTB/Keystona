@@ -4,8 +4,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_text_styles.dart';
+import '../theme/aurora_colors.dart';
+import '../theme/aurora_typography.dart';
 
 /// Persistent bottom-navigation shell that wraps the five primary tabs.
 ///
@@ -20,7 +20,7 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       body: navigationShell,
       bottomNavigationBar: _AppTabBar(
         currentIndex: navigationShell.currentIndex,
@@ -57,9 +57,9 @@ class _AppTabBar extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
         child: DecoratedBox(
           decoration: const BoxDecoration(
-            color: AppColors.navBarBg,
+            color: Color(0xEBFFFFFF), // paper 92% opacity
             border: Border(
-              top: BorderSide(color: AppColors.navHairline, width: 0.5),
+              top: BorderSide(color: AuroraColors.inkBorder, width: 0.5),
             ),
           ),
           child: Column(
@@ -99,7 +99,7 @@ class _TabCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? AppColors.accent : AppColors.textTertiary;
+    final color = active ? AuroraColors.coral : AuroraColors.inkTertiary;
     return Stack(
       alignment: Alignment.topCenter,
       children: [
@@ -109,7 +109,7 @@ class _TabCell extends StatelessWidget {
             width: 20,
             height: 3,
             decoration: const BoxDecoration(
-              color: AppColors.accent,
+              color: AuroraColors.coral,
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(3),
                 bottomRight: Radius.circular(3),
@@ -127,7 +127,8 @@ class _TabCell extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 item.label,
-                style: AppTextStyles.labelSmall.copyWith(
+                style: AuroraType.bodySm.copyWith(
+                  fontSize: 10,
                   color: color,
                   fontWeight: active ? FontWeight.w700 : FontWeight.w600,
                 ),

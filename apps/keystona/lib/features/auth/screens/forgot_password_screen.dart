@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_sizes.dart';
+import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/snackbar_service.dart';
@@ -58,18 +58,18 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     return AppScaffold(
       title: 'Reset Password',
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSizes.screenPadding),
+        padding: const EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: AppSizes.lg),
+              const SizedBox(height: AuroraSpacing.space7),
               Text(
                 'Enter your email address and we\'ll send you a link to reset your password.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              const SizedBox(height: AppSizes.xl),
+              const SizedBox(height: AuroraSpacing.space8),
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -81,7 +81,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 ),
                 validator: Validators.email,
               ),
-              const SizedBox(height: AppSizes.lg),
+              const SizedBox(height: AuroraSpacing.space7),
               ElevatedButton(
                 onPressed: _isLoading ? null : _sendResetLink,
                 child: _isLoading

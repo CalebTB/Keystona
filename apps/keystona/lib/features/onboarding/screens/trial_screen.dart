@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../providers/onboarding_provider.dart';
 
@@ -18,58 +18,58 @@ class TrialScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
+          padding: const EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
           child: Column(
             children: [
               const Spacer(),
 
-              // ── Title ────────────────────────────────────────────────────
+              // ── Title ──────────────────────────────────────────────────────
               Text(
                 'Try Premium Free',
-                style: AppTextStyles.h1,
+                style: AuroraType.h1,
                 textAlign: TextAlign.center,
               ),
 
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
 
-              // ── Subtitle ─────────────────────────────────────────────────
+              // ── Subtitle ───────────────────────────────────────────────────
               Text(
                 r'30 days free, then $4.99/month. Cancel anytime.',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                style: AuroraType.body.copyWith(
+                  color: AuroraColors.inkSecondary,
                 ),
                 textAlign: TextAlign.center,
               ),
 
-              const SizedBox(height: AppSizes.xl),
+              const SizedBox(height: AuroraSpacing.space10),
 
-              // ── Benefit bullets ──────────────────────────────────────────
+              // ── Benefit bullets ────────────────────────────────────────────
               _BulletRow(text: 'Unlimited document storage'),
-              const SizedBox(height: AppSizes.md),
+              const SizedBox(height: AuroraSpacing.space7),
               _BulletRow(text: 'Smart maintenance reminders'),
-              const SizedBox(height: AppSizes.md),
+              const SizedBox(height: AuroraSpacing.space7),
               _BulletRow(text: 'Emergency hub for your whole household'),
 
               const Spacer(),
 
-              // ── Start Free Trial CTA ─────────────────────────────────────
+              // ── Start Free Trial CTA ───────────────────────────────────────
               ElevatedButton(
                 onPressed: () => _complete(context),
                 child: const Text('Start Free Trial'),
               ),
 
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
 
-              // ── No thanks ────────────────────────────────────────────────
+              // ── No thanks ─────────────────────────────────────────────────
               TextButton(
                 onPressed: () => _complete(context),
                 child: const Text('No thanks'),
               ),
 
-              const SizedBox(height: AppSizes.md),
+              const SizedBox(height: AuroraSpacing.space7),
             ],
           ),
         ),
@@ -81,7 +81,6 @@ class TrialScreen extends StatelessWidget {
     try {
       await completeOnboarding();
     } catch (_) {
-      // Best-effort — do not block navigation on a metadata write failure.
       if (context.mounted) {
         SnackbarService.showError(
           context,
@@ -108,12 +107,12 @@ class _BulletRow extends StatelessWidget {
       children: [
         const Icon(
           Icons.check_circle_outline,
-          size: AppSizes.iconMd,
-          color: AppColors.success,
+          size: 24,
+          color: AuroraColors.limeDeep,
         ),
-        const SizedBox(width: AppSizes.sm),
+        const SizedBox(width: AuroraSpacing.space3),
         Expanded(
-          child: Text(text, style: AppTextStyles.bodyMedium),
+          child: Text(text, style: AuroraType.body),
         ),
       ],
     );

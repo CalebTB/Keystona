@@ -4,8 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
+import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/snackbar_service.dart';
@@ -52,7 +51,7 @@ class PropertySetupScreen extends ConsumerStatefulWidget {
 class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // ── Controllers ─────────────────────────────────────────────────────────────
+  // ── Controllers ───────────────────────────────────────────────────────────────
   final _addressController = TextEditingController();
   final _cityController = TextEditingController();
   final _stateController = TextEditingController();
@@ -62,12 +61,9 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
   final _bathroomsController = TextEditingController();
   final _purchasePriceController = TextEditingController();
 
-  // ── Selected values ──────────────────────────────────────────────────────────
+  // ── Selected values ────────────────────────────────────────────────────────────
   String? _selectedPropertyType;
-  // null means "not yet resolved or user chose 'I don't know'"
   int? _selectedClimateZone;
-  // sentinel to tell the dropdown that the "I don't know" option is selected
-  // We track it as a String? in the DropdownButtonFormField to handle nulls.
   String? _climateZoneDropdownValue;
 
   bool _detectingClimateZone = false;
@@ -86,14 +82,11 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
     super.dispose();
   }
 
-  // ── ZIP → Climate Zone lookup (stub — real Edge Function wired in Phase 6) ──
-
   Future<void> _detectClimateZone(String zip) async {
     if (zip.length != 5) return;
 
     setState(() => _detectingClimateZone = true);
 
-    // Stub: returns null; real lookup will call the Edge Function.
     final zone = await _lookupClimateZoneFromZip(zip);
 
     if (!mounted) return;
@@ -108,11 +101,8 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
 
   /// Stub lookup — returns null until the Edge Function is wired in Phase 6.
   Future<int?> _lookupClimateZoneFromZip(String zip) async {
-    // Phase 6: replace with Edge Function call.
     return null;
   }
-
-  // ── Save ─────────────────────────────────────────────────────────────────────
 
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
@@ -156,8 +146,6 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
     );
   }
 
-  // ── Build ────────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
@@ -171,11 +159,11 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSizes.md),
+          padding: const EdgeInsets.all(AuroraSpacing.screenPadH),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── Address ───────────────────────────────────────────────────
+              // ── Address ──────────────────────────────────────────────────
               TextFormField(
                 controller: _addressController,
                 decoration: const InputDecoration(labelText: 'Address'),
@@ -184,9 +172,9 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
                 validator: Validators.required,
               ),
 
-              const SizedBox(height: AppSizes.md),
+              const SizedBox(height: AuroraSpacing.space7),
 
-              // ── City ──────────────────────────────────────────────────────
+              // ── City ─────────────────────────────────────────────────────
               TextFormField(
                 controller: _cityController,
                 decoration: const InputDecoration(labelText: 'City'),
@@ -194,13 +182,12 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
                 validator: Validators.required,
               ),
 
-              const SizedBox(height: AppSizes.md),
+              const SizedBox(height: AuroraSpacing.space7),
 
-              // ── State & ZIP in a row ───────────────────────────────────────
+              // ── State & ZIP in a row ──────────────────────────────────────
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // State — 2-letter
                   Flexible(
                     flex: 2,
                     child: TextFormField(
@@ -215,9 +202,8 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
                     ),
                   ),
 
-                  const SizedBox(width: AppSizes.md),
+                  const SizedBox(width: AuroraSpacing.space7),
 
-                  // ZIP Code
                   Flexible(
                     flex: 3,
                     child: TextFormField(
@@ -244,13 +230,12 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
                 ],
               ),
 
-              const SizedBox(height: AppSizes.md),
+              const SizedBox(height: AuroraSpacing.space7),
 
               // ── Property Type ─────────────────────────────────────────────
               DropdownButtonFormField<String>(
                 initialValue: _selectedPropertyType,
-                decoration:
-                    const InputDecoration(labelText: 'Property Type'),
+                decoration: const InputDecoration(labelText: 'Property Type'),
                 items: _kPropertyTypes
                     .map(
                       (t) => DropdownMenuItem<String>(
@@ -263,7 +248,7 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
                     setState(() => _selectedPropertyType = value),
               ),
 
-              const SizedBox(height: AppSizes.md),
+              const SizedBox(height: AuroraSpacing.space7),
 
               // ── Year Built ────────────────────────────────────────────────
               TextFormField(
@@ -274,7 +259,7 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
                 validator: Validators.year,
               ),
 
-              const SizedBox(height: AppSizes.md),
+              const SizedBox(height: AuroraSpacing.space7),
 
               // ── Bedrooms & Bathrooms in a row ─────────────────────────────
               Row(
@@ -283,8 +268,7 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
                   Flexible(
                     child: TextFormField(
                       controller: _bedroomsController,
-                      decoration:
-                          const InputDecoration(labelText: 'Bedrooms'),
+                      decoration: const InputDecoration(labelText: 'Bedrooms'),
                       keyboardType: TextInputType.number,
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly,
@@ -296,7 +280,7 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
                     ),
                   ),
 
-                  const SizedBox(width: AppSizes.md),
+                  const SizedBox(width: AuroraSpacing.space7),
 
                   Flexible(
                     child: TextFormField(
@@ -320,7 +304,7 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
                 ],
               ),
 
-              const SizedBox(height: AppSizes.md),
+              const SizedBox(height: AuroraSpacing.space7),
 
               // ── Purchase Price ────────────────────────────────────────────
               TextFormField(
@@ -333,10 +317,9 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                 ],
-                // Optional field — no validator.
               ),
 
-              const SizedBox(height: AppSizes.md),
+              const SizedBox(height: AuroraSpacing.space7),
 
               // ── Climate Zone ──────────────────────────────────────────────
               Row(
@@ -344,8 +327,6 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      // ValueKey forces a rebuild when a ZIP lookup
-                      // auto-selects the zone, updating the displayed value.
                       key: ValueKey(_climateZoneDropdownValue),
                       initialValue: _climateZoneDropdownValue,
                       decoration: const InputDecoration(
@@ -354,7 +335,6 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
                       items: _kClimateZones
                           .map(
                             (z) => DropdownMenuItem<String>(
-                              // Use toString for non-null, sentinel 'unknown' for null.
                               value: z.value?.toString() ?? 'unknown',
                               child: Text(z.label),
                             ),
@@ -375,7 +355,7 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
                   ),
 
                   if (_detectingClimateZone) ...[
-                    const SizedBox(width: AppSizes.sm),
+                    const SizedBox(width: AuroraSpacing.space3),
                     const Padding(
                       padding: EdgeInsets.only(top: 14),
                       child: SizedBox(
@@ -388,7 +368,7 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
                 ],
               ),
 
-              const SizedBox(height: AppSizes.xl),
+              const SizedBox(height: AuroraSpacing.space10),
 
               // ── Save & Continue ───────────────────────────────────────────
               ElevatedButton(
@@ -399,13 +379,13 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppColors.textInverse,
+                          color: Colors.white,
                         ),
                       )
                     : const Text('Save & Continue'),
               ),
 
-              const SizedBox(height: AppSizes.md),
+              const SizedBox(height: AuroraSpacing.space7),
             ],
           ),
         ),

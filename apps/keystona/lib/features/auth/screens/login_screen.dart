@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_sizes.dart';
+import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/providers/service_providers.dart';
@@ -52,18 +52,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSizes.screenPadding),
+          padding: const EdgeInsets.all(AuroraSpacing.screenPadH),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: AppSizes.xxl),
+                const SizedBox(height: AuroraSpacing.space9),
                 Text(
                   'Sign In',
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
-                const SizedBox(height: AppSizes.xl),
+                const SizedBox(height: AuroraSpacing.space8),
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -74,7 +74,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   validator: Validators.email,
                 ),
-                const SizedBox(height: AppSizes.md),
+                const SizedBox(height: AuroraSpacing.space5),
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
@@ -85,7 +85,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   validator: Validators.required,
                 ),
-                const SizedBox(height: AppSizes.lg),
+                const SizedBox(height: AuroraSpacing.space7),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _signIn,
                   child: _isLoading
@@ -96,24 +96,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         )
                       : const Text('Sign In'),
                 ),
-                const SizedBox(height: AppSizes.sm),
+                const SizedBox(height: AuroraSpacing.space3),
                 TextButton(
                   onPressed: () => context.go(AppRoutes.forgotPassword),
                   child: const Text('Forgot password?'),
                 ),
-                const SizedBox(height: AppSizes.xl),
+                const SizedBox(height: AuroraSpacing.space8),
                 OutlinedButton.icon(
                   onPressed: null,
                   icon: const Icon(Icons.g_mobiledata),
                   label: const Text('Continue with Google'),
                 ),
-                const SizedBox(height: AppSizes.sm),
+                const SizedBox(height: AuroraSpacing.space3),
                 OutlinedButton.icon(
                   onPressed: null,
                   icon: const Icon(Icons.apple),
                   label: const Text('Continue with Apple'),
                 ),
-                const SizedBox(height: AppSizes.xl),
+                const SizedBox(height: AuroraSpacing.space8),
                 TextButton(
                   onPressed: () => context.go(AppRoutes.signup),
                   child: const Text("Don't have an account? Sign up"),

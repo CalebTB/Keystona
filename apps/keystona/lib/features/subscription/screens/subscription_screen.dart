@@ -2,13 +2,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/providers/service_providers.dart';
 
@@ -37,30 +38,30 @@ class SubscriptionScreen extends ConsumerWidget {
           SliverSafeArea(
             sliver: SliverToBoxAdapter(
               child: Padding(
-                padding: AppPadding.screen,
+                padding: const EdgeInsets.all(AuroraSpacing.screenPadH),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: AppSizes.md),
+                    const SizedBox(height: AuroraSpacing.space7),
                     _TierCard(tier: tier, isPremium: isPremium),
-                    const SizedBox(height: AppSizes.lg),
+                    const SizedBox(height: AuroraSpacing.space9),
                     if (!isPremium) ...[
                       _ActionButton(
                         label: 'Upgrade to Pro',
-                        color: AppColors.deepNavy,
+                        color: AuroraColors.ink,
                         onTap: () => context.push(AppRoutes.settingsPaywall),
                       ),
-                      const SizedBox(height: AppSizes.sm),
+                      const SizedBox(height: AuroraSpacing.space3),
                     ],
                     _ActionButton(
                       label: 'Restore Purchases',
-                      color: AppColors.textSecondary,
+                      color: AuroraColors.inkSecondary,
                       onTap: () => _restore(context),
                     ),
-                    const SizedBox(height: AppSizes.sm),
+                    const SizedBox(height: AuroraSpacing.space3),
                     _ActionButton(
                       label: 'Manage Subscription',
-                      color: AppColors.textSecondary,
+                      color: AuroraColors.inkSecondary,
                       onTap: () => RevenueCatUI.presentCustomerCenter(),
                     ),
                   ],
@@ -96,43 +97,40 @@ class _TierCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSizes.md),
+      padding: const EdgeInsets.all(AuroraSpacing.space7),
       decoration: BoxDecoration(
-        color: isPremium ? AppColors.deepNavy : AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        color: isPremium ? AuroraColors.ink : AuroraColors.paper,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isPremium ? AppColors.goldAccent : AppColors.border,
+          color: isPremium ? AuroraColors.yellow : AuroraColors.inkBorder,
         ),
       ),
       child: Row(
         children: [
           Icon(
             isPremium ? Icons.star_rounded : Icons.star_border_rounded,
-            color:
-                isPremium ? AppColors.goldAccent : AppColors.textSecondary,
+            color: isPremium ? AuroraColors.yellow : AuroraColors.inkSecondary,
             size: 28,
           ),
-          const SizedBox(width: AppSizes.md),
+          const SizedBox(width: AuroraSpacing.space7),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Keystona $tier',
-                  style: AppTextStyles.labelLarge.copyWith(
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color:
-                        isPremium ? AppColors.textInverse : AppColors.textPrimary,
+                    color: isPremium ? Colors.white : AuroraColors.ink,
                   ),
                 ),
                 Text(
-                  isPremium
-                      ? 'Full access to all features'
-                      : 'Limited features',
-                  style: AppTextStyles.bodySmall.copyWith(
+                  isPremium ? 'Full access to all features' : 'Limited features',
+                  style: AuroraType.bodySm.copyWith(
                     color: isPremium
-                        ? AppColors.textInverse.withValues(alpha: 0.7)
-                        : AppColors.textSecondary,
+                        ? Colors.white.withValues(alpha: 0.7)
+                        : AuroraColors.inkSecondary,
                   ),
                 ),
               ],
@@ -161,20 +159,24 @@ class _ActionButton extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
-          vertical: AppSizes.md,
-          horizontal: AppSizes.md,
+          vertical: AuroraSpacing.space7,
+          horizontal: AuroraSpacing.space7,
         ),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: AppColors.border),
+          color: AuroraColors.paper,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(
           children: [
             Expanded(
               child: Text(
                 label,
-                style: AppTextStyles.labelLarge.copyWith(color: color),
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
               ),
             ),
             Icon(Icons.chevron_right, color: color, size: 20),

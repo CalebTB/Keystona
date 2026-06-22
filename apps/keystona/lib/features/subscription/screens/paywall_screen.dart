@@ -2,11 +2,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/snackbar_service.dart';
 
 /// Keystona Pro paywall — custom-built UI that fetches offerings directly
@@ -22,7 +23,7 @@ class PaywallScreen extends ConsumerStatefulWidget {
 }
 
 class _PaywallScreenState extends ConsumerState<PaywallScreen> {
-  // ─── State ──────────────────────────────────────────────────────────────────
+  // ─── State ───────────────────────────────────────────────────────────────────
 
   List<Package> _packages = [];
   int _selectedIndex = 1; // Default: Yearly
@@ -30,7 +31,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   bool _isLoadingOfferings = true;
   String? _offeringsError;
 
-  // ─── Lifecycle ──────────────────────────────────────────────────────────────
+  // ─── Lifecycle ───────────────────────────────────────────────────────────────
 
   @override
   void initState() {
@@ -38,7 +39,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     _loadOfferings();
   }
 
-  // ─── Data ───────────────────────────────────────────────────────────────────
+  // ─── Data ────────────────────────────────────────────────────────────────────
 
   Future<void> _loadOfferings() async {
     setState(() {
@@ -52,14 +53,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
       // Sort into canonical order: Monthly → Yearly.
       final sorted = <Package>[];
-      for (final type in [
-        PackageType.monthly,
-        PackageType.annual,
-      ]) {
+      for (final type in [PackageType.monthly, PackageType.annual]) {
         final match = available.where((p) => p.packageType == type);
         sorted.addAll(match);
       }
-      // Append any remaining packages not in the canonical order.
       for (final p in available) {
         if (!sorted.contains(p)) sorted.add(p);
       }
@@ -67,7 +64,6 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       if (mounted) {
         setState(() {
           _packages = sorted;
-          // Default to Yearly (index 1) if available, otherwise 0.
           _selectedIndex = sorted.length > 1 ? 1 : 0;
           _isLoadingOfferings = false;
         });
@@ -75,7 +71,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _offeringsError = 'Unable to load subscription options. Please check your connection and try again.';
+          _offeringsError =
+              'Unable to load subscription options. Please check your connection and try again.';
           _isLoadingOfferings = false;
         });
       }
@@ -124,16 +121,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     }
   }
 
-  // ─── Build ──────────────────────────────────────────────────────────────────
+  // ─── Build ───────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       body: Stack(
         children: [
-          // Gradient background: deep navy at top → warm off-white at bottom.
-          _GradientBackground(),
+          const _GradientBackground(),
           SafeArea(
             child: Column(
               children: [
@@ -141,16 +137,16 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: AppSizes.screenPadding,
+                      horizontal: AuroraSpacing.screenPadH,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const SizedBox(height: AppSizes.lg),
+                        const SizedBox(height: AuroraSpacing.space9),
                         const _HeroSection(),
-                        const SizedBox(height: AppSizes.xl),
+                        const SizedBox(height: AuroraSpacing.space10),
                         const _FeatureList(),
-                        const SizedBox(height: AppSizes.xl),
+                        const SizedBox(height: AuroraSpacing.space10),
                         _PackageSection(
                           isLoading: _isLoadingOfferings,
                           error: _offeringsError,
@@ -159,7 +155,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                           onRetry: _loadOfferings,
                           onSelected: (i) => setState(() => _selectedIndex = i),
                         ),
-                        const SizedBox(height: AppSizes.lg),
+                        const SizedBox(height: AuroraSpacing.space9),
                         _CtaButton(
                           packages: _packages,
                           selectedIndex: _selectedIndex,
@@ -167,14 +163,14 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                           isLoadingOfferings: _isLoadingOfferings,
                           onPressed: _purchase,
                         ),
-                        const SizedBox(height: AppSizes.md),
+                        const SizedBox(height: AuroraSpacing.space7),
                         _RestoreButton(
                           isLoading: _isLoading,
                           onPressed: _restorePurchases,
                         ),
-                        const SizedBox(height: AppSizes.md),
+                        const SizedBox(height: AuroraSpacing.space7),
                         const _LegalFooter(),
-                        const SizedBox(height: AppSizes.xl),
+                        const SizedBox(height: AuroraSpacing.space10),
                       ],
                     ),
                   ),
@@ -188,9 +184,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   }
 }
 
-// ─── Gradient background ─────────────────────────────────────────────────────
+// ─── Gradient background ──────────────────────────────────────────────────────
 
 class _GradientBackground extends StatelessWidget {
+  const _GradientBackground();
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -200,9 +198,9 @@ class _GradientBackground extends StatelessWidget {
           end: Alignment.bottomCenter,
           stops: [0.0, 0.45, 1.0],
           colors: [
-            AppColors.deepNavy,
-            AppColors.paywallGradientMid,
-            AppColors.warmOffWhite,
+            AuroraColors.ink,
+            AuroraColors.cobalt,
+            AuroraColors.paper,
           ],
         ),
       ),
@@ -210,7 +208,7 @@ class _GradientBackground extends StatelessWidget {
   }
 }
 
-// ─── Close button ────────────────────────────────────────────────────────────
+// ─── Close button ─────────────────────────────────────────────────────────────
 
 class _CloseButton extends StatelessWidget {
   const _CloseButton({required this.onClose});
@@ -223,8 +221,8 @@ class _CloseButton extends StatelessWidget {
       alignment: Alignment.centerRight,
       child: Padding(
         padding: const EdgeInsets.only(
-          top: AppSizes.sm,
-          right: AppSizes.md,
+          top: AuroraSpacing.space3,
+          right: AuroraSpacing.space7,
         ),
         child: GestureDetector(
           onTap: onClose,
@@ -232,13 +230,13 @@ class _CloseButton extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: AppColors.textInverse.withAlpha(30),
-              borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+              color: Colors.white.withAlpha(30),
+              borderRadius: BorderRadius.circular(999),
             ),
             child: const Icon(
               Icons.close,
-              color: AppColors.textInverse,
-              size: AppSizes.iconMd,
+              color: Colors.white,
+              size: 24,
             ),
           ),
         ),
@@ -256,38 +254,35 @@ class _HeroSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Gold home icon in a navy circle.
         Container(
           width: 80,
           height: 80,
           decoration: BoxDecoration(
-            color: AppColors.textInverse.withAlpha(20),
-            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+            color: Colors.white.withAlpha(20),
+            borderRadius: BorderRadius.circular(999),
             border: Border.all(
-              color: AppColors.goldAccent.withAlpha(100),
+              color: AuroraColors.yellow.withAlpha(100),
               width: 2,
             ),
           ),
           child: const Icon(
             Icons.home_work_rounded,
-            color: AppColors.goldAccent,
+            color: AuroraColors.yellow,
             size: 44,
           ),
         ),
-        const SizedBox(height: AppSizes.md),
+        const SizedBox(height: AuroraSpacing.space7),
         Text(
           'Keystona Pro',
           textAlign: TextAlign.center,
-          style: AppTextStyles.displayMedium.copyWith(
-            color: AppColors.textInverse,
-          ),
+          style: AuroraType.h1.copyWith(color: Colors.white),
         ),
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: AuroraSpacing.space3),
         Text(
           'The smart way to manage your home,\nunlocked in full.',
           textAlign: TextAlign.center,
-          style: AppTextStyles.bodyLarge.copyWith(
-            color: AppColors.textInverse.withAlpha(200),
+          style: AuroraType.bodyLg.copyWith(
+            color: Colors.white.withAlpha(200),
             height: 1.5,
           ),
         ),
@@ -313,13 +308,11 @@ class _FeatureList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSizes.md),
+      padding: const EdgeInsets.all(AuroraSpacing.space7),
       decoration: BoxDecoration(
-        color: AppColors.textInverse.withAlpha(18),
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(
-          color: AppColors.textInverse.withAlpha(30),
-        ),
+        color: Colors.white.withAlpha(18),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withAlpha(30)),
       ),
       child: Column(
         children: _features
@@ -345,29 +338,27 @@ class _FeatureRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSizes.xs + 2),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
           Container(
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: AppColors.goldAccent.withAlpha(30),
-              borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+              color: AuroraColors.yellow.withAlpha(30),
+              borderRadius: BorderRadius.circular(999),
             ),
             child: const Icon(
               Icons.check_rounded,
-              color: AppColors.goldAccent,
-              size: AppSizes.iconSm,
+              color: AuroraColors.yellow,
+              size: 16,
             ),
           ),
-          const SizedBox(width: AppSizes.sm + 4),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               feature.label,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textInverse,
-              ),
+              style: AuroraType.body.copyWith(color: Colors.white),
             ),
           ),
         ],
@@ -398,10 +389,10 @@ class _PackageSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: AppSizes.lg),
-          child: CupertinoActivityIndicator(color: AppColors.goldAccent),
+          padding: const EdgeInsets.symmetric(vertical: AuroraSpacing.space9),
+          child: CupertinoActivityIndicator(color: AuroraColors.yellow),
         ),
       );
     }
@@ -421,7 +412,7 @@ class _PackageSection extends StatelessWidget {
       children: List.generate(
         packages.length,
         (i) => Padding(
-          padding: const EdgeInsets.only(bottom: AppSizes.sm),
+          padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
           child: _PackageCard(
             package: packages[i],
             index: i,
@@ -443,28 +434,28 @@ class _PackageError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSizes.md),
+      padding: const EdgeInsets.all(AuroraSpacing.space7),
       decoration: BoxDecoration(
-        color: AppColors.textInverse.withAlpha(18),
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.error.withAlpha(100)),
+        color: Colors.white.withAlpha(18),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFD32F2F).withAlpha(100)),
       ),
       child: Column(
         children: [
           Text(
             message,
             textAlign: TextAlign.center,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textInverse,
-            ),
+            style: AuroraType.body.copyWith(color: Colors.white),
           ),
-          const SizedBox(height: AppSizes.md),
+          const SizedBox(height: AuroraSpacing.space7),
           TextButton(
             onPressed: onRetry,
             child: Text(
               'Try Again',
-              style: AppTextStyles.labelLarge.copyWith(
-                color: AppColors.goldAccent,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AuroraColors.yellow,
               ),
             ),
           ),
@@ -509,12 +500,12 @@ class _PackageCard extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
-        padding: const EdgeInsets.all(AppSizes.md),
+        padding: const EdgeInsets.all(AuroraSpacing.space7),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.deepNavy : AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          color: isSelected ? AuroraColors.ink : AuroraColors.paper,
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.goldAccent : AppColors.border,
+            color: isSelected ? AuroraColors.yellow : const Color(0xFFC4C3D0),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -522,85 +513,86 @@ class _PackageCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                // Selection indicator.
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   width: 22,
                   height: 22,
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.goldAccent : Colors.transparent,
-                    borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                    color: isSelected ? AuroraColors.yellow : Colors.transparent,
+                    borderRadius: BorderRadius.circular(999),
                     border: Border.all(
-                      color: isSelected ? AppColors.goldAccent : AppColors.gray400,
+                      color: isSelected
+                          ? AuroraColors.yellow
+                          : const Color(0xFFC4C3D0),
                       width: 2,
                     ),
                   ),
                   child: isSelected
-                      ? const Icon(
+                      ? Icon(
                           Icons.check_rounded,
-                          color: AppColors.deepNavy,
+                          color: AuroraColors.ink,
                           size: 14,
                         )
                       : null,
                 ),
-                const SizedBox(width: AppSizes.md),
-                // Labels.
+                const SizedBox(width: AuroraSpacing.space7),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         _periodLabel,
-                        style: AppTextStyles.h4.copyWith(
-                          color: isSelected
-                              ? AppColors.textInverse
-                              : AppColors.textPrimary,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: isSelected ? Colors.white : AuroraColors.ink,
                         ),
                       ),
                       if (_savingsNote != null) ...[
-                        const SizedBox(height: AppSizes.xs),
+                        const SizedBox(height: AuroraSpacing.space1),
                         Text(
                           _savingsNote!,
-                          style: AppTextStyles.labelMedium.copyWith(
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
                             color: isSelected
-                                ? AppColors.goldAccent
-                                : AppColors.textSecondary,
+                                ? AuroraColors.yellow
+                                : AuroraColors.inkSecondary,
                           ),
                         ),
                       ],
                     ],
                   ),
                 ),
-                // Price.
                 Text(
                   package.storeProduct.priceString,
-                  style: AppTextStyles.bodyLargeSemibold.copyWith(
-                    color: isSelected
-                        ? AppColors.textInverse
-                        : AppColors.textPrimary,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected ? Colors.white : AuroraColors.ink,
                   ),
                 ),
               ],
             ),
-            // "Best Value" badge on the Yearly card.
             if (_isYearly)
               Positioned(
                 top: 0,
                 right: 0,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: AppSizes.sm,
-                    vertical: AppSizes.xs,
+                    horizontal: AuroraSpacing.space3,
+                    vertical: AuroraSpacing.space1,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.goldAccent,
-                    borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                    color: AuroraColors.yellow,
+                    borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
                     'Best Value',
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.deepNavy,
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
                       fontWeight: FontWeight.w700,
+                      color: AuroraColors.ink,
                     ),
                   ),
                 ),
@@ -612,7 +604,7 @@ class _PackageCard extends StatelessWidget {
   }
 }
 
-// ─── CTA button ──────────────────────────────────────────────────────────────
+// ─── CTA button ───────────────────────────────────────────────────────────────
 
 class _CtaButton extends StatelessWidget {
   const _CtaButton({
@@ -631,9 +623,7 @@ class _CtaButton extends StatelessWidget {
 
   bool get _hasIntroOffer {
     if (packages.isEmpty) return false;
-    final pkg = packages[selectedIndex];
-    // Check for iOS intro offer or Android free trial.
-    return pkg.storeProduct.introductoryPrice != null;
+    return packages[selectedIndex].storeProduct.introductoryPrice != null;
   }
 
   String get _ctaLabel {
@@ -646,23 +636,25 @@ class _CtaButton extends StatelessWidget {
     final enabled = !isLoading && !isLoadingOfferings && packages.isNotEmpty;
 
     return SizedBox(
-      height: AppSizes.buttonHeight,
+      height: 48,
       child: ElevatedButton(
         onPressed: enabled ? onPressed : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.accent,
-          disabledBackgroundColor: AppColors.gray300,
+          backgroundColor: AuroraColors.coral,
+          disabledBackgroundColor: const Color(0xFFE0DFEA),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+            borderRadius: BorderRadius.circular(8),
           ),
           elevation: 0,
         ),
         child: isLoading
-            ? const CupertinoActivityIndicator(color: AppColors.goldAccent)
+            ? CupertinoActivityIndicator(color: AuroraColors.yellow)
             : Text(
                 _ctaLabel,
-                style: AppTextStyles.button.copyWith(
-                  color: AppColors.goldAccent,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AuroraColors.yellow,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -689,8 +681,10 @@ class _RestoreButton extends StatelessWidget {
         onPressed: isLoading ? null : onPressed,
         child: Text(
           'Restore Purchases',
-          style: AppTextStyles.labelMedium.copyWith(
-            color: AppColors.textSecondary,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: AuroraColors.inkSecondary,
           ),
         ),
       ),
@@ -708,8 +702,8 @@ class _LegalFooter extends StatelessWidget {
     return Text(
       'Cancel anytime · Prices in USD · Terms & Privacy',
       textAlign: TextAlign.center,
-      style: AppTextStyles.caption.copyWith(
-        color: AppColors.gray500,
+      style: AuroraType.bodySm.copyWith(
+        color: const Color(0xFF9D9BB0),
         fontSize: 10,
       ),
     );

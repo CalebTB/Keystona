@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_sizes.dart';
+import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/providers/service_providers.dart';
@@ -45,14 +45,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       if (mounted) {
         context.go(AppRoutes.onboarding);
       }
-      // Note: if onboarding redirect fails, router will auto-redirect to
-      // dashboard once isAuthenticatedProvider updates.
     } catch (e) {
       if (mounted) {
-        SnackbarService.showError(
-          context,
-          e.toString(),
-        );
+        SnackbarService.showError(context, e.toString());
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -64,18 +59,18 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSizes.screenPadding),
+          padding: const EdgeInsets.all(AuroraSpacing.screenPadH),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: AppSizes.xxl),
+                const SizedBox(height: 48),
                 Text(
                   'Create Account',
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
-                const SizedBox(height: AppSizes.xl),
+                const SizedBox(height: AuroraSpacing.space10),
                 TextFormField(
                   controller: _fullNameController,
                   keyboardType: TextInputType.name,
@@ -86,7 +81,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   ),
                   validator: Validators.required,
                 ),
-                const SizedBox(height: AppSizes.md),
+                const SizedBox(height: AuroraSpacing.space7),
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -97,7 +92,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   ),
                   validator: Validators.email,
                 ),
-                const SizedBox(height: AppSizes.md),
+                const SizedBox(height: AuroraSpacing.space7),
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
@@ -107,7 +102,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   ),
                   validator: Validators.required,
                 ),
-                const SizedBox(height: AppSizes.md),
+                const SizedBox(height: AuroraSpacing.space7),
                 TextFormField(
                   controller: _confirmPasswordController,
                   obscureText: true,
@@ -126,7 +121,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: AppSizes.lg),
+                const SizedBox(height: AuroraSpacing.space9),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _createAccount,
                   child: _isLoading
@@ -137,7 +132,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         )
                       : const Text('Create Account'),
                 ),
-                const SizedBox(height: AppSizes.xl),
+                const SizedBox(height: AuroraSpacing.space10),
                 TextButton(
                   onPressed: () => context.go(AppRoutes.login),
                   child: const Text('Already have an account? Sign in'),
