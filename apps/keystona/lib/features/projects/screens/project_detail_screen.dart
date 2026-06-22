@@ -1509,7 +1509,7 @@ class _DetailSkeletonState extends State<_DetailSkeleton>
                         height: 26,
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          color: const Color(0xFFE0DFEA),
+                          color: Color(0xFFE0DFEA),
                         ),
                       ),
                       const SizedBox(width: 10),

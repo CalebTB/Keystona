@@ -515,7 +515,7 @@ class _ProjectsSection extends StatelessWidget {
                 fontSize: 9,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.0,
-                color: const Color(0xFF9D9BB0),
+                color: Color(0xFF9D9BB0),
               ),
             ),
           ],

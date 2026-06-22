@@ -61,7 +61,7 @@ class _ContractorSkeletonState extends State<ContractorSkeleton>
                   height: 44,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFFE0DFEA),
+                    color: Color(0xFFE0DFEA),
                   ),
                 ),
                 const SizedBox(width: AuroraSpacing.space7),

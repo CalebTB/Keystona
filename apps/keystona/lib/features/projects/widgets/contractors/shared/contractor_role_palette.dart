@@ -11,13 +11,13 @@ const Map<String, Color> _kRoleColors = {
   'electrician':        AuroraColors.yellow,
   'plumber':            AuroraColors.cobalt,
   'hvac':               AuroraColors.lime,
-  'painter':            const Color(0xFF6B6980),
+  'painter':            Color(0xFF6B6980),
   'carpenter':          AuroraColors.yellow,
   'roofer':             AuroraColors.ink,
   'landscaper':         AuroraColors.lime,
   'tile':               AuroraColors.cobalt,
   'tiler':              AuroraColors.cobalt,
-  'flooring':           const Color(0xFF6B6980),
+  'flooring':           Color(0xFF6B6980),
   'designer':           AuroraColors.yellow,
   'architect':          AuroraColors.ink,
   // Emergency contact categories.
@@ -25,7 +25,7 @@ const Map<String, Color> _kRoleColors = {
   'electrical':         AuroraColors.yellow,
   'hvac_replacement':   AuroraColors.lime,
   'roofing':            AuroraColors.ink,
-  'other':              const Color(0xFF9D9BB0),
+  'other':              Color(0xFF9D9BB0),
 };
 
 /// Returns the role color for a contractor.

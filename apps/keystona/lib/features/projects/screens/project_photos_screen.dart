@@ -665,19 +665,19 @@ class _PairPickerSheet extends StatelessWidget {
                   ),
                   GestureDetector(
                     onTap: () => Navigator.of(context, rootNavigator: true).pop(),
-                    child: const Icon(Icons.close, size: 20, color: const Color(0xFF9D9BB0)),
+                    child: const Icon(Icons.close, size: 20, color: Color(0xFF9D9BB0)),
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1, color: const Color(0xFFEEEDF2)),
+            const Divider(height: 1, color: Color(0xFFEEEDF2)),
             Flexible(
               child: ListView.separated(
                 shrinkWrap: true,
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 itemCount: candidates.length,
                 separatorBuilder: (_, _) =>
-                    const Divider(height: 1, indent: 72, color: const Color(0xFFEEEDF2)),
+                    const Divider(height: 1, indent: 72, color: Color(0xFFEEEDF2)),
                 itemBuilder: (context, i) {
                   final photo = candidates[i];
                   return ListTile(
@@ -712,11 +712,11 @@ class _PairPickerSheet extends StatelessWidget {
                       style: const TextStyle(
                         fontFamily: 'IBMPlexMono',
                         fontSize: 10,
-                        color: const Color(0xFF9D9BB0),
+                        color: Color(0xFF9D9BB0),
                       ),
                     ),
                     trailing: const Icon(Icons.chevron_right,
-                        size: 18, color: const Color(0xFF9D9BB0)),
+                        size: 18, color: Color(0xFF9D9BB0)),
                     onTap: () => onSelected(photo),
                   );
                 },
@@ -820,12 +820,12 @@ class _PairEditFormSheetState extends State<_PairEditFormSheet> {
                       onTap: () =>
                           Navigator.of(context, rootNavigator: true).pop(),
                       child: const Icon(Icons.close,
-                          size: 20, color: const Color(0xFF9D9BB0)),
+                          size: 20, color: Color(0xFF9D9BB0)),
                     ),
                   ],
                 ),
               ),
-              const Divider(height: 1, color: const Color(0xFFEEEDF2)),
+              const Divider(height: 1, color: Color(0xFFEEEDF2)),
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(

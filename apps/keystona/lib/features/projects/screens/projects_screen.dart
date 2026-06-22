@@ -541,7 +541,7 @@ class _ProjectsScreenSkeletonState extends State<_ProjectsScreenSkeleton>
                       width: double.infinity,
                       height: 120,
                       decoration: const BoxDecoration(
-                        color: const Color(0xFF1E1D38),
+                        color: Color(0xFF1E1D38),
                         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                       ),
                       padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
