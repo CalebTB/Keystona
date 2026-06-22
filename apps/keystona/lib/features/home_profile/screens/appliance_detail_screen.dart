@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_shadows.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 
 import '../../../core/router/app_router.dart';
 
@@ -108,7 +109,7 @@ class _Body extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return detailState.when(
-      loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      loading: () => const _DetailSkeleton(),
       error: (e, _) => ErrorView(
         message: "Couldn't load appliance details.",
         onRetry: () =>
@@ -118,6 +119,88 @@ class _Body extends ConsumerWidget {
         detail: detail,
         applianceId: applianceId,
         isIOS: isIOS,
+      ),
+    );
+  }
+}
+
+// ── Skeleton ───────────────────────────────────────────────────────────────────
+
+class _DetailSkeleton extends StatefulWidget {
+  const _DetailSkeleton();
+
+  @override
+  State<_DetailSkeleton> createState() => _DetailSkeletonState();
+}
+
+class _DetailSkeletonState extends State<_DetailSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _opacity = Tween<double>(begin: 0.3, end: 0.7).animate(_ctrl);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _ctrl.repeat(reverse: true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _opacity,
+      builder: (_, _) => Opacity(
+        opacity: _opacity.value,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: AuroraSpacing.space5),
+              _SkeletonBar(widthFactor: 0.6, height: 16),
+              const SizedBox(height: AuroraSpacing.space3),
+              _SkeletonBar(widthFactor: 0.4, height: 12),
+              const SizedBox(height: AuroraSpacing.space7),
+              _SkeletonBar(widthFactor: 1.0, height: 80),
+              const SizedBox(height: AuroraSpacing.space5),
+              _SkeletonBar(widthFactor: 1.0, height: 80),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SkeletonBar extends StatelessWidget {
+  const _SkeletonBar({required this.widthFactor, required this.height});
+
+  final double widthFactor;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return FractionallySizedBox(
+      alignment: Alignment.centerLeft,
+      widthFactor: widthFactor,
+      child: Container(
+        height: height,
+        decoration: BoxDecoration(
+          color: AuroraColors.butter,
+          borderRadius: AuroraRadius.sm,
+        ),
       ),
     );
   }
@@ -373,29 +456,16 @@ class _ContentState extends ConsumerState<_Content> {
               Padding(
                 padding: const EdgeInsets.symmetric(
                     horizontal: AuroraSpacing.screenPadH),
-                child: OutlinedButton(
-                  onPressed: _deleting ? null : _confirmDelete,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AuroraColors.coral,
-                    side: const BorderSide(color: AuroraColors.coral),
-                    minimumSize:
-                        const Size.fromHeight(52.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          const BorderRadius.all(Radius.circular(8)),
-                    ),
-                  ),
-                  child: _deleting
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AuroraColors.coral,
-                          ),
-                        )
-                      : const Text('Delete Appliance'),
-                ),
+                child: _deleting
+                    ? const Center(
+                        child: CupertinoActivityIndicator(
+                          color: AuroraColors.coral,
+                        ),
+                      )
+                    : GhostButton(
+                        label: 'Delete Appliance',
+                        onPressed: _confirmDelete,
+                      ),
               ),
               const SizedBox(height: AuroraSpacing.space8),
             ],
@@ -496,25 +566,19 @@ class _HeroCard extends StatelessWidget {
           AuroraSpacing.screenPadH, 0, AuroraSpacing.screenPadH, 12),
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: const BorderRadius.all(Radius.circular(16)),
+        borderRadius: AuroraRadius.xl,
         border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
-        boxShadow: [
-          const BoxShadow(
-            color: Color(0x0A071238),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
+        boxShadow: AuroraShadows.card,
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16 - 1.5),
+        borderRadius: AuroraRadius.xl,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Colored top accent strip
             Container(height: 3, color: categoryColor),
             Padding(
-              padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -524,25 +588,23 @@ class _HeroCard extends StatelessWidget {
                   height: 46,
                   decoration: BoxDecoration(
                     color: categoryColor.withAlpha(28),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AuroraRadius.md,
                   ),
                   child: Icon(icon, color: categoryColor, size: 24),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: AuroraSpacing.space4),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         eyebrow,
-                        style: GoogleFonts.jetBrainsMono(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
+                        style: AuroraType.label.copyWith(
                           letterSpacing: 1.2,
                           color: healthColor,
                         ),
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: AuroraSpacing.space1),
                       Text(
                         name,
                         style: AuroraType.h1.copyWith(
@@ -552,12 +614,10 @@ class _HeroCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       if (subtitle.isNotEmpty) ...[
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AuroraSpacing.space1),
                         Text(
                           subtitle,
-                          style: GoogleFonts.jetBrainsMono(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w400,
+                          style: AuroraType.bodySm.copyWith(
                             color: AuroraColors.inkSecondary,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -569,17 +629,17 @@ class _HeroCard extends StatelessWidget {
               ],
             ),
           ),
-          // Stats row — subtle category tint separates it from the info above
+          // Stats row — butter AuroraTile grid
           Container(
-            decoration: BoxDecoration(
-              color: categoryColor.withAlpha(14),
-              borderRadius: const BorderRadius.vertical(
+            decoration: const BoxDecoration(
+              color: AuroraColors.butter,
+              borderRadius: BorderRadius.vertical(
                 bottom: Radius.circular(16 - 1.5),
               ),
               border: Border(
                 top: BorderSide(
-                  color: categoryColor.withAlpha(40),
-                  width: 1,
+                  color: AuroraColors.inkBorder,
+                  width: 0.5,
                 ),
               ),
             ),
@@ -591,18 +651,18 @@ class _HeroCard extends StatelessWidget {
                     Expanded(
                       child: _StatCell(label: 'BOUGHT', value: boughtVal),
                     ),
-                    VerticalDivider(
-                        color: categoryColor.withAlpha(50),
+                    const VerticalDivider(
+                        color: AuroraColors.inkBorder,
                         width: 1,
-                        thickness: 1),
+                        thickness: 0.5),
                   ],
                   Expanded(
                     child: _StatCell(label: 'LIFESPAN', value: pctStr),
                   ),
-                  VerticalDivider(
-                      color: categoryColor.withAlpha(50),
+                  const VerticalDivider(
+                      color: AuroraColors.inkBorder,
                       width: 1,
-                      thickness: 1),
+                      thickness: 0.5),
                   Expanded(
                     child: _StatCell(label: 'UNTIL END', value: untilEndStr),
                   ),
@@ -630,9 +690,7 @@ class _StatCell extends StatelessWidget {
         children: [
           Text(
             label,
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 9,
-              fontWeight: FontWeight.w700,
+            style: AuroraType.labelSm.copyWith(
               letterSpacing: 0.8,
               color: AuroraColors.inkTertiary,
             ),
@@ -676,7 +734,7 @@ class _WarrantyCalloutCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AuroraColors.limeDim,
-          borderRadius: const BorderRadius.all(Radius.circular(14)),
+          borderRadius: AuroraRadius.lg,
           border: Border.all(
             color: AuroraColors.lime.withAlpha(51), // 0.2 opacity
           ),
@@ -697,16 +755,14 @@ class _WarrantyCalloutCard extends StatelessWidget {
                 size: 18,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: AuroraSpacing.space2),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'MANUFACTURER WARRANTY',
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
+                    style: AuroraType.labelSm.copyWith(
                       letterSpacing: 0.8,
                       color: AuroraColors.inkTertiary,
                     ),
@@ -844,19 +900,17 @@ class _QuickActionCell extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: AuroraSpacing.space4),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 24, color: AuroraColors.ink),
-            const SizedBox(height: 6),
-            Text(label, style: AuroraType.labelSm),
-            const SizedBox(height: 2),
+            const SizedBox(height: AuroraSpacing.space2),
+            Text(label.toUpperCase(), style: AuroraType.labelSm),
+            const SizedBox(height: AuroraSpacing.space1),
             Text(
               subtitle,
-              style: GoogleFonts.jetBrainsMono(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
+              style: AuroraType.bodySm.copyWith(
                 color: AuroraColors.inkTertiary,
               ),
               textAlign: TextAlign.center,
@@ -880,17 +934,17 @@ class _SectionLabel2 extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 6,
-            height: 6,
-            decoration: const BoxDecoration(
-              color: AuroraColors.ink,
-              shape: BoxShape.circle,
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(
+              color: AuroraColors.inkSecondary,
+              borderRadius: AuroraRadius.xs,
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: AuroraSpacing.space2),
           Text(
             title,
-            style: AuroraType.label,
+            style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
           ),
         ],
       ),

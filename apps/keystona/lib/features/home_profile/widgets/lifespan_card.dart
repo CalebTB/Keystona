@@ -25,8 +25,13 @@ class LifespanCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AuroraSpacing.space5),
       decoration: BoxDecoration(
-        color: AuroraColors.paper,
+        color: entry.isEndOfLife ? AuroraColors.coralDim : AuroraColors.paper,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: entry.isEndOfLife
+              ? AuroraColors.coral.withValues(alpha: 0.20)
+              : AuroraColors.inkBorder,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

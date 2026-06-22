@@ -6,6 +6,7 @@ import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 import '../providers/document_upload_provider.dart';
 
 /// Step 2 of the upload wizard — document name, expiration date, and notes.
@@ -56,8 +57,27 @@ class _UploadMetadataStepState extends ConsumerState<UploadMetadataStep> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Document details', style: AuroraType.h3),
-        const SizedBox(height: AuroraSpacing.space1),
+        // Section eyebrow — cobalt dot + label (form is an action surface).
+        Row(
+          children: [
+            Container(
+              width: 7,
+              height: 7,
+              margin: const EdgeInsets.only(right: 6),
+              decoration: const BoxDecoration(
+                color: AuroraColors.cobalt,
+                shape: BoxShape.circle,
+              ),
+            ),
+            Text(
+              'DOCUMENT DETAILS',
+              style: AuroraType.label.copyWith(
+                color: AuroraColors.inkSecondary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AuroraSpacing.space5),
         Text(
           'Name this document and add optional details.',
           style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
@@ -68,14 +88,25 @@ class _UploadMetadataStepState extends ConsumerState<UploadMetadataStep> {
             key: _formKey,
             child: ListView(
               children: [
-                // ── Name ─────────────────────────────────────────────────
-                Text(
-                  'DOCUMENT NAME',
-                  style: AuroraType.label.copyWith(
-                    color: AuroraColors.inkSecondary,
+                // ── Name (required) ───────────────────────────────────────
+                RichText(
+                  text: TextSpan(
+                    style: AuroraType.label.copyWith(
+                      color: AuroraColors.inkSecondary,
+                    ),
+                    children: [
+                      const TextSpan(text: 'DOCUMENT NAME'),
+                      TextSpan(
+                        text: ' *',
+                        style: AuroraType.label.copyWith(
+                          color: AuroraColors.coral,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: AuroraSpacing.space1),
+                const SizedBox(height: AuroraSpacing.space3),
                 TextFormField(
                   controller: _nameController,
                   textCapitalization: TextCapitalization.sentences,
@@ -100,14 +131,14 @@ class _UploadMetadataStepState extends ConsumerState<UploadMetadataStep> {
 
                 const SizedBox(height: AuroraSpacing.space7),
 
-                // ── Expiration date ───────────────────────────────────────
+                // ── Expiration date (optional) ────────────────────────────
                 Text(
                   'EXPIRATION DATE',
                   style: AuroraType.label.copyWith(
                     color: AuroraColors.inkSecondary,
                   ),
                 ),
-                const SizedBox(height: AuroraSpacing.space1),
+                const SizedBox(height: AuroraSpacing.space3),
                 Text(
                   'Optional — for warranties, insurance, permits.',
                   style: AuroraType.bodySm.copyWith(
@@ -127,14 +158,14 @@ class _UploadMetadataStepState extends ConsumerState<UploadMetadataStep> {
 
                 const SizedBox(height: AuroraSpacing.space7),
 
-                // ── Notes ─────────────────────────────────────────────────
+                // ── Notes (optional) ──────────────────────────────────────
                 Text(
                   'NOTES',
                   style: AuroraType.label.copyWith(
                     color: AuroraColors.inkSecondary,
                   ),
                 ),
-                const SizedBox(height: AuroraSpacing.space1),
+                const SizedBox(height: AuroraSpacing.space3),
                 Text(
                   'Optional — any context you want to remember.',
                   style: AuroraType.bodySm.copyWith(
@@ -160,35 +191,18 @@ class _UploadMetadataStepState extends ConsumerState<UploadMetadataStep> {
           ),
         ),
 
-        // ── Actions ───────────────────────────────────────────────────────
+        // ── Actions — SaveButton (cobalt) + SecondaryButton (cancel/back) ─
         const SizedBox(height: AuroraSpacing.space5),
-        FilledButton(
+        SaveButton(
+          label: 'Upload Document',
           onPressed: _submit,
-          style: FilledButton.styleFrom(
-            backgroundColor: AuroraColors.coral,
-            minimumSize: const Size.fromHeight(56),
-            shape: const RoundedRectangleBorder(
-              borderRadius: AuroraRadius.sm,
-            ),
-          ),
-          child: Text(
-            'Upload',
-            style: AuroraType.bodyLg.copyWith(
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
+          expand: true,
         ),
         const SizedBox(height: AuroraSpacing.space3),
-        TextButton(
+        SecondaryButton(
+          label: 'Back',
           onPressed: widget.onBack,
-          child: Text(
-            'Back',
-            style: AuroraType.bodyLg.copyWith(
-              fontWeight: FontWeight.w600,
-              color: AuroraColors.inkSecondary,
-            ),
-          ),
+          expand: true,
         ),
       ],
     );

@@ -94,7 +94,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen> {
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: AuroraColors.paper,
+                        color: AuroraColors.lime,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(

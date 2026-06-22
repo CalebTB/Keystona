@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/widgets/aurora/aurora.dart';
+import '../../../core/widgets/empty_state.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/widgets/upgrade_sheet.dart';
@@ -76,7 +79,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
               activeFilter: _activeFilter,
               onChanged: _onFilterChanged,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AuroraSpacing.space7),
             // ── Page view ────────────────────────────────────────────────────
             Expanded(
               child: filtered.isEmpty
@@ -104,7 +107,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
               ColoredBox(
                 color: AuroraColors.paper,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: AuroraSpacing.space7),
                   child: ValueListenableBuilder<int>(
                     valueListenable: _currentPage,
                     builder: (_, current, _) => _PageDots(
@@ -172,7 +175,7 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
+      padding: const EdgeInsets.fromLTRB(AuroraSpacing.space8, AuroraSpacing.space8, AuroraSpacing.space8, AuroraSpacing.space1),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
@@ -182,15 +185,14 @@ class _Header extends StatelessWidget {
               Text(
                 'PROJECTS',
                 style: AuroraType.label.copyWith(
-                  fontSize: 10,
-                  color: AuroraColors.coral,
                   letterSpacing: 1.4,
+                  color: AuroraColors.coral,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AuroraSpacing.space1),
               Text(
                 'Your renovations',
-                style: AuroraType.h2.copyWith(fontSize: 26),
+                style: AuroraType.h1,
               ),
             ],
           ),
@@ -261,7 +263,7 @@ class _FilterChips extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+      padding: const EdgeInsets.fromLTRB(AuroraSpacing.space8, AuroraSpacing.space5, AuroraSpacing.space8, AuroraSpacing.space1),
       child: Row(
         children: [
           for (int i = 0; i < _filters.length; i++) ...[
@@ -302,10 +304,10 @@ class _Chip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: AuroraSpacing.space7, vertical: AuroraSpacing.space3),
         decoration: BoxDecoration(
           color: selected ? AuroraColors.ink : AuroraColors.paper,
-          borderRadius: BorderRadius.circular(999.0),
+          borderRadius: AuroraRadius.full,
           border: Border.all(
             color: selected ? AuroraColors.ink : AuroraColors.inkBorder,
           ),
@@ -317,24 +319,23 @@ class _Chip extends StatelessWidget {
               label,
               style: AuroraType.label.copyWith(
                 fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : AuroraColors.inkSecondary,
+                color: selected ? AuroraColors.paper : AuroraColors.inkSecondary,
               ),
             ),
-            const SizedBox(width: 5),
+            const SizedBox(width: AuroraSpacing.space1),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              padding: const EdgeInsets.symmetric(horizontal: AuroraSpacing.space1, vertical: 2),
               decoration: BoxDecoration(
                 color: selected
-                    ? Colors.white.withValues(alpha: 0.15)
+                    ? AuroraColors.paper.withValues(alpha: 0.15)
                     : AuroraColors.butter,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AuroraRadius.md,
               ),
               child: Text(
                 '$count',
-                style: AuroraType.label.copyWith(
-                  fontSize: 9,
+                style: AuroraType.labelSm.copyWith(
                   color: selected
-                      ? Colors.white.withValues(alpha: 0.8)
+                      ? AuroraColors.paper.withValues(alpha: 0.8)
                       : AuroraColors.inkSecondary,
                 ),
               ),
@@ -374,7 +375,7 @@ class _PageDots extends StatelessWidget {
             margin: EdgeInsets.symmetric(horizontal: spacing),
             decoration: BoxDecoration(
               color: active ? AuroraColors.ink : Colors.transparent,
-              borderRadius: BorderRadius.circular(dotSize),
+              borderRadius: AuroraRadius.full,
               border: active
                   ? null
                   : Border.all(color: AuroraColors.ink.withValues(alpha: 0.25), width: 1),
@@ -398,30 +399,12 @@ class _NoResultsState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.filter_list_off, size: 48.0, color: AuroraColors.inkTertiary),
-            const SizedBox(height: AuroraSpacing.space7),
-            Text(
-              'No ${filter?.statusLabel ?? ''} projects',
-              style: AuroraType.h3,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AuroraSpacing.space3),
-            TextButton(
-              onPressed: onClear,
-              child: Text(
-                'Clear filter',
-                style: AuroraType.body.copyWith(color: AuroraColors.ink),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return EmptyState(
+      icon: CupertinoIcons.search,
+      title: 'No results found',
+      subtitle: 'Try a different filter or search term.',
+      actionLabel: 'Clear filter',
+      onAction: onClear,
     );
   }
 }
@@ -444,11 +427,7 @@ class _ErrorState extends StatelessWidget {
             const SizedBox(height: AuroraSpacing.space7),
             Text("Couldn't load projects", style: AuroraType.h3, textAlign: TextAlign.center),
             const SizedBox(height: AuroraSpacing.space9),
-            FilledButton(
-              onPressed: onRetry,
-              style: FilledButton.styleFrom(backgroundColor: AuroraColors.coral),
-              child: const Text('Retry'),
-            ),
+            PrimaryButton(label: 'Retry', onPressed: onRetry),
           ],
         ),
       ),
@@ -500,7 +479,7 @@ class _ProjectsScreenSkeletonState extends State<_ProjectsScreenSkeleton>
           children: [
             // ── Header shimmer ───────────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
+              padding: const EdgeInsets.fromLTRB(AuroraSpacing.space8, AuroraSpacing.space8, AuroraSpacing.space8, AuroraSpacing.space1),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -508,7 +487,7 @@ class _ProjectsScreenSkeletonState extends State<_ProjectsScreenSkeleton>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _ShimmerBar(width: 70, height: 10, radius: 4),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: AuroraSpacing.space2),
                       _ShimmerBar(width: 180, height: 22, radius: 6),
                     ],
                   ),
@@ -519,7 +498,7 @@ class _ProjectsScreenSkeletonState extends State<_ProjectsScreenSkeleton>
             ),
             // ── Filter chips shimmer ─────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+              padding: const EdgeInsets.fromLTRB(AuroraSpacing.space8, AuroraSpacing.space5, AuroraSpacing.space8, AuroraSpacing.space1),
               child: Row(
                 children: [
                   for (final w in [56.0, 88.0, 72.0, 80.0]) ...[
@@ -529,7 +508,7 @@ class _ProjectsScreenSkeletonState extends State<_ProjectsScreenSkeleton>
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AuroraSpacing.space7),
             // ── Card shimmer ─────────────────────────────────────────────────
             Expanded(
               child: Padding(
@@ -616,7 +595,7 @@ class _ProjectsScreenSkeletonState extends State<_ProjectsScreenSkeleton>
             ColoredBox(
               color: AuroraColors.paper,
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: AuroraSpacing.space7),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -656,8 +635,8 @@ class _ShimmerBar extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         color: dark
-            ? Colors.white.withValues(alpha: 0.15)
-            : const Color(0xFFEEEDF2),
+            ? AuroraColors.paper.withValues(alpha: 0.15)
+            : AuroraColors.butter,
         borderRadius: BorderRadius.circular(radius),
       ),
     );

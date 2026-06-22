@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/supabase_service.dart';
@@ -281,10 +282,10 @@ class _ProjectJournalScreenState
         ],
       ),
       body: body,
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: AuroraFAB(
+        icon: Icons.add,
         onPressed: _onAddTap,
-        backgroundColor: AuroraColors.coral,
-        child: const Icon(Icons.add, color: Colors.white),
+        tooltip: 'Add note',
       ),
     );
   }
@@ -642,15 +643,7 @@ class _EmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AuroraSpacing.space10),
-            FilledButton(
-              onPressed: onAddTap,
-              style: FilledButton.styleFrom(
-                backgroundColor: AuroraColors.yellow,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              ),
-              child: const Text('+ Add Note'),
-            ),
+            PrimaryButton(label: '+ Add Note', onPressed: onAddTap),
           ],
         ),
       ),
@@ -684,12 +677,7 @@ class _ErrorState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AuroraSpacing.space9),
-            FilledButton(
-              onPressed: onRetry,
-              style: FilledButton.styleFrom(
-                  backgroundColor: AuroraColors.coral),
-              child: const Text('Retry'),
-            ),
+            PrimaryButton(label: 'Retry', onPressed: onRetry),
           ],
         ),
       ),

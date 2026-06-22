@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router.dart';
@@ -11,6 +10,7 @@ import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 import '../../../core/widgets/error_view.dart';
 import '../models/maintenance_task.dart';
 import '../models/task_completion.dart';
@@ -218,10 +218,10 @@ class _LedgerHeader extends StatelessWidget {
                     color: AuroraColors.inkTertiary,
                   ),
                 ),
-                const SizedBox(height: 7),
+                const SizedBox(height: AuroraSpacing.space2),
                 Text(
                   task.name.endsWith('.') ? task.name : '${task.name}.',
-                  style: GoogleFonts.inter(
+                  style: AuroraType.h1.copyWith(
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.5,
@@ -273,7 +273,7 @@ class _OverdueBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: AuroraColors.coralDim,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AuroraRadius.md,
         border: Border.all(color: AuroraColors.coral.withValues(alpha: 0.24)),
       ),
       child: Column(
@@ -281,19 +281,17 @@ class _OverdueBadge extends StatelessWidget {
         children: [
           Text(
             days == 0 ? 'Due' : '${days}d',
-            style: GoogleFonts.jetBrainsMono(
+            style: AuroraType.number.copyWith(
               fontSize: 18,
               fontWeight: FontWeight.w700,
               color: AuroraColors.coral,
               height: 1.0,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: AuroraSpacing.space1),
           Text(
             'OVERDUE',
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 8,
-              fontWeight: FontWeight.w700,
+            style: AuroraType.labelSm.copyWith(
               letterSpacing: 1.0,
               color: AuroraColors.coral,
             ),
@@ -311,19 +309,17 @@ class _DoneBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: AuroraColors.limeDim,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AuroraRadius.md,
         border: Border.all(color: AuroraColors.lime.withValues(alpha: 0.24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.check_rounded, color: AuroraColors.limeDeep, size: 18),
-          const SizedBox(height: 2),
+          const SizedBox(height: AuroraSpacing.space1),
           Text(
             'DONE',
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 8,
-              fontWeight: FontWeight.w700,
+            style: AuroraType.labelSm.copyWith(
               letterSpacing: 1.0,
               color: AuroraColors.limeDeep,
             ),
@@ -350,7 +346,7 @@ class _DueBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: AuroraColors.cobaltDim,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AuroraRadius.md,
         border: Border.all(color: AuroraColors.cobalt.withValues(alpha: 0.24)),
       ),
       child: Column(
@@ -358,19 +354,17 @@ class _DueBadge extends StatelessWidget {
         children: [
           Text(
             label,
-            style: GoogleFonts.jetBrainsMono(
+            style: AuroraType.number.copyWith(
               fontSize: task.status == TaskStatus.due ? 12 : 18,
               fontWeight: FontWeight.w700,
               color: AuroraColors.cobalt,
               height: 1.0,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: AuroraSpacing.space1),
           Text(
             task.status == TaskStatus.due ? 'DUE' : 'DAYS',
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 8,
-              fontWeight: FontWeight.w700,
+            style: AuroraType.labelSm.copyWith(
               letterSpacing: 1.0,
               color: AuroraColors.cobalt,
             ),
@@ -439,7 +433,7 @@ class _StatCell extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: AuroraRadius.md,
           border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Column(
@@ -447,19 +441,17 @@ class _StatCell extends StatelessWidget {
           children: [
             Text(
               value,
-              style: GoogleFonts.jetBrainsMono(
+              style: AuroraType.number.copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: AuroraColors.ink,
                 height: 1.0,
               ),
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: AuroraSpacing.space1),
             Text(
               label,
-              style: GoogleFonts.jetBrainsMono(
-                fontSize: 8,
-                fontWeight: FontWeight.w700,
+              style: AuroraType.labelSm.copyWith(
                 letterSpacing: 1.0,
                 color: AuroraColors.inkTertiary,
               ),
@@ -530,7 +522,7 @@ class _InstructionsRowState extends State<_InstructionsRow> {
         child: Container(
           decoration: BoxDecoration(
             color: AuroraColors.paper,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: AuroraRadius.md,
             border: Border.all(color: AuroraColors.inkBorder),
           ),
           clipBehavior: Clip.hardEdge,
@@ -546,7 +538,7 @@ class _InstructionsRowState extends State<_InstructionsRow> {
                       height: 30,
                       decoration: BoxDecoration(
                         color: AuroraColors.coralDim,
-                        borderRadius: BorderRadius.circular(7),
+                        borderRadius: AuroraRadius.sm,
                       ),
                       child: Icon(
                         _expanded ? Icons.remove : Icons.add,
@@ -554,27 +546,24 @@ class _InstructionsRowState extends State<_InstructionsRow> {
                         color: AuroraColors.coral,
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: AuroraSpacing.space2),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             _headerLine(),
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
+                            style: AuroraType.body.copyWith(
                               fontWeight: FontWeight.w600,
                               color: AuroraColors.ink,
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: AuroraSpacing.space1),
                           Text(
                             _expanded
                                 ? 'Tap to collapse'
                                 : 'Tap to expand · ${_summaryLine()}',
-                            style: GoogleFonts.jetBrainsMono(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
+                            style: AuroraType.label.copyWith(
                               color: AuroraColors.inkTertiary,
                             ),
                           ),
@@ -658,8 +647,7 @@ class _InstructionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
         text,
-        style: GoogleFonts.jetBrainsMono(
-          fontSize: 9,
+        style: AuroraType.labelSm.copyWith(
           fontWeight: FontWeight.w700,
           letterSpacing: 1.2,
           color: AuroraColors.inkTertiary,
@@ -814,11 +802,10 @@ class _ServiceHistoryState extends State<_ServiceHistory>
                   shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: 7),
+              const SizedBox(width: AuroraSpacing.space2),
               Text(
                 'SERVICE HISTORY',
-                style: GoogleFonts.jetBrainsMono(
-                  fontSize: 10,
+                style: AuroraType.label.copyWith(
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.4,
                   color: AuroraColors.inkTertiary,
@@ -826,7 +813,7 @@ class _ServiceHistoryState extends State<_ServiceHistory>
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: AuroraSpacing.space4),
 
           if (!isDone && _isOverdueOrDue(widget.task)) ...[
             _OverdueEntry(task: widget.task, isLast: completions.isEmpty),
@@ -900,7 +887,7 @@ class _ScheduledNextEntry extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AuroraColors.cobaltDim,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: AuroraRadius.md,
           border: Border.all(color: AuroraColors.cobalt.withValues(alpha: 0.20)),
         ),
         child: Column(
@@ -911,8 +898,7 @@ class _ScheduledNextEntry extends StatelessWidget {
               children: [
                 Text(
                   '$dateStr · $yearStr',
-                  style: GoogleFonts.jetBrainsMono(
-                    fontSize: 10,
+                  style: AuroraType.label.copyWith(
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
                     color: AuroraColors.cobalt,
@@ -920,33 +906,28 @@ class _ScheduledNextEntry extends StatelessWidget {
                 ),
                 Text(
                   'in $daysUntil days',
-                  style: GoogleFonts.jetBrainsMono(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
+                  style: AuroraType.label.copyWith(
                     color: AuroraColors.cobalt,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AuroraSpacing.space1),
             Text(
               task.recurrence == RecurrenceType.none
                   ? 'Scheduled service'
                   : 'Next service',
-              style: GoogleFonts.inter(
-                fontSize: 14,
+              style: AuroraType.bodyLg.copyWith(
                 fontWeight: FontWeight.w600,
                 color: AuroraColors.ink,
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: AuroraSpacing.space1),
             Text(
               task.recurrence == RecurrenceType.none
                   ? 'One-time task'
                   : 'Auto-scheduled · ${task.recurrence.label}',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
+              style: AuroraType.bodySm.copyWith(
                 color: AuroraColors.cobalt,
               ),
             ),
@@ -1001,7 +982,7 @@ class _OverdueEntry extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AuroraColors.coralDim,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: AuroraRadius.md,
           border: Border.all(color: AuroraColors.coral.withValues(alpha: 0.16)),
         ),
         child: Column(
@@ -1012,8 +993,7 @@ class _OverdueEntry extends StatelessWidget {
               children: [
                 Text(
                   '$today · TODAY',
-                  style: GoogleFonts.jetBrainsMono(
-                    fontSize: 10,
+                  style: AuroraType.label.copyWith(
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
                     color: AuroraColors.coral,
@@ -1021,29 +1001,24 @@ class _OverdueEntry extends StatelessWidget {
                 ),
                 Text(
                   lateLabel,
-                  style: GoogleFonts.jetBrainsMono(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
+                  style: AuroraType.label.copyWith(
                     color: AuroraColors.coral,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AuroraSpacing.space1),
             Text(
               'Due now',
-              style: GoogleFonts.inter(
-                fontSize: 14,
+              style: AuroraType.bodyLg.copyWith(
                 fontWeight: FontWeight.w600,
                 color: AuroraColors.ink,
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: AuroraSpacing.space1),
             Text(
               scheduledLabel,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
+              style: AuroraType.bodySm.copyWith(
                 color: AuroraColors.coral,
               ),
             ),
@@ -1114,7 +1089,7 @@ class _CompletionEntry extends ConsumerWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: AuroraRadius.md,
           border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Column(
@@ -1125,8 +1100,7 @@ class _CompletionEntry extends ConsumerWidget {
               children: [
                 Text(
                   dateStr,
-                  style: GoogleFonts.jetBrainsMono(
-                    fontSize: 10,
+                  style: AuroraType.label.copyWith(
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
                     color: AuroraColors.inkTertiary,
@@ -1135,30 +1109,26 @@ class _CompletionEntry extends ConsumerWidget {
                 if (hasCost)
                   Text(
                     '\$${_totalCost.toInt()}',
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 11,
+                    style: AuroraType.label.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AuroraColors.inkSecondary,
                     ),
                   ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AuroraSpacing.space1),
             Text(
               _completedByLabel(),
-              style: GoogleFonts.inter(
-                fontSize: 13,
+              style: AuroraType.body.copyWith(
                 fontWeight: FontWeight.w600,
                 color: AuroraColors.ink,
               ),
             ),
             if (meta.isNotEmpty) ...[
-              const SizedBox(height: 2),
+              const SizedBox(height: AuroraSpacing.space1),
               Text(
                 meta,
-                style: GoogleFonts.jetBrainsMono(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
+                style: AuroraType.label.copyWith(
                   color: AuroraColors.inkTertiary,
                 ),
                 maxLines: 2,
@@ -1166,7 +1136,7 @@ class _CompletionEntry extends ConsumerWidget {
               ),
             ],
             if (completion.linkedDocumentIds.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AuroraSpacing.space2),
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
@@ -1180,7 +1150,7 @@ class _CompletionEntry extends ConsumerWidget {
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: AuroraColors.butter,
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: AuroraRadius.xs,
                         border: Border.all(color: AuroraColors.inkBorder),
                       ),
                       child: Row(
@@ -1194,13 +1164,11 @@ class _CompletionEntry extends ConsumerWidget {
                           const SizedBox(width: 4),
                           Text(
                             label,
-                            style: GoogleFonts.jetBrainsMono(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
+                            style: AuroraType.label.copyWith(
                               color: AuroraColors.inkSecondary,
                             ),
                           ),
-                          const SizedBox(width: 3),
+                          const SizedBox(width: AuroraSpacing.space1),
                           Icon(
                             Icons.chevron_right,
                             size: 11,
@@ -1254,7 +1222,7 @@ class _TimelineRow extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: AuroraSpacing.space2),
           Expanded(child: content),
         ],
       ),
@@ -1274,7 +1242,7 @@ class _TerracottaDot extends StatelessWidget {
         child: const Center(
           child: Icon(
             Icons.priority_high_rounded,
-            color: Colors.white,
+            color: AuroraColors.paper,
             size: 13,
           ),
         ),
@@ -1314,17 +1282,15 @@ class _EmptyHistory extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'No history yet',
-              style: GoogleFonts.inter(
-                fontSize: 13,
+              style: AuroraType.body.copyWith(
                 fontWeight: FontWeight.w500,
                 color: AuroraColors.inkTertiary,
               ),
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: AuroraSpacing.space1),
             Text(
               'Complete this task to start your service log.',
-              style: GoogleFonts.inter(
-                fontSize: 11,
+              style: AuroraType.bodySm.copyWith(
                 color: AuroraColors.inkTertiary,
               ),
               textAlign: TextAlign.center,
@@ -1370,101 +1336,43 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(
-            height: 52,
-            child: ElevatedButton(
-              onPressed: (_isCompleting || widget.isDone)
-                  ? null
-                  : _handleMarkComplete,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: widget.isDone
-                    ? AuroraColors.inkTertiary
-                    : AuroraColors.coral,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-              child: _isCompleting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
-                    )
-                  : Text(
-                      widget.isDone ? 'Already Done' : 'Mark Complete',
-                      style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-            ),
+          PrimaryButton(
+            label: widget.isDone ? 'Already Done' : 'Mark Complete',
+            loading: _isCompleting,
+            expand: true,
+            onPressed: (_isCompleting || widget.isDone)
+                ? null
+                : _handleMarkComplete,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AuroraSpacing.space2),
           Row(
             children: [
               Expanded(
-                child: SizedBox(
-                  height: 44,
-                  child: OutlinedButton(
-                    onPressed: widget.isDone ? null : _handleAddDetails,
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(
-                        color: widget.isDone
-                            ? AuroraColors.inkBorder
-                            : AuroraColors.coral.withValues(alpha: 0.55),
-                      ),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                    ),
-                    child: Text(
-                      'Add Details',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: widget.isDone
-                            ? AuroraColors.inkTertiary
-                            : AuroraColors.coral,
-                      ),
-                    ),
-                  ),
+                child: SecondaryButton(
+                  label: 'Add Details',
+                  expand: true,
+                  onPressed: widget.isDone ? null : _handleAddDetails,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AuroraSpacing.space2),
               Expanded(
-                child: SizedBox(
-                  height: 44,
-                  child: OutlinedButton(
-                    onPressed: (_isSkipping || widget.isDone)
-                        ? null
-                        : _handleSkip,
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AuroraColors.inkBorder),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                    ),
-                    child: _isSkipping
-                        ? const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AuroraColors.inkTertiary),
-                          )
-                        : Text(
-                            'Skip',
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: widget.isDone
-                                  ? AuroraColors.inkTertiary
-                                  : AuroraColors.coral,
-                            ),
+                child: _isSkipping
+                    ? const Center(
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CupertinoActivityIndicator(
+                            color: AuroraColors.inkTertiary,
                           ),
-                  ),
-                ),
+                        ),
+                      )
+                    : SecondaryButton(
+                        label: 'Skip',
+                        expand: true,
+                        onPressed: (_isSkipping || widget.isDone)
+                            ? null
+                            : _handleSkip,
+                      ),
               ),
             ],
           ),
@@ -1654,9 +1562,9 @@ class _SkipReasonSheetState extends ConsumerState<_SkipReasonSheet> {
             child: Container(
               width: 36,
               height: 4,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AuroraColors.inkBorder,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: AuroraRadius.xs,
               ),
             ),
           ),
@@ -1685,7 +1593,7 @@ class _SkipReasonSheetState extends ConsumerState<_SkipReasonSheet> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: AuroraRadius.md,
-                borderSide: const BorderSide(color: AuroraColors.ink),
+                borderSide: const BorderSide(color: AuroraColors.coral, width: 2.0),
               ),
               filled: true,
               fillColor: AuroraColors.butter,
@@ -1694,56 +1602,39 @@ class _SkipReasonSheetState extends ConsumerState<_SkipReasonSheet> {
           ),
           const SizedBox(height: AuroraSpacing.space5),
           if (isIOS) ...[
-            CupertinoButton.filled(
+            ElevatedButton(
               onPressed: _confirm,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AuroraColors.coral,
+                foregroundColor: AuroraColors.paper,
+                elevation: 0,
+                shape: const RoundedRectangleBorder(
+                    borderRadius: AuroraRadius.full),
+                minimumSize: const Size(double.infinity, 48),
+              ),
               child: const Text('Skip Task'),
             ),
-            CupertinoButton(
+            const SizedBox(height: AuroraSpacing.space2),
+            GhostButton(
+              label: 'Cancel',
               onPressed: _cancel,
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: AuroraColors.inkSecondary),
-              ),
             ),
           ] else ...[
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
+                  child: SecondaryButton(
+                    label: 'Cancel',
+                    expand: true,
                     onPressed: _cancel,
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AuroraColors.inkBorder),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: AuroraRadius.md,
-                      ),
-                    ),
-                    child: Text(
-                      'Cancel',
-                      style: AuroraType.body.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
                   ),
                 ),
                 const SizedBox(width: AuroraSpacing.space3),
                 Expanded(
-                  child: ElevatedButton(
+                  child: PrimaryButton(
+                    label: 'Skip Task',
+                    expand: true,
                     onPressed: _confirm,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AuroraColors.coral,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: AuroraRadius.md,
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      'Skip Task',
-                      style: AuroraType.body.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
                   ),
                 ),
               ],

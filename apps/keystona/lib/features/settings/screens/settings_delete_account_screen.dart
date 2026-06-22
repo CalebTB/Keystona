@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 import '../../../services/providers/service_providers.dart';
 
 class SettingsDeleteAccountScreen extends ConsumerStatefulWidget {
@@ -20,6 +22,7 @@ class _SettingsDeleteAccountScreenState
     extends ConsumerState<SettingsDeleteAccountScreen> {
   final _confirmController = TextEditingController();
   bool _deleting = false;
+
   bool get _confirmed =>
       _confirmController.text.trim().toLowerCase() == 'delete';
 
@@ -36,7 +39,8 @@ class _SettingsDeleteAccountScreenState
       builder: (_) => CupertinoAlertDialog(
         title: const Text('Delete account?'),
         content: const Text(
-            'This is permanent. All your data will be erased and cannot be recovered.'),
+          'This is permanent. All your data will be erased and cannot be recovered.',
+        ),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.of(context).pop(false),
@@ -74,80 +78,171 @@ class _SettingsDeleteAccountScreenState
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.all(AuroraSpacing.screenPadH)
-              .copyWith(top: AuroraSpacing.space10),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AuroraSpacing.screenPadH,
+          ).copyWith(top: AuroraSpacing.space10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ── Warning icon tile ─────────────────────────────────────
               Container(
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: AuroraColors.coral.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
+                  color: AuroraColors.coralDim,
+                  borderRadius: AuroraRadius.xl,
                 ),
-                child: const Icon(CupertinoIcons.exclamationmark_triangle,
-                    size: 26, color: AuroraColors.coral),
+                child: const Icon(
+                  CupertinoIcons.exclamationmark_triangle,
+                  size: 26,
+                  color: AuroraColors.coral,
+                ),
               ),
               const SizedBox(height: AuroraSpacing.space7),
+
+              // ── Title + description ───────────────────────────────────
               Text('Delete your account', style: AuroraType.h1),
               const SizedBox(height: AuroraSpacing.space3),
               Text(
                 'This will permanently delete your account and all associated data including documents, tasks, systems, and home history. This cannot be undone.',
-                style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
+                style: AuroraType.body.copyWith(
+                  color: AuroraColors.coral,
+                ),
               ),
 
               const SizedBox(height: AuroraSpacing.space10),
 
-              Text(
-                'TYPE DELETE TO CONFIRM',
-                style: AuroraType.label,
+              // ── Confirm field label (eyebrow) ─────────────────────────
+              Row(
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: const BoxDecoration(
+                      color: AuroraColors.coral,
+                      borderRadius: BorderRadius.all(Radius.circular(2)),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'TYPE DELETE TO CONFIRM',
+                    style: AuroraType.label.copyWith(
+                      color: AuroraColors.coral,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: AuroraSpacing.space3),
-              Container(
-                decoration: BoxDecoration(
-                  color: AuroraColors.paper,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
-                ),
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-                child: TextField(
-                  controller: _confirmController,
-                  style: AuroraType.bodyLg,
-                  decoration: null,
-                  textCapitalization: TextCapitalization.characters,
-                  onChanged: (_) => setState(() {}),
-                ),
+              _ConfirmField(
+                controller: _confirmController,
+                onChanged: (_) => setState(() {}),
               ),
 
               const SizedBox(height: AuroraSpacing.space10),
 
-              GestureDetector(
-                onTap: (_confirmed && !_deleting) ? _delete : null,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(
-                    color: _confirmed
-                        ? AuroraColors.coral
-                        : AuroraColors.coral.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(14),
+              // ── CTA row: cancel + delete (coral = PrimaryButton) ──────
+              Row(
+                children: [
+                  Expanded(
+                    child: SecondaryButton(
+                      label: 'Cancel',
+                      onPressed: _deleting ? null : () => context.pop(),
+                      expand: true,
+                    ),
                   ),
-                  child: _deleting
-                      ? const Center(
-                          child: CupertinoActivityIndicator(color: Colors.white))
-                      : Text(
-                          'Delete my account',
-                          textAlign: TextAlign.center,
-                          style: AuroraType.body.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                ),
+                  const SizedBox(width: AuroraSpacing.space5),
+                  Expanded(
+                    child: PrimaryButton(
+                      label: 'Delete account',
+                      onPressed:
+                          (_confirmed && !_deleting) ? _delete : null,
+                      loading: _deleting,
+                      expand: true,
+                    ),
+                  ),
+                ],
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Confirm text field ────────────────────────────────────────────────────────
+
+class _ConfirmField extends StatefulWidget {
+  const _ConfirmField({
+    required this.controller,
+    required this.onChanged,
+  });
+
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<_ConfirmField> createState() => _ConfirmFieldState();
+}
+
+class _ConfirmFieldState extends State<_ConfirmField> {
+  final _focusNode = FocusNode();
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      if (mounted) setState(() => _isFocused = _focusNode.hasFocus);
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 48),
+      decoration: BoxDecoration(
+        color: AuroraColors.paper,
+        borderRadius: AuroraRadius.md,
+        border: Border.all(
+          color: _isFocused ? AuroraColors.coral : AuroraColors.inkBorder,
+          width: _isFocused ? 2.0 : 1.5,
+        ),
+        boxShadow: _isFocused
+            ? [
+                BoxShadow(
+                  color: AuroraColors.focusCoral,
+                  blurRadius: 4,
+                ),
+              ]
+            : null,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AuroraSpacing.space7,
+        vertical: AuroraSpacing.space5,
+      ),
+      child: TextField(
+        controller: widget.controller,
+        focusNode: _focusNode,
+        style: AuroraType.bodyLg,
+        textCapitalization: TextCapitalization.characters,
+        cursorColor: AuroraColors.coral,
+        onChanged: widget.onChanged,
+        decoration: InputDecoration(
+          isDense: true,
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          contentPadding: EdgeInsets.zero,
+          hintText: 'DELETE',
+          hintStyle: AuroraType.bodyLg.copyWith(
+            color: AuroraColors.inkTertiary,
           ),
         ),
       ),

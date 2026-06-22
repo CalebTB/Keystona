@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/supabase_service.dart';
@@ -56,10 +57,10 @@ class ProjectBudgetScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Budget')),
       body: body,
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: AuroraFAB(
+        icon: Icons.add,
         onPressed: onAdd,
-        backgroundColor: AuroraColors.coral,
-        child: const Icon(Icons.add, color: Colors.white),
+        tooltip: 'Add budget item',
       ),
     );
   }
@@ -1182,14 +1183,7 @@ class _EmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AuroraSpacing.space10),
-            FilledButton(
-              onPressed: onAdd,
-              style: FilledButton.styleFrom(
-                backgroundColor: AuroraColors.coral,
-                padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              ),
-              child: const Text('+ Start Tracking'),
-            ),
+            PrimaryButton(label: '+ Start Tracking', onPressed: onAdd),
           ],
         ),
       ),
@@ -1216,12 +1210,7 @@ class _ErrorState extends StatelessWidget {
                 style: AuroraType.h1,
                 textAlign: TextAlign.center),
             const SizedBox(height: AuroraSpacing.space9),
-            FilledButton(
-              onPressed: onRetry,
-              style:
-                  FilledButton.styleFrom(backgroundColor: AuroraColors.coral),
-              child: const Text('Retry'),
-            ),
+            PrimaryButton(label: 'Retry', onPressed: onRetry),
           ],
         ),
       ),

@@ -207,7 +207,7 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
       floatingActionButton: tasks != null && tasks.isNotEmpty
           ? FloatingActionButton(
               onPressed: _addTask,
-              backgroundColor: AuroraColors.ink,
+              backgroundColor: AuroraColors.coral,
               child: const Icon(Icons.add, color: Colors.white),
             )
           : null,
@@ -244,13 +244,13 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
                   width: 52,
                   height: 52,
                   decoration: BoxDecoration(
-                    color: AuroraColors.ink,
+                    color: AuroraColors.coral,
                     borderRadius: BorderRadius.circular(999),
                     boxShadow: [
-                      const BoxShadow(
-                        color: Color(0x59FF3B62),
+                      BoxShadow(
+                        color: AuroraColors.coral.withValues(alpha: 0.35),
                         blurRadius: 12,
-                        offset: Offset(0, 4),
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),

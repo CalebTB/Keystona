@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/widgets/snackbar_service.dart';
@@ -119,10 +120,10 @@ class _ProjectDocumentsScreenState
       appBar: AppBar(title: const Text('Documents')),
       body: body,
       floatingActionButton: asyncLinks.value?.isNotEmpty == true
-          ? FloatingActionButton(
+          ? AuroraFAB(
+              icon: Icons.link,
               onPressed: _onLink,
-              backgroundColor: AuroraColors.ink,
-              child: const Icon(Icons.link, color: Colors.white),
+              tooltip: 'Link document',
             )
           : null,
     );
@@ -215,14 +216,7 @@ class _EmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AuroraSpacing.space10),
-            FilledButton(
-              onPressed: onLink,
-              style: FilledButton.styleFrom(
-                backgroundColor: AuroraColors.ink,
-                padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              ),
-              child: const Text('+ Link Document'),
-            ),
+            PrimaryButton(label: '+ Link Document', onPressed: onLink),
           ],
         ),
       ),
@@ -248,12 +242,7 @@ class _ErrorState extends StatelessWidget {
             Text("Couldn't load documents",
                 style: AuroraType.h3, textAlign: TextAlign.center),
             const SizedBox(height: AuroraSpacing.space9),
-            FilledButton(
-              onPressed: onRetry,
-              style:
-                  FilledButton.styleFrom(backgroundColor: AuroraColors.ink),
-              child: const Text('Retry'),
-            ),
+            PrimaryButton(label: 'Retry', onPressed: onRetry),
           ],
         ),
       ),

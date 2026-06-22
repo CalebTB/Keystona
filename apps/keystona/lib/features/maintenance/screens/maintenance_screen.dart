@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_shadows.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/error_view.dart';
 import '../models/maintenance_task.dart';
@@ -247,7 +249,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: Row(
               children: [
                 Text(
@@ -260,12 +262,12 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
                 ),
                 const Spacer(),
                 _NavButton(icon: Icons.chevron_left, onTap: _prevWeek),
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
                 _NavButton(icon: Icons.chevron_right, onTap: _nextWeek),
               ],
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: WeekStrip(
@@ -275,7 +277,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
               onDaySelected: _selectDay,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           Divider(color: AuroraColors.inkBorder, thickness: 1, height: 1),
         ],
       );
@@ -315,10 +317,10 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(
-        top: 14,
+        top: 16,
         left: 16,
         right: 16,
-        bottom: 10,
+        bottom: 8,
       ),
       child: Row(
         children: [
@@ -382,7 +384,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(
-        top: 18,
+        top: 20,
         left: 16,
         right: 16,
       ),
@@ -403,7 +405,7 @@ class _HeaderButtons extends StatelessWidget {
           icon: Icons.tune_outlined,
           onTap: () {}, // filter sheet — future implementation
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 8),
         _CircleIconButton(
           icon: Icons.search,
           onTap: () {}, // search — future implementation
@@ -430,13 +432,7 @@ class _CircleIconButton extends StatelessWidget {
           color: AuroraColors.paper,
           shape: BoxShape.circle,
           border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x0A071238),
-              blurRadius: 4,
-              offset: Offset(0, 1),
-            ),
-          ],
+          boxShadow: AuroraShadows.card,
         ),
         child: Icon(icon, size: 18, color: AuroraColors.ink),
       ),
@@ -556,7 +552,7 @@ class _AgendaSkeleton extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(height: 10, width: 110, color: AuroraColors.butter),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           _SkeletonAgendaCard(),
           const SizedBox(height: 8),
           _SkeletonAgendaCard(),
@@ -577,7 +573,7 @@ class _SkeletonAgendaCard extends StatelessWidget {
       height: 68,
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        borderRadius: AuroraRadius.lg,
       ),
       child: Row(
         children: [
@@ -589,7 +585,7 @@ class _SkeletonAgendaCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(height: 13, width: double.infinity, color: AuroraColors.butter),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Container(height: 10, width: 140, color: AuroraColors.butter),
               ],
             ),
@@ -633,7 +629,7 @@ class _TabStrip extends StatelessWidget {
               behavior: HitTestBehavior.opaque,
               child: Container(
                 margin: const EdgeInsets.only(right: 28),
-                padding: const EdgeInsets.only(top: 6, bottom: 11),
+                padding: const EdgeInsets.only(top: 8, bottom: 12),
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(

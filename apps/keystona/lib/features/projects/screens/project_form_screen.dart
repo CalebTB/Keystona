@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../../../core/theme/aurora_spacing.dart';
 
@@ -152,7 +153,7 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
       context: context,
       builder: (_) => Container(
         height: 300,
-        color: CupertinoColors.systemBackground.resolveFrom(context),
+        color: AuroraColors.paper,
         child: Column(
           children: [
             Row(
@@ -354,7 +355,7 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
                   style: TextStyle(
                     color: _saving
                         ? CupertinoColors.inactiveGray
-                        : CupertinoColors.activeBlue,
+                        : AuroraColors.cobalt,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -376,6 +377,7 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
               _SectionHeader('Project Details'),
               _FormField(
                 label: 'Project name',
+                required: true,
                 child: TextFormField(
                   controller: _nameController,
                   textCapitalization: TextCapitalization.words,
@@ -485,7 +487,7 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
           if (_saving)
             const Padding(
               padding: EdgeInsets.all(AuroraSpacing.space3),
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: CupertinoActivityIndicator(color: AuroraColors.ink),
             )
           else
             TextButton(
@@ -508,6 +510,7 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
             _SectionHeader('Project Details'),
             _FormField(
               label: 'Project name',
+              required: true,
               child: TextFormField(
                 controller: _nameController,
                 textCapitalization: TextCapitalization.words,
@@ -619,7 +622,16 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
         hintStyle:
             AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.0),
+          borderRadius: AuroraRadius.sm,
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: AuroraRadius.sm,
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: AuroraRadius.sm,
+          borderSide: const BorderSide(color: AuroraColors.coral, width: 2.0),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AuroraSpacing.space7,
@@ -637,23 +649,35 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: AuroraSpacing.space7, bottom: AuroraSpacing.space1),
-      child: Text(
-        title.toUpperCase(),
-        style: AuroraType.bodySm.copyWith(
-          color: AuroraColors.inkSecondary,
-          letterSpacing: 0.8,
-          fontWeight: FontWeight.w600,
-        ),
+      padding: const EdgeInsets.only(top: AuroraSpacing.space7, bottom: AuroraSpacing.space3),
+      child: Row(
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: AuroraColors.cobalt,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            title.toUpperCase(),
+            style: AuroraType.label.copyWith(
+              color: AuroraColors.inkSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
 class _FormField extends StatelessWidget {
-  const _FormField({required this.label, required this.child});
+  const _FormField({required this.label, required this.child, this.required = false});
   final String label;
   final Widget child;
+  final bool required;
 
   @override
   Widget build(BuildContext context) {
@@ -662,10 +686,20 @@ class _FormField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style:
-                AuroraType.bodySm.copyWith(color: AuroraColors.inkSecondary),
+          Row(
+            children: [
+              Text(
+                label.toUpperCase(),
+                style: AuroraType.label,
+              ),
+              if (required) ...[
+                const SizedBox(width: 2),
+                Text(
+                  '*',
+                  style: AuroraType.label.copyWith(color: AuroraColors.coral),
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: AuroraSpacing.space1),
           child,
@@ -699,7 +733,7 @@ class _TapRow extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: AuroraSpacing.space3),
         decoration: BoxDecoration(
           border: Border.all(color: AuroraColors.inkBorder),
-          borderRadius: BorderRadius.circular(8.0),
+          borderRadius: AuroraRadius.sm,
         ),
         child: Row(
           children: [
@@ -758,7 +792,7 @@ class _DateRow extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: AuroraSpacing.space3),
         decoration: BoxDecoration(
           border: Border.all(color: AuroraColors.inkBorder),
-          borderRadius: BorderRadius.circular(8.0),
+          borderRadius: AuroraRadius.sm,
         ),
         child: Row(
           children: [
@@ -826,7 +860,7 @@ class _CoverPhotoField extends StatelessWidget {
         height: 160,
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.circular(12.0),
+          borderRadius: AuroraRadius.md,
           border: Border.all(color: AuroraColors.inkBorder),
         ),
         clipBehavior: Clip.antiAlias,
@@ -853,12 +887,12 @@ class _CoverPhotoField extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: AuroraColors.inkSecondary,
-                borderRadius: BorderRadius.circular(8.0),
+                borderRadius: AuroraRadius.sm,
               ),
               child: Text(
                 'Tap to change',
                 style: AuroraType.bodySm
-                    .copyWith(color: Colors.white),
+                    .copyWith(color: AuroraColors.paper),
               ),
             ),
           ),
@@ -869,7 +903,7 @@ class _CoverPhotoField extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        ColoredBox(color: const Color(0xFFEEEDF2)),
+        ColoredBox(color: AuroraColors.butter),
         const Center(
           child: Icon(Icons.image_outlined, color: AuroraColors.inkTertiary, size: 40),
         ),
@@ -883,12 +917,12 @@ class _CoverPhotoField extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               color: AuroraColors.inkSecondary,
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: AuroraRadius.sm,
             ),
             child: Text(
               'Tap to change',
               style:
-                  AuroraType.bodySm.copyWith(color: Colors.white),
+                  AuroraType.bodySm.copyWith(color: AuroraColors.paper),
             ),
           ),
         ),

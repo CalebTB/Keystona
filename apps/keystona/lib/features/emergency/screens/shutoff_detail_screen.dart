@@ -2,11 +2,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../models/utility_shutoff.dart';
 import '../providers/emergency_hub_provider.dart';
@@ -55,6 +56,7 @@ class _ShutoffDetailScreenState extends ConsumerState<ShutoffDetailScreen> {
 
   bool _loading = true;
   bool _saving = false;
+  bool _isComplete = false;
 
   String? _valveType;
   String? _turnDirection;
@@ -106,6 +108,7 @@ class _ShutoffDetailScreenState extends ConsumerState<ShutoffDetailScreen> {
     _locationController.text = shutoff.locationDescription;
     _instructionsController.text = shutoff.specialInstructions ?? '';
     _toolsController.text = shutoff.toolsRequired.join('\n');
+    _isComplete = shutoff.isComplete;
 
     if (widget.utilityType == 'water' || widget.utilityType == 'gas') {
       _valveType = shutoff.valveType;
@@ -206,7 +209,11 @@ class _ShutoffDetailScreenState extends ConsumerState<ShutoffDetailScreen> {
     if (_loading) {
       return isIOS
           ? CupertinoPageScaffold(
-              navigationBar: CupertinoNavigationBar(middle: Text(title)),
+              backgroundColor: AuroraColors.paper,
+              navigationBar: CupertinoNavigationBar(
+                middle: Text(title),
+                backgroundColor: AuroraColors.paper,
+              ),
               child: const SafeArea(
                 bottom: false,
                 child: ShutoffDetailSkeleton(),
@@ -239,6 +246,7 @@ class _ShutoffDetailScreenState extends ConsumerState<ShutoffDetailScreen> {
             turnDirection: _turnDirection,
             circuitDirectory: _circuitDirectory,
             saving: _saving,
+            isComplete: _isComplete,
             onValveTypeChanged: (v) => setState(() => _valveType = v),
             onTurnDirectionChanged: (v) => setState(() => _turnDirection = v),
             onCircuitDirectoryChanged: (m) =>
@@ -259,6 +267,7 @@ class _ShutoffDetailScreenState extends ConsumerState<ShutoffDetailScreen> {
             turnDirection: _turnDirection,
             circuitDirectory: _circuitDirectory,
             saving: _saving,
+            isComplete: _isComplete,
             onValveTypeChanged: (v) => setState(() => _valveType = v),
             onTurnDirectionChanged: (v) => setState(() => _turnDirection = v),
             onCircuitDirectoryChanged: (m) =>
@@ -285,6 +294,7 @@ class _IOSLayout extends StatelessWidget {
     required this.turnDirection,
     required this.circuitDirectory,
     required this.saving,
+    required this.isComplete,
     required this.onValveTypeChanged,
     required this.onTurnDirectionChanged,
     required this.onCircuitDirectoryChanged,
@@ -304,6 +314,7 @@ class _IOSLayout extends StatelessWidget {
   final String? turnDirection;
   final Map<String, String> circuitDirectory;
   final bool saving;
+  final bool isComplete;
   final ValueChanged<String?> onValveTypeChanged;
   final ValueChanged<String?> onTurnDirectionChanged;
   final ValueChanged<Map<String, String>> onCircuitDirectoryChanged;
@@ -312,22 +323,10 @@ class _IOSLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
+      backgroundColor: AuroraColors.paper,
       navigationBar: CupertinoNavigationBar(
         middle: Text(title),
-        trailing: saving
-            ? const CupertinoActivityIndicator()
-            : CupertinoButton(
-                padding: EdgeInsets.zero,
-                onPressed: onSave,
-                child: Text(
-                  'Save',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AuroraColors.ink,
-                  ),
-                ),
-              ),
+        backgroundColor: AuroraColors.paper,
       ),
       child: SafeArea(
         bottom: false,
@@ -344,12 +343,12 @@ class _IOSLayout extends StatelessWidget {
           turnDirection: turnDirection,
           circuitDirectory: circuitDirectory,
           saving: saving,
+          isComplete: isComplete,
           isIOS: true,
           onValveTypeChanged: onValveTypeChanged,
           onTurnDirectionChanged: onTurnDirectionChanged,
           onCircuitDirectoryChanged: onCircuitDirectoryChanged,
           onSave: onSave,
-          showSaveButton: false,
         ),
       ),
     );
@@ -373,6 +372,7 @@ class _AndroidLayout extends StatelessWidget {
     required this.turnDirection,
     required this.circuitDirectory,
     required this.saving,
+    required this.isComplete,
     required this.onValveTypeChanged,
     required this.onTurnDirectionChanged,
     required this.onCircuitDirectoryChanged,
@@ -392,6 +392,7 @@ class _AndroidLayout extends StatelessWidget {
   final String? turnDirection;
   final Map<String, String> circuitDirectory;
   final bool saving;
+  final bool isComplete;
   final ValueChanged<String?> onValveTypeChanged;
   final ValueChanged<String?> onTurnDirectionChanged;
   final ValueChanged<Map<String, String>> onCircuitDirectoryChanged;
@@ -406,31 +407,6 @@ class _AndroidLayout extends StatelessWidget {
         backgroundColor: AuroraColors.paper,
         scrolledUnderElevation: 0,
         elevation: 0,
-        actions: [
-          if (saving)
-            const Padding(
-              padding: EdgeInsets.only(right: AuroraSpacing.space7),
-              child: Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            )
-          else
-            TextButton(
-              onPressed: onSave,
-              child: Text(
-                'Save',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AuroraColors.ink,
-                ),
-              ),
-            ),
-        ],
       ),
       body: _FormBody(
         formKey: formKey,
@@ -445,12 +421,12 @@ class _AndroidLayout extends StatelessWidget {
         turnDirection: turnDirection,
         circuitDirectory: circuitDirectory,
         saving: saving,
+        isComplete: isComplete,
         isIOS: false,
         onValveTypeChanged: onValveTypeChanged,
         onTurnDirectionChanged: onTurnDirectionChanged,
         onCircuitDirectoryChanged: onCircuitDirectoryChanged,
         onSave: onSave,
-        showSaveButton: true,
       ),
     );
   }
@@ -472,12 +448,12 @@ class _FormBody extends StatelessWidget {
     required this.turnDirection,
     required this.circuitDirectory,
     required this.saving,
+    required this.isComplete,
     required this.isIOS,
     required this.onValveTypeChanged,
     required this.onTurnDirectionChanged,
     required this.onCircuitDirectoryChanged,
     required this.onSave,
-    required this.showSaveButton,
   });
 
   final GlobalKey<FormState> formKey;
@@ -492,12 +468,12 @@ class _FormBody extends StatelessWidget {
   final String? turnDirection;
   final Map<String, String> circuitDirectory;
   final bool saving;
+  final bool isComplete;
   final bool isIOS;
   final ValueChanged<String?> onValveTypeChanged;
   final ValueChanged<String?> onTurnDirectionChanged;
   final ValueChanged<Map<String, String>> onCircuitDirectoryChanged;
   final VoidCallback onSave;
-  final bool showSaveButton;
 
   bool get _isWater => utilityType == 'water';
   bool get _isGas => utilityType == 'gas';
@@ -509,154 +485,158 @@ class _FormBody extends StatelessWidget {
     return Form(
       key: formKey,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AuroraSpacing.screenPadH),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AuroraSpacing.screenPadH,
+          vertical: AuroraSpacing.screenPadTop,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: AuroraSpacing.space3),
+            // ── Status pill ────────────────────────────────────────────────
+            _StatusPill(isComplete: isComplete),
+            const SizedBox(height: AuroraSpacing.space5),
 
+            // ── Info banner ────────────────────────────────────────────────
             _InfoBanner(utilityType: utilityType),
-            const SizedBox(height: AuroraSpacing.space9),
-
-            _SectionHeader(
-              icon: Icons.location_on_outlined,
-              label: 'Location',
-            ),
             const SizedBox(height: AuroraSpacing.space3),
-            _FormField(
-              controller: locationController,
-              label: 'Location Description',
-              hint: _locationHint,
-              isIOS: isIOS,
-              maxLines: 2,
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) {
-                  return 'Please describe where to find the shutoff';
-                }
-                return null;
-              },
+
+            // ── Location ───────────────────────────────────────────────────
+            AuroraFormSection(
+              title: 'Location',
+              children: [
+                AuroraTextField(
+                  label: 'Location Description',
+                  required: true,
+                  controller: locationController,
+                  hintText: _locationHint,
+                  maxLines: 3,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) {
+                      return 'Please describe where to find the shutoff';
+                    }
+                    return null;
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: AuroraSpacing.space9),
 
+            // ── Valve Details ──────────────────────────────────────────────
             if (_hasValve) ...[
-              _SectionHeader(
-                icon: Icons.settings_outlined,
-                label: 'Valve Details',
+              AuroraFormSection(
+                title: 'Valve Details',
+                isOptional: true,
+                children: [
+                  _EnumPickerField(
+                    label: 'Valve Type',
+                    value: valveType,
+                    options: _ValveTypes.all
+                        .map((v) => (value: v.value, label: v.label))
+                        .toList(),
+                    isIOS: isIOS,
+                    onChanged: onValveTypeChanged,
+                    context: context,
+                  ),
+                  _EnumPickerField(
+                    label: 'Turn Direction to Close',
+                    value: turnDirection,
+                    options: _TurnDirections.all
+                        .map((v) => (value: v.value, label: v.label))
+                        .toList(),
+                    isIOS: isIOS,
+                    onChanged: onTurnDirectionChanged,
+                    context: context,
+                  ),
+                ],
               ),
-              const SizedBox(height: AuroraSpacing.space3),
-              _EnumPickerField(
-                label: 'Valve Type',
-                value: valveType,
-                options: _ValveTypes.all
-                    .map((v) => (value: v.value, label: v.label))
-                    .toList(),
-                isIOS: isIOS,
-                onChanged: onValveTypeChanged,
-                context: context,
-              ),
-              const SizedBox(height: AuroraSpacing.space3),
-              _EnumPickerField(
-                label: 'Turn Direction to Close',
-                value: turnDirection,
-                options: _TurnDirections.all
-                    .map((v) => (value: v.value, label: v.label))
-                    .toList(),
-                isIOS: isIOS,
-                onChanged: onTurnDirectionChanged,
-                context: context,
-              ),
-              const SizedBox(height: AuroraSpacing.space9),
             ],
 
+            // ── Gas Company ────────────────────────────────────────────────
             if (_isGas) ...[
-              _SectionHeader(
-                icon: Icons.phone_outlined,
-                label: 'Gas Company',
+              AuroraFormSection(
+                title: 'Gas Company',
+                isOptional: true,
+                children: [
+                  AuroraTextField(
+                    label: 'Emergency Phone',
+                    controller: gasPhoneController,
+                    hintText: 'e.g. 1-800-555-0123',
+                    keyboardType: TextInputType.phone,
+                  ),
+                ],
               ),
-              const SizedBox(height: AuroraSpacing.space3),
-              _FormField(
-                controller: gasPhoneController,
-                label: 'Gas Company Emergency Phone',
-                hint: 'e.g. 1-800-555-0123',
-                isIOS: isIOS,
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: AuroraSpacing.space9),
             ],
 
+            // ── Electrical ─────────────────────────────────────────────────
             if (_isElectrical) ...[
-              _SectionHeader(
-                icon: Icons.electrical_services_outlined,
-                label: 'Main Breaker Panel',
+              AuroraFormSection(
+                title: 'Main Breaker Panel',
+                isOptional: true,
+                children: [
+                  AuroraTextField(
+                    label: 'Panel Location',
+                    controller: breakerLocationController,
+                    hintText: 'e.g. Basement utility room, north wall',
+                    maxLines: 2,
+                  ),
+                  AuroraTextField(
+                    label: 'Main Breaker Amperage',
+                    controller: breakerAmperageController,
+                    hintText: 'e.g. 200',
+                    keyboardType: TextInputType.number,
+                    validator: (v) {
+                      if (v != null && v.isNotEmpty && int.tryParse(v) == null) {
+                        return 'Enter a whole number (e.g. 200)';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
               ),
-              const SizedBox(height: AuroraSpacing.space3),
-              _FormField(
-                controller: breakerLocationController,
-                label: 'Panel Location',
-                hint: 'e.g. Basement utility room, north wall',
-                isIOS: isIOS,
-                maxLines: 2,
-              ),
-              const SizedBox(height: AuroraSpacing.space3),
-              _FormField(
-                controller: breakerAmperageController,
-                label: 'Main Breaker Amperage',
-                hint: 'e.g. 200',
-                isIOS: isIOS,
-                keyboardType: TextInputType.number,
-                validator: (v) {
-                  if (v != null && v.isNotEmpty && int.tryParse(v) == null) {
-                    return 'Enter a whole number (e.g. 200)';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: AuroraSpacing.space9),
+              const SizedBox(height: AuroraSpacing.space8),
               CircuitDirectoryEditor(
                 initialValue: circuitDirectory,
                 onChanged: onCircuitDirectoryChanged,
               ),
-              const SizedBox(height: AuroraSpacing.space9),
             ],
 
-            _SectionHeader(
-              icon: Icons.build_outlined,
-              label: 'Tools Required',
-            ),
-            const SizedBox(height: AuroraSpacing.space1),
-            Text(
-              'One tool per line.',
-              style: AuroraType.bodySm.copyWith(
-                color: AuroraColors.inkSecondary,
-              ),
-            ),
-            const SizedBox(height: AuroraSpacing.space3),
-            _FormField(
-              controller: toolsController,
-              label: 'Tools',
-              hint: 'e.g. Adjustable wrench\nFlashlight',
-              isIOS: isIOS,
-              maxLines: 4,
-            ),
-            const SizedBox(height: AuroraSpacing.space9),
-
-            _SectionHeader(
-              icon: Icons.info_outline,
-              label: 'Special Instructions',
-            ),
-            const SizedBox(height: AuroraSpacing.space3),
-            _FormField(
-              controller: instructionsController,
-              label: 'Instructions',
-              hint: 'Any notes for yourself or emergency responders',
-              isIOS: isIOS,
-              maxLines: 4,
+            // ── Tools Required ─────────────────────────────────────────────
+            AuroraFormSection(
+              title: 'Tools Required',
+              isOptional: true,
+              children: [
+                AuroraTextField(
+                  label: 'Tools',
+                  controller: toolsController,
+                  hintText: 'e.g. Adjustable wrench\nFlashlight',
+                  helperText: 'One tool per line',
+                  maxLines: 4,
+                ),
+              ],
             ),
 
-            if (showSaveButton) ...[
-              const SizedBox(height: AuroraSpacing.space10),
-              _SaveButton(saving: saving, onSave: onSave),
-            ],
+            // ── Special Instructions ───────────────────────────────────────
+            AuroraFormSection(
+              title: 'Special Instructions',
+              isOptional: true,
+              children: [
+                AuroraTextField(
+                  label: 'Instructions',
+                  controller: instructionsController,
+                  hintText: 'Any notes for yourself or emergency responders',
+                  maxLines: 4,
+                ),
+              ],
+            ),
+
+            const SizedBox(height: AuroraSpacing.space10),
+
+            // ── Save CTA ───────────────────────────────────────────────────
+            SaveButton(
+              label: 'Save Shutoff Info',
+              onPressed: saving ? null : onSave,
+              loading: saving,
+              expand: true,
+            ),
 
             const SizedBox(height: AuroraSpacing.space10),
           ],
@@ -673,28 +653,37 @@ class _FormBody extends StatelessWidget {
       };
 }
 
-// ── Section header ────────────────────────────────────────────────────────────
+// ── Status pill ───────────────────────────────────────────────────────────────
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.icon, required this.label});
-  final IconData icon;
-  final String label;
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.isComplete});
+  final bool isComplete;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: AuroraColors.ink),
-        const SizedBox(width: AuroraSpacing.space1),
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: AuroraColors.ink,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: isComplete ? AuroraColors.limeDim : AuroraColors.coralDim,
+        borderRadius: AuroraRadius.full,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isComplete ? Icons.check_circle_outline : Icons.radio_button_unchecked,
+            size: 13,
+            color: isComplete ? AuroraColors.limeDeep : AuroraColors.coral,
           ),
-        ),
-      ],
+          const SizedBox(width: 5),
+          Text(
+            isComplete ? 'COMPLETE' : 'INCOMPLETE',
+            style: AuroraType.labelSm.copyWith(
+              color: isComplete ? AuroraColors.limeDeep : AuroraColors.coral,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -708,11 +697,11 @@ class _InfoBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AuroraSpacing.space6),
+      padding: const EdgeInsets.all(AuroraSpacing.space5),
       decoration: BoxDecoration(
         color: AuroraColors.cobaltDim,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AuroraColors.cobalt.withValues(alpha: 0.3)),
+        borderRadius: AuroraRadius.md,
+        border: Border.all(color: AuroraColors.cobalt.withValues(alpha: 0.25)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -722,7 +711,7 @@ class _InfoBanner extends StatelessWidget {
           Expanded(
             child: Text(
               _tip,
-              style: AuroraType.bodySm.copyWith(color: AuroraColors.cobalt),
+              style: AuroraType.bodySm.copyWith(color: AuroraColors.cobaltDeep),
             ),
           ),
         ],
@@ -737,168 +726,9 @@ class _InfoBanner extends StatelessWidget {
           'If you smell gas, do NOT use any switches or electronics. Leave immediately and call your gas company from outside.',
         'electrical' =>
           'Turning off the main breaker cuts power to the entire home. Individual circuit breakers control specific areas.',
-        _ => 'Keep this information updated so you are prepared in an emergency.',
+        _ =>
+          'Keep this information updated so you are prepared in an emergency.',
       };
-}
-
-// ── Adaptive form field ───────────────────────────────────────────────────────
-
-class _FormField extends StatelessWidget {
-  const _FormField({
-    required this.controller,
-    required this.label,
-    required this.hint,
-    required this.isIOS,
-    this.maxLines = 1,
-    this.keyboardType = TextInputType.text,
-    this.validator,
-  });
-
-  final TextEditingController controller;
-  final String label;
-  final String hint;
-  final bool isIOS;
-  final int maxLines;
-  final TextInputType keyboardType;
-  final FormFieldValidator<String>? validator;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: AuroraSpacing.space1),
-        if (isIOS)
-          _IOSFormField(
-            controller: controller,
-            hint: hint,
-            maxLines: maxLines,
-            keyboardType: keyboardType,
-            validator: validator,
-          )
-        else
-          _AndroidFormField(
-            controller: controller,
-            hint: hint,
-            maxLines: maxLines,
-            keyboardType: keyboardType,
-            validator: validator,
-          ),
-      ],
-    );
-  }
-}
-
-class _IOSFormField extends StatelessWidget {
-  const _IOSFormField({
-    required this.controller,
-    required this.hint,
-    required this.maxLines,
-    required this.keyboardType,
-    required this.validator,
-  });
-
-  final TextEditingController controller;
-  final String hint;
-  final int maxLines;
-  final TextInputType keyboardType;
-  final FormFieldValidator<String>? validator;
-
-  @override
-  Widget build(BuildContext context) {
-    return FormField<String>(
-      initialValue: controller.text,
-      validator: validator,
-      builder: (field) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CupertinoTextField(
-            controller: controller,
-            placeholder: hint,
-            maxLines: maxLines,
-            keyboardType: keyboardType,
-            onChanged: (v) => field.didChange(v),
-            padding: const EdgeInsets.all(AuroraSpacing.space3),
-            style: AuroraType.body,
-            placeholderStyle:
-                AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
-            decoration: BoxDecoration(
-              color: AuroraColors.paper,
-              border: Border.all(
-                color: field.hasError ? AuroraColors.coral : AuroraColors.inkBorder,
-              ),
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          if (field.hasError) ...[
-            const SizedBox(height: AuroraSpacing.space1),
-            Text(
-              field.errorText!,
-              style: AuroraType.bodySm.copyWith(color: AuroraColors.coral),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _AndroidFormField extends StatelessWidget {
-  const _AndroidFormField({
-    required this.controller,
-    required this.hint,
-    required this.maxLines,
-    required this.keyboardType,
-    required this.validator,
-  });
-
-  final TextEditingController controller;
-  final String hint;
-  final int maxLines;
-  final TextInputType keyboardType;
-  final FormFieldValidator<String>? validator;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      maxLines: maxLines,
-      keyboardType: keyboardType,
-      validator: validator,
-      style: AuroraType.body,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
-        contentPadding: const EdgeInsets.all(AuroraSpacing.space6),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AuroraColors.inkBorder),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AuroraColors.inkBorder),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AuroraColors.ink, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AuroraColors.coral),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AuroraColors.coral, width: 1.5),
-        ),
-        filled: true,
-        fillColor: AuroraColors.paper,
-      ),
-    );
-  }
 }
 
 // ── Enum picker field ─────────────────────────────────────────────────────────
@@ -929,54 +759,57 @@ class _EnumPickerField extends StatelessWidget {
 
   @override
   Widget build(BuildContext outerContext) {
+    if (isIOS) {
+      return AuroraSelectField(
+        label: label,
+        value: value != null ? _displayLabel : null,
+        placeholder: 'Select...',
+        onTap: () => _showIOSPicker(outerContext),
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          label,
-          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+          label.toUpperCase(),
+          style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
         ),
         const SizedBox(height: AuroraSpacing.space1),
-        if (isIOS)
-          _IOSPickerTile(
-            displayLabel: _displayLabel,
-            hasValue: value != null,
-            onTap: () => _showIOSPicker(outerContext),
-          )
-        else
-          DropdownButtonFormField<String>(
-            initialValue: value,
-            items: options
-                .map(
-                  (o) => DropdownMenuItem(
-                    value: o.value,
-                    child: Text(o.label, style: AuroraType.body),
-                  ),
-                )
-                .toList(),
-            onChanged: onChanged,
-            style: AuroraType.body,
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: AuroraSpacing.space7,
-                vertical: 14,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AuroraColors.inkBorder),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AuroraColors.inkBorder),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AuroraColors.ink, width: 1.5),
-              ),
-              filled: true,
-              fillColor: AuroraColors.paper,
+        DropdownButtonFormField<String>(
+          initialValue: value,
+          items: options
+              .map(
+                (o) => DropdownMenuItem(
+                  value: o.value,
+                  child: Text(o.label, style: AuroraType.body),
+                ),
+              )
+              .toList(),
+          onChanged: onChanged,
+          style: AuroraType.body,
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AuroraSpacing.space7,
+              vertical: 14,
             ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AuroraColors.inkBorder),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide:
+                  const BorderSide(color: AuroraColors.inkBorder, width: 1.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
+            ),
+            filled: true,
+            fillColor: AuroraColors.paper,
           ),
+        ),
       ],
     );
   }
@@ -1001,92 +834,6 @@ class _EnumPickerField extends StatelessWidget {
           onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(),
           child: const Text('Cancel'),
         ),
-      ),
-    );
-  }
-}
-
-class _IOSPickerTile extends StatelessWidget {
-  const _IOSPickerTile({
-    required this.displayLabel,
-    required this.hasValue,
-    required this.onTap,
-  });
-
-  final String displayLabel;
-  final bool hasValue;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 50,
-        padding: const EdgeInsets.symmetric(horizontal: AuroraSpacing.space7),
-        decoration: BoxDecoration(
-          color: AuroraColors.paper,
-          border: Border.all(color: AuroraColors.inkBorder),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              displayLabel,
-              style: AuroraType.body.copyWith(
-                color: hasValue ? AuroraColors.ink : AuroraColors.inkTertiary,
-              ),
-            ),
-            const Icon(
-              CupertinoIcons.chevron_down,
-              size: 16,
-              color: AuroraColors.inkSecondary,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Save button (Android only) ────────────────────────────────────────────────
-
-class _SaveButton extends StatelessWidget {
-  const _SaveButton({required this.saving, required this.onSave});
-  final bool saving;
-  final VoidCallback onSave;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 48,
-      child: FilledButton(
-        onPressed: saving ? null : onSave,
-        style: FilledButton.styleFrom(
-          backgroundColor: AuroraColors.ink,
-          disabledBackgroundColor: AuroraColors.ink.withValues(alpha: 0.5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        child: saving
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
-            : Text(
-                'Save',
-                style: AuroraType.bodyLg.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
       ),
     );
   }

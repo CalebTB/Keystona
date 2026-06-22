@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 import '../../../services/supabase_service.dart';
 import '../../home_profile/providers/home_profile_provider.dart';
 
@@ -46,71 +48,92 @@ class SettingsProfileScreen extends ConsumerWidget {
           SliverSafeArea(
             sliver: SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(AuroraSpacing.screenPadH)
-                    .copyWith(top: AuroraSpacing.space7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AuroraSpacing.screenPadH,
+                ).copyWith(
+                  top: AuroraSpacing.space7,
+                  bottom: AuroraSpacing.space10,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _SectionLabel('ACCOUNT'),
+                    // ── Account section (form eyebrow: cobalt dot) ────────
+                    _FormSectionHeader(label: 'ACCOUNT'),
                     const SizedBox(height: AuroraSpacing.space3),
                     _InfoGroup(rows: [
                       _InfoRow(
-                          label: 'Name',
-                          value: fullName.isEmpty ? '—' : fullName),
+                        label: 'Name',
+                        value: fullName.isEmpty ? '—' : fullName,
+                      ),
                       _InfoRow(
-                          label: 'Email',
-                          value: email.isEmpty ? '—' : email),
+                        label: 'Email',
+                        value: email.isEmpty ? '—' : email,
+                      ),
                     ]),
 
                     const SizedBox(height: AuroraSpacing.space10),
 
-                    _SectionLabel('HOME'),
+                    // ── Home section ──────────────────────────────────────
+                    _FormSectionHeader(label: 'HOME'),
                     const SizedBox(height: AuroraSpacing.space3),
                     _InfoGroup(rows: [
                       _InfoRow(
-                          label: 'Address',
-                          value: property?.addressLine1 ?? '—'),
-                      _InfoRow(label: 'City', value: property?.city ?? '—'),
-                      _InfoRow(label: 'State', value: property?.state ?? '—'),
+                        label: 'Address',
+                        value: property?.addressLine1 ?? '—',
+                      ),
                       _InfoRow(
-                          label: 'ZIP', value: property?.zipCode ?? '—'),
+                        label: 'City',
+                        value: property?.city ?? '—',
+                      ),
                       _InfoRow(
-                          label: 'Type',
-                          value: property?.propertyType ?? '—'),
+                        label: 'State',
+                        value: property?.state ?? '—',
+                      ),
                       _InfoRow(
-                          label: 'Year built',
-                          value: property?.yearBuilt?.toString() ?? '—'),
+                        label: 'ZIP',
+                        value: property?.zipCode ?? '—',
+                      ),
                       _InfoRow(
-                          label: 'Sq ft',
-                          value: property?.squareFeet?.toString() ?? '—'),
+                        label: 'Type',
+                        value: property?.propertyType ?? '—',
+                      ),
                       _InfoRow(
-                          label: 'Climate zone',
-                          value: property?.climateZone != null
-                              ? 'Zone ${property!.climateZone}'
-                              : '—'),
+                        label: 'Year built',
+                        value: property?.yearBuilt?.toString() ?? '—',
+                      ),
+                      _InfoRow(
+                        label: 'Sq ft',
+                        value: property?.squareFeet?.toString() ?? '—',
+                      ),
+                      _InfoRow(
+                        label: 'Climate zone',
+                        value: property?.climateZone != null
+                            ? 'Zone ${property!.climateZone}'
+                            : '—',
+                      ),
                     ]),
 
                     const SizedBox(height: AuroraSpacing.space10),
 
-                    GestureDetector(
-                      onTap: () => context.push(AppRoutes.homeEdit),
-                      child: Container(
-                        width: double.infinity,
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 14),
-                        decoration: BoxDecoration(
-                          color: AuroraColors.ink,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Text(
-                          'Edit home details',
-                          textAlign: TextAlign.center,
-                          style: AuroraType.body.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                    // ── CTA row: cancel + save (cobalt) ───────────────────
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SecondaryButton(
+                            label: 'Cancel',
+                            onPressed: () => context.pop(),
+                            expand: true,
                           ),
                         ),
-                      ),
+                        const SizedBox(width: AuroraSpacing.space5),
+                        Expanded(
+                          child: SaveButton(
+                            label: 'Edit home',
+                            onPressed: () => context.push(AppRoutes.homeEdit),
+                            expand: true,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -123,27 +146,49 @@ class SettingsProfileScreen extends ConsumerWidget {
   }
 }
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.label);
+// ── Form section header — cobalt dot eyebrow ──────────────────────────────────
+
+class _FormSectionHeader extends StatelessWidget {
+  const _FormSectionHeader({required this.label});
+
   final String label;
 
   @override
   Widget build(BuildContext context) {
-    return Text(label, style: AuroraType.label);
+    return Row(
+      children: [
+        Container(
+          width: 7,
+          height: 7,
+          decoration: const BoxDecoration(
+            color: AuroraColors.cobalt,
+            borderRadius: AuroraRadius.xs,
+          ),
+        ),
+        const SizedBox(width: AuroraSpacing.space2),
+        Text(
+          label.toUpperCase(),
+          style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
+        ),
+      ],
+    );
   }
 }
 
+// ── Info group card ───────────────────────────────────────────────────────────
+
 class _InfoGroup extends StatelessWidget {
   const _InfoGroup({required this.rows});
+
   final List<Widget> rows;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
+        color: AuroraColors.butter,
+        borderRadius: AuroraRadius.lg,
+        border: Border.all(color: AuroraColors.inkBorder),
       ),
       child: Column(
         children: [
@@ -151,8 +196,11 @@ class _InfoGroup extends StatelessWidget {
             rows[i],
             if (i < rows.length - 1)
               const Divider(
-                  height: 1, thickness: 1, color: AuroraColors.butter,
-                  indent: 16),
+                height: 1,
+                thickness: 1,
+                color: AuroraColors.inkBorder,
+                indent: AuroraSpacing.screenPadH,
+              ),
           ],
         ],
       ),
@@ -160,19 +208,27 @@ class _InfoGroup extends StatelessWidget {
   }
 }
 
+// ── Info row ──────────────────────────────────────────────────────────────────
+
 class _InfoRow extends StatelessWidget {
   const _InfoRow({required this.label, required this.value});
+
   final String label;
   final String value;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AuroraSpacing.screenPadH,
+        vertical: AuroraSpacing.space3,
+      ),
       child: Row(
         children: [
-          Text(label,
-              style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary)),
+          Text(
+            label.toUpperCase(),
+            style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
+          ),
           const Spacer(),
           Text(value, style: AuroraType.body),
         ],

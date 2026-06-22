@@ -12,8 +12,10 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 import '../../../core/widgets/confirm_dialog.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/snackbar_service.dart';
@@ -223,7 +225,7 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
       SnackBar(
         content: Text(
           'Document moved to trash.',
-          style: AuroraType.body.copyWith(color: Colors.white),
+          style: AuroraType.body.copyWith(color: AuroraColors.paper),
         ),
         backgroundColor: AuroraColors.ink,
         duration: const Duration(seconds: 5),
@@ -457,7 +459,7 @@ class _PreviewCardState extends State<_PreviewCard> {
         height: 220,
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AuroraRadius.xl,
           border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
           boxShadow: [
             BoxShadow(
@@ -468,7 +470,7 @@ class _PreviewCardState extends State<_PreviewCard> {
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(14.5),
+          borderRadius: AuroraRadius.xl,
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -495,7 +497,7 @@ class _PreviewCardState extends State<_PreviewCard> {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withValues(alpha: 0.35),
+                          AuroraColors.ink.withValues(alpha: 0.35),
                         ],
                       ),
                     ),
@@ -512,7 +514,7 @@ class _PreviewCardState extends State<_PreviewCard> {
                       : 'Tap to preview',
                   style: AuroraType.labelSm.copyWith(
                     color: _thumbnailUrl != null
-                        ? Colors.white.withValues(alpha: 0.85)
+                        ? AuroraColors.paper.withValues(alpha: 0.85)
                         : AuroraColors.inkTertiary,
                   ),
                 ),
@@ -527,15 +529,15 @@ class _PreviewCardState extends State<_PreviewCard> {
                   height: 32,
                   decoration: BoxDecoration(
                     color: _thumbnailUrl != null
-                        ? Colors.black.withValues(alpha: 0.35)
+                        ? AuroraColors.ink.withValues(alpha: 0.35)
                         : AuroraColors.ink.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AuroraRadius.sm,
                   ),
                   child: Icon(
                     Icons.open_in_full_rounded,
                     size: 16,
                     color: _thumbnailUrl != null
-                        ? Colors.white
+                        ? AuroraColors.paper
                         : AuroraColors.inkSecondary,
                   ),
                 ),
@@ -571,7 +573,7 @@ class _PreviewCardState extends State<_PreviewCard> {
                 height: 80,
                 decoration: BoxDecoration(
                   color: dimColor,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AuroraRadius.sm,
                   border: Border.all(color: borderColor, width: 1.5),
                 ),
                 child: Column(
@@ -762,7 +764,7 @@ class _TitleBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: AuroraRadius.xs,
         border: border,
       ),
       child: child,
@@ -797,7 +799,7 @@ class _ExpiryCountdownCard extends StatelessWidget {
           color: AuroraColors.coral.withValues(alpha: 0.12),
           width: 1.5,
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AuroraRadius.lg,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -834,7 +836,7 @@ class _ExpiryCountdownCard extends StatelessWidget {
                   margin: EdgeInsets.only(right: i < 3 ? 3 : 0),
                   height: 4,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: AuroraRadius.xs,
                     gradient: isCurrent
                         ? LinearGradient(colors: [
                             AuroraColors.coral,
@@ -924,33 +926,43 @@ class _InfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: AuroraColors.ink.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
+        borderRadius: AuroraRadius.lg,
+        border: Border.fromBorderSide(
+          BorderSide(color: AuroraColors.inkBorder, width: 1),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-            decoration: const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: AuroraColors.butter),
+            decoration: BoxDecoration(
+              color: AuroraColors.butter,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(13),
+                topRight: Radius.circular(13),
               ),
             ),
             child: Row(
               children: [
-                Icon(icon, size: 15, color: AuroraColors.inkTertiary),
-                const SizedBox(width: 8),
-                Text(label, style: AuroraType.label),
+                // Small cobalt dot for info card section headers.
+                Container(
+                  width: 6,
+                  height: 6,
+                  margin: const EdgeInsets.only(right: 6),
+                  decoration: const BoxDecoration(
+                    color: AuroraColors.inkSecondary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                Text(
+                  label.toUpperCase(),
+                  style: AuroraType.label.copyWith(
+                    color: AuroraColors.inkSecondary,
+                  ),
+                ),
                 if (trailing != null) ...[
                   const Spacer(),
                   trailing!,
@@ -1023,83 +1035,30 @@ class _DetailsGrid extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final itemWidth = (constraints.maxWidth - 20) / 2;
-          final items = <Widget>[];
+      child: AuroraTile(
+        padding: const EdgeInsets.all(AuroraSpacing.space5),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final itemWidth = (constraints.maxWidth - 20) / 2;
+            final items = <Widget>[];
 
-          if (hasMetadata) {
-            // Type-specific fields from the metadata JSONB column.
-            for (final entry in document.metadata.entries) {
-              final value = entry.value;
-              if (value == null || value.toString().isEmpty) continue;
-              items.add(SizedBox(
-                width: itemWidth,
-                child: _InfoItem(
-                  label: _formatKey(entry.key),
-                  value: value.toString(),
-                  mono: _isMono(value),
-                  valueColor: _valueColor(entry.key, value),
-                ),
-              ));
-            }
-            if (document.expirationDate != null) {
-              items.add(SizedBox(
-                width: itemWidth,
-                child: _InfoItem(
-                  label: 'Expiration',
-                  value: DateFormat('MMM d, yyyy')
-                      .format(document.expirationDate!),
-                  valueColor: AuroraColors.coral,
-                ),
-              ));
-            }
-          } else {
-            // Generic fallback when no type-specific metadata is set.
-            final uploadedDate =
-                DateFormat('MMM d, yyyy').format(document.createdAt);
-            final updatedDate =
-                DateFormat('MMM d, yyyy').format(document.updatedAt);
-            items.addAll([
-              SizedBox(
-                width: itemWidth,
-                child: _InfoItem(
-                    label: 'Category',
-                    value: document.category?.name ?? '—'),
-              ),
-              SizedBox(
-                width: itemWidth,
-                child: _InfoItem(
-                    label: 'Type', value: document.type?.name ?? '—'),
-              ),
-              SizedBox(
-                width: itemWidth,
-                child: _InfoItem(label: 'Uploaded', value: uploadedDate),
-              ),
-              SizedBox(
-                width: itemWidth,
-                child: _InfoItem(label: 'Updated', value: updatedDate),
-              ),
-              if (document.fileSizeBytes != null)
-                SizedBox(
+            if (hasMetadata) {
+              // Type-specific fields from the metadata JSONB column.
+              for (final entry in document.metadata.entries) {
+                final value = entry.value;
+                if (value == null || value.toString().isEmpty) continue;
+                items.add(SizedBox(
                   width: itemWidth,
                   child: _InfoItem(
-                    label: 'Size',
-                    value: _formatFileSize(document.fileSizeBytes!),
-                    mono: true,
+                    label: _formatKey(entry.key),
+                    value: value.toString(),
+                    mono: _isMono(value),
+                    valueColor: _valueColor(entry.key, value),
                   ),
-                ),
-              if (document.pageCount != null)
-                SizedBox(
-                  width: itemWidth,
-                  child: _InfoItem(
-                    label: 'Pages',
-                    value: '${document.pageCount}',
-                    mono: true,
-                  ),
-                ),
-              if (document.expirationDate != null)
-                SizedBox(
+                ));
+              }
+              if (document.expirationDate != null) {
+                items.add(SizedBox(
                   width: itemWidth,
                   child: _InfoItem(
                     label: 'Expiration',
@@ -1107,12 +1066,68 @@ class _DetailsGrid extends StatelessWidget {
                         .format(document.expirationDate!),
                     valueColor: AuroraColors.coral,
                   ),
+                ));
+              }
+            } else {
+              // Generic fallback when no type-specific metadata is set.
+              final uploadedDate =
+                  DateFormat('MMM d, yyyy').format(document.createdAt);
+              final updatedDate =
+                  DateFormat('MMM d, yyyy').format(document.updatedAt);
+              items.addAll([
+                SizedBox(
+                  width: itemWidth,
+                  child: _InfoItem(
+                      label: 'Category',
+                      value: document.category?.name ?? '—'),
                 ),
-            ]);
-          }
+                SizedBox(
+                  width: itemWidth,
+                  child: _InfoItem(
+                      label: 'Type', value: document.type?.name ?? '—'),
+                ),
+                SizedBox(
+                  width: itemWidth,
+                  child: _InfoItem(label: 'Uploaded', value: uploadedDate),
+                ),
+                SizedBox(
+                  width: itemWidth,
+                  child: _InfoItem(label: 'Updated', value: updatedDate),
+                ),
+                if (document.fileSizeBytes != null)
+                  SizedBox(
+                    width: itemWidth,
+                    child: _InfoItem(
+                      label: 'Size',
+                      value: _formatFileSize(document.fileSizeBytes!),
+                      mono: true,
+                    ),
+                  ),
+                if (document.pageCount != null)
+                  SizedBox(
+                    width: itemWidth,
+                    child: _InfoItem(
+                      label: 'Pages',
+                      value: '${document.pageCount}',
+                      mono: true,
+                    ),
+                  ),
+                if (document.expirationDate != null)
+                  SizedBox(
+                    width: itemWidth,
+                    child: _InfoItem(
+                      label: 'Expiration',
+                      value: DateFormat('MMM d, yyyy')
+                          .format(document.expirationDate!),
+                      valueColor: AuroraColors.coral,
+                    ),
+                  ),
+              ]);
+            }
 
-          return Wrap(spacing: 20, runSpacing: 14, children: items);
-        },
+            return Wrap(spacing: 20, runSpacing: 14, children: items);
+          },
+        ),
       ),
     );
   }
@@ -1279,7 +1294,7 @@ class _LinkedItemRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(13),
+      borderRadius: AuroraRadius.lg,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
@@ -1289,7 +1304,7 @@ class _LinkedItemRow extends StatelessWidget {
               height: 34,
               decoration: BoxDecoration(
                 color: iconBg,
-                borderRadius: BorderRadius.circular(9),
+                borderRadius: AuroraRadius.md,
               ),
               child: Icon(icon, size: 16, color: iconColor),
             ),
@@ -1536,7 +1551,7 @@ class _FileMeta extends StatelessWidget {
               if (prefix != null) TextSpan(text: prefix),
               TextSpan(
                 text: value,
-                style: TextStyle(
+                style: AuroraType.bodySm.copyWith(
                   color: valueColor ?? AuroraColors.inkSecondary,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1634,7 +1649,7 @@ class _BarButton extends StatelessWidget {
     final fg = isDisabled
         ? AuroraColors.inkTertiary
         : switch (style) {
-            _BarButtonStyle.primary => Colors.white,
+            _BarButtonStyle.primary => AuroraColors.paper,
             _BarButtonStyle.secondary => AuroraColors.inkSecondary,
             _BarButtonStyle.danger => AuroraColors.coral,
           };
@@ -1646,7 +1661,7 @@ class _BarButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AuroraRadius.md,
           border: style == _BarButtonStyle.secondary
               ? Border.all(color: AuroraColors.inkBorder, width: 1.5)
               : null,

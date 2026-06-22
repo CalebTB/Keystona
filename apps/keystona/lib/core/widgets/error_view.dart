@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../theme/aurora_colors.dart';
-import '../theme/aurora_radius.dart';
+import '../theme/aurora_spacing.dart';
 import '../theme/aurora_typography.dart';
+import 'aurora/aurora_button.dart';
 
 /// Full-screen error state displayed when an async operation fails.
 ///
 /// Always includes a retry mechanism so users are never left stuck.
 /// Use this as the `error` branch of every `AsyncValue.when()` call.
+///
+/// Aurora spec: 48px inkTertiary icon, body inkSecondary text,
+/// GhostButton retry (coral text).
 class ErrorView extends StatelessWidget {
   const ErrorView({
     super.key,
@@ -30,16 +34,16 @@ class ErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AuroraSpacing.space9),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(
-              Icons.error_outline,
+              Icons.error_outline_rounded,
               size: 48,
-              color: AuroraColors.coral,
+              color: AuroraColors.inkTertiary,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AuroraSpacing.space7),
             Text(
               message,
               style: AuroraType.body.copyWith(
@@ -48,22 +52,10 @@ class ErrorView extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
-              const SizedBox(height: 24),
-              FilledButton(
+              const SizedBox(height: AuroraSpacing.space7),
+              GhostButton(
+                label: retryLabel,
                 onPressed: onRetry,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AuroraColors.coral,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: AuroraRadius.sm,
-                  ),
-                ),
-                child: Text(
-                  retryLabel,
-                  style: AuroraType.bodyLg.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
               ),
             ],
           ],

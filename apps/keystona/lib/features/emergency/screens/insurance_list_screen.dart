@@ -7,6 +7,7 @@ import '../../../core/router/app_router.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 import '../../../core/widgets/error_view.dart';
 import '../models/insurance_policy.dart';
 import '../providers/emergency_hub_provider.dart';
@@ -32,22 +33,33 @@ class _IOSLayout extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return CupertinoPageScaffold(
-      child: CustomScrollView(
-        slivers: [
-          CupertinoSliverNavigationBar(
-            largeTitle: const Text('Insurance'),
-            trailing: CupertinoButton(
-              padding: EdgeInsets.zero,
-              onPressed: () => context.push(AppRoutes.emergencyInsuranceAdd),
-              child: const Icon(CupertinoIcons.add),
+      backgroundColor: AuroraColors.paper,
+      child: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
+              CupertinoSliverNavigationBar(
+                largeTitle: const Text('Insurance'),
+                backgroundColor: AuroraColors.paper,
+              ),
+              CupertinoSliverRefreshControl(
+                onRefresh: () =>
+                    ref.read(emergencyHubProvider.notifier).refresh(),
+              ),
+              const _ContentSliver(),
+              const SliverToBoxAdapter(child: SizedBox(height: 88)),
+            ],
+          ),
+          Positioned(
+            right: AuroraSpacing.space9,
+            bottom: AuroraSpacing.space10,
+            child: AuroraFAB(
+              icon: Icons.add,
+              onPressed: () =>
+                  context.push(AppRoutes.emergencyInsuranceAdd),
+              tooltip: 'Add Policy',
             ),
           ),
-          CupertinoSliverRefreshControl(
-            onRefresh: () => ref.read(emergencyHubProvider.notifier).refresh(),
-          ),
-          const _ContentSliver(),
-          const SliverToBoxAdapter(
-              child: SizedBox(height: AuroraSpacing.space10)),
         ],
       ),
     );
@@ -63,13 +75,13 @@ class _AndroidLayout extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: AuroraColors.paper,
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AuroraColors.ink,
+      floatingActionButton: AuroraFAB(
+        icon: Icons.add,
         onPressed: () => context.push(AppRoutes.emergencyInsuranceAdd),
-        child: const Icon(Icons.add, color: Colors.white),
+        tooltip: 'Add Policy',
       ),
       body: RefreshIndicator(
-        color: AuroraColors.ink,
+        color: AuroraColors.coral,
         onRefresh: () => ref.read(emergencyHubProvider.notifier).refresh(),
         child: CustomScrollView(
           slivers: [
@@ -117,7 +129,8 @@ class _ContentSliver extends ConsumerWidget {
           return SliverFillRemaining(
             hasScrollBody: false,
             child: InsuranceEmptyState(
-              onAddPolicy: () => context.push(AppRoutes.emergencyInsuranceAdd),
+              onAddPolicy: () =>
+                  context.push(AppRoutes.emergencyInsuranceAdd),
             ),
           );
         }

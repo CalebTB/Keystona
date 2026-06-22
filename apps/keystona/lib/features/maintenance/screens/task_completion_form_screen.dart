@@ -11,6 +11,8 @@ import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../documents/providers/documents_provider.dart';
 import '../providers/task_detail_provider.dart';
 
@@ -85,7 +87,7 @@ class _TaskCompletionFormScreenState
         context: context,
         builder: (_) => Container(
           height: 280,
-          color: CupertinoColors.systemBackground.resolveFrom(context),
+          color: AuroraColors.paper,
           child: CupertinoDatePicker(
             mode: CupertinoDatePickerMode.date,
             initialDateTime: _completedDate,
@@ -204,43 +206,40 @@ class _TaskCompletionFormScreenState
 
   Widget _buildIOS(BuildContext context) {
     return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
+      navigationBar: const CupertinoNavigationBar(
         previousPageTitle: 'Task',
-        middle: const Text('Complete Task'),
-        trailing: _isSaving
-            ? const CupertinoActivityIndicator()
-            : CupertinoButton(
-                padding: EdgeInsets.zero,
-                onPressed: _save,
-                child: const Text(
-                  'Save',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ),
+        middle: Text('Complete Task'),
       ),
       child: SafeArea(
         bottom: false,
-        child: Form(
-          key: _formKey,
-          child: _FormBody(
-            completedDate: _completedDate,
-            completedBy: _completedBy,
-            contractorNameController: _contractorNameController,
-            contractorCompanyController: _contractorCompanyController,
-            contractorPhoneController: _contractorPhoneController,
-            serviceCostController: _serviceCostController,
-            materialsCostController: _materialsCostController,
-            timeMinutesController: _timeMinutesController,
-            notesController: _notesController,
-            photos: _photos,
-            linkedDocumentIds: _linkedDocumentIds,
-            isIOS: true,
-            onPickDate: () => _pickDate(context),
-            onToggleCompletedBy: (v) => setState(() => _completedBy = v),
-            onPickPhotos: _pickPhotos,
-            onRemovePhoto: (i) => setState(() => _photos.removeAt(i)),
-            onLinkReceipts: () => _linkReceipts(context),
-          ),
+        child: Column(
+          children: [
+            Expanded(
+              child: Form(
+                key: _formKey,
+                child: _FormBody(
+                  completedDate: _completedDate,
+                  completedBy: _completedBy,
+                  contractorNameController: _contractorNameController,
+                  contractorCompanyController: _contractorCompanyController,
+                  contractorPhoneController: _contractorPhoneController,
+                  serviceCostController: _serviceCostController,
+                  materialsCostController: _materialsCostController,
+                  timeMinutesController: _timeMinutesController,
+                  notesController: _notesController,
+                  photos: _photos,
+                  linkedDocumentIds: _linkedDocumentIds,
+                  isIOS: true,
+                  onPickDate: () => _pickDate(context),
+                  onToggleCompletedBy: (v) => setState(() => _completedBy = v),
+                  onPickPhotos: _pickPhotos,
+                  onRemovePhoto: (i) => setState(() => _photos.removeAt(i)),
+                  onLinkReceipts: () => _linkReceipts(context),
+                ),
+              ),
+            ),
+            _CompletionBottomBar(saving: _isSaving, onSave: _save, onCancel: () => context.pop()),
+          ],
         ),
       ),
     );
@@ -254,52 +253,35 @@ class _TaskCompletionFormScreenState
         backgroundColor: AuroraColors.paper,
         elevation: 0,
         scrolledUnderElevation: 0,
-        actions: [
-          if (_isSaving)
-            const Padding(
-              padding: EdgeInsets.only(right: AuroraSpacing.space7),
-              child: Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            )
-          else
-            TextButton(
-              onPressed: _save,
-              child: Text(
-                'Save',
-                style: AuroraType.body.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AuroraColors.ink,
-                ),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: Form(
+              key: _formKey,
+              child: _FormBody(
+                completedDate: _completedDate,
+                completedBy: _completedBy,
+                contractorNameController: _contractorNameController,
+                contractorCompanyController: _contractorCompanyController,
+                contractorPhoneController: _contractorPhoneController,
+                serviceCostController: _serviceCostController,
+                materialsCostController: _materialsCostController,
+                timeMinutesController: _timeMinutesController,
+                notesController: _notesController,
+                photos: _photos,
+                linkedDocumentIds: _linkedDocumentIds,
+                isIOS: false,
+                onPickDate: () => _pickDate(context),
+                onToggleCompletedBy: (v) => setState(() => _completedBy = v),
+                onPickPhotos: _pickPhotos,
+                onRemovePhoto: (i) => setState(() => _photos.removeAt(i)),
+                onLinkReceipts: () => _linkReceipts(context),
               ),
             ),
+          ),
+          _CompletionBottomBar(saving: _isSaving, onSave: _save, onCancel: () => context.pop()),
         ],
-      ),
-      body: Form(
-        key: _formKey,
-        child: _FormBody(
-          completedDate: _completedDate,
-          completedBy: _completedBy,
-          contractorNameController: _contractorNameController,
-          contractorCompanyController: _contractorCompanyController,
-          contractorPhoneController: _contractorPhoneController,
-          serviceCostController: _serviceCostController,
-          materialsCostController: _materialsCostController,
-          timeMinutesController: _timeMinutesController,
-          notesController: _notesController,
-          photos: _photos,
-          linkedDocumentIds: _linkedDocumentIds,
-          isIOS: false,
-          onPickDate: () => _pickDate(context),
-          onToggleCompletedBy: (v) => setState(() => _completedBy = v),
-          onPickPhotos: _pickPhotos,
-          onRemovePhoto: (i) => setState(() => _photos.removeAt(i)),
-          onLinkReceipts: () => _linkReceipts(context),
-        ),
       ),
     );
   }
@@ -478,22 +460,10 @@ class _FormBody extends StatelessWidget {
           if (photos.isNotEmpty)
             _PhotoGrid(photos: photos, onRemove: onRemovePhoto),
           const SizedBox(height: AuroraSpacing.space3),
-          OutlinedButton.icon(
+          SecondaryButton(
+            label: photos.isEmpty ? 'Add Photos' : 'Add More Photos',
             onPressed: onPickPhotos,
-            icon: const Icon(Icons.add_a_photo_outlined, size: 18),
-            label: Text(
-              photos.isEmpty ? 'Add Photos' : 'Add More Photos',
-              style: AuroraType.bodySm,
-            ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AuroraColors.coral,
-              side: const BorderSide(color: AuroraColors.coral),
-              shape: RoundedRectangleBorder(borderRadius: AuroraRadius.md),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AuroraSpacing.space5,
-                vertical: AuroraSpacing.space3,
-              ),
-            ),
+            expand: true,
           ),
           const SizedBox(height: AuroraSpacing.space7),
           const _Divider(),
@@ -512,24 +482,12 @@ class _FormBody extends StatelessWidget {
                 ),
               ),
             ),
-          OutlinedButton.icon(
+          SecondaryButton(
+            label: linkedDocumentIds.isEmpty
+                ? 'Add Receipt'
+                : 'Change Linked Receipts',
             onPressed: onLinkReceipts,
-            icon: const Icon(Icons.attach_file_outlined, size: 18),
-            label: Text(
-              linkedDocumentIds.isEmpty
-                  ? 'Link from Document Vault'
-                  : 'Change Linked Receipts',
-              style: AuroraType.bodySm,
-            ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AuroraColors.coral,
-              side: const BorderSide(color: AuroraColors.coral),
-              shape: RoundedRectangleBorder(borderRadius: AuroraRadius.md),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AuroraSpacing.space5,
-                vertical: AuroraSpacing.space3,
-              ),
-            ),
+            expand: true,
           ),
         ],
       ),
@@ -612,7 +570,7 @@ class _PhotoThumbnail extends StatelessWidget {
                 color: AuroraColors.coral,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.close, size: 12, color: Colors.white),
+              child: const Icon(Icons.close, size: 12, color: AuroraColors.paper),
             ),
           ),
         ),
@@ -730,9 +688,9 @@ class _ReceiptPickerSheetState extends ConsumerState<_ReceiptPickerSheet> {
                   child: Container(
                     width: 36,
                     height: 4,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: AuroraColors.inkBorder,
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: AuroraRadius.xs,
                     ),
                   ),
                 ),
@@ -742,25 +700,14 @@ class _ReceiptPickerSheetState extends ConsumerState<_ReceiptPickerSheet> {
                     Expanded(
                       child: Text('Link Receipt', style: AuroraType.h3),
                     ),
-                    TextButton(
+                    SecondaryButton(
+                      label: 'Cancel',
                       onPressed: _cancel,
-                      child: Text(
-                        'Cancel',
-                        style: AuroraType.body.copyWith(
-                          color: AuroraColors.inkSecondary,
-                        ),
-                      ),
                     ),
                     const SizedBox(width: AuroraSpacing.space3),
-                    FilledButton(
+                    SaveButton(
+                      label: 'Done',
                       onPressed: _confirm,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AuroraColors.coral,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: AuroraRadius.md,
-                        ),
-                      ),
-                      child: const Text('Done'),
                     ),
                   ],
                 ),
@@ -773,7 +720,7 @@ class _ReceiptPickerSheetState extends ConsumerState<_ReceiptPickerSheet> {
           Expanded(
             child: docsAsync.when(
               loading: () =>
-                  const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  const Center(child: CupertinoActivityIndicator(color: AuroraColors.ink)),
               error: (_, _) => Center(
                 child: Text(
                   'Couldn\'t load documents.',
@@ -784,24 +731,11 @@ class _ReceiptPickerSheetState extends ConsumerState<_ReceiptPickerSheet> {
               ),
               data: (docs) {
                 if (docs.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.folder_outlined,
-                          size: 48,
-                          color: AuroraColors.inkTertiary,
-                        ),
-                        const SizedBox(height: AuroraSpacing.space3),
-                        Text(
-                          'No documents in your vault yet',
-                          style: AuroraType.body.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AuroraColors.inkSecondary,
-                          ),
-                        ),
-                      ],
+                  return const Center(
+                    child: EmptyState(
+                      icon: CupertinoIcons.folder,
+                      title: 'No documents yet',
+                      subtitle: 'Upload documents to your vault to link them as receipts.',
                     ),
                   );
                 }
@@ -862,12 +796,24 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text.toUpperCase(),
-      style: AuroraType.labelSm.copyWith(
-        color: AuroraColors.inkSecondary,
-        letterSpacing: 0.8,
-      ),
+    return Row(
+      children: [
+        Container(
+          width: 7,
+          height: 7,
+          decoration: const BoxDecoration(
+            color: AuroraColors.cobalt,
+            borderRadius: AuroraRadius.xs,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          text.toUpperCase(),
+          style: AuroraType.label.copyWith(
+            color: AuroraColors.inkSecondary,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -963,7 +909,7 @@ class _SegmentedToggle extends StatelessWidget {
                   style: AuroraType.body.copyWith(
                     fontWeight: FontWeight.w600,
                     color: isSelected
-                        ? Colors.white
+                        ? AuroraColors.paper
                         : AuroraColors.ink,
                   ),
                 ),
@@ -1022,7 +968,7 @@ class _FormField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AuroraRadius.md,
-          borderSide: const BorderSide(color: AuroraColors.ink),
+          borderSide: const BorderSide(color: AuroraColors.coral, width: 2.0),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: AuroraRadius.md,
@@ -1038,6 +984,61 @@ class _FormField extends StatelessWidget {
           horizontal: AuroraSpacing.space5,
           vertical: AuroraSpacing.space3,
         ),
+      ),
+    );
+  }
+}
+
+// ── Completion form bottom action bar ─────────────────────────────────────────
+
+/// Sticky bottom bar with SaveButton (cobalt) and SecondaryButton (cancel).
+class _CompletionBottomBar extends StatelessWidget {
+  const _CompletionBottomBar({
+    required this.saving,
+    required this.onSave,
+    required this.onCancel,
+  });
+
+  final bool saving;
+  final VoidCallback onSave;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.space4,
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.space4 + bottomPad,
+      ),
+      decoration: BoxDecoration(
+        color: AuroraColors.paper,
+        border: Border(
+          top: BorderSide(color: AuroraColors.inkBorder),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: SecondaryButton(
+              label: 'Cancel',
+              expand: true,
+              onPressed: saving ? null : onCancel,
+            ),
+          ),
+          const SizedBox(width: AuroraSpacing.space3),
+          Expanded(
+            flex: 2,
+            child: SaveButton(
+              label: 'Save Completion',
+              loading: saving,
+              expand: true,
+              onPressed: saving ? null : onSave,
+            ),
+          ),
+        ],
       ),
     );
   }

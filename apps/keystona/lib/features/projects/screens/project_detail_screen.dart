@@ -6,8 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 
 import '../../../core/widgets/snackbar_service.dart';
 import '../models/project.dart';
@@ -34,7 +36,7 @@ Color _statusDim(String s) => switch (s) {
       'planning' => AuroraColors.yellowDim,
       'on_hold' => AuroraColors.yellowDim,
       'completed' => AuroraColors.limeDim,
-      _ => const Color(0xFFEEEDF2),
+      _ => AuroraColors.butter,
     };
 
 String _headerDateRange(DateTime? start, DateTime? end) {
@@ -128,10 +130,9 @@ class ProjectDetailScreen extends ConsumerWidget {
           Text("Couldn't load project",
               style: AuroraType.h3, textAlign: TextAlign.center),
           const SizedBox(height: AuroraSpacing.space9),
-          FilledButton(
+          PrimaryButton(
+            label: 'Retry',
             onPressed: () => ref.invalidate(projectDetailProvider(projectId)),
-            style: FilledButton.styleFrom(backgroundColor: AuroraColors.coral),
-            child: const Text('Retry'),
           ),
         ],
       ),
@@ -362,7 +363,7 @@ class _ProjectHeaderCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AuroraRadius.xl,
         border: Border.all(color: AuroraColors.inkBorder),
         boxShadow: const [
           BoxShadow(
@@ -387,7 +388,7 @@ class _ProjectHeaderCard extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: statusDim,
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: AuroraRadius.sm,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -429,8 +430,7 @@ class _ProjectHeaderCard extends StatelessWidget {
           // Project name
           Text(
             project.name,
-            style: AuroraType.h2.copyWith(
-              fontSize: 24,
+            style: AuroraType.h1.copyWith(
               fontWeight: FontWeight.w900,
               color: AuroraColors.ink,
               letterSpacing: -0.6,
@@ -547,8 +547,7 @@ class _MiniPhaseDots extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Phase ${activeIdx + 1} of $phaseCount · $activePhaseName',
-            style: AuroraType.label.copyWith(
-              fontSize: 11,
+            style: AuroraType.bodySm.copyWith(
               fontWeight: FontWeight.w600,
               color: AuroraColors.cobalt,
             ),
@@ -642,8 +641,8 @@ class _BudgetStrip extends StatelessWidget {
               ),
               Text(
                 'of ${_compact(estimated)} budget',
-                style: AuroraType.label
-                    .copyWith(color: const Color(0xFF9D9BB0), fontSize: 12),
+                style: AuroraType.bodySm
+                    .copyWith(color: const Color(0xFF9D9BB0)),
               ),
             ],
           ),
@@ -656,8 +655,7 @@ class _BudgetStrip extends StatelessWidget {
             child: Center(
               child: Text(
                 '${(pct * 100).round()}%',
-                style: AuroraType.label.copyWith(
-                  fontSize: 11,
+                style: AuroraType.bodySm.copyWith(
                   fontWeight: FontWeight.w700,
                   color: AuroraColors.inkSecondary,
                 ),
@@ -840,7 +838,7 @@ class _SectionCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AuroraRadius.md,
           border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Column(
@@ -852,7 +850,7 @@ class _SectionCard extends StatelessWidget {
               height: 30,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AuroraRadius.sm,
               ),
               child: Icon(section.icon, size: 15, color: color),
             ),
@@ -863,7 +861,6 @@ class _SectionCard extends StatelessWidget {
               style: AuroraType.bodySm.copyWith(
                 fontWeight: FontWeight.w700,
                 color: AuroraColors.ink,
-                fontSize: 12,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -873,7 +870,6 @@ class _SectionCard extends StatelessWidget {
             Text(
               section.metric,
               style: AuroraType.label.copyWith(
-                fontSize: 10,
                 color: const Color(0xFF9D9BB0),
               ),
               maxLines: 1,
@@ -1070,7 +1066,7 @@ class _PhaseMarkerRow extends StatelessWidget {
                       ? Icons.build_outlined
                       : Icons.schedule_outlined,
               size: 12,
-              color: (isActive || isDone) ? Colors.white : const Color(0xFF9D9BB0),
+              color: (isActive || isDone) ? AuroraColors.paper : const Color(0xFF9D9BB0),
             ),
           ),
           const SizedBox(width: 10),
@@ -1080,7 +1076,6 @@ class _PhaseMarkerRow extends StatelessWidget {
             child: Text(
               phase.name,
               style: AuroraType.h3.copyWith(
-                fontSize: 15,
                 fontWeight: FontWeight.w700,
                 color: AuroraColors.ink,
               ),
@@ -1092,7 +1087,6 @@ class _PhaseMarkerRow extends StatelessWidget {
             Text(
               dateStr,
               style: AuroraType.label.copyWith(
-                fontSize: 10,
                 color: const Color(0xFF9D9BB0),
               ),
             ),
@@ -1142,7 +1136,7 @@ class _NoteTimelineCard extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: AuroraColors.paper,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: AuroraRadius.md,
                 border: Border.all(color: AuroraColors.inkBorder),
                 boxShadow: const [
                   BoxShadow(
@@ -1162,7 +1156,6 @@ class _NoteTimelineCard extends StatelessWidget {
                         Text(
                           _noteDate(note.noteDate),
                           style: AuroraType.label.copyWith(
-                            fontSize: 10,
                             color: const Color(0xFF9D9BB0),
                           ),
                         ),
@@ -1172,7 +1165,7 @@ class _NoteTimelineCard extends StatelessWidget {
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: AuroraColors.yellowDim,
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: AuroraRadius.xs,
                           ),
                           child: Text(
                             'NOTE',
@@ -1180,7 +1173,6 @@ class _NoteTimelineCard extends StatelessWidget {
                               color: AuroraColors.yellow,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.5,
-                              fontSize: 9,
                             ),
                           ),
                         ),
@@ -1190,9 +1182,7 @@ class _NoteTimelineCard extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(
                         note.title!,
-                        style: AuroraType.h3.copyWith(
-                          fontSize: 13,
-                        ),
+                        style: AuroraType.body,
                       ),
                     ],
                     const SizedBox(height: 4),
@@ -1264,7 +1254,7 @@ class _AddEntryButton extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: AuroraColors.paper,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: AuroraRadius.md,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1377,7 +1367,7 @@ class _TemplatePromptState extends ConsumerState<_TemplatePrompt> {
       padding: const EdgeInsets.all(AuroraSpacing.space7),
       decoration: BoxDecoration(
         color: AuroraColors.cobaltDim,
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: AuroraRadius.md,
         border: Border.all(color: AuroraColors.cobalt.withValues(alpha: 0.15)),
       ),
       child: Column(
@@ -1398,22 +1388,18 @@ class _TemplatePromptState extends ConsumerState<_TemplatePrompt> {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: SaveButton(
+                  label: 'Load Template',
                   onPressed: _loading ? null : _loadTemplates,
-                  child: _loading
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Load Template'),
+                  loading: _loading,
+                  expand: true,
                 ),
               ),
               const SizedBox(width: AuroraSpacing.space3),
-              TextButton(
+              GhostButton(
+                label: 'Add Manually',
                 onPressed: () => context.push(
                     '/projects/${widget.projectId}/phases/create'),
-                child: const Text('Add Manually'),
               ),
             ],
           ),
@@ -1471,8 +1457,8 @@ class _DetailSkeletonState extends State<_DetailSkeleton>
               Container(
                 height: 220,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEEEDF2),
-                  borderRadius: BorderRadius.circular(16),
+                  color: AuroraColors.butter,
+                  borderRadius: AuroraRadius.xl,
                 ),
               ),
               const SizedBox(height: 16),
@@ -1488,8 +1474,8 @@ class _DetailSkeletonState extends State<_DetailSkeleton>
                         width: 88,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEEEDF2),
-                          borderRadius: BorderRadius.circular(8),
+                          color: AuroraColors.butter,
+                          borderRadius: AuroraRadius.sm,
                         ),
                       ),
                     ),
@@ -1517,8 +1503,8 @@ class _DetailSkeletonState extends State<_DetailSkeleton>
                         child: Container(
                           height: 80,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEEEDF2),
-                            borderRadius: BorderRadius.circular(12),
+                            color: AuroraColors.butter,
+                            borderRadius: AuroraRadius.md,
                           ),
                         ),
                       ),

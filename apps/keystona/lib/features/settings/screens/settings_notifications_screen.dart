@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 
 class SettingsNotificationsScreen extends StatefulWidget {
   const SettingsNotificationsScreen({super.key});
@@ -44,59 +45,62 @@ class _SettingsNotificationsScreenState
             CupertinoSliverRefreshControl(onRefresh: () async {}),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(AuroraSpacing.screenPadH)
-                    .copyWith(top: AuroraSpacing.space7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AuroraSpacing.screenPadH,
+                ).copyWith(
+                  top: AuroraSpacing.space7,
+                  bottom: AuroraSpacing.space10,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _label('GENERAL'),
+                    // ── General section ───────────────────────────────────
+                    const _SectionHeader(
+                      dot: AuroraColors.yellow,
+                      label: 'GENERAL',
+                    ),
                     const SizedBox(height: AuroraSpacing.space3),
-                    _group([
-                      _toggle(
-                        icon: CupertinoIcons.bell,
-                        color: AuroraColors.yellowDeep,
-                        title: 'Push notifications',
+                    _TogglesGroup(children: [
+                      AuroraToggleRow(
+                        label: 'Push notifications',
                         value: _pushEnabled,
                         onChanged: (v) => setState(() => _pushEnabled = v),
                       ),
-                      _toggle(
-                        icon: CupertinoIcons.moon,
-                        color: AuroraColors.yellowDeep,
-                        title: 'Quiet hours',
-                        subtitle: '10pm – 8am',
+                      AuroraToggleRow(
+                        label: 'Quiet hours',
+                        helperText: '10pm – 8am',
                         value: _quietHoursEnabled,
-                        onChanged: (v) => setState(() => _quietHoursEnabled = v),
+                        onChanged: (v) =>
+                            setState(() => _quietHoursEnabled = v),
                       ),
                     ]),
 
                     const SizedBox(height: AuroraSpacing.space10),
 
-                    _label('REMINDERS'),
+                    // ── Reminders section ─────────────────────────────────
+                    const _SectionHeader(
+                      dot: AuroraColors.lime,
+                      label: 'REMINDERS',
+                    ),
                     const SizedBox(height: AuroraSpacing.space3),
-                    _group([
-                      _toggle(
-                        icon: CupertinoIcons.wrench,
-                        color: AuroraColors.lime,
-                        title: 'Maintenance reminders',
-                        subtitle: 'Tasks due soon',
+                    _TogglesGroup(children: [
+                      AuroraToggleRow(
+                        label: 'Maintenance reminders',
+                        helperText: 'Tasks due soon',
                         value: _maintenanceReminders,
                         onChanged: (v) =>
                             setState(() => _maintenanceReminders = v),
                       ),
-                      _toggle(
-                        icon: CupertinoIcons.doc_text,
-                        color: AuroraColors.coral,
-                        title: 'Expiration alerts',
-                        subtitle: 'Documents expiring within 90 days',
+                      AuroraToggleRow(
+                        label: 'Expiration alerts',
+                        helperText: 'Documents expiring within 90 days',
                         value: _expirationAlerts,
                         onChanged: (v) =>
                             setState(() => _expirationAlerts = v),
                       ),
-                      _toggle(
-                        icon: CupertinoIcons.chart_bar,
-                        color: AuroraColors.cobalt,
-                        title: 'Weekly digest',
-                        subtitle: 'Home health summary every Sunday',
+                      AuroraToggleRow(
+                        label: 'Weekly digest',
+                        helperText: 'Home health summary every Sunday',
                         value: _weeklyDigest,
                         onChanged: (v) => setState(() => _weeklyDigest = v),
                       ),
@@ -110,72 +114,57 @@ class _SettingsNotificationsScreenState
       ),
     );
   }
+}
 
-  Widget _label(String text) => Text(text, style: AuroraType.label);
+// ── Section header — dot + label ──────────────────────────────────────────────
 
-  Widget _group(List<Widget> rows) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
-      ),
-      child: Column(
-        children: [
-          for (int i = 0; i < rows.length; i++) ...[
-            rows[i],
-            if (i < rows.length - 1)
-              const Divider(
-                  height: 1, thickness: 1, color: AuroraColors.butter,
-                  indent: 54),
-          ],
-        ],
-      ),
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.dot, required this.label});
+
+  final Color dot;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(
+            color: dot,
+            borderRadius: const BorderRadius.all(Radius.circular(2)),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(label.toUpperCase(), style: AuroraType.label),
+      ],
     );
   }
+}
 
-  Widget _toggle({
-    required IconData icon,
-    required Color color,
-    required String title,
-    String? subtitle,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(9),
+// ── Toggles group — stacked AuroraToggleRows with a divider ──────────────────
+
+class _TogglesGroup extends StatelessWidget {
+  const _TogglesGroup({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (int i = 0; i < children.length; i++) ...[
+          children[i],
+          if (i < children.length - 1)
+            const Divider(
+              height: 1,
+              thickness: 1,
+              color: AuroraColors.inkBorder,
+              indent: AuroraSpacing.screenPadH,
             ),
-            child: Icon(icon, size: 16, color: color),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: AuroraType.body),
-                if (subtitle != null)
-                  Text(subtitle,
-                      style: AuroraType.bodySm.copyWith(
-                        color: AuroraColors.inkSecondary,
-                      )),
-              ],
-            ),
-          ),
-          CupertinoSwitch(
-            value: value,
-            activeTrackColor: AuroraColors.lime,
-            onChanged: onChanged,
-          ),
         ],
-      ),
+      ],
     );
   }
 }

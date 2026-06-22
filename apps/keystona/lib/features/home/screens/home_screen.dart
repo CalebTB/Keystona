@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -279,31 +278,31 @@ class _QuickActionsRow extends StatelessWidget {
       children: [
         Expanded(
           child: _QuickAction(
+            icon: CupertinoIcons.camera_viewfinder,
+            label: 'SCAN',
+            tileColor: AuroraColors.cobalt,
+            iconColor: AuroraColors.paper,
+            onTap: () => context.push(AppRoutes.homeAppliancesAdd),
+          ),
+        ),
+        const SizedBox(width: AuroraSpacing.space2),
+        Expanded(
+          child: _QuickAction(
             icon: CupertinoIcons.exclamationmark_shield_fill,
-            label: 'Emergency',
+            label: 'EMERGENCY',
             tileColor: AuroraColors.coral,
-            iconColor: Colors.white,
+            iconColor: AuroraColors.paper,
             onTap: () => context.push(AppRoutes.emergency),
           ),
         ),
         const SizedBox(width: AuroraSpacing.space2),
         Expanded(
           child: _QuickAction(
-            icon: CupertinoIcons.doc_text,
-            label: 'Documents',
-            tileColor: AuroraColors.cobaltDim,
-            iconColor: AuroraColors.cobalt,
-            onTap: () => context.go(AppRoutes.documents),
-          ),
-        ),
-        const SizedBox(width: AuroraSpacing.space2),
-        Expanded(
-          child: _QuickAction(
-            icon: CupertinoIcons.checkmark_square,
-            label: 'Tasks',
-            tileColor: AuroraColors.limeDim,
-            iconColor: AuroraColors.limeDeep,
-            onTap: () => context.go(AppRoutes.maintenance),
+            icon: CupertinoIcons.plus_square,
+            label: 'ADD TASK',
+            tileColor: AuroraColors.ink,
+            iconColor: AuroraColors.lime,
+            onTap: () => context.push(AppRoutes.maintenanceCreate),
           ),
         ),
       ],
@@ -354,11 +353,7 @@ class _QuickAction extends StatelessWidget {
             const SizedBox(height: AuroraSpacing.space1),
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w600,
-                color: AuroraColors.ink,
-              ),
+              style: AuroraType.labelSm.copyWith(color: AuroraColors.ink),
               textAlign: TextAlign.center,
             ),
           ],
@@ -381,9 +376,19 @@ class _YourHomeSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          'YOUR HOME',
-          style: AuroraType.label,
+        Row(
+          children: [
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: AuroraColors.inkSecondary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: AuroraSpacing.space1),
+            Text('YOUR HOME', style: AuroraType.label),
+          ],
         ),
         const SizedBox(height: AuroraSpacing.space3),
         Row(
@@ -391,7 +396,7 @@ class _YourHomeSection extends StatelessWidget {
             Expanded(
               child: _HomeStatTile(
                 icon: CupertinoIcons.wrench,
-                label: 'Systems',
+                label: 'SYSTEMS',
                 count: data.systemCount,
                 onTap: () => context.push(AppRoutes.homeSystems),
               ),
@@ -400,7 +405,7 @@ class _YourHomeSection extends StatelessWidget {
             Expanded(
               child: _HomeStatTile(
                 icon: CupertinoIcons.device_laptop,
-                label: 'Appliances',
+                label: 'APPLIANCES',
                 count: data.applianceCount,
                 onTap: () => context.push(AppRoutes.homeAppliances),
               ),
@@ -409,7 +414,7 @@ class _YourHomeSection extends StatelessWidget {
             Expanded(
               child: _HomeStatTile(
                 icon: CupertinoIcons.chart_bar,
-                label: 'Lifespan',
+                label: 'LIFESPAN',
                 count: null,
                 onTap: () => context.push(AppRoutes.homeLifespan),
               ),
@@ -454,11 +459,7 @@ class _HomeStatTile extends StatelessWidget {
             Expanded(
               child: Text(
                 count != null ? '$count $label' : label,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: AuroraColors.ink,
-                ),
+                style: AuroraType.labelSm.copyWith(color: AuroraColors.ink),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -490,6 +491,15 @@ class _ComingUpSection extends StatelessWidget {
       children: [
         Row(
           children: [
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: AuroraColors.inkSecondary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: AuroraSpacing.space1),
             Text('COMING UP', style: AuroraType.label),
             const Spacer(),
             GestureDetector(

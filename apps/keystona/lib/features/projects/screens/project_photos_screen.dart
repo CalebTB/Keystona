@@ -2,11 +2,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 
 import '../../../core/widgets/snackbar_service.dart';
 import '../models/project_photo.dart';
@@ -564,14 +564,7 @@ class _EmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AuroraSpacing.space10),
-            FilledButton(
-              onPressed: onAdd,
-              style: FilledButton.styleFrom(
-                backgroundColor: AuroraColors.coral,
-                padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              ),
-              child: const Text('+ Add Photo'),
-            ),
+            PrimaryButton(label: '+ Add Photo', onPressed: onAdd),
           ],
         ),
       ),
@@ -595,12 +588,7 @@ class _ErrorState extends StatelessWidget {
           Text("Couldn't load photos",
               style: AuroraType.h3, textAlign: TextAlign.center),
           const SizedBox(height: AuroraSpacing.space9),
-          FilledButton(
-            onPressed: onRetry,
-            style: FilledButton.styleFrom(
-                backgroundColor: AuroraColors.ink),
-            child: const Text('Retry'),
-          ),
+          PrimaryButton(label: 'Retry', onPressed: onRetry),
         ],
       ),
     );
@@ -656,11 +644,7 @@ class _PairPickerSheet extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'Choose $oppositeType photo to pair',
-                      style: GoogleFonts.outfit(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AuroraColors.ink,
-                      ),
+                      style: AuroraType.h3,
                     ),
                   ),
                   GestureDetector(
@@ -701,19 +685,11 @@ class _PairPickerSheet extends StatelessWidget {
                       photo.roomTag?.isNotEmpty == true
                           ? photo.roomTag!
                           : photo.photoType,
-                      style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: AuroraColors.ink,
-                      ),
+                      style: AuroraType.bodyLg.copyWith(fontWeight: FontWeight.w500),
                     ),
                     subtitle: Text(
                       '${photo.photoType.toUpperCase()} · ${photo.createdAt.month}/${photo.createdAt.day}/${photo.createdAt.year}',
-                      style: const TextStyle(
-                        fontFamily: 'IBMPlexMono',
-                        fontSize: 10,
-                        color: Color(0xFF9D9BB0),
-                      ),
+                      style: AuroraType.labelSm.copyWith(color: AuroraColors.inkSecondary),
                     ),
                     trailing: const Icon(Icons.chevron_right,
                         size: 18, color: Color(0xFF9D9BB0)),
@@ -809,11 +785,7 @@ class _PairEditFormSheetState extends State<_PairEditFormSheet> {
                     Expanded(
                       child: Text(
                         'Edit pair details',
-                        style: GoogleFonts.outfit(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: AuroraColors.ink,
-                        ),
+                        style: AuroraType.h2,
                       ),
                     ),
                     GestureDetector(
@@ -850,19 +822,13 @@ class _PairEditFormSheetState extends State<_PairEditFormSheet> {
                       minLines: 2,
                     ),
                     const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () => widget.onSave(
-                          _roomTagCtrl.text.trim(),
-                          _captionCtrl.text.trim(),
-                        ),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AuroraColors.ink,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
-                        child: const Text('Save Changes'),
+                    SaveButton(
+                      label: 'Save Changes',
+                      onPressed: () => widget.onSave(
+                        _roomTagCtrl.text.trim(),
+                        _captionCtrl.text.trim(),
                       ),
+                      expand: true,
                     ),
                   ],
                 ),
@@ -905,14 +871,8 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(
-        text,
-        style: const TextStyle(
-          fontFamily: 'IBMPlexMono',
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.5,
-          color: AuroraColors.inkSecondary,
-        ),
+        text.toUpperCase(),
+        style: AuroraType.label,
       );
 }
 

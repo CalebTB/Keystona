@@ -5,7 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../router/app_router.dart';
 import '../theme/aurora_colors.dart';
 import '../theme/aurora_radius.dart';
+import '../theme/aurora_spacing.dart';
 import '../theme/aurora_typography.dart';
+import 'aurora/aurora_button.dart';
 
 /// Configuration for an [UpgradeSheet] presentation.
 class UpgradeSheetConfig {
@@ -74,9 +76,10 @@ class UpgradeSheet extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      backgroundColor: AuroraColors.paper,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
-          top: Radius.circular(16),
+          top: Radius.circular(22),
         ),
       ),
       builder: (sheetContext) => UpgradeSheet._(config: config),
@@ -103,7 +106,12 @@ class UpgradeSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        padding: const EdgeInsets.fromLTRB(
+          AuroraSpacing.screenPadH,
+          AuroraSpacing.space3,
+          AuroraSpacing.screenPadH,
+          AuroraSpacing.space10,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -113,55 +121,49 @@ class UpgradeSheet extends StatelessWidget {
               child: Container(
                 width: 36,
                 height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE0DFEA),
-                  borderRadius: BorderRadius.circular(999),
+                decoration: const BoxDecoration(
+                  color: AuroraColors.inkBorder,
+                  borderRadius: AuroraRadius.full,
                 ),
               ),
             ),
-            const SizedBox(height: 24),
-            // Gold home icon
-            const Center(
-              child: Icon(
-                Icons.home_work_rounded,
-                color: AuroraColors.yellow,
-                size: 48,
-              ),
+            const SizedBox(height: AuroraSpacing.space9),
+            // Coral upgrade hero card with yellow blob
+            _UpgradeHeroCard(
+              headline: config.headline,
+              reason: config.reason,
             ),
-            const SizedBox(height: 16),
-            // Headline
-            Text(
-              config.headline,
-              style: AuroraType.h3,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            // Reason
-            Text(
-              config.reason,
-              style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AuroraSpacing.space9),
             // Features label
             Text(
-              'With Premium, you get:',
-              style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
+              'WITH PREMIUM, YOU GET',
+              style: AuroraType.label.copyWith(
+                color: AuroraColors.inkSecondary,
+              ),
             ),
-            const SizedBox(height: 8),
-            // Feature bullets
+            const SizedBox(height: AuroraSpacing.space5),
+            // Feature bullets with lime icon tiles
             ...config.features.map(
               (f) => Padding(
-                padding: const EdgeInsets.only(bottom: 4),
+                padding: const EdgeInsets.only(bottom: AuroraSpacing.space5),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '✦ ',
-                      style: AuroraType.body.copyWith(
-                        color: AuroraColors.yellow,
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: const BoxDecoration(
+                        color: AuroraColors.limeDim,
+                        borderRadius: AuroraRadius.xs,
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.check_rounded,
+                          size: 16,
+                          color: AuroraColors.limeDeep,
+                        ),
                       ),
                     ),
+                    const SizedBox(width: AuroraSpacing.space5),
                     Expanded(
                       child: Text(f, style: AuroraType.body),
                     ),
@@ -169,45 +171,103 @@ class UpgradeSheet extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 24),
-            // Primary CTA
-            FilledButton(
+            const SizedBox(height: AuroraSpacing.space9),
+            // Primary CTA — PrimaryButton (coral) for purchase action
+            PrimaryButton(
+              label: 'See Premium Plans',
+              expand: true,
               onPressed: () {
                 Navigator.of(context).pop();
                 context.push(AppRoutes.settingsPaywall);
               },
-              style: FilledButton.styleFrom(
-                backgroundColor: AuroraColors.coral,
-                minimumSize: const Size.fromHeight(48),
-                shape: const RoundedRectangleBorder(
-                  borderRadius: AuroraRadius.sm,
-                ),
-              ),
-              child: Text(
-                'See Premium Plans',
-                style: AuroraType.bodyLg.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
             ),
-            const SizedBox(height: 4),
-            // Dismiss button
-            TextButton(
+            const SizedBox(height: AuroraSpacing.space1),
+            // Dismiss — GhostButton
+            GhostButton(
+              label: 'Maybe Later',
               onPressed: () {
                 _recordDismissal(config.triggerKey);
                 Navigator.of(context).pop();
               },
-              child: Text(
-                'Maybe Later',
-                style: AuroraType.bodyLg.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AuroraColors.inkSecondary,
-                ),
-              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Coral hero card with yellow blob ─────────────────────────────────────────
+
+class _UpgradeHeroCard extends StatelessWidget {
+  const _UpgradeHeroCard({
+    required this.headline,
+    required this.reason,
+  });
+
+  final String headline;
+  final String reason;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: AuroraRadius.xxl,
+      child: Stack(
+        children: [
+          // Coral background
+          Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: AuroraColors.coral,
+              borderRadius: AuroraRadius.xxl,
+            ),
+            padding: const EdgeInsets.all(AuroraSpacing.space8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // PRO badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: const BoxDecoration(
+                    color: AuroraColors.lime,
+                    borderRadius: AuroraRadius.xs,
+                  ),
+                  child: Text(
+                    'PRO',
+                    style: AuroraType.labelSm.copyWith(
+                      color: AuroraColors.limeDeep,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AuroraSpacing.space5),
+                Text(
+                  headline,
+                  style: AuroraType.h2.copyWith(color: Colors.white),
+                ),
+                const SizedBox(height: AuroraSpacing.space2),
+                Text(
+                  reason,
+                  style: AuroraType.body.copyWith(
+                    color: Colors.white.withValues(alpha: 0.78),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Yellow decorative blob
+          Positioned(
+            top: -40,
+            right: -40,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: AuroraColors.yellow.withValues(alpha: 0.32),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -4,15 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../providers/onboarding_provider.dart';
 
 /// Property type options for the dropdown.
-///
-/// Keys are display labels; values are Supabase enum strings.
 const List<({String label, String value})> _kPropertyTypes = [
   (label: 'Single Family', value: 'single_family'),
   (label: 'Condo', value: 'condo'),
@@ -151,245 +153,375 @@ class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
     return AppScaffold(
       title: 'Your Home',
       actions: [
-        TextButton(
+        GhostButton(
+          label: 'Skip',
           onPressed: () => context.go(AppRoutes.onboardingTrial),
-          child: const Text('Skip'),
         ),
       ],
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AuroraSpacing.screenPadH),
+          padding: const EdgeInsets.fromLTRB(
+            AuroraSpacing.screenPadH,
+            AuroraSpacing.screenPadTop,
+            AuroraSpacing.screenPadH,
+            AuroraSpacing.space10,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // ── Address ──────────────────────────────────────────────────
-              TextFormField(
-                controller: _addressController,
-                decoration: const InputDecoration(labelText: 'Address'),
-                maxLength: 500,
-                textCapitalization: TextCapitalization.words,
-                validator: Validators.required,
-              ),
-
-              const SizedBox(height: AuroraSpacing.space7),
-
-              // ── City ─────────────────────────────────────────────────────
-              TextFormField(
-                controller: _cityController,
-                decoration: const InputDecoration(labelText: 'City'),
-                textCapitalization: TextCapitalization.words,
-                validator: Validators.required,
-              ),
-
-              const SizedBox(height: AuroraSpacing.space7),
-
-              // ── State & ZIP in a row ──────────────────────────────────────
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              AuroraFormSection(
+                title: 'Address',
                 children: [
-                  Flexible(
-                    flex: 2,
+                  _buildField(
+                    label: 'Street Address',
+                    isRequired: true,
                     child: TextFormField(
-                      controller: _stateController,
-                      decoration: const InputDecoration(labelText: 'State'),
-                      maxLength: 2,
-                      textCapitalization: TextCapitalization.characters,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp('[a-zA-Z]')),
-                      ],
+                      controller: _addressController,
+                      textCapitalization: TextCapitalization.words,
+                      maxLength: 500,
+                      style: AuroraType.body,
+                      cursorColor: AuroraColors.coral,
+                      decoration: _inputDecoration('123 Main St'),
                       validator: Validators.required,
                     ),
                   ),
-
-                  const SizedBox(width: AuroraSpacing.space7),
-
-                  Flexible(
-                    flex: 3,
+                  _buildField(
+                    label: 'City',
+                    isRequired: true,
                     child: TextFormField(
-                      controller: _zipController,
-                      decoration: const InputDecoration(labelText: 'ZIP Code'),
-                      maxLength: 5,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
-                      onEditingComplete: () =>
-                          _detectClimateZone(_zipController.text),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Required';
-                        }
-                        if (!RegExp(r'^\d{5}$').hasMatch(value.trim())) {
-                          return 'Enter a 5-digit ZIP';
-                        }
-                        return null;
-                      },
+                      controller: _cityController,
+                      textCapitalization: TextCapitalization.words,
+                      style: AuroraType.body,
+                      cursorColor: AuroraColors.coral,
+                      decoration: _inputDecoration('San Francisco'),
+                      validator: Validators.required,
                     ),
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Flexible(
+                        flex: 2,
+                        child: _buildField(
+                          label: 'State',
+                          isRequired: true,
+                          child: TextFormField(
+                            controller: _stateController,
+                            maxLength: 2,
+                            textCapitalization: TextCapitalization.characters,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp('[a-zA-Z]'),
+                              ),
+                            ],
+                            style: AuroraType.body,
+                            cursorColor: AuroraColors.coral,
+                            decoration: _inputDecoration('CA'),
+                            validator: Validators.required,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AuroraSpacing.space3),
+                      Flexible(
+                        flex: 3,
+                        child: _buildField(
+                          label: 'ZIP Code',
+                          isRequired: true,
+                          child: TextFormField(
+                            controller: _zipController,
+                            maxLength: 5,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            onEditingComplete: () =>
+                                _detectClimateZone(_zipController.text),
+                            style: AuroraType.body,
+                            cursorColor: AuroraColors.coral,
+                            decoration: _inputDecoration('94105'),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Required';
+                              }
+                              if (!RegExp(r'^\d{5}$').hasMatch(value.trim())) {
+                                return 'Enter a 5-digit ZIP';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
 
-              const SizedBox(height: AuroraSpacing.space7),
-
-              // ── Property Type ─────────────────────────────────────────────
-              DropdownButtonFormField<String>(
-                initialValue: _selectedPropertyType,
-                decoration: const InputDecoration(labelText: 'Property Type'),
-                items: _kPropertyTypes
-                    .map(
-                      (t) => DropdownMenuItem<String>(
-                        value: t.value,
-                        child: Text(t.label),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) =>
-                    setState(() => _selectedPropertyType = value),
-              ),
-
-              const SizedBox(height: AuroraSpacing.space7),
-
-              // ── Year Built ────────────────────────────────────────────────
-              TextFormField(
-                controller: _yearBuiltController,
-                decoration: const InputDecoration(labelText: 'Year Built'),
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                validator: Validators.year,
-              ),
-
-              const SizedBox(height: AuroraSpacing.space7),
-
-              // ── Bedrooms & Bathrooms in a row ─────────────────────────────
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // ── Property details ──────────────────────────────────────────
+              AuroraFormSection(
+                title: 'Property Details',
+                isOptional: true,
                 children: [
-                  Flexible(
+                  // Property type — native DropdownButtonFormField styled to Aurora
+                  _buildField(
+                    label: 'Property Type',
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _selectedPropertyType,
+                      decoration: _inputDecoration('Select type'),
+                      icon: const Icon(
+                        Icons.chevron_right,
+                        size: 14,
+                        color: AuroraColors.inkTertiary,
+                      ),
+                      style: AuroraType.body,
+                      dropdownColor: AuroraColors.paper,
+                      items: _kPropertyTypes
+                          .map(
+                            (t) => DropdownMenuItem<String>(
+                              value: t.value,
+                              child: Text(t.label),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) =>
+                          setState(() => _selectedPropertyType = value),
+                    ),
+                  ),
+                  _buildField(
+                    label: 'Year Built',
                     child: TextFormField(
-                      controller: _bedroomsController,
-                      decoration: const InputDecoration(labelText: 'Bedrooms'),
+                      controller: _yearBuiltController,
                       keyboardType: TextInputType.number,
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly,
                       ],
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) return null;
-                        return Validators.positiveNumber(value);
-                      },
+                      style: AuroraType.body,
+                      cursorColor: AuroraColors.coral,
+                      decoration: _inputDecoration('1985'),
+                      validator: Validators.year,
                     ),
                   ),
-
-                  const SizedBox(width: AuroraSpacing.space7),
-
-                  Flexible(
-                    child: TextFormField(
-                      controller: _bathroomsController,
-                      decoration:
-                          const InputDecoration(labelText: 'Bathrooms'),
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Flexible(
+                        child: _buildField(
+                          label: 'Bedrooms',
+                          child: TextFormField(
+                            controller: _bedroomsController,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            style: AuroraType.body,
+                            cursorColor: AuroraColors.coral,
+                            decoration: _inputDecoration('3'),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return null;
+                              }
+                              return Validators.positiveNumber(value);
+                            },
+                          ),
+                        ),
                       ),
+                      const SizedBox(width: AuroraSpacing.space3),
+                      Flexible(
+                        child: _buildField(
+                          label: 'Bathrooms',
+                          child: TextFormField(
+                            controller: _bathroomsController,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d*\.?\d*'),
+                              ),
+                            ],
+                            style: AuroraType.body,
+                            cursorColor: AuroraColors.coral,
+                            decoration: _inputDecoration('2'),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return null;
+                              }
+                              return Validators.positiveNumber(value);
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              // ── Purchase & climate ────────────────────────────────────────
+              AuroraFormSection(
+                title: 'Financial & Climate',
+                isOptional: true,
+                children: [
+                  _buildField(
+                    label: 'Purchase Price',
+                    child: TextFormField(
+                      controller: _purchasePriceController,
+                      keyboardType: TextInputType.number,
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(
                           RegExp(r'^\d*\.?\d*'),
                         ),
                       ],
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) return null;
-                        return Validators.positiveNumber(value);
-                      },
+                      style: AuroraType.body,
+                      cursorColor: AuroraColors.coral,
+                      decoration: _inputDecoration(r'$450,000').copyWith(
+                        prefixText: r'$ ',
+                        prefixStyle: AuroraType.body,
+                      ),
                     ),
                   ),
-                ],
-              ),
-
-              const SizedBox(height: AuroraSpacing.space7),
-
-              // ── Purchase Price ────────────────────────────────────────────
-              TextFormField(
-                controller: _purchasePriceController,
-                decoration: const InputDecoration(
-                  labelText: 'Purchase Price',
-                  prefixText: r'$',
-                ),
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                ],
-              ),
-
-              const SizedBox(height: AuroraSpacing.space7),
-
-              // ── Climate Zone ──────────────────────────────────────────────
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      key: ValueKey(_climateZoneDropdownValue),
-                      initialValue: _climateZoneDropdownValue,
-                      decoration: const InputDecoration(
-                        labelText: 'Climate Zone',
-                      ),
-                      items: _kClimateZones
-                          .map(
-                            (z) => DropdownMenuItem<String>(
-                              value: z.value?.toString() ?? 'unknown',
-                              child: Text(z.label),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: _buildField(
+                          label: 'Climate Zone',
+                          child: DropdownButtonFormField<String>(
+                            key: ValueKey(_climateZoneDropdownValue),
+                            initialValue: _climateZoneDropdownValue,
+                            decoration: _inputDecoration('Select zone'),
+                            icon: const Icon(
+                              Icons.chevron_right,
+                              size: 14,
+                              color: AuroraColors.inkTertiary,
                             ),
-                          )
-                          .toList(),
-                      onChanged: (rawValue) {
-                        setState(() {
-                          if (rawValue == null || rawValue == 'unknown') {
-                            _selectedClimateZone = null;
-                            _climateZoneDropdownValue = 'unknown';
-                          } else {
-                            _selectedClimateZone = int.tryParse(rawValue);
-                            _climateZoneDropdownValue = rawValue;
-                          }
-                        });
-                      },
-                    ),
-                  ),
-
-                  if (_detectingClimateZone) ...[
-                    const SizedBox(width: AuroraSpacing.space3),
-                    const Padding(
-                      padding: EdgeInsets.only(top: 14),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                            style: AuroraType.body,
+                            dropdownColor: AuroraColors.paper,
+                            items: _kClimateZones
+                                .map(
+                                  (z) => DropdownMenuItem<String>(
+                                    value: z.value?.toString() ?? 'unknown',
+                                    child: Text(z.label),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (rawValue) {
+                              setState(() {
+                                if (rawValue == null ||
+                                    rawValue == 'unknown') {
+                                  _selectedClimateZone = null;
+                                  _climateZoneDropdownValue = 'unknown';
+                                } else {
+                                  _selectedClimateZone =
+                                      int.tryParse(rawValue);
+                                  _climateZoneDropdownValue = rawValue;
+                                }
+                              });
+                            },
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                      if (_detectingClimateZone) ...[
+                        const SizedBox(width: AuroraSpacing.space3),
+                        const Padding(
+                          padding: EdgeInsets.only(top: 28),
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AuroraColors.cobalt,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
               ),
 
               const SizedBox(height: AuroraSpacing.space10),
 
-              // ── Save & Continue ───────────────────────────────────────────
-              ElevatedButton(
-                onPressed: _saving ? null : _save,
-                child: _saving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text('Save & Continue'),
+              // ── Save & Continue — cobalt SaveButton (form save) ───────────
+              SaveButton(
+                label: 'Save & Continue',
+                onPressed: _save,
+                loading: _saving,
+                expand: true,
               ),
-
-              const SizedBox(height: AuroraSpacing.space7),
             ],
           ),
         ),
       ),
     );
   }
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+InputDecoration _inputDecoration(String hint) => InputDecoration(
+      isDense: true,
+      filled: true,
+      fillColor: AuroraColors.paper,
+      hintText: hint,
+      hintStyle: AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
+      counterText: '',
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AuroraSpacing.space7,
+        vertical: AuroraSpacing.space5,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: AuroraRadius.md,
+        borderSide: const BorderSide(color: AuroraColors.inkBorder, width: 1.5),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: AuroraRadius.md,
+        borderSide: const BorderSide(color: AuroraColors.inkBorder, width: 1.5),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: AuroraRadius.md,
+        borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: AuroraRadius.md,
+        borderSide: const BorderSide(color: AuroraColors.coral, width: 1.5),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: AuroraRadius.md,
+        borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
+      ),
+    );
+
+/// Aurora-styled label above a raw TextFormField / DropdownButtonFormField.
+Widget _buildField({
+  required String label,
+  required Widget child,
+  bool isRequired = false,
+}) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      if (isRequired)
+        RichText(
+          text: TextSpan(
+            text: label.toUpperCase(),
+            style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
+            children: const [
+              TextSpan(
+                text: ' *',
+                style: TextStyle(color: AuroraColors.coral),
+              ),
+            ],
+          ),
+        )
+      else
+        Text(
+          label.toUpperCase(),
+          style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
+        ),
+      const SizedBox(height: AuroraSpacing.space1),
+      child,
+    ],
+  );
 }

@@ -9,8 +9,10 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 
 import '../../../core/widgets/scan_label_button.dart';
 import '../../../core/widgets/snackbar_service.dart';
@@ -304,7 +306,7 @@ class _ApplianceFormScreenState extends ConsumerState<ApplianceFormScreen> {
       context: context,
       builder: (_) => Container(
         height: 260,
-        color: CupertinoColors.systemBackground.resolveFrom(context),
+        color: AuroraColors.paper,
         child: Column(
           children: [
             Row(
@@ -411,7 +413,12 @@ class _ApplianceFormScreenState extends ConsumerState<ApplianceFormScreen> {
             onPressed: _saving ? null : _save,
             child: _saving
                 ? const CupertinoActivityIndicator()
-                : const Text('Save'),
+                : Text(
+                    'Save',
+                    style: AuroraType.label.copyWith(
+                      color: AuroraColors.cobalt,
+                    ),
+                  ),
           ),
         ),
         child: SafeArea(
@@ -468,22 +475,13 @@ class _ApplianceFormScreenState extends ConsumerState<ApplianceFormScreen> {
         scrolledUnderElevation: 0,
         title: Text(title, style: AuroraType.h3),
         actions: [
-          TextButton(
-            onPressed: _saving ? null : _save,
-            child: _saving
-                ? const SizedBox(
-                    height: 18,
-                    width: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AuroraColors.ink,
-                    ),
-                  )
-                : Text(
-                    'Save',
-                    style: AuroraType.label
-                        .copyWith(color: AuroraColors.ink),
-                  ),
+          Padding(
+            padding: const EdgeInsets.only(right: AuroraSpacing.space3),
+            child: SaveButton(
+              label: 'Save',
+              loading: _saving,
+              onPressed: _saving ? null : _save,
+            ),
           ),
         ],
       ),
@@ -832,10 +830,23 @@ class _SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
-      child: Text(
-        label,
-        style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
+      padding: const EdgeInsets.only(top: AuroraSpacing.space8, bottom: AuroraSpacing.space3),
+      child: Row(
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: const BoxDecoration(
+              color: AuroraColors.cobalt,
+              borderRadius: AuroraRadius.xs,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label.toUpperCase(),
+            style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
+          ),
+        ],
       ),
     );
   }
@@ -879,24 +890,24 @@ class _TextField extends StatelessWidget {
           vertical: AuroraSpacing.space5,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AuroraRadius.sm,
           borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AuroraRadius.sm,
           borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AuroraColors.ink, width: 1.5),
+          borderRadius: AuroraRadius.sm,
+          borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AuroraRadius.sm,
           borderSide: const BorderSide(color: AuroraColors.coral),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AuroraColors.coral, width: 1.5),
+          borderRadius: AuroraRadius.sm,
+          borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
         ),
       ),
     );
@@ -930,11 +941,11 @@ class _PickerField extends StatelessWidget {
             vertical: AuroraSpacing.space1,
           ),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AuroraRadius.sm,
             borderSide: const BorderSide(color: AuroraColors.inkBorder),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AuroraRadius.sm,
             borderSide: const BorderSide(color: AuroraColors.inkBorder),
           ),
         ),
@@ -951,7 +962,7 @@ class _PickerField extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AuroraRadius.sm,
           border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(
@@ -1006,7 +1017,7 @@ class _DateField extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AuroraRadius.sm,
           border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(

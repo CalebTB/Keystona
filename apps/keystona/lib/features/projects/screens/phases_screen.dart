@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 
 import '../../../core/widgets/snackbar_service.dart';
 import '../models/project_phase.dart';
@@ -61,10 +62,10 @@ class PhasesScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Phases')),
       body: body,
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: AuroraFAB(
+        icon: Icons.add,
         onPressed: onAddTap,
-        backgroundColor: AuroraColors.coral,
-        child: const Icon(Icons.add, color: Colors.white),
+        tooltip: 'Add phase',
       ),
     );
   }
@@ -424,14 +425,7 @@ class _EmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AuroraSpacing.space10),
-            FilledButton(
-              onPressed: onAddTap,
-              style: FilledButton.styleFrom(
-                backgroundColor: AuroraColors.coral,
-                padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              ),
-              child: const Text('+ Add Phase'),
-            ),
+            PrimaryButton(label: '+ Add Phase', onPressed: onAddTap),
           ],
         ),
       ),
@@ -459,12 +453,7 @@ class _ErrorState extends StatelessWidget {
             Text("Couldn't load phases",
                 style: AuroraType.h3, textAlign: TextAlign.center),
             const SizedBox(height: AuroraSpacing.space9),
-            FilledButton(
-              onPressed: onRetry,
-              style: FilledButton.styleFrom(
-                  backgroundColor: AuroraColors.coral),
-              child: const Text('Retry'),
-            ),
+            PrimaryButton(label: 'Retry', onPressed: onRetry),
           ],
         ),
       ),

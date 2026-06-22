@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 
 
 
@@ -180,12 +181,9 @@ class _ErrorState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AuroraSpacing.space7),
-            FilledButton(
+            PrimaryButton(
+              label: 'Retry',
               onPressed: onRetry,
-              style: FilledButton.styleFrom(
-                backgroundColor: AuroraColors.ink,
-              ),
-              child: const Text('Retry'),
             ),
           ],
         ),

@@ -8,8 +8,12 @@ import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_shadows.dart';
+import '../../../core/widgets/aurora/aurora.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/upgrade_sheet.dart';
 import '../../../services/providers/service_providers.dart';
@@ -200,7 +204,7 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
                               horizontal: 14, vertical: 7),
                           decoration: BoxDecoration(
                             color: AuroraColors.coral,
-                            borderRadius: BorderRadius.circular(999),
+                            borderRadius: AuroraRadius.full,
                             boxShadow: [
                               BoxShadow(
                                 color: AuroraColors.coral.withValues(alpha: 0.25),
@@ -213,12 +217,12 @@ class _IOSDocumentsLayoutState extends ConsumerState<_IOSDocumentsLayout> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(Icons.add_rounded,
-                                  color: Colors.white, size: 16),
+                                  color: AuroraColors.paper, size: 16),
                               const SizedBox(width: 4),
                               Text(
                                 'Add',
                                 style: AuroraType.label.copyWith(
-                                  color: Colors.white,
+                                  color: AuroraColors.paper,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -378,7 +382,7 @@ class _AndroidDocumentsLayoutState
                           horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(
                         color: AuroraColors.coral,
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: AuroraRadius.full,
                         boxShadow: [
                           BoxShadow(
                             color: AuroraColors.coral.withValues(alpha: 0.25),
@@ -391,12 +395,12 @@ class _AndroidDocumentsLayoutState
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(Icons.add_rounded,
-                              color: Colors.white, size: 16),
+                              color: AuroraColors.paper, size: 16),
                           const SizedBox(width: 4),
                           Text(
                             'Add',
                             style: AuroraType.label.copyWith(
-                              color: Colors.white,
+                              color: AuroraColors.paper,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -487,14 +491,16 @@ List<Widget> _buildBody({
           ];
         }
         if (selectedCategoryId != null) {
-          final catName = (categoriesState.value ?? [])
-                  .where((c) => c.id == selectedCategoryId)
-                  .map((c) => c.name)
-                  .firstOrNull ??
-              'this category';
           return [
             SliverFillRemaining(
-              child: _FilteredEmptyState(categoryName: catName),
+              child: EmptyState(
+                icon: CupertinoIcons.doc_text,
+                title: 'No matching documents',
+                subtitle:
+                    'Try clearing your filters or search term.',
+                actionLabel: 'Clear filters',
+                onAction: () => notifier.setCategory(null),
+              ),
             ),
           ];
         }
@@ -537,16 +543,28 @@ List<Widget> _buildBody({
       return [
         if (recentDocs.isNotEmpty) ...[
           SliverToBoxAdapter(
-            child: InkWell(
+            child: GestureDetector(
               onTap: onToggleRecentlyAdded,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
                 child: Row(
                   children: [
+                    // Cobalt dot for recently-added (active/recent = action).
+                    Container(
+                      width: 7,
+                      height: 7,
+                      margin: const EdgeInsets.only(right: 6),
+                      decoration: const BoxDecoration(
+                        color: AuroraColors.cobalt,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                     Expanded(
                       child: Text(
-                        'Recently Added',
-                        style: AuroraType.h2.copyWith(color: AuroraColors.ink),
+                        'RECENTLY ADDED',
+                        style: AuroraType.label.copyWith(
+                          color: AuroraColors.inkSecondary,
+                        ),
                       ),
                     ),
                     AnimatedRotation(
@@ -554,7 +572,7 @@ List<Widget> _buildBody({
                       duration: const Duration(milliseconds: 200),
                       child: const Icon(
                         Icons.keyboard_arrow_down_rounded,
-                        size: 20,
+                        size: 16,
                         color: AuroraColors.inkSecondary,
                       ),
                     ),
@@ -605,56 +623,6 @@ List<Widget> _buildBody({
       ];
     },
   );
-}
-
-// ── _FilteredEmptyState ───────────────────────────────────────────────────────
-
-class _FilteredEmptyState extends StatelessWidget {
-  const _FilteredEmptyState({required this.categoryName});
-
-  final String categoryName;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: const BoxDecoration(
-                color: AuroraColors.butter,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.folder_open_outlined,
-                size: 28,
-                color: AuroraColors.inkSecondary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No $categoryName documents',
-              style: AuroraType.h2.copyWith(color: AuroraColors.ink),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Documents you add to this category will appear here.',
-              style: AuroraType.body.copyWith(
-                color: AuroraColors.inkSecondary,
-                height: 1.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 // ── _DocSearchBar ─────────────────────────────────────────────────────────────
@@ -719,24 +687,18 @@ class _DocSearchBarState extends ConsumerState<_DocSearchBar> {
         height: 48,
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: AuroraRadius.full,
           border: Border.all(color: AuroraColors.inkBorder, width: 1),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x0A071238),
-              blurRadius: 8,
-              offset: Offset(0, 2),
-            ),
-          ],
+          boxShadow: AuroraShadows.card,
         ),
         child: Row(
           children: [
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 14),
               child: Icon(
-                Icons.search_rounded,
+                CupertinoIcons.search,
                 size: 18,
-                color: AuroraColors.inkSecondary,
+                color: AuroraColors.inkTertiary,
               ),
             ),
             Expanded(
@@ -758,32 +720,31 @@ class _DocSearchBarState extends ConsumerState<_DocSearchBar> {
                 ),
               ),
             ),
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: isPremium ? null : _showOcrUpgradeSheet,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isPremium ? AuroraColors.yellowDim : AuroraColors.butter,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    'OCR',
-                    style: AuroraType.labelSm.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: isPremium
-                          ? AuroraColors.yellow
-                          : AuroraColors.inkSecondary,
+            if (!isPremium)
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _showOcrUpgradeSheet,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AuroraColors.coralDim,
+                      borderRadius: AuroraRadius.xs,
+                    ),
+                    child: Text(
+                      'PREMIUM',
+                      style: AuroraType.labelSm.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AuroraColors.coral,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -891,7 +852,7 @@ class _FilterPill extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected ? activeColor : AuroraColors.paper,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: AuroraRadius.full,
           border: Border.all(
             color: isSelected ? activeColor : AuroraColors.inkBorder,
             width: 1,
@@ -915,7 +876,7 @@ class _FilterPill extends StatelessWidget {
               label,
               style: AuroraType.bodySm.copyWith(
                 fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : AuroraColors.ink,
+                color: isSelected ? AuroraColors.paper : AuroraColors.ink,
               ),
             ),
             const SizedBox(width: 4),
@@ -924,7 +885,7 @@ class _FilterPill extends StatelessWidget {
               style: AuroraType.bodySm.copyWith(
                 fontWeight: FontWeight.w400,
                 color: isSelected
-                    ? Colors.white.withValues(alpha: 0.75)
+                    ? AuroraColors.paper.withValues(alpha: 0.75)
                     : AuroraColors.inkSecondary,
               ),
             ),
@@ -953,7 +914,7 @@ class _DocGridTile extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AuroraRadius.md,
         onTap: () {
           final path = AppRoutes.documentDetail.replaceFirst(
             ':documentId',
@@ -964,15 +925,9 @@ class _DocGridTile extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: AuroraColors.paper,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: AuroraRadius.md,
             border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x0D071238),
-                blurRadius: 4,
-                offset: Offset(0, 1),
-              ),
-            ],
+            boxShadow: AuroraShadows.card,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1010,7 +965,7 @@ class _DocGridTile extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: expiry.bg,
-                            borderRadius: BorderRadius.circular(3),
+                            borderRadius: AuroraRadius.xs,
                           ),
                           child: Text(
                             expiry.label,
@@ -1034,7 +989,7 @@ class _DocGridTile extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: AuroraColors.butter,
-                          borderRadius: BorderRadius.circular(3),
+                          borderRadius: AuroraRadius.xs,
                         ),
                         child: Text(
                           typeLabel,
@@ -1123,10 +1078,22 @@ class _AllDocsFeed extends StatelessWidget {
         children: [
           Row(
             children: [
+              // Dot + label section header pattern.
+              Container(
+                width: 7,
+                height: 7,
+                margin: const EdgeInsets.only(right: 6),
+                decoration: const BoxDecoration(
+                  color: AuroraColors.inkSecondary,
+                  shape: BoxShape.circle,
+                ),
+              ),
               Expanded(
                 child: Text(
-                  sectionTitle,
-                  style: AuroraType.h2.copyWith(color: AuroraColors.ink),
+                  sectionTitle.toUpperCase(),
+                  style: AuroraType.label.copyWith(
+                    color: AuroraColors.inkSecondary,
+                  ),
                 ),
               ),
               _SortButton(
@@ -1136,7 +1103,7 @@ class _AllDocsFeed extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AuroraSpacing.space1),
+          const SizedBox(height: AuroraSpacing.space5),
           ...docs.map((doc) => _FeedRow(document: doc)),
         ],
       ),
@@ -1159,27 +1126,21 @@ class _FeedRow extends StatelessWidget {
     final dateStr = DateFormat('MMM d, yyyy').format(document.createdAt);
     final sizeStr = _formatSize(document.fileSizeBytes);
 
+    final typeLabel = _fileTypeLabel(document.mimeType);
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      decoration: const BoxDecoration(
+      margin: const EdgeInsets.only(bottom: AuroraSpacing.space3),
+      decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.all(Radius.circular(10)),
-        border: Border.fromBorderSide(
-          BorderSide(color: AuroraColors.inkBorder, width: 1),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x0D071238),
-            blurRadius: 4,
-            offset: Offset(0, 1),
-          ),
-        ],
+        borderRadius: AuroraRadius.xl,
+        border: Border.all(color: AuroraColors.inkBorder, width: 1),
+        boxShadow: AuroraShadows.card,
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: const BorderRadius.all(Radius.circular(10)),
+        borderRadius: AuroraRadius.xl,
         child: InkWell(
-          borderRadius: const BorderRadius.all(Radius.circular(10)),
+          borderRadius: AuroraRadius.xl,
           onTap: () {
             final path = AppRoutes.documentDetail.replaceFirst(
               ':documentId',
@@ -1191,14 +1152,50 @@ class _FeedRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
               children: [
-                // Colored dot.
+                // 44×44 color thumbnail square (category color).
                 Container(
-                  width: 8,
-                  height: 8,
-                  margin: const EdgeInsets.only(right: 10, top: 2),
+                  width: 44,
+                  height: 44,
+                  margin: const EdgeInsets.only(right: 12),
                   decoration: BoxDecoration(
-                    color: catColor,
-                    shape: BoxShape.circle,
+                    color: catColor.withAlpha(28),
+                    borderRadius: AuroraRadius.md,
+                  ),
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: Icon(
+                          CategoryIcons.forKey(cat?.icon ?? ''),
+                          size: 20,
+                          color: catColor,
+                        ),
+                      ),
+                      // Doc type chip — bottom-left of thumbnail.
+                      Positioned(
+                        bottom: 4,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: catColor.withAlpha(48),
+                              borderRadius: AuroraRadius.xs,
+                            ),
+                            child: Text(
+                              typeLabel,
+                              style: AuroraType.labelSm.copyWith(
+                                color: catColor,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 
@@ -1209,46 +1206,44 @@ class _FeedRow extends StatelessWidget {
                     children: [
                       Text(
                         document.name,
-                        style: AuroraType.body.copyWith(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AuroraColors.ink,
-                        ),
+                        style: AuroraType.h3,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 4),
                       Row(
                         children: [
+                          // Date in JetBrains Mono number style.
+                          Text(
+                            dateStr,
+                            style: AuroraType.number.copyWith(
+                              fontSize: 11,
+                              color: AuroraColors.inkSecondary,
+                            ),
+                          ),
                           if (cat != null) ...[
+                            const SizedBox(width: 6),
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 5,
-                                vertical: 1,
-                              ),
-                              decoration: BoxDecoration(
-                                color: catColor.withAlpha(20),
-                                borderRadius: BorderRadius.circular(3),
-                              ),
-                              child: Text(
-                                cat.name,
-                                style: AuroraType.bodySm.copyWith(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w700,
-                                  color: catColor,
-                                ),
+                              width: 3,
+                              height: 3,
+                              decoration: const BoxDecoration(
+                                color: AuroraColors.inkTertiary,
+                                shape: BoxShape.circle,
                               ),
                             ),
                             const SizedBox(width: 6),
-                          ],
-                          Text(
-                            dateStr,
-                            style: AuroraType.bodySm.copyWith(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w400,
-                              color: AuroraColors.inkTertiary,
+                            // Category name in bodySm inkSecondary.
+                            Flexible(
+                              child: Text(
+                                cat.name,
+                                style: AuroraType.bodySm.copyWith(
+                                  color: AuroraColors.inkSecondary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
+                          ],
                         ],
                       ),
                     ],
@@ -1257,42 +1252,32 @@ class _FeedRow extends StatelessWidget {
 
                 const SizedBox(width: AuroraSpacing.space3),
 
-                // End column: expiry badge or file size.
-                if (expiry != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 5,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: expiry.bg,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                    child: Text(
-                      expiry.label,
-                      style: AuroraType.labelSm.copyWith(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                        color: expiry.text,
+                // End: expiry badge or file size, then chevron.
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (expiry != null)
+                      StatusChip(
+                        label: expiry.label,
+                        background: expiry.bg,
+                        foreground: expiry.text,
+                      )
+                    else if (sizeStr.isNotEmpty)
+                      Text(
+                        sizeStr,
+                        style: AuroraType.number.copyWith(
+                          fontSize: 11,
+                          color: AuroraColors.inkTertiary,
+                        ),
                       ),
+                    const SizedBox(height: 4),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      size: 14,
+                      color: AuroraColors.inkSecondary,
                     ),
-                  )
-                else if (sizeStr.isNotEmpty)
-                  Text(
-                    sizeStr,
-                    style: AuroraType.labelSm.copyWith(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w400,
-                      color: AuroraColors.inkTertiary,
-                    ),
-                  ),
-
-                const SizedBox(width: AuroraSpacing.space1),
-
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  size: 14,
-                  color: AuroraColors.inkSecondary,
+                  ],
                 ),
               ],
             ),
@@ -1324,7 +1309,7 @@ class _StorageTierCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: AuroraColors.ink,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AuroraRadius.md,
       ),
       child: Row(
         children: [
@@ -1337,7 +1322,7 @@ class _StorageTierCard extends StatelessWidget {
                   style: AuroraType.bodySm.copyWith(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: AuroraColors.paper,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -1346,16 +1331,17 @@ class _StorageTierCard extends StatelessWidget {
                   style: AuroraType.bodySm.copyWith(
                     fontSize: 11,
                     fontWeight: FontWeight.w400,
-                    color: Colors.white.withAlpha(102),
+                    color: AuroraColors.paper.withValues(alpha: 102 / 255),
                   ),
                 ),
                 const SizedBox(height: 8),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: AuroraRadius.xs,
                   child: LinearProgressIndicator(
                     value: fraction,
                     minHeight: 3,
-                    backgroundColor: Colors.white.withAlpha(40),
+                    backgroundColor:
+                        AuroraColors.paper.withValues(alpha: 40 / 255),
                     valueColor: const AlwaysStoppedAnimation<Color>(
                       AuroraColors.coral,
                     ),
@@ -1384,7 +1370,7 @@ class _StorageTierCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
               decoration: BoxDecoration(
                 color: AuroraColors.coralDim,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AuroraRadius.sm,
               ),
               child: Text(
                 'UPGRADE',
@@ -1438,7 +1424,7 @@ class _SortButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: AuroraRadius.full,
           border: Border.all(color: AuroraColors.inkBorder, width: 1),
         ),
         child: Row(

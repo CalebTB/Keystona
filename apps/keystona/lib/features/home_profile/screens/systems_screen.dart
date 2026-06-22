@@ -190,12 +190,22 @@ class _CategoryHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
-      child: Text(
-        category.label.toUpperCase(),
-        style: AuroraType.labelSm.copyWith(
-          color: AuroraColors.inkSecondary,
-          letterSpacing: 0.8,
-        ),
+      child: Row(
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: const BoxDecoration(
+              color: AuroraColors.inkSecondary,
+              borderRadius: BorderRadius.all(Radius.circular(2)),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            category.label.toUpperCase(),
+            style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
+          ),
+        ],
       ),
     );
   }
@@ -212,7 +222,7 @@ class _AddFab extends StatelessWidget {
   Widget build(BuildContext context) {
     return FloatingActionButton(
       onPressed: onPressed,
-      backgroundColor: AuroraColors.ink,
+      backgroundColor: AuroraColors.coral,
       foregroundColor: Colors.white,
       child: const Icon(Icons.add),
     );

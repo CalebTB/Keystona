@@ -57,8 +57,8 @@ class _IOSLayout extends ConsumerWidget {
             bottom: AuroraSpacing.space8,
             child: FloatingActionButton(
               onPressed: () => context.push(AppRoutes.homeAppliancesAdd),
-              backgroundColor: AuroraColors.ink,
-              foregroundColor: Colors.white,
+              backgroundColor: AuroraColors.coral,
+              foregroundColor: AuroraColors.paper,
               elevation: 3,
               child: const Icon(Icons.add),
             ),
@@ -78,8 +78,8 @@ class _AndroidLayout extends ConsumerWidget {
       backgroundColor: AuroraColors.paper,
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push(AppRoutes.homeAppliancesAdd),
-        backgroundColor: AuroraColors.ink,
-        foregroundColor: Colors.white,
+        backgroundColor: AuroraColors.coral,
+        foregroundColor: AuroraColors.paper,
         child: const Icon(Icons.add),
       ),
       body: RefreshIndicator(
@@ -165,10 +165,23 @@ class _ContentSliver extends ConsumerWidget {
                     top: AuroraSpacing.space5,
                     bottom: AuroraSpacing.space1,
                   ),
-                  child: Text(
-                    item.title,
-                    style: AuroraType.label
-                        .copyWith(color: AuroraColors.inkSecondary),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: AuroraColors.inkSecondary,
+                          borderRadius: BorderRadius.all(Radius.circular(2)),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        item.title.toUpperCase(),
+                        style: AuroraType.label
+                            .copyWith(color: AuroraColors.inkSecondary),
+                      ),
+                    ],
                   ),
                 );
               }

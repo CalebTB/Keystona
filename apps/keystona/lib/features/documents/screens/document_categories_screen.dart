@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_view.dart';
+import '../../../core/widgets/snackbar_service.dart';
 import '../models/document_category.dart';
 import '../providers/document_categories_provider.dart';
 import '../widgets/category_form_sheet.dart';
@@ -94,7 +97,7 @@ class _AndroidCategoriesLayout extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AuroraColors.coral,
-        foregroundColor: Colors.white,
+        foregroundColor: AuroraColors.paper,
         onPressed: () => showCategoryFormSheet(context),
         child: const Icon(Icons.add),
       ),
@@ -133,7 +136,13 @@ class _CategoryList extends StatelessWidget {
         ...system.map((cat) => _CategoryRow(category: cat)),
         const SizedBox(height: AuroraSpacing.space7),
         _SectionHeader(label: 'Custom'),
-        if (custom.isEmpty) const _EmptyCustomCategories(),
+        if (custom.isEmpty)
+          const EmptyState(
+            icon: CupertinoIcons.folder,
+            title: 'No custom categories',
+            subtitle:
+                'Create your own categories to organize documents.',
+          ),
         ...custom.map((cat) => _CategoryRow(category: cat)),
       ],
     );
@@ -148,47 +157,24 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
-      child: Text(
-        label.toUpperCase(),
-        style: AuroraType.labelSm.copyWith(
-          color: AuroraColors.inkSecondary,
-          letterSpacing: 0.8,
-        ),
-      ),
-    );
-  }
-}
-
-// ── Empty state ───────────────────────────────────────────────────────────────
-
-class _EmptyCustomCategories extends StatelessWidget {
-  const _EmptyCustomCategories();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AuroraSpacing.space8),
-      child: Column(
+      padding: const EdgeInsets.only(bottom: AuroraSpacing.space5),
+      child: Row(
         children: [
-          const Icon(
-            Icons.folder_outlined,
-            size: 48,
-            color: AuroraColors.inkTertiary,
-          ),
-          const SizedBox(height: AuroraSpacing.space5),
-          Text(
-            'No custom categories yet',
-            style: AuroraType.bodySm.copyWith(
-              fontWeight: FontWeight.w600,
-              color: AuroraColors.inkSecondary,
+          // Small cobalt dot — categories is an action surface.
+          Container(
+            width: 7,
+            height: 7,
+            margin: const EdgeInsets.only(right: 6),
+            decoration: const BoxDecoration(
+              color: AuroraColors.cobalt,
+              shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(height: AuroraSpacing.space1),
           Text(
-            'Tap + to create your first custom category.',
-            style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
-            textAlign: TextAlign.center,
+            label.toUpperCase(),
+            style: AuroraType.label.copyWith(
+              color: AuroraColors.inkSecondary,
+            ),
           ),
         ],
       ),
@@ -217,9 +203,8 @@ class _CategoryRow extends ConsumerWidget {
       child: Container(
         constraints: const BoxConstraints(minHeight: 56),
         decoration: BoxDecoration(
-          color: AuroraColors.paper,
-          borderRadius: const BorderRadius.all(Radius.circular(12)),
-          border: Border.all(color: AuroraColors.inkBorder),
+          color: AuroraColors.butter,
+          borderRadius: AuroraRadius.lg,
         ),
         child: Row(
           children: [
@@ -234,7 +219,7 @@ class _CategoryRow extends ConsumerWidget {
               child: Icon(
                 CategoryIcons.forKey(category.icon),
                 size: 16,
-                color: Colors.white,
+                color: AuroraColors.paper,
               ),
             ),
             const SizedBox(width: AuroraSpacing.space5),
@@ -361,13 +346,8 @@ class _CategoryRow extends ConsumerWidget {
           .deleteCategory(category.id);
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to delete category. Please try again.'),
-            backgroundColor: AuroraColors.coral,
-          ),
-        );
+        SnackbarService.showError(
+            context, 'Failed to delete category. Please try again.');
       }
     }
   }

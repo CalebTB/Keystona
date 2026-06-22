@@ -12,8 +12,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 
 
 
@@ -55,7 +57,7 @@ const int _kOptionalFieldCount = 8;
 
 const BoxDecoration _kCardDecoration = BoxDecoration(
   color: AuroraColors.paper,
-  borderRadius: BorderRadius.all(Radius.circular(14)),
+  borderRadius: AuroraRadius.lg,
   border: Border.fromBorderSide(
     BorderSide(color: AuroraColors.inkBorder, width: 1.5),
   ),
@@ -63,7 +65,7 @@ const BoxDecoration _kCardDecoration = BoxDecoration(
 
 final BoxDecoration _kClimateCardDecoration = BoxDecoration(
   color: AuroraColors.limeDim,
-  borderRadius: const BorderRadius.all(Radius.circular(14)),
+  borderRadius: AuroraRadius.lg,
   border: Border.fromBorderSide(
     BorderSide(color: AuroraColors.lime.withValues(alpha: 0.13), width: 1.5),
   ),
@@ -324,7 +326,7 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
           type: MaterialType.transparency,
           child: Container(
             height: 300,
-            color: CupertinoColors.systemBackground.resolveFrom(context),
+            color: AuroraColors.paper,
             child: Column(
               children: [
                 Row(
@@ -474,7 +476,7 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
     if (_saveSuccess) {
       trailing = const Icon(
         CupertinoIcons.checkmark_alt_circle_fill,
-        color: CupertinoColors.activeGreen,
+        color: AuroraColors.limeDeep,
         size: 22,
       );
     } else if (_saving) {
@@ -483,11 +485,10 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
       trailing = CupertinoButton(
         padding: EdgeInsets.zero,
         onPressed: _save,
-        child: const Text(
+        child: Text(
           'Save',
-          style: TextStyle(
-            color: CupertinoColors.activeBlue,
-            fontWeight: FontWeight.w600,
+          style: AuroraType.label.copyWith(
+            color: AuroraColors.cobalt,
           ),
         ),
       );
@@ -503,10 +504,10 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
           onPressed: _saving ? null : () => context.pop(),
           child: Text(
             'Cancel',
-            style: TextStyle(
+            style: AuroraType.body.copyWith(
               color: _saving
-                  ? CupertinoColors.inactiveGray
-                  : CupertinoColors.activeBlue,
+                  ? AuroraColors.inkTertiary
+                  : AuroraColors.inkSecondary,
             ),
           ),
         ),
@@ -538,7 +539,7 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
           if (_saveSuccess)
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Icon(Icons.check_circle, color: Colors.green, size: 22),
+              child: Icon(Icons.check_circle, color: AuroraColors.limeDeep, size: 22),
             )
           else if (_saving)
             const Padding(
@@ -552,7 +553,14 @@ class _PropertyEditScreenState extends ConsumerState<PropertyEditScreen> {
               ),
             )
           else
-            TextButton(onPressed: _save, child: const Text('Save')),
+            Padding(
+              padding: const EdgeInsets.only(right: AuroraSpacing.space3),
+              child: SaveButton(
+                label: 'Save',
+                loading: false,
+                onPressed: _save,
+              ),
+            ),
         ],
       ),
       body: _initialized
@@ -906,16 +914,18 @@ class _DoneToolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 44,
-      color: CupertinoColors.systemBackground.resolveFrom(context),
+      color: AuroraColors.paper,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           CupertinoButton(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             onPressed: onDone,
-            child: const Text(
+            child: Text(
               'Done',
-              style: TextStyle(fontWeight: FontWeight.w600),
+              style: AuroraType.label.copyWith(
+                color: AuroraColors.cobalt,
+              ),
             ),
           ),
         ],
@@ -943,12 +953,18 @@ class _SectionHeader extends StatelessWidget {
         Row(
           children: [
             Container(
-              width: 6,
-              height: 6,
-              decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: dot,
+                borderRadius: AuroraRadius.xs,
+              ),
             ),
             const SizedBox(width: 6),
-            Text(eyebrow, style: AuroraType.label),
+            Text(
+              eyebrow.toUpperCase(),
+              style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
+            ),
           ],
         ),
         const SizedBox(height: 6),
@@ -1008,11 +1024,10 @@ class _FieldCardState extends State<_FieldCard> {
             duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
               color: AuroraColors.paper,
-              borderRadius:
-                  const BorderRadius.all(Radius.circular(14)),
+              borderRadius: AuroraRadius.lg,
               border: Border.fromBorderSide(
                 BorderSide(
-                  color: _focused ? AuroraColors.ink : AuroraColors.inkBorder,
+                  color: _focused ? AuroraColors.coral : AuroraColors.inkBorder,
                   width: _focused ? 2.0 : 1.5,
                 ),
               ),
@@ -1041,8 +1056,7 @@ class _FieldCardState extends State<_FieldCard> {
               padding: const EdgeInsets.only(left: 14, top: 3),
               child: Text(
                 widget.error!,
-                style: TextStyle(
-                  fontSize: 10,
+                style: AuroraType.labelSm.copyWith(
                   color: AuroraColors.coral,
                   height: 1.4,
                 ),
@@ -1135,7 +1149,7 @@ class _ClimateZoneCard extends StatelessWidget {
               height: 36,
               decoration: BoxDecoration(
                 color: AuroraColors.lime.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(9),
+                borderRadius: AuroraRadius.md,
               ),
               child: const Icon(Icons.thermostat_outlined,
                   size: 18, color: AuroraColors.lime),
@@ -1207,7 +1221,7 @@ class _CompletionBar extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: AuroraRadius.xs,
           child: LinearProgressIndicator(
             value: pct,
             minHeight: 4,
@@ -1222,8 +1236,7 @@ class _CompletionBar extends StatelessWidget {
           isComplete
               ? 'Profile complete'
               : '$filled of $total optional fields filled',
-          style: TextStyle(
-            fontSize: 11,
+          style: AuroraType.bodySm.copyWith(
             color: isComplete ? AuroraColors.lime : AuroraColors.inkTertiary,
             fontWeight: isComplete ? FontWeight.w600 : FontWeight.w400,
           ),
@@ -1264,7 +1277,7 @@ class _PhotoSlot extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: ClipRRect(
-        borderRadius: const BorderRadius.all(Radius.circular(16)),
+        borderRadius: AuroraRadius.xl,
         child: Stack(
           children: [
             AspectRatio(
@@ -1284,19 +1297,18 @@ class _PhotoSlot extends StatelessWidget {
                         horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
                       color: AuroraColors.ink.withValues(alpha: 0.42),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: AuroraRadius.xxl,
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.camera_alt_outlined,
-                            size: 16, color: Colors.white),
+                            size: 16, color: AuroraColors.paper),
                         const SizedBox(width: 6),
                         Text(
                           hasPhoto ? 'Change Photo' : 'Add Cover Photo',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
+                          style: AuroraType.body.copyWith(
+                            color: AuroraColors.paper,
                             fontWeight: FontWeight.w600,
                           ),
                         ),

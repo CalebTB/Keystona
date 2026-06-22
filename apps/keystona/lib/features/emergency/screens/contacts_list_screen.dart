@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../models/emergency_contact.dart';
@@ -33,12 +35,14 @@ class _IOSLayout extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return CupertinoPageScaffold(
+      backgroundColor: AuroraColors.paper,
       child: Stack(
         children: [
           CustomScrollView(
             slivers: [
               const CupertinoSliverNavigationBar(
                 largeTitle: Text('Contacts'),
+                backgroundColor: AuroraColors.paper,
               ),
               CupertinoSliverRefreshControl(
                 onRefresh: () =>
@@ -51,7 +55,11 @@ class _IOSLayout extends ConsumerWidget {
           Positioned(
             right: AuroraSpacing.space9,
             bottom: AuroraSpacing.space10,
-            child: const _AddContactFAB(),
+            child: AuroraFAB(
+              icon: Icons.add,
+              onPressed: () => context.push(AppRoutes.emergencyContactsAdd),
+              tooltip: 'Add Contact',
+            ),
           ),
         ],
       ),
@@ -68,9 +76,13 @@ class _AndroidLayout extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: AuroraColors.paper,
-      floatingActionButton: const _AddContactFAB(),
+      floatingActionButton: AuroraFAB(
+        icon: Icons.add,
+        onPressed: () => context.push(AppRoutes.emergencyContactsAdd),
+        tooltip: 'Add Contact',
+      ),
       body: RefreshIndicator(
-        color: AuroraColors.ink,
+        color: AuroraColors.coral,
         onRefresh: () => ref.read(contactsListProvider.notifier).refresh(),
         child: CustomScrollView(
           slivers: [
@@ -240,31 +252,15 @@ class _DeleteBackground extends StatelessWidget {
     return Container(
       alignment: Alignment.centerRight,
       padding: const EdgeInsets.only(right: AuroraSpacing.space9),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AuroraColors.coral,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AuroraRadius.xl,
       ),
       child: const Icon(
         Icons.delete_outline,
         color: Colors.white,
         size: 24,
       ),
-    );
-  }
-}
-
-// ── FAB ───────────────────────────────────────────────────────────────────────
-
-class _AddContactFAB extends StatelessWidget {
-  const _AddContactFAB();
-
-  @override
-  Widget build(BuildContext context) {
-    return FloatingActionButton(
-      onPressed: () => context.push(AppRoutes.emergencyContactsAdd),
-      backgroundColor: AuroraColors.ink,
-      foregroundColor: Colors.white,
-      child: const Icon(Icons.add),
     );
   }
 }

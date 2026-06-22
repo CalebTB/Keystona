@@ -3,12 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../services/providers/service_providers.dart';
 import '../theme/aurora_colors.dart';
+import '../theme/aurora_spacing.dart';
 import '../theme/aurora_typography.dart';
 
-/// Amber banner displayed at the top of the screen when the device is offline.
+/// Full-width banner displayed when the device is offline.
 ///
-/// Wrap with [Consumer] internally so it rebuilds automatically when
-/// connectivity changes. Place this above the main content inside a [Column]
+/// Aurora spec: butter background, wifi-off icon in inkSecondary,
+/// body text in ink, no dismiss. Place inside a [Column] above main content
 /// so it pushes content down without overlapping it.
 class OfflineBanner extends ConsumerWidget {
   const OfflineBanner({super.key});
@@ -24,22 +25,24 @@ class OfflineBanner extends ConsumerWidget {
 
     return Container(
       width: double.infinity,
-      color: AuroraColors.yellowDim,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: AuroraColors.butter,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AuroraSpacing.screenPadH,
+        vertical: AuroraSpacing.space3,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(
-            Icons.wifi_off,
+            Icons.wifi_off_rounded,
             size: 16,
-            color: AuroraColors.yellowDeep,
+            color: AuroraColors.inkSecondary,
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: AuroraSpacing.space1),
           Text(
             'No internet connection',
-            style: AuroraType.bodySm.copyWith(
-              fontWeight: FontWeight.w600,
-              color: AuroraColors.yellowDeep,
+            style: AuroraType.body.copyWith(
+              color: AuroraColors.ink,
             ),
           ),
         ],

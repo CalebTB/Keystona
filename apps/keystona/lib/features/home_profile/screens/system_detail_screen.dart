@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_shadows.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 
 import '../../../core/router/app_router.dart';
 
@@ -226,7 +227,7 @@ class _SkeletonBar extends StatelessWidget {
         height: height,
         decoration: BoxDecoration(
           color: AuroraColors.inkBorder,
-          borderRadius: const BorderRadius.all(Radius.circular(8)),
+          borderRadius: AuroraRadius.sm,
         ),
       ),
     );
@@ -323,28 +324,20 @@ class _DetailContentState extends ConsumerState<_DetailContent> {
                           AuroraSpacing.screenPadH, 12),
                       decoration: BoxDecoration(
                         color: AuroraColors.paper,
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(16)),
+                        borderRadius: AuroraRadius.xl,
                         border: Border.all(
                             color: AuroraColors.inkBorder, width: 1.5),
-                        boxShadow: [
-                          const BoxShadow(
-                            color: Color(0x0A071238),
-                            blurRadius: 8,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
+                        boxShadow: AuroraShadows.card,
                       ),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(
-                            16 - 1.5),
+                        borderRadius: AuroraRadius.xl,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Colored top accent strip
                             Container(height: 3, color: categoryColor),
                           Padding(
-                            padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
+                            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
@@ -353,25 +346,23 @@ class _DetailContentState extends ConsumerState<_DetailContent> {
                                   height: 46,
                                   decoration: BoxDecoration(
                                     color: categoryColor.withAlpha(28),
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: AuroraRadius.md,
                                   ),
                                   child: Icon(icon, color: categoryColor, size: 24),
                                 ),
-                                const SizedBox(width: 14),
+                                const SizedBox(width: AuroraSpacing.space4),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         eyebrow,
-                                        style: GoogleFonts.jetBrainsMono(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w700,
+                                        style: AuroraType.label.copyWith(
                                           letterSpacing: 1.2,
                                           color: healthColor,
                                         ),
                                       ),
-                                      const SizedBox(height: 3),
+                                      const SizedBox(height: AuroraSpacing.space1),
                                       Text(
                                         system.name,
                                         style: AuroraType.h1
@@ -382,12 +373,10 @@ class _DetailContentState extends ConsumerState<_DetailContent> {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                       if (subtitle.isNotEmpty) ...[
-                                        const SizedBox(height: 2),
+                                        const SizedBox(height: AuroraSpacing.space1),
                                         Text(
                                           subtitle,
-                                          style: GoogleFonts.jetBrainsMono(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w400,
+                                          style: AuroraType.bodySm.copyWith(
                                             color: AuroraColors.inkSecondary,
                                           ),
                                           overflow: TextOverflow.ellipsis,
@@ -399,17 +388,17 @@ class _DetailContentState extends ConsumerState<_DetailContent> {
                               ],
                             ),
                           ),
-                          // Stats row with subtle category tint
+                          // Stats row — butter AuroraTile grid
                           Container(
-                            decoration: BoxDecoration(
-                              color: categoryColor.withAlpha(14),
-                              borderRadius: const BorderRadius.vertical(
+                            decoration: const BoxDecoration(
+                              color: AuroraColors.butter,
+                              borderRadius: BorderRadius.vertical(
                                 bottom: Radius.circular(16 - 1.5),
                               ),
                               border: Border(
                                 top: BorderSide(
-                                  color: categoryColor.withAlpha(40),
-                                  width: 1,
+                                  color: AuroraColors.inkBorder,
+                                  width: 0.5,
                                 ),
                               ),
                             ),
@@ -423,10 +412,10 @@ class _DetailContentState extends ConsumerState<_DetailContent> {
                                           label: 'INSTALLED',
                                           value: installedVal),
                                     ),
-                                    VerticalDivider(
-                                      color: categoryColor.withAlpha(50),
+                                    const VerticalDivider(
+                                      color: AuroraColors.inkBorder,
                                       width: 1,
-                                      thickness: 1,
+                                      thickness: 0.5,
                                     ),
                                   ],
                                   Expanded(
@@ -434,10 +423,10 @@ class _DetailContentState extends ConsumerState<_DetailContent> {
                                         label: 'LIFESPAN',
                                         value: pctStr),
                                   ),
-                                  VerticalDivider(
-                                    color: categoryColor.withAlpha(50),
+                                  const VerticalDivider(
+                                    color: AuroraColors.inkBorder,
                                     width: 1,
-                                    thickness: 1,
+                                    thickness: 0.5,
                                   ),
                                   Expanded(
                                     child: _StatCell2(
@@ -602,8 +591,6 @@ class _DeleteBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-
     return Container(
       padding: EdgeInsets.fromLTRB(
         AuroraSpacing.screenPadH,
@@ -612,37 +599,22 @@ class _DeleteBar extends StatelessWidget {
         AuroraSpacing.screenPadH + MediaQuery.of(context).padding.bottom,
       ),
       decoration: BoxDecoration(
-        color: isIOS ? CupertinoColors.systemBackground : AuroraColors.paper,
+        color: AuroraColors.paper,
         border: const Border(top: BorderSide(color: AuroraColors.inkBorder, width: 0.5)),
       ),
       child: SizedBox(
+        width: double.infinity,
         height: 44,
-        child: OutlinedButton.icon(
-          onPressed: isDeleting ? null : onDelete,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AuroraColors.coral,
-            side: const BorderSide(color: AuroraColors.coral),
-            shape: RoundedRectangleBorder(
-              borderRadius: const BorderRadius.all(Radius.circular(14)),
-            ),
-          ),
-          icon: isDeleting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AuroraColors.coral,
-                  ),
-                )
-              : const Icon(Icons.delete_outline, size: 18),
-          label: Text(
-            isDeleting ? 'Removing…' : 'Remove System',
-            style: AuroraType.body.copyWith(fontWeight: FontWeight.w600).copyWith(
-              color: isDeleting ? AuroraColors.inkTertiary : AuroraColors.coral,
-            ),
-          ),
-        ),
+        child: isDeleting
+            ? const Center(
+                child: CupertinoActivityIndicator(
+                  color: AuroraColors.coral,
+                ),
+              )
+            : GhostButton(
+                label: 'Remove System',
+                onPressed: onDelete,
+              ),
       ),
     );
   }
@@ -785,9 +757,7 @@ class _StatCell2 extends StatelessWidget {
         children: [
           Text(
             label,
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 9,
-              fontWeight: FontWeight.w700,
+            style: AuroraType.labelSm.copyWith(
               letterSpacing: 0.8,
               color: AuroraColors.inkTertiary,
             ),
@@ -823,7 +793,7 @@ class _WarrantyCalloutCard2 extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AuroraColors.limeDim,
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        borderRadius: AuroraRadius.lg,
         border: Border.all(
           color: AuroraColors.lime.withAlpha(51),
         ),
@@ -844,16 +814,14 @@ class _WarrantyCalloutCard2 extends StatelessWidget {
               size: 18,
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: AuroraSpacing.space2),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'MANUFACTURER WARRANTY',
-                  style: GoogleFonts.jetBrainsMono(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
+                  style: AuroraType.labelSm.copyWith(
                     letterSpacing: 0.8,
                     color: AuroraColors.inkTertiary,
                   ),
@@ -974,19 +942,17 @@ class _QuickActionCell2 extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: AuroraSpacing.space4),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 24, color: AuroraColors.ink),
-            const SizedBox(height: 6),
-            Text(label, style: AuroraType.labelSm),
-            const SizedBox(height: 2),
+            const SizedBox(height: AuroraSpacing.space2),
+            Text(label.toUpperCase(), style: AuroraType.labelSm),
+            const SizedBox(height: AuroraSpacing.space1),
             Text(
               subtitle,
-              style: GoogleFonts.jetBrainsMono(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
+              style: AuroraType.bodySm.copyWith(
                 color: AuroraColors.inkTertiary,
               ),
               textAlign: TextAlign.center,
@@ -1009,15 +975,18 @@ class _SectionLabel2 extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 6,
-            height: 6,
-            decoration: const BoxDecoration(
-              color: AuroraColors.ink,
-              shape: BoxShape.circle,
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(
+              color: AuroraColors.inkSecondary,
+              borderRadius: AuroraRadius.xs,
             ),
           ),
-          const SizedBox(width: 6),
-          Text(title, style: AuroraType.label),
+          const SizedBox(width: AuroraSpacing.space2),
+          Text(
+            title,
+            style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
+          ),
         ],
       ),
     );

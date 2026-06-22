@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 
 import '../providers/project_contractors_provider.dart';
 import '../providers/project_detail_provider.dart';
@@ -61,10 +62,10 @@ class ProjectContractorsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Contractors')),
       body: body,
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: AuroraFAB(
+        icon: Icons.add,
         onPressed: () => _onAdd(context, ref),
-        backgroundColor: AuroraColors.ink,
-        child: const Icon(Icons.add, color: Colors.white),
+        tooltip: 'Add contractor',
       ),
     );
   }
@@ -96,14 +97,7 @@ class _EmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AuroraSpacing.space10),
-            FilledButton(
-              onPressed: onAdd,
-              style: FilledButton.styleFrom(
-                backgroundColor: AuroraColors.ink,
-                padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              ),
-              child: const Text('+ Add Contractor'),
-            ),
+            PrimaryButton(label: '+ Add Contractor', onPressed: onAdd),
           ],
         ),
       ),
@@ -130,12 +124,7 @@ class _ErrorState extends StatelessWidget {
             Text("Couldn't load contractors",
                 style: AuroraType.h3, textAlign: TextAlign.center),
             const SizedBox(height: AuroraSpacing.space9),
-            FilledButton(
-              onPressed: onRetry,
-              style:
-                  FilledButton.styleFrom(backgroundColor: AuroraColors.ink),
-              child: const Text('Retry'),
-            ),
+            PrimaryButton(label: 'Retry', onPressed: onRetry),
           ],
         ),
       ),

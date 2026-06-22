@@ -2,12 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 import '../../../services/providers/service_providers.dart';
 import '../../../services/supabase_service.dart';
 import '../../home_profile/providers/home_profile_provider.dart';
@@ -58,13 +59,16 @@ class SettingsScreen extends ConsumerWidget {
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(AuroraSpacing.screenPadH).copyWith(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AuroraSpacing.screenPadH,
+              ).copyWith(
                 top: AuroraSpacing.space3,
-                bottom: 48,
+                bottom: AuroraSpacing.space10 + 16,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // ── Account card (ink bg, coral avatar) ──────────────────
                   _AccountCard(
                     initials: initials,
                     fullName: fullName,
@@ -73,20 +77,35 @@ class SettingsScreen extends ConsumerWidget {
                     onTap: () => context.push(AppRoutes.settingsProfile),
                   ),
 
+                  // ── PRO upgrade card (shown only to free users) ──────────
+                  if (!isPremium) ...[
+                    const SizedBox(height: AuroraSpacing.space5),
+                    _ProUpgradeCard(
+                      onUpgrade: () =>
+                          context.push(AppRoutes.settingsSubscription),
+                    ),
+                  ],
+
                   const SizedBox(height: AuroraSpacing.space10),
 
-                  _GroupLabel(dot: AuroraColors.lime, label: 'PROPERTY'),
+                  // ── Property section ─────────────────────────────────────
+                  const _SectionHeader(
+                    dot: AuroraColors.lime,
+                    label: 'PROPERTY',
+                  ),
                   const SizedBox(height: AuroraSpacing.space3),
                   _SettingsGroup(rows: [
                     _SettingsRow(
-                      iconColor: AuroraColors.lime,
+                      iconBg: AuroraColors.limeDim,
+                      iconColor: AuroraColors.limeDeep,
                       icon: CupertinoIcons.house,
                       title: address,
                       subtitle: addressSub,
                       onTap: () => context.push(AppRoutes.settingsProfile),
                     ),
                     _SettingsRow(
-                      iconColor: AuroraColors.lime,
+                      iconBg: AuroraColors.limeDim,
+                      iconColor: AuroraColors.limeDeep,
                       icon: CupertinoIcons.person_2,
                       title: 'Household members',
                       subtitle: 'Manage who has access',
@@ -96,64 +115,125 @@ class SettingsScreen extends ConsumerWidget {
 
                   const SizedBox(height: AuroraSpacing.space10),
 
-                  _GroupLabel(dot: AuroraColors.yellowDeep, label: 'NOTIFICATIONS'),
+                  // ── Notifications section ────────────────────────────────
+                  const _SectionHeader(
+                    dot: AuroraColors.yellow,
+                    label: 'NOTIFICATIONS',
+                  ),
                   const SizedBox(height: AuroraSpacing.space3),
                   _SettingsGroup(rows: [
                     _ToggleRow(
+                      iconBg: AuroraColors.yellowDim,
                       iconColor: AuroraColors.yellowDeep,
                       icon: CupertinoIcons.bell,
                       title: 'Push notifications',
                       onToggle: (v) {},
                     ),
                     _SettingsRow(
+                      iconBg: AuroraColors.yellowDim,
                       iconColor: AuroraColors.yellowDeep,
                       icon: CupertinoIcons.moon,
                       title: 'Quiet hours',
                       subtitle: '10pm – 8am',
-                      onTap: () => context.push(AppRoutes.settingsNotifications),
+                      onTap: () =>
+                          context.push(AppRoutes.settingsNotifications),
                     ),
                   ]),
 
                   const SizedBox(height: AuroraSpacing.space10),
 
-                  _GroupLabel(dot: AuroraColors.cobalt, label: 'SUBSCRIPTION'),
+                  // ── Subscription section ─────────────────────────────────
+                  const _SectionHeader(
+                    dot: AuroraColors.cobalt,
+                    label: 'SUBSCRIPTION',
+                  ),
                   const SizedBox(height: AuroraSpacing.space3),
                   _SettingsGroup(rows: [
                     _SettingsRow(
+                      iconBg: AuroraColors.cobaltDim,
                       iconColor: AuroraColors.cobalt,
                       icon: CupertinoIcons.star,
                       title: 'Manage plan',
                       subtitle: isPremium
                           ? 'Premium · renews Sep 12'
                           : 'Free plan · Upgrade to Pro',
-                      onTap: () => context.push(AppRoutes.settingsSubscription),
+                      onTap: () =>
+                          context.push(AppRoutes.settingsSubscription),
                     ),
                   ]),
 
                   const SizedBox(height: AuroraSpacing.space10),
 
-                  _GroupLabel(dot: AuroraColors.cobalt, label: 'PRIVACY'),
+                  // ── Privacy section ──────────────────────────────────────
+                  const _SectionHeader(
+                    dot: AuroraColors.cobalt,
+                    label: 'PRIVACY',
+                  ),
                   const SizedBox(height: AuroraSpacing.space3),
                   _SettingsGroup(rows: [
                     _SettingsRow(
+                      iconBg: AuroraColors.cobaltDim,
                       iconColor: AuroraColors.cobalt,
                       icon: CupertinoIcons.arrow_down_circle,
                       title: 'Export my data',
                       onTap: () => context.push(AppRoutes.settingsExport),
                     ),
-                    _SettingsRow(
-                      iconColor: AuroraColors.coral,
-                      icon: CupertinoIcons.trash,
-                      title: 'Delete account',
-                      titleColor: AuroraColors.coral,
-                      danger: true,
-                      onTap: () =>
-                          context.push(AppRoutes.settingsDeleteAccount),
-                    ),
                   ]),
+
+                  const SizedBox(height: AuroraSpacing.space3),
+
+                  // ── Danger zone — ghost text only, no icon group ─────────
+                  GestureDetector(
+                    onTap: () =>
+                        context.push(AppRoutes.settingsDeleteAccount),
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AuroraSpacing.space6,
+                        vertical: 13,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AuroraColors.coralDim,
+                        borderRadius: AuroraRadius.lg,
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: AuroraColors.coral.withValues(alpha: 0.15),
+                              borderRadius: AuroraRadius.sm,
+                            ),
+                            child: const Icon(
+                              CupertinoIcons.trash,
+                              size: 14,
+                              color: AuroraColors.coral,
+                            ),
+                          ),
+                          const SizedBox(width: AuroraSpacing.space5),
+                          Expanded(
+                            child: Text(
+                              'Delete account',
+                              style: AuroraType.body.copyWith(
+                                color: AuroraColors.coral,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            CupertinoIcons.chevron_right,
+                            size: 14,
+                            color: AuroraColors.coral.withValues(alpha: 0.55),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
 
                   const SizedBox(height: AuroraSpacing.space10),
 
+                  // ── Sign out ─────────────────────────────────────────────
                   _SignOutButton(ref: ref),
 
                   const SizedBox(height: AuroraSpacing.space7),
@@ -184,7 +264,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-// ── Account card ──────────────────────────────────────────────────────────────
+// ── Account card — ink bg, coral avatar ──────────────────────────────────────
 
 class _AccountCard extends StatelessWidget {
   const _AccountCard({
@@ -206,50 +286,42 @@ class _AccountCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AuroraSpacing.space7),
         decoration: BoxDecoration(
-          color: AuroraColors.paper,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
+          color: AuroraColors.ink,
+          borderRadius: AuroraRadius.xl,
         ),
         child: Row(
           children: [
+            // Coral avatar circle
             Container(
               width: 52,
               height: 52,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [AuroraColors.coral, AuroraColors.yellow],
-                ),
-                borderRadius: BorderRadius.circular(14),
+              decoration: const BoxDecoration(
+                color: AuroraColors.coral,
+                shape: BoxShape.circle,
               ),
               child: Center(
                 child: Text(
                   initials,
-                  style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
+                  style: AuroraType.h2.copyWith(color: AuroraColors.paper),
                 ),
               ),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: AuroraSpacing.space6),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     fullName,
-                    style: AuroraType.bodyLg.copyWith(fontWeight: FontWeight.w600),
+                    style: AuroraType.h3.copyWith(color: AuroraColors.paper),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     email,
                     style: AuroraType.bodySm.copyWith(
-                      color: AuroraColors.inkSecondary,
+                      color: AuroraColors.paper.withValues(alpha: 0.65),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -258,37 +330,29 @@ class _AccountCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: AuroraColors.yellowDim,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: AuroraColors.yellowDeep.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
+                        horizontal: 7,
+                        vertical: 3,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(CupertinoIcons.star_fill,
-                              size: 10, color: AuroraColors.yellowDeep),
-                          const SizedBox(width: 4),
-                          Text(
-                            'PREMIUM · ANNUAL',
-                            style: AuroraType.label.copyWith(
-                              color: AuroraColors.yellowDeep,
-                              fontSize: 9,
-                            ),
-                          ),
-                        ],
+                      decoration: BoxDecoration(
+                        color: AuroraColors.lime.withValues(alpha: 0.18),
+                        borderRadius: AuroraRadius.xs,
+                      ),
+                      child: Text(
+                        'PRO',
+                        style: AuroraType.labelSm.copyWith(
+                          color: AuroraColors.lime,
+                        ),
                       ),
                     ),
                   ],
                 ],
               ),
             ),
-            const Icon(CupertinoIcons.chevron_right,
-                size: 16, color: AuroraColors.inkTertiary),
+            Icon(
+              CupertinoIcons.chevron_right,
+              size: 15,
+              color: AuroraColors.paper.withValues(alpha: 0.40),
+            ),
           ],
         ),
       ),
@@ -296,10 +360,91 @@ class _AccountCard extends StatelessWidget {
   }
 }
 
-// ── Group label ───────────────────────────────────────────────────────────────
+// ── PRO upgrade card — coral bg with yellow blob ──────────────────────────────
 
-class _GroupLabel extends StatelessWidget {
-  const _GroupLabel({required this.dot, required this.label});
+class _ProUpgradeCard extends StatelessWidget {
+  const _ProUpgradeCard({required this.onUpgrade});
+
+  final VoidCallback onUpgrade;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AuroraColors.coral,
+        borderRadius: AuroraRadius.xl,
+      ),
+      child: ClipRRect(
+        borderRadius: AuroraRadius.xl,
+        child: Stack(
+          children: [
+            // Yellow decorative blob top-right
+            Positioned(
+              top: -24,
+              right: -24,
+              child: Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
+                  color: AuroraColors.yellow.withValues(alpha: 0.32),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(AuroraSpacing.space7),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AuroraColors.lime.withValues(alpha: 0.2),
+                      borderRadius: AuroraRadius.xs,
+                    ),
+                    child: Text(
+                      'PRO',
+                      style: AuroraType.labelSm.copyWith(
+                        color: AuroraColors.lime,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AuroraSpacing.space3),
+                  Text(
+                    'Unlock the full picture',
+                    style: AuroraType.h3.copyWith(color: AuroraColors.paper),
+                  ),
+                  const SizedBox(height: AuroraSpacing.space2),
+                  Text(
+                    'Unlimited docs · AI maintenance plans · Priority alerts',
+                    style: AuroraType.body.copyWith(
+                      color: AuroraColors.paper.withValues(alpha: 0.80),
+                    ),
+                  ),
+                  const SizedBox(height: AuroraSpacing.space7),
+                  PrimaryButton(
+                    label: 'Upgrade to Pro',
+                    onPressed: onUpgrade,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Section header — dot + label ──────────────────────────────────────────────
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.dot, required this.label});
+
   final Color dot;
   final String label;
 
@@ -308,39 +453,46 @@ class _GroupLabel extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 6,
-          height: 6,
-          decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(
+            color: dot,
+            borderRadius: AuroraRadius.xs,
+          ),
         ),
         const SizedBox(width: 6),
-        Text(label, style: AuroraType.label),
+        Text(label.toUpperCase(), style: AuroraType.label),
       ],
     );
   }
 }
 
-// ── Settings group (card with dividers) ───────────────────────────────────────
+// ── Settings group card ───────────────────────────────────────────────────────
 
 class _SettingsGroup extends StatelessWidget {
   const _SettingsGroup({required this.rows});
+
   final List<Widget> rows;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
+        color: AuroraColors.butter,
+        borderRadius: AuroraRadius.lg,
+        border: Border.all(color: AuroraColors.inkBorder),
       ),
       child: Column(
         children: [
           for (int i = 0; i < rows.length; i++) ...[
             rows[i],
             if (i < rows.length - 1)
-              const Divider(
-                  height: 1, thickness: 1, color: AuroraColors.butter,
-                  indent: 54),
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: AuroraColors.inkBorder,
+                indent: AuroraSpacing.space6 + 28 + AuroraSpacing.space5,
+              ),
           ],
         ],
       ),
@@ -352,21 +504,19 @@ class _SettingsGroup extends StatelessWidget {
 
 class _SettingsRow extends StatelessWidget {
   const _SettingsRow({
+    required this.iconBg,
     required this.iconColor,
     required this.icon,
     required this.title,
     this.subtitle,
-    this.titleColor,
-    this.danger = false,
     this.onTap,
   });
 
+  final Color iconBg;
   final Color iconColor;
   final IconData icon;
   final String title;
   final String? subtitle;
-  final Color? titleColor;
-  final bool danger;
   final VoidCallback? onTap;
 
   @override
@@ -374,25 +524,29 @@ class _SettingsRow extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Container(
-        color: danger
-            ? AuroraColors.coral.withValues(alpha: 0.04)
-            : Colors.transparent,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AuroraSpacing.space6,
+          vertical: 13,
+        ),
         child: Row(
           children: [
-            _IconBlock(color: iconColor, icon: icon),
-            const SizedBox(width: 12),
+            // 28×28 icon tile
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: AuroraRadius.sm,
+              ),
+              child: Icon(icon, size: 14, color: iconColor),
+            ),
+            const SizedBox(width: AuroraSpacing.space5),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: AuroraType.body.copyWith(
-                      color: titleColor ?? AuroraColors.ink,
-                    ),
-                  ),
+                  Text(title, style: AuroraType.body),
                   if (subtitle != null)
                     Text(
                       subtitle!,
@@ -403,8 +557,11 @@ class _SettingsRow extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(CupertinoIcons.chevron_right,
-                size: 15, color: AuroraColors.inkTertiary),
+            const Icon(
+              CupertinoIcons.chevron_right,
+              size: 14,
+              color: AuroraColors.inkTertiary,
+            ),
           ],
         ),
       ),
@@ -416,12 +573,14 @@ class _SettingsRow extends StatelessWidget {
 
 class _ToggleRow extends StatefulWidget {
   const _ToggleRow({
+    required this.iconBg,
     required this.iconColor,
     required this.icon,
     required this.title,
     required this.onToggle,
   });
 
+  final Color iconBg;
   final Color iconColor;
   final IconData icon;
   final String title;
@@ -437,17 +596,28 @@ class _ToggleRowState extends State<_ToggleRow> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AuroraSpacing.space6,
+        vertical: 12,
+      ),
       child: Row(
         children: [
-          _IconBlock(color: widget.iconColor, icon: widget.icon),
-          const SizedBox(width: 12),
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: widget.iconBg,
+              borderRadius: AuroraRadius.sm,
+            ),
+            child: Icon(widget.icon, size: 14, color: widget.iconColor),
+          ),
+          const SizedBox(width: AuroraSpacing.space5),
           Expanded(
             child: Text(widget.title, style: AuroraType.body),
           ),
           CupertinoSwitch(
             value: _value,
-            activeTrackColor: AuroraColors.lime,
+            activeTrackColor: AuroraColors.coral,
             onChanged: (v) {
               setState(() => _value = v);
               widget.onToggle(v);
@@ -459,31 +629,11 @@ class _ToggleRowState extends State<_ToggleRow> {
   }
 }
 
-// ── Icon block ────────────────────────────────────────────────────────────────
-
-class _IconBlock extends StatelessWidget {
-  const _IconBlock({required this.color, required this.icon});
-  final Color color;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 32,
-      height: 32,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(9),
-      ),
-      child: Icon(icon, size: 16, color: color),
-    );
-  }
-}
-
 // ── Sign out ──────────────────────────────────────────────────────────────────
 
 class _SignOutButton extends ConsumerWidget {
   const _SignOutButton({required this.ref});
+
   final WidgetRef ref;
 
   @override
@@ -515,8 +665,8 @@ class _SignOutButton extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
+          borderRadius: AuroraRadius.lg,
+          border: Border.all(color: AuroraColors.inkBorderStrong),
         ),
         child: Text(
           'Sign out',

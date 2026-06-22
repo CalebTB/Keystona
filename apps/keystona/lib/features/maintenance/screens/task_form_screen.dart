@@ -5,7 +5,10 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/supabase_service.dart';
 import '../models/maintenance_task.dart';
@@ -444,87 +447,84 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
           onPressed: _saving ? null : () => context.pop(),
           child: const Text('Cancel'),
         ),
-        trailing: CupertinoButton(
-          padding: EdgeInsets.zero,
-          onPressed: _saving ? null : _save,
-          child: _saving
-              ? const CupertinoActivityIndicator()
-              : const Text(
-                  'Save',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-        ),
       ),
       child: SafeArea(
         bottom: false,
-        child: _FormBody(
-          formKey: _formKey,
-          isIOS: true,
-          saving: _saving,
-          titleController: _titleController,
-          descriptionController: _descriptionController,
-          toolsController: _toolsController,
-          suppliesController: _suppliesController,
-          estHoursController: _estHoursController,
-          category: _category,
-          dueDate: _dueDate,
-          recurrence: _recurrence,
-          priority: _priority,
-          difficulty: _difficulty,
-          diyOrPro: _diyOrPro,
-          linkedSystemId: _linkedSystemId,
-          linkedApplianceId: _linkedApplianceId,
-          propertyId: _propertyId,
-          onCategoryTap: () => _pickEnumIOS(
-            title: 'Category',
-            options: TaskCategories.all
-                .map((c) => (c.value, c.label))
-                .toList(),
-            current: _category,
-            onSelected: (v) => setState(() => _category = v),
-          ),
-          onDueDateTap: _pickDueDate,
-          onRecurrenceTap: () => _pickEnumIOS(
-            title: 'Recurrence',
-            options: RecurrenceType.values
-                .map((r) => (r, r.label))
-                .toList(),
-            current: _recurrence,
-            onSelected: (v) => setState(() => _recurrence = v),
-          ),
-          onPriorityTap: () => _pickEnumIOS(
-            title: 'Priority',
-            options: [
-              (TaskPriority.low, 'Low'),
-              (TaskPriority.medium, 'Medium'),
-              (TaskPriority.high, 'High'),
-            ],
-            current: _priority,
-            onSelected: (v) => setState(() => _priority = v),
-          ),
-          onDifficultyTap: () => _pickEnumIOS(
-            title: 'Difficulty',
-            options: [
-              (TaskDifficulty.easy, 'Easy'),
-              (TaskDifficulty.moderate, 'Moderate'),
-              (TaskDifficulty.involved, 'Involved'),
-              (TaskDifficulty.professional, 'Professional'),
-            ],
-            current: _difficulty,
-            onSelected: (v) => setState(() => _difficulty = v),
-          ),
-          onDiyOrProTap: () => _pickEnumIOS(
-            title: 'Recommendation',
-            options: [
-              (DiyOrPro.diy, 'DIY'),
-              (DiyOrPro.either, 'Either'),
-              (DiyOrPro.professional, 'Professional'),
-            ],
-            current: _diyOrPro,
-            onSelected: (v) => setState(() => _diyOrPro = v),
-          ),
-          onSystemTap: (options) => _pickLinkedSystem(options),
-          onApplianceTap: (options) => _pickLinkedAppliance(options),
+        child: Column(
+          children: [
+            Expanded(
+              child: _FormBody(
+                formKey: _formKey,
+                isIOS: true,
+                saving: _saving,
+                titleController: _titleController,
+                descriptionController: _descriptionController,
+                toolsController: _toolsController,
+                suppliesController: _suppliesController,
+                estHoursController: _estHoursController,
+                category: _category,
+                dueDate: _dueDate,
+                recurrence: _recurrence,
+                priority: _priority,
+                difficulty: _difficulty,
+                diyOrPro: _diyOrPro,
+                linkedSystemId: _linkedSystemId,
+                linkedApplianceId: _linkedApplianceId,
+                propertyId: _propertyId,
+                onCategoryTap: () => _pickEnumIOS(
+                  title: 'Category',
+                  options: TaskCategories.all
+                      .map((c) => (c.value, c.label))
+                      .toList(),
+                  current: _category,
+                  onSelected: (v) => setState(() => _category = v),
+                ),
+                onDueDateTap: _pickDueDate,
+                onRecurrenceTap: () => _pickEnumIOS(
+                  title: 'Recurrence',
+                  options: RecurrenceType.values
+                      .map((r) => (r, r.label))
+                      .toList(),
+                  current: _recurrence,
+                  onSelected: (v) => setState(() => _recurrence = v),
+                ),
+                onPriorityTap: () => _pickEnumIOS(
+                  title: 'Priority',
+                  options: [
+                    (TaskPriority.low, 'Low'),
+                    (TaskPriority.medium, 'Medium'),
+                    (TaskPriority.high, 'High'),
+                  ],
+                  current: _priority,
+                  onSelected: (v) => setState(() => _priority = v),
+                ),
+                onDifficultyTap: () => _pickEnumIOS(
+                  title: 'Difficulty',
+                  options: [
+                    (TaskDifficulty.easy, 'Easy'),
+                    (TaskDifficulty.moderate, 'Moderate'),
+                    (TaskDifficulty.involved, 'Involved'),
+                    (TaskDifficulty.professional, 'Professional'),
+                  ],
+                  current: _difficulty,
+                  onSelected: (v) => setState(() => _difficulty = v),
+                ),
+                onDiyOrProTap: () => _pickEnumIOS(
+                  title: 'Recommendation',
+                  options: [
+                    (DiyOrPro.diy, 'DIY'),
+                    (DiyOrPro.either, 'Either'),
+                    (DiyOrPro.professional, 'Professional'),
+                  ],
+                  current: _diyOrPro,
+                  onSelected: (v) => setState(() => _diyOrPro = v),
+                ),
+                onSystemTap: (options) => _pickLinkedSystem(options),
+                onApplianceTap: (options) => _pickLinkedAppliance(options),
+              ),
+            ),
+            _FormBottomBar(saving: _saving, onSave: _save, onCancel: () => context.pop()),
+          ],
         ),
       ),
     );
@@ -547,147 +547,129 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
           icon: const Icon(Icons.close),
           onPressed: _saving ? null : () => context.pop(),
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: _saving
-                ? Center(
-                    child: SizedBox.square(
-                      dimension: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AuroraColors.ink,
-                      ),
-                    ),
-                  )
-                : TextButton(
-                    onPressed: _save,
-                    child: Text(
-                      'Save',
-                      style: TextStyle(
-                        color: AuroraColors.ink,
-                        fontWeight: FontWeight.w600,
-                      ),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: _FormBody(
+              formKey: _formKey,
+              isIOS: false,
+              saving: _saving,
+              titleController: _titleController,
+              descriptionController: _descriptionController,
+              toolsController: _toolsController,
+              suppliesController: _suppliesController,
+              estHoursController: _estHoursController,
+              category: _category,
+              dueDate: _dueDate,
+              recurrence: _recurrence,
+              priority: _priority,
+              difficulty: _difficulty,
+              diyOrPro: _diyOrPro,
+              linkedSystemId: _linkedSystemId,
+              linkedApplianceId: _linkedApplianceId,
+              propertyId: _propertyId,
+              onCategoryTap: () async {
+                final result = await showModalBottomSheet<String>(
+                  context: context,
+                  backgroundColor: AuroraColors.paper,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(16),
                     ),
                   ),
+                  builder: (_) => _CategoryPicker(current: _category),
+                );
+                if (result != null && mounted) setState(() => _category = result);
+              },
+              onDueDateTap: _pickDueDate,
+              onRecurrenceTap: () async {
+                final result = await showModalBottomSheet<RecurrenceType>(
+                  context: context,
+                  backgroundColor: AuroraColors.paper,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                  ),
+                  builder: (_) => _EnumPicker<RecurrenceType>(
+                    title: 'Recurrence',
+                    options: RecurrenceType.values.map((r) => (r, r.label)).toList(),
+                    current: _recurrence,
+                  ),
+                );
+                if (result != null && mounted) setState(() => _recurrence = result);
+              },
+              onPriorityTap: () async {
+                final result = await showModalBottomSheet<TaskPriority>(
+                  context: context,
+                  backgroundColor: AuroraColors.paper,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                  ),
+                  builder: (_) => _EnumPicker<TaskPriority>(
+                    title: 'Priority',
+                    options: [
+                      (TaskPriority.low, 'Low'),
+                      (TaskPriority.medium, 'Medium'),
+                      (TaskPriority.high, 'High'),
+                    ],
+                    current: _priority,
+                  ),
+                );
+                if (result != null && mounted) setState(() => _priority = result);
+              },
+              onDifficultyTap: () async {
+                final result = await showModalBottomSheet<TaskDifficulty>(
+                  context: context,
+                  backgroundColor: AuroraColors.paper,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                  ),
+                  builder: (_) => _EnumPicker<TaskDifficulty>(
+                    title: 'Difficulty',
+                    options: [
+                      (TaskDifficulty.easy, 'Easy'),
+                      (TaskDifficulty.moderate, 'Moderate'),
+                      (TaskDifficulty.involved, 'Involved'),
+                      (TaskDifficulty.professional, 'Professional'),
+                    ],
+                    current: _difficulty,
+                  ),
+                );
+                if (result != null && mounted) setState(() => _difficulty = result);
+              },
+              onDiyOrProTap: () async {
+                final result = await showModalBottomSheet<DiyOrPro>(
+                  context: context,
+                  backgroundColor: AuroraColors.paper,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                  ),
+                  builder: (_) => _EnumPicker<DiyOrPro>(
+                    title: 'Recommendation',
+                    options: [
+                      (DiyOrPro.diy, 'DIY'),
+                      (DiyOrPro.either, 'Either'),
+                      (DiyOrPro.professional, 'Professional'),
+                    ],
+                    current: _diyOrPro,
+                  ),
+                );
+                if (result != null && mounted) setState(() => _diyOrPro = result);
+              },
+              onSystemTap: (options) => _pickLinkedSystem(options),
+              onApplianceTap: (options) => _pickLinkedAppliance(options),
+            ),
           ),
+          _FormBottomBar(saving: _saving, onSave: _save, onCancel: () => context.pop()),
         ],
-      ),
-      body: _FormBody(
-        formKey: _formKey,
-        isIOS: false,
-        saving: _saving,
-        titleController: _titleController,
-        descriptionController: _descriptionController,
-        toolsController: _toolsController,
-        suppliesController: _suppliesController,
-        estHoursController: _estHoursController,
-        category: _category,
-        dueDate: _dueDate,
-        recurrence: _recurrence,
-        priority: _priority,
-        difficulty: _difficulty,
-        diyOrPro: _diyOrPro,
-        linkedSystemId: _linkedSystemId,
-        linkedApplianceId: _linkedApplianceId,
-        propertyId: _propertyId,
-        onCategoryTap: () async {
-          final result = await showModalBottomSheet<String>(
-            context: context,
-            backgroundColor: AuroraColors.paper,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
-            ),
-            builder: (_) => _CategoryPicker(current: _category),
-          );
-          if (result != null && mounted) setState(() => _category = result);
-        },
-        onDueDateTap: _pickDueDate,
-        onRecurrenceTap: () async {
-          final result = await showModalBottomSheet<RecurrenceType>(
-            context: context,
-            backgroundColor: AuroraColors.paper,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
-            ),
-            builder: (_) => _EnumPicker<RecurrenceType>(
-              title: 'Recurrence',
-              options: RecurrenceType.values.map((r) => (r, r.label)).toList(),
-              current: _recurrence,
-            ),
-          );
-          if (result != null && mounted) setState(() => _recurrence = result);
-        },
-        onPriorityTap: () async {
-          final result = await showModalBottomSheet<TaskPriority>(
-            context: context,
-            backgroundColor: AuroraColors.paper,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
-            ),
-            builder: (_) => _EnumPicker<TaskPriority>(
-              title: 'Priority',
-              options: [
-                (TaskPriority.low, 'Low'),
-                (TaskPriority.medium, 'Medium'),
-                (TaskPriority.high, 'High'),
-              ],
-              current: _priority,
-            ),
-          );
-          if (result != null && mounted) setState(() => _priority = result);
-        },
-        onDifficultyTap: () async {
-          final result = await showModalBottomSheet<TaskDifficulty>(
-            context: context,
-            backgroundColor: AuroraColors.paper,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
-            ),
-            builder: (_) => _EnumPicker<TaskDifficulty>(
-              title: 'Difficulty',
-              options: [
-                (TaskDifficulty.easy, 'Easy'),
-                (TaskDifficulty.moderate, 'Moderate'),
-                (TaskDifficulty.involved, 'Involved'),
-                (TaskDifficulty.professional, 'Professional'),
-              ],
-              current: _difficulty,
-            ),
-          );
-          if (result != null && mounted) setState(() => _difficulty = result);
-        },
-        onDiyOrProTap: () async {
-          final result = await showModalBottomSheet<DiyOrPro>(
-            context: context,
-            backgroundColor: AuroraColors.paper,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
-            ),
-            builder: (_) => _EnumPicker<DiyOrPro>(
-              title: 'Recommendation',
-              options: [
-                (DiyOrPro.diy, 'DIY'),
-                (DiyOrPro.either, 'Either'),
-                (DiyOrPro.professional, 'Professional'),
-              ],
-              current: _diyOrPro,
-            ),
-          );
-          if (result != null && mounted) setState(() => _diyOrPro = result);
-        },
-        onSystemTap: (options) => _pickLinkedSystem(options),
-        onApplianceTap: (options) => _pickLinkedAppliance(options),
       ),
     );
   }
@@ -930,28 +912,28 @@ class _FormBody extends ConsumerWidget {
 
   static InputDecoration _inputDecoration(String hint) => InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: AuroraColors.inkSecondary),
+        hintStyle: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
         filled: true,
         fillColor: AuroraColors.paper,
-        counterStyle: TextStyle(color: AuroraColors.inkSecondary, fontSize: 12),
+        counterStyle: AuroraType.labelSm.copyWith(color: AuroraColors.inkSecondary),
         border: OutlineInputBorder(
-          borderRadius: const BorderRadius.all(Radius.circular(8)),
+          borderRadius: AuroraRadius.sm,
           borderSide: BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: const BorderRadius.all(Radius.circular(8)),
+          borderRadius: AuroraRadius.sm,
           borderSide: BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: const BorderRadius.all(Radius.circular(8)),
-          borderSide: BorderSide(color: AuroraColors.ink),
+          borderRadius: AuroraRadius.sm,
+          borderSide: const BorderSide(color: AuroraColors.coral, width: 2.0),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: const BorderRadius.all(Radius.circular(8)),
+          borderRadius: AuroraRadius.sm,
           borderSide: BorderSide(color: AuroraColors.coral),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: const BorderRadius.all(Radius.circular(8)),
+          borderRadius: AuroraRadius.sm,
           borderSide: BorderSide(color: AuroraColors.coral),
         ),
         contentPadding: const EdgeInsets.symmetric(
@@ -990,13 +972,25 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 16, bottom: 4),
-      child: Text(
-        label.toUpperCase(),
-        style: AuroraType.labelSm.copyWith(
-          color: AuroraColors.inkSecondary,
-          letterSpacing: 0.8,
-        ),
+      padding: const EdgeInsets.only(top: AuroraSpacing.space5, bottom: AuroraSpacing.space2),
+      child: Row(
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: const BoxDecoration(
+              color: AuroraColors.cobalt,
+              borderRadius: AuroraRadius.xs,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label.toUpperCase(),
+            style: AuroraType.label.copyWith(
+              color: AuroraColors.inkSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1009,14 +1003,28 @@ class _FormField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isRequired = label.endsWith(' *');
+    final baseLabel = isRequired ? label.substring(0, label.length - 2) : label;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Text(label, style: AuroraType.label),
+            padding: const EdgeInsets.only(bottom: AuroraSpacing.space1),
+            child: Row(
+              children: [
+                Text(
+                  baseLabel.toUpperCase(),
+                  style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
+                ),
+                if (isRequired)
+                  Text(
+                    ' *',
+                    style: AuroraType.label.copyWith(color: AuroraColors.coral),
+                  ),
+              ],
+            ),
           ),
           child,
         ],
@@ -1042,7 +1050,7 @@ class _TapRow extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: const BorderRadius.all(Radius.circular(8)),
+          borderRadius: AuroraRadius.sm,
           border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(
@@ -1132,6 +1140,62 @@ class _EnumPicker<T> extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Form bottom action bar ────────────────────────────────────────────────────
+
+/// Sticky bottom bar with SaveButton (cobalt) and SecondaryButton (cancel).
+/// Used on both iOS and Android form layouts.
+class _FormBottomBar extends StatelessWidget {
+  const _FormBottomBar({
+    required this.saving,
+    required this.onSave,
+    required this.onCancel,
+  });
+
+  final bool saving;
+  final VoidCallback onSave;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.space4,
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.space4 + bottomPad,
+      ),
+      decoration: BoxDecoration(
+        color: AuroraColors.paper,
+        border: Border(
+          top: BorderSide(color: AuroraColors.inkBorder),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: SecondaryButton(
+              label: 'Cancel',
+              expand: true,
+              onPressed: saving ? null : onCancel,
+            ),
+          ),
+          const SizedBox(width: AuroraSpacing.space3),
+          Expanded(
+            flex: 2,
+            child: SaveButton(
+              label: 'Save Task',
+              loading: saving,
+              expand: true,
+              onPressed: saving ? null : onSave,
+            ),
+          ),
         ],
       ),
     );

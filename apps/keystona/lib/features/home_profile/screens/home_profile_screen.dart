@@ -6,9 +6,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_shadows.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
 
@@ -32,17 +33,11 @@ import '../widgets/home_profile_skeleton.dart';
 
 const BoxDecoration _kCardDecoration = BoxDecoration(
   color: AuroraColors.paper,
-  borderRadius: BorderRadius.all(Radius.circular(14)),
+  borderRadius: AuroraRadius.lg,
   border: Border.fromBorderSide(
     BorderSide(color: AuroraColors.inkBorder, width: 1.5),
   ),
-  boxShadow: [
-    BoxShadow(
-      color: Color(0x0D071238),
-      blurRadius: 4,
-      offset: Offset(0, 1),
-    ),
-  ],
+  boxShadow: AuroraShadows.card,
 );
 
 // ── Lifespan helpers ──────────────────────────────────────────────────────────
@@ -325,7 +320,7 @@ class _AndroidLayout extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddSheet(context),
         backgroundColor: AuroraColors.coral,
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add, color: AuroraColors.paper),
       ),
       body: RefreshIndicator(
         color: AuroraColors.coral,
@@ -447,8 +442,7 @@ class _PropertyCard extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         color: AuroraColors.ink,
-        borderRadius:
-            BorderRadius.all(Radius.circular(16 + 2)), // 18px
+        borderRadius: AuroraRadius.xxl,
       ),
       padding: const EdgeInsets.all(AuroraSpacing.space5 + 4), // 20px
       child: Column(
@@ -459,7 +453,7 @@ class _PropertyCard extends StatelessWidget {
             children: [
               // Exterior photo thumbnail (or placeholder).
               ClipRRect(
-                borderRadius: const BorderRadius.all(Radius.circular(14)),
+                borderRadius: AuroraRadius.lg,
                 child: Container(
                   width: 64,
                   height: 64,
@@ -487,7 +481,7 @@ class _PropertyCard extends StatelessWidget {
                         ),
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: AuroraSpacing.space4),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -495,16 +489,16 @@ class _PropertyCard extends StatelessWidget {
                     Text(
                       _streetLine,
                       style: AuroraType.h1.copyWith(
-                        color: const Color(0xFFFFFFFF),
+                        color: AuroraColors.paper,
                         fontWeight: FontWeight.w800,
                         fontSize: 18,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AuroraSpacing.space1),
                     Text(
                       _cityLine,
                       style: AuroraType.bodySm.copyWith(
-                        color: const Color(0x59FFFFFF),
+                        color: AuroraColors.paper.withValues(alpha: 0.35),
                         fontSize: 12,
                       ),
                     ),
@@ -519,8 +513,7 @@ class _PropertyCard extends StatelessWidget {
                   height: 32,
                   decoration: const BoxDecoration(
                     color: Color(0x1AFFFFFF),
-                    borderRadius: BorderRadius.all(
-                        Radius.circular(999)),
+                    borderRadius: AuroraRadius.full,
                   ),
                   child: const Icon(
                     Icons.edit_outlined,
@@ -532,7 +525,7 @@ class _PropertyCard extends StatelessWidget {
             ],
           ),
           if (_hasStats) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: AuroraSpacing.space4),
             _PropertyStats(property: property),
           ],
         ],
@@ -557,14 +550,14 @@ class _PropertyStats extends StatelessWidget {
         if (property.yearBuilt != null) ...[
           _StatCell(
               value: '${property.yearBuilt}', label: 'Year Built'),
-          const SizedBox(width: 20),
+          const SizedBox(width: AuroraSpacing.space5),
         ],
         if (property.squareFeet != null) ...[
           _StatCell(
             value: _fmtSqFt(property.squareFeet!),
             label: 'Sq Ft',
           ),
-          const SizedBox(width: 20),
+          const SizedBox(width: AuroraSpacing.space5),
         ],
         if (property.bedrooms != null)
           _StatCell(
@@ -603,13 +596,13 @@ class _StatCell extends StatelessWidget {
         Text(
           value,
           style:
-              AuroraType.number.copyWith(color: const Color(0xFFFFFFFF)),
+              AuroraType.number.copyWith(color: AuroraColors.paper),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: AuroraSpacing.space1),
         Text(
           label.toUpperCase(),
           style: AuroraType.labelSm.copyWith(
-            color: const Color(0x59FFFFFF),
+            color: AuroraColors.paper.withValues(alpha: 0.35),
           ),
         ),
       ],
@@ -660,15 +653,14 @@ class _ForecastStrip extends ConsumerWidget {
               width: double.infinity,
               decoration: BoxDecoration(
                 color: AuroraColors.yellowDim,
-                borderRadius:
-                    const BorderRadius.all(Radius.circular(14)),
+                borderRadius: AuroraRadius.lg,
                 border: Border.all(
                   color: AuroraColors.yellow.withValues(alpha: 0.2),
                   width: 1.5,
                 ),
               ),
               padding: const EdgeInsets.symmetric(
-                  horizontal: 14, vertical: 12),
+                  horizontal: AuroraSpacing.space4, vertical: AuroraSpacing.space3),
               child: Row(
                 children: [
                   Container(
@@ -676,7 +668,7 @@ class _ForecastStrip extends ConsumerWidget {
                     height: 36,
                     decoration: BoxDecoration(
                       color: AuroraColors.yellow.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(9),
+                      borderRadius: AuroraRadius.md,
                     ),
                     child: const Icon(
                       Icons.schedule_outlined,
@@ -684,25 +676,23 @@ class _ForecastStrip extends ConsumerWidget {
                       color: AuroraColors.yellow,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AuroraSpacing.space3),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           '5-Year Replacement Forecast',
-                          style: AuroraType.h3.copyWith(
+                          style: AuroraType.body.copyWith(
                             color: AuroraColors.yellow,
-                            fontSize: 13,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AuroraSpacing.space1),
                         Text(
                           '${forecastSystems.length} system${forecastSystems.length == 1 ? '' : 's'} due for replacement'
                           '${costStr != null ? ' · $costStr total' : ''}',
                           style: AuroraType.label.copyWith(
                             color: AuroraColors.yellow.withValues(alpha: 0.8),
-                            fontSize: 10,
                           ),
                         ),
                       ],
@@ -739,9 +729,9 @@ class _SystemsSection extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _SectionHeader(label: 'Systems', count: systems.length),
-          const SizedBox(height: 8),
+          const SizedBox(height: AuroraSpacing.space2),
           const _StatusLegend(),
-          const SizedBox(height: 10),
+          const SizedBox(height: AuroraSpacing.space2),
           if (systems.isEmpty)
             _EmptySectionHint(
               label: 'No systems tracked yet',
@@ -775,7 +765,7 @@ class _AppliancesSection extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _SectionHeader(label: 'Appliances', count: appliances.length),
-          const SizedBox(height: 10),
+          const SizedBox(height: AuroraSpacing.space2),
           if (appliances.isEmpty)
             _EmptySectionHint(
               label: 'No appliances tracked yet',
@@ -804,21 +794,24 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.2,
-            color: AuroraColors.ink,
+        Container(
+          width: 7,
+          height: 7,
+          decoration: const BoxDecoration(
+            color: AuroraColors.inkSecondary,
+            borderRadius: AuroraRadius.xs,
           ),
+        ),
+        const SizedBox(width: AuroraSpacing.space2),
+        Text(
+          label.toUpperCase(),
+          style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
         ),
         const Spacer(),
         Text(
           '$count tracked',
           style: AuroraType.label.copyWith(
             color: AuroraColors.inkTertiary,
-            fontSize: 11,
           ),
         ),
       ],
@@ -836,9 +829,9 @@ class _StatusLegend extends StatelessWidget {
     return Row(
       children: const [
         _LegendDot(color: AuroraColors.lime, label: 'Healthy'),
-        SizedBox(width: 14),
+        SizedBox(width: AuroraSpacing.space4),
         _LegendDot(color: AuroraColors.yellow, label: 'Aging'),
-        SizedBox(width: 14),
+        SizedBox(width: AuroraSpacing.space4),
         _LegendDot(color: AuroraColors.coral, label: 'End of Life'),
       ],
     );
@@ -863,11 +856,10 @@ class _LegendDot extends StatelessWidget {
             shape: BoxShape.circle,
           ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: AuroraSpacing.space1),
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 10,
+          style: AuroraType.labelSm.copyWith(
             fontWeight: FontWeight.w600,
             color: color,
           ),
@@ -945,7 +937,7 @@ class _SystemCard extends StatelessWidget {
       ),
       child: Container(
         decoration: _kCardDecoration,
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AuroraSpacing.space4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -958,11 +950,11 @@ class _SystemCard extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: style.bg,
-                    borderRadius: BorderRadius.circular(11),
+                    borderRadius: AuroraRadius.lg,
                   ),
                   child: Icon(style.icon, size: 20, color: style.fg),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AuroraSpacing.space3),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -977,7 +969,7 @@ class _SystemCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AuroraSpacing.space2),
                           // Health badge.
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -986,12 +978,11 @@ class _SystemCard extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: healthBg,
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: AuroraRadius.xs,
                             ),
                             child: Text(
                               healthLbl,
-                              style: GoogleFonts.jetBrainsMono(
-                                fontSize: 9,
+                              style: AuroraType.labelSm.copyWith(
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.5,
                                 color: healthColor,
@@ -1016,12 +1007,10 @@ class _SystemCard extends StatelessWidget {
 
             // Brand · model · location row.
             if (specParts.isNotEmpty) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: AuroraSpacing.space2),
               Text(
                 specParts.join(' · '),
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w400,
+                style: AuroraType.bodySm.copyWith(
                   color: AuroraColors.inkTertiary,
                 ),
                 maxLines: 1,
@@ -1031,26 +1020,24 @@ class _SystemCard extends StatelessWidget {
 
             // Lifespan bar.
             if (system.installationDate != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AuroraSpacing.space2),
               ClipRRect(
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: AuroraRadius.xs,
                 child: LinearProgressIndicator(
                   value: barValue,
                   minHeight: 5,
-                  backgroundColor: AuroraColors.butter,
+                  backgroundColor: AuroraColors.inkBorder,
                   valueColor: AlwaysStoppedAnimation<Color>(barColor),
                 ),
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: AuroraSpacing.space1),
               // Age row.
               Row(
                 children: [
                   if (ageText != null)
                     Text(
                       ageText,
-                      style: GoogleFonts.jetBrainsMono(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
+                      style: AuroraType.labelSm.copyWith(
                         color: AuroraColors.inkTertiary,
                       ),
                     ),
@@ -1058,8 +1045,7 @@ class _SystemCard extends StatelessWidget {
                   if (remainingText != null)
                     Text(
                       remainingText,
-                      style: GoogleFonts.jetBrainsMono(
-                        fontSize: 10,
+                      style: AuroraType.labelSm.copyWith(
                         fontWeight: FontWeight.w600,
                         color: remainingColor,
                       ),
@@ -1069,9 +1055,9 @@ class _SystemCard extends StatelessWidget {
             ],
 
             // Divider.
-            const SizedBox(height: 8),
-            const Divider(color: AuroraColors.paper, height: 1),
-            const SizedBox(height: 8),
+            const SizedBox(height: AuroraSpacing.space2),
+            const Divider(color: AuroraColors.inkBorder, height: 1, thickness: 0.5),
+            const SizedBox(height: AuroraSpacing.space2),
 
             // Cost tag + warranty badge row.
             Row(
@@ -1087,9 +1073,7 @@ class _SystemCard extends StatelessWidget {
                       ),
                       Text(
                         '${_fmtCost(system.estimatedReplacementCost!)} replacement',
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w400,
+                        style: AuroraType.labelSm.copyWith(
                           color: AuroraColors.inkTertiary,
                         ),
                       ),
@@ -1102,12 +1086,11 @@ class _SystemCard extends StatelessWidget {
                         horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: badge.bg,
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: AuroraRadius.xs,
                     ),
                     child: Text(
                       badge.label,
-                      style: GoogleFonts.jetBrainsMono(
-                        fontSize: 9,
+                      style: AuroraType.labelSm.copyWith(
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.3,
                         color: badge.text,
@@ -1190,7 +1173,7 @@ class _ApplianceCard extends StatelessWidget {
       ),
       child: Container(
         decoration: _kCardDecoration,
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AuroraSpacing.space4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1203,11 +1186,11 @@ class _ApplianceCard extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: style.bg,
-                    borderRadius: BorderRadius.circular(11),
+                    borderRadius: AuroraRadius.lg,
                   ),
                   child: Icon(style.icon, size: 20, color: style.fg),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AuroraSpacing.space3),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1222,19 +1205,18 @@ class _ApplianceCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AuroraSpacing.space2),
                           // Health badge.
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: healthBg,
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: AuroraRadius.xs,
                             ),
                             child: Text(
                               healthLbl,
-                              style: GoogleFonts.jetBrainsMono(
-                                fontSize: 9,
+                              style: AuroraType.labelSm.copyWith(
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.5,
                                 color: healthColor,
@@ -1258,12 +1240,10 @@ class _ApplianceCard extends StatelessWidget {
 
             // Brand · model · location row.
             if (specParts.isNotEmpty) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: AuroraSpacing.space2),
               Text(
                 specParts.join(' · '),
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w400,
+                style: AuroraType.bodySm.copyWith(
                   color: AuroraColors.inkTertiary,
                 ),
                 maxLines: 1,
@@ -1273,25 +1253,23 @@ class _ApplianceCard extends StatelessWidget {
 
             // Lifespan bar.
             if (appliance.purchaseDate != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AuroraSpacing.space2),
               ClipRRect(
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: AuroraRadius.xs,
                 child: LinearProgressIndicator(
                   value: barValue,
                   minHeight: 5,
-                  backgroundColor: AuroraColors.butter,
+                  backgroundColor: AuroraColors.inkBorder,
                   valueColor: AlwaysStoppedAnimation<Color>(barColor),
                 ),
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: AuroraSpacing.space1),
               Row(
                 children: [
                   if (ageText != null)
                     Text(
                       ageText,
-                      style: GoogleFonts.jetBrainsMono(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
+                      style: AuroraType.labelSm.copyWith(
                         color: AuroraColors.inkTertiary,
                       ),
                     ),
@@ -1299,8 +1277,7 @@ class _ApplianceCard extends StatelessWidget {
                   if (remainingText != null)
                     Text(
                       remainingText,
-                      style: GoogleFonts.jetBrainsMono(
-                        fontSize: 10,
+                      style: AuroraType.labelSm.copyWith(
                         fontWeight: FontWeight.w600,
                         color: remainingColor,
                       ),
@@ -1310,9 +1287,9 @@ class _ApplianceCard extends StatelessWidget {
             ],
 
             // Divider.
-            const SizedBox(height: 8),
-            const Divider(color: AuroraColors.paper, height: 1),
-            const SizedBox(height: 8),
+            const SizedBox(height: AuroraSpacing.space2),
+            const Divider(color: AuroraColors.inkBorder, height: 1, thickness: 0.5),
+            const SizedBox(height: AuroraSpacing.space2),
 
             // Cost tag + warranty badge row.
             Row(
@@ -1328,9 +1305,7 @@ class _ApplianceCard extends StatelessWidget {
                       ),
                       Text(
                         '${_fmtCost(appliance.estimatedReplacementCost!)} purchased',
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w400,
+                        style: AuroraType.labelSm.copyWith(
                           color: AuroraColors.inkTertiary,
                         ),
                       ),
@@ -1343,12 +1318,11 @@ class _ApplianceCard extends StatelessWidget {
                         horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: badge.bg,
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: AuroraRadius.xs,
                     ),
                     child: Text(
                       badge.label,
-                      style: GoogleFonts.jetBrainsMono(
-                        fontSize: 9,
+                      style: AuroraType.labelSm.copyWith(
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.3,
                         color: badge.text,
@@ -1408,7 +1382,7 @@ class _AddFab extends StatelessWidget {
     return FloatingActionButton(
       onPressed: onPressed,
       backgroundColor: AuroraColors.coral,
-      child: const Icon(Icons.add, color: Colors.white),
+      child: const Icon(Icons.add, color: AuroraColors.paper),
     );
   }
 }
@@ -1428,15 +1402,11 @@ class _SectionLoadingPlaceholder extends StatelessWidget {
           children: [
             Text(
               label,
-              style: GoogleFonts.inter(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: AuroraColors.ink,
-              ),
+              style: AuroraType.h2.copyWith(color: AuroraColors.ink),
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: AuroraSpacing.space2),
         Container(
           height: 80,
           decoration: _kCardDecoration,
@@ -1457,10 +1427,12 @@ class _EmptySectionHint extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: const BorderRadius.all(Radius.circular(14)),
-          border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
+          borderRadius: AuroraRadius.lg,
+          border: Border.fromBorderSide(
+            BorderSide(color: AuroraColors.inkBorder, width: 1.5),
+          ),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: Row(
@@ -1471,7 +1443,7 @@ class _EmptySectionHint extends StatelessWidget {
               size: 16,
               color: AuroraColors.inkTertiary,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AuroraSpacing.space2),
             Text(
               label,
               style: AuroraType.bodySm.copyWith(

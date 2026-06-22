@@ -3,8 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/utils/validators.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/providers/service_providers.dart';
 
@@ -50,77 +54,274 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AuroraColors.paper,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AuroraSpacing.screenPadH),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AuroraSpacing.screenPadH,
+          ),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: AuroraSpacing.space9),
+                const SizedBox(height: AuroraSpacing.space10),
+
+                // ── Screen title ──────────────────────────────────────────────
+                Text('Sign In', style: AuroraType.h1),
+
+                const SizedBox(height: AuroraSpacing.space2),
+
                 Text(
-                  'Sign In',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-                const SizedBox(height: AuroraSpacing.space8),
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  autocorrect: false,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
+                  'Welcome back to Keystona.',
+                  style: AuroraType.body.copyWith(
+                    color: AuroraColors.inkSecondary,
                   ),
-                  validator: Validators.email,
                 ),
-                const SizedBox(height: AuroraSpacing.space5),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => _signIn(),
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
+
+                const SizedBox(height: AuroraSpacing.space10),
+
+                // ── Email field ───────────────────────────────────────────────
+                _AuroraFormField(
+                  label: 'Email',
+                  isRequired: true,
+                  child: TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    autocorrect: false,
+                    style: AuroraType.body,
+                    cursorColor: AuroraColors.coral,
+                    decoration: _inputDecoration('your@email.com'),
+                    validator: Validators.email,
                   ),
-                  validator: Validators.required,
                 ),
+
                 const SizedBox(height: AuroraSpacing.space7),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _signIn,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Sign In'),
+
+                // ── Password field ────────────────────────────────────────────
+                _AuroraFormField(
+                  label: 'Password',
+                  isRequired: true,
+                  child: TextFormField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => _signIn(),
+                    style: AuroraType.body,
+                    cursorColor: AuroraColors.coral,
+                    decoration: _inputDecoration('••••••••'),
+                    validator: Validators.required,
+                  ),
                 ),
+
                 const SizedBox(height: AuroraSpacing.space3),
-                TextButton(
-                  onPressed: () => context.go(AppRoutes.forgotPassword),
-                  child: const Text('Forgot password?'),
+
+                // ── Forgot password link ──────────────────────────────────────
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: GhostButton(
+                    label: 'Forgot password?',
+                    onPressed: () => context.go(AppRoutes.forgotPassword),
+                  ),
                 ),
+
+                const SizedBox(height: AuroraSpacing.space9),
+
+                // ── Sign in CTA ───────────────────────────────────────────────
+                PrimaryButton(
+                  label: 'Sign In',
+                  onPressed: _signIn,
+                  loading: _isLoading,
+                  expand: true,
+                ),
+
                 const SizedBox(height: AuroraSpacing.space8),
-                OutlinedButton.icon(
-                  onPressed: null,
-                  icon: const Icon(Icons.g_mobiledata),
-                  label: const Text('Continue with Google'),
+
+                // ── Divider ───────────────────────────────────────────────────
+                Row(
+                  children: [
+                    const Expanded(child: Divider(color: AuroraColors.inkBorder)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AuroraSpacing.space7,
+                      ),
+                      child: Text(
+                        'OR',
+                        style: AuroraType.label.copyWith(
+                          color: AuroraColors.inkSecondary,
+                        ),
+                      ),
+                    ),
+                    const Expanded(child: Divider(color: AuroraColors.inkBorder)),
+                  ],
                 ),
+
+                const SizedBox(height: AuroraSpacing.space8),
+
+                // ── Social auth ───────────────────────────────────────────────
+                _SocialButton(
+                  icon: Icons.g_mobiledata,
+                  label: 'Continue with Google',
+                  onPressed: null,
+                ),
+
                 const SizedBox(height: AuroraSpacing.space3),
-                OutlinedButton.icon(
+
+                _SocialButton(
+                  icon: Icons.apple,
+                  label: 'Continue with Apple',
                   onPressed: null,
-                  icon: const Icon(Icons.apple),
-                  label: const Text('Continue with Apple'),
                 ),
-                const SizedBox(height: AuroraSpacing.space8),
-                TextButton(
-                  onPressed: () => context.go(AppRoutes.signup),
-                  child: const Text("Don't have an account? Sign up"),
+
+                const SizedBox(height: AuroraSpacing.space10),
+
+                // ── Sign up link ──────────────────────────────────────────────
+                Center(
+                  child: GestureDetector(
+                    onTap: () => context.go(AppRoutes.signup),
+                    child: RichText(
+                      text: TextSpan(
+                        text: "Don't have an account? ",
+                        style: AuroraType.body.copyWith(
+                          color: AuroraColors.inkSecondary,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: 'Sign up',
+                            style: AuroraType.body.copyWith(
+                              color: AuroraColors.coral,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
+
+                const SizedBox(height: AuroraSpacing.space10),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+InputDecoration _inputDecoration(String hint) => InputDecoration(
+      isDense: true,
+      filled: true,
+      fillColor: AuroraColors.paper,
+      hintText: hint,
+      hintStyle: AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AuroraSpacing.space7,
+        vertical: AuroraSpacing.space5,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: AuroraRadius.md,
+        borderSide: const BorderSide(color: AuroraColors.inkBorder, width: 1.5),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: AuroraRadius.md,
+        borderSide: const BorderSide(color: AuroraColors.inkBorder, width: 1.5),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: AuroraRadius.md,
+        borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: AuroraRadius.md,
+        borderSide: const BorderSide(color: AuroraColors.coral, width: 1.5),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: AuroraRadius.md,
+        borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
+      ),
+    );
+
+/// Aurora-styled label above a form field.
+class _AuroraFormField extends StatelessWidget {
+  const _AuroraFormField({
+    required this.label,
+    required this.child,
+    this.isRequired = false,
+  });
+
+  final String label;
+  final bool isRequired;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (isRequired)
+          RichText(
+            text: TextSpan(
+              text: label.toUpperCase(),
+              style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
+              children: const [
+                TextSpan(
+                  text: ' *',
+                  style: TextStyle(color: AuroraColors.coral),
+                ),
+              ],
+            ),
+          )
+        else
+          Text(
+            label.toUpperCase(),
+            style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
+          ),
+        const SizedBox(height: AuroraSpacing.space1),
+        child,
+      ],
+    );
+  }
+}
+
+/// Social sign-in button (outlined, paper bg).
+class _SocialButton extends StatelessWidget {
+  const _SocialButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 20, color: AuroraColors.ink),
+        label: Text(
+          label,
+          style: AuroraType.bodyLg.copyWith(
+            fontWeight: FontWeight.w600,
+            color: onPressed == null
+                ? AuroraColors.inkTertiary
+                : AuroraColors.ink,
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          backgroundColor: AuroraColors.paper,
+          side: const BorderSide(
+            color: AuroraColors.inkBorder,
+            width: 1.5,
+          ),
+          shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.full),
         ),
       ),
     );

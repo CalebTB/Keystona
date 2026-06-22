@@ -168,7 +168,7 @@ class _BudgetItemFormScreenState extends ConsumerState<BudgetItemFormScreen> {
                   style: TextStyle(
                     color: _saving
                         ? CupertinoColors.inactiveGray
-                        : CupertinoColors.activeBlue,
+                        : AuroraColors.cobalt,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -264,7 +264,16 @@ class _FormBody extends StatelessWidget {
         hintStyle:
             AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.0),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AuroraColors.cobalt, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AuroraSpacing.space7,
@@ -279,7 +288,7 @@ class _FormBody extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         children: [
-          _Label('Item name'),
+          _Label('Item name', required: true),
           TextFormField(
             controller: nameCtrl,
             textCapitalization: TextCapitalization.sentences,
@@ -373,17 +382,25 @@ class _FormBody extends StatelessWidget {
 }
 
 class _Label extends StatelessWidget {
-  const _Label(this.text);
+  const _Label(this.text, {this.required = false});
   final String text;
+  final bool required;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AuroraSpacing.space1),
-      child: Text(
-        text,
-        style:
-            AuroraType.bodySm.copyWith(color: AuroraColors.inkSecondary),
+      child: Row(
+        children: [
+          Text(
+            text.toUpperCase(),
+            style: AuroraType.label,
+          ),
+          if (required) ...[
+            const SizedBox(width: 2),
+            Text('*', style: AuroraType.label.copyWith(color: AuroraColors.coral)),
+          ],
+        ],
       ),
     );
   }
