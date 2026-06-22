@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_sizes.dart';
-import '../theme/app_text_styles.dart';
+import '../theme/aurora_colors.dart';
+import '../theme/aurora_radius.dart';
+import '../theme/aurora_spacing.dart';
+import '../theme/aurora_typography.dart';
 
 /// Bottom sheet confirmation dialog for destructive or irreversible actions.
 ///
@@ -35,7 +36,7 @@ class ConfirmDialog extends StatelessWidget {
   /// Label on the dismiss button. Defaults to "Cancel".
   final String cancelLabel;
 
-  /// When true the confirm button uses [AppColors.error]. Defaults to true.
+  /// When true the confirm button uses [AuroraColors.coral]. Defaults to true.
   final bool isDestructive;
 
   /// Presents the confirmation sheet and returns the user's choice.
@@ -54,9 +55,7 @@ class ConfirmDialog extends StatelessWidget {
       context: context,
       isScrollControlled: false,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSizes.radiusLg),
-        ),
+        borderRadius: BorderRadius.vertical(top: AuroraRadius.xl),
       ),
       builder: (_) => ConfirmDialog(
         title: title,
@@ -73,10 +72,10 @@ class ConfirmDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppSizes.md,
-        AppSizes.lg,
-        AppSizes.md,
-        AppSizes.xl,
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.space7,
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.space10,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -84,44 +83,45 @@ class ConfirmDialog extends StatelessWidget {
         children: [
           Text(
             title,
-            style: AppTextStyles.h3,
+            style: AuroraType.h3,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
           Text(
             message,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+            style: AuroraType.body.copyWith(
+              color: AuroraColors.inkSecondary,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AuroraSpacing.space7),
           FilledButton(
             onPressed: () {
               Navigator.of(context).pop(true);
               onConfirm();
             },
             style: FilledButton.styleFrom(
-              backgroundColor: isDestructive ? AppColors.error : AppColors.accent,
-              minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-              ),
+              backgroundColor:
+                  isDestructive ? AuroraColors.coral : AuroraColors.cobalt,
+              minimumSize: const Size.fromHeight(52),
+              shape: RoundedRectangleBorder(borderRadius: AuroraRadius.md),
             ),
             child: Text(
               confirmLabel,
-              style: AppTextStyles.button.copyWith(
-                color: AppColors.textInverse,
+              style: AuroraType.body.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
               ),
             ),
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(
               cancelLabel,
-              style: AppTextStyles.button.copyWith(
-                color: AppColors.textSecondary,
+              style: AuroraType.body.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AuroraColors.inkSecondary,
               ),
             ),
           ),

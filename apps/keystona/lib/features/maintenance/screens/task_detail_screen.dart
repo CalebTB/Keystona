@@ -7,9 +7,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/error_view.dart';
 import '../models/maintenance_task.dart';
 import '../models/task_completion.dart';
@@ -47,9 +48,9 @@ class _IOSLayout extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(taskDetailProvider(taskId));
     return CupertinoPageScaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         border: null,
         previousPageTitle: 'Tasks',
         middle: const SizedBox.shrink(),
@@ -84,9 +85,9 @@ class _AndroidLayout extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(taskDetailProvider(taskId));
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       appBar: AppBar(
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         elevation: 0,
         scrolledUnderElevation: 0,
         title: const SizedBox.shrink(),
@@ -100,7 +101,10 @@ class _AndroidLayout extends ConsumerWidget {
               ),
               child: Text(
                 'Edit',
-                style: AppTextStyles.labelLarge.copyWith(color: AppColors.accent),
+                style: AuroraType.body.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AuroraColors.coral,
+                ),
               ),
             ),
             orElse: () => const SizedBox.shrink(),
@@ -146,9 +150,6 @@ class _LedgerBody extends StatelessWidget {
     final isDone = task.status == TaskStatus.completed ||
         task.status == TaskStatus.skipped;
 
-    // Only show action bar when the task is actually due — tasks scheduled
-    // far in the future should be view-only so completing them doesn't
-    // create an infinite chain of future occurrences.
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final isActionable = !isDone &&
@@ -159,32 +160,18 @@ class _LedgerBody extends StatelessWidget {
         Expanded(
           child: CustomScrollView(
             slivers: [
-              // ── Header ────────────────────────────────────────────────────
-              SliverToBoxAdapter(
-                child: _LedgerHeader(task: task),
-              ),
-
-              // ── Stat strip ────────────────────────────────────────────────
+              SliverToBoxAdapter(child: _LedgerHeader(task: task)),
               SliverToBoxAdapter(
                 child: _StatStrip(task: task, completions: completions),
               ),
-
-              // ── Instructions (collapsed) ──────────────────────────────────
-              SliverToBoxAdapter(
-                child: _InstructionsRow(task: task),
-              ),
-
-              // ── Service history ───────────────────────────────────────────
+              SliverToBoxAdapter(child: _InstructionsRow(task: task)),
               SliverToBoxAdapter(
                 child: _ServiceHistory(task: task, completions: completions),
               ),
-
               const SliverToBoxAdapter(child: SizedBox(height: 32)),
             ],
           ),
         ),
-
-        // ── Action bar — only for due/overdue tasks ────────────────────────
         AnimatedSize(
           duration: const Duration(milliseconds: 280),
           curve: Curves.easeInOutCubic,
@@ -221,38 +208,30 @@ class _LedgerHeader extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Eyebrow + Title ──────────────────────────────────────────────
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   _eyebrow(),
-                  style: GoogleFonts.ibmPlexMono(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.2,
-                    color: AppColors.gray500,
+                  style: AuroraType.label.copyWith(
+                    color: AuroraColors.inkTertiary,
                   ),
                 ),
                 const SizedBox(height: 7),
                 Text(
-                  task.name.endsWith('.')
-                      ? task.name
-                      : '${task.name}.',
-                  style: GoogleFonts.fraunces(
+                  task.name.endsWith('.') ? task.name : '${task.name}.',
+                  style: GoogleFonts.inter(
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.5,
                     height: 1.1,
-                    color: AppColors.textPrimary,
+                    color: AuroraColors.ink,
                   ),
                 ),
               ],
             ),
           ),
-
-          // ── Status badge ─────────────────────────────────────────────────
           if (overdueDays != null) ...[
             const SizedBox(width: 12),
             _OverdueBadge(days: overdueDays),
@@ -293,30 +272,30 @@ class _OverdueBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.accentDim,
+        color: AuroraColors.coralDim,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.accent.withAlpha(60)),
+        border: Border.all(color: AuroraColors.coral.withValues(alpha: 0.24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             days == 0 ? 'Due' : '${days}d',
-            style: GoogleFonts.ibmPlexMono(
+            style: GoogleFonts.jetBrainsMono(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: AppColors.accent,
+              color: AuroraColors.coral,
               height: 1.0,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             'OVERDUE',
-            style: GoogleFonts.ibmPlexMono(
+            style: GoogleFonts.jetBrainsMono(
               fontSize: 8,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.0,
-              color: AppColors.accent,
+              color: AuroraColors.coral,
             ),
           ),
         ],
@@ -331,22 +310,22 @@ class _DoneBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.oliveDim,
+        color: AuroraColors.limeDim,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.olive.withAlpha(60)),
+        border: Border.all(color: AuroraColors.lime.withValues(alpha: 0.24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.check_rounded, color: AppColors.olive, size: 18),
+          Icon(Icons.check_rounded, color: AuroraColors.limeDeep, size: 18),
           const SizedBox(height: 2),
           Text(
             'DONE',
-            style: GoogleFonts.ibmPlexMono(
+            style: GoogleFonts.jetBrainsMono(
               fontSize: 8,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.0,
-              color: AppColors.olive,
+              color: AuroraColors.limeDeep,
             ),
           ),
         ],
@@ -370,30 +349,30 @@ class _DueBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.slateDim,
+        color: AuroraColors.cobaltDim,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.slate.withAlpha(60)),
+        border: Border.all(color: AuroraColors.cobalt.withValues(alpha: 0.24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             label,
-            style: GoogleFonts.ibmPlexMono(
+            style: GoogleFonts.jetBrainsMono(
               fontSize: task.status == TaskStatus.due ? 12 : 18,
               fontWeight: FontWeight.w700,
-              color: AppColors.slate,
+              color: AuroraColors.cobalt,
               height: 1.0,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             task.status == TaskStatus.due ? 'DUE' : 'DAYS',
-            style: GoogleFonts.ibmPlexMono(
+            style: GoogleFonts.jetBrainsMono(
               fontSize: 8,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.0,
-              color: AppColors.slate,
+              color: AuroraColors.cobalt,
             ),
           ),
         ],
@@ -441,10 +420,7 @@ class _StatStrip extends StatelessWidget {
           const SizedBox(width: 8),
           _StatCell(value: _cycleLabel(), label: 'CYCLE'),
           const SizedBox(width: 8),
-          _StatCell(
-            value: '${completions.length}',
-            label: 'STREAK',
-          ),
+          _StatCell(value: '${completions.length}', label: 'STREAK'),
         ],
       ),
     );
@@ -462,30 +438,30 @@ class _StatCell extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AuroraColors.paper,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               value,
-              style: GoogleFonts.ibmPlexMono(
+              style: GoogleFonts.jetBrainsMono(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: AuroraColors.ink,
                 height: 1.0,
               ),
             ),
             const SizedBox(height: 3),
             Text(
               label,
-              style: GoogleFonts.ibmPlexMono(
+              style: GoogleFonts.jetBrainsMono(
                 fontSize: 8,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.0,
-                color: AppColors.gray500,
+                color: AuroraColors.inkTertiary,
               ),
             ),
           ],
@@ -553,35 +529,32 @@ class _InstructionsRowState extends State<_InstructionsRow> {
         behavior: HitTestBehavior.opaque,
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AuroraColors.paper,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AuroraColors.inkBorder),
           ),
           clipBehavior: Clip.hardEdge,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Collapsed header row ────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
                 child: Row(
                   children: [
-                    // Icon
                     Container(
                       width: 30,
                       height: 30,
                       decoration: BoxDecoration(
-                        color: AppColors.accentDim,
+                        color: AuroraColors.coralDim,
                         borderRadius: BorderRadius.circular(7),
                       ),
                       child: Icon(
                         _expanded ? Icons.remove : Icons.add,
                         size: 16,
-                        color: AppColors.accent,
+                        color: AuroraColors.coral,
                       ),
                     ),
                     const SizedBox(width: 10),
-                    // Text
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -591,7 +564,7 @@ class _InstructionsRowState extends State<_InstructionsRow> {
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                              color: AuroraColors.ink,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -599,30 +572,27 @@ class _InstructionsRowState extends State<_InstructionsRow> {
                             _expanded
                                 ? 'Tap to collapse'
                                 : 'Tap to expand · ${_summaryLine()}',
-                            style: GoogleFonts.ibmPlexMono(
+                            style: GoogleFonts.jetBrainsMono(
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
-                              color: AppColors.gray500,
+                              color: AuroraColors.inkTertiary,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    // Chevron
                     AnimatedRotation(
                       turns: _expanded ? 0.5 : 0.0,
                       duration: const Duration(milliseconds: 220),
-                      child: const Icon(
+                      child: Icon(
                         Icons.keyboard_arrow_down,
                         size: 18,
-                        color: AppColors.gray500,
+                        color: AuroraColors.inkTertiary,
                       ),
                     ),
                   ],
                 ),
               ),
-
-              // ── Expandable content ──────────────────────────────────────
               ClipRect(
                 child: AnimatedAlign(
                   alignment: Alignment.topCenter,
@@ -634,14 +604,14 @@ class _InstructionsRowState extends State<_InstructionsRow> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Divider(height: 1, color: AppColors.divider),
+                        Divider(height: 1, color: AuroraColors.inkBorder),
                         const SizedBox(height: 12),
                         if (widget.task.description != null &&
                             widget.task.description!.isNotEmpty) ...[
                           Text(
                             widget.task.description!,
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
+                            style: AuroraType.bodySm.copyWith(
+                              color: AuroraColors.inkSecondary,
                               height: 1.5,
                             ),
                           ),
@@ -653,8 +623,7 @@ class _InstructionsRowState extends State<_InstructionsRow> {
                           const SizedBox(height: 6),
                           Text(
                             widget.task.instructions!,
-                            style: AppTextStyles.bodySmall
-                                .copyWith(height: 1.6),
+                            style: AuroraType.bodySm.copyWith(height: 1.6),
                           ),
                           const SizedBox(height: 12),
                         ],
@@ -689,11 +658,11 @@ class _InstructionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
         text,
-        style: GoogleFonts.ibmPlexMono(
+        style: GoogleFonts.jetBrainsMono(
           fontSize: 9,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.2,
-          color: AppColors.gray500,
+          color: AuroraColors.inkTertiary,
         ),
       );
 }
@@ -719,7 +688,7 @@ class _BulletList extends StatelessWidget {
                       width: 4,
                       height: 4,
                       decoration: const BoxDecoration(
-                        color: AppColors.gray500,
+                        color: AuroraColors.inkTertiary,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -727,8 +696,9 @@ class _BulletList extends StatelessWidget {
                   Expanded(
                     child: Text(
                       item,
-                      style:
-                          AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                      style: AuroraType.bodySm.copyWith(
+                        color: AuroraColors.inkSecondary,
+                      ),
                     ),
                   ),
                 ],
@@ -753,12 +723,10 @@ class _ServiceHistory extends StatefulWidget {
 
 class _ServiceHistoryState extends State<_ServiceHistory>
     with TickerProviderStateMixin {
-  // Completion entry: slide up + fade in.
   late final AnimationController _ctrl;
   late final Animation<double> _fade;
   late final Animation<Offset> _slide;
 
-  // Next service entry: scale pop + fade in (fires shortly after completion).
   late final AnimationController _nextCtrl;
   late final Animation<double> _nextFade;
   late final Animation<double> _nextScale;
@@ -792,12 +760,7 @@ class _ServiceHistoryState extends State<_ServiceHistory>
       CurvedAnimation(parent: _nextCtrl, curve: Curves.easeOutBack),
     );
 
-    // Completion entries: always start visible (history was already on screen).
     _ctrl.value = 1.0;
-    // Next-service entry: start invisible only when we're waiting for the
-    // pop-in animation (task is currently overdue/due with no history yet).
-    // Any other case — scheduled future task, or returning to an already
-    // completed task — starts fully visible so it doesn't re-animate.
     final waitingForFirstCompletion =
         _isOverdueOrDue(widget.task) && widget.completions.isEmpty;
     _nextCtrl.value = waitingForFirstCompletion ? 0.0 : 1.0;
@@ -807,9 +770,7 @@ class _ServiceHistoryState extends State<_ServiceHistory>
   void didUpdateWidget(_ServiceHistory old) {
     super.didUpdateWidget(old);
     if (widget.completions.length > _prevCount) {
-      // Completion card slides in immediately.
       _ctrl.forward(from: 0.0);
-      // Next service card pops in with a short delay for sequencing.
       if (widget.task.recurrence != RecurrenceType.none) {
         Future.delayed(const Duration(milliseconds: 180), () {
           if (mounted) _nextCtrl.forward(from: 0.0);
@@ -843,43 +804,34 @@ class _ServiceHistoryState extends State<_ServiceHistory>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Section label ─────────────────────────────────────────────────
           Row(
             children: [
               Container(
                 width: 7,
                 height: 7,
                 decoration: BoxDecoration(
-                  color: isDone ? AppColors.olive : AppColors.accent,
+                  color: isDone ? AuroraColors.lime : AuroraColors.coral,
                   shape: BoxShape.circle,
                 ),
               ),
               const SizedBox(width: 7),
               Text(
                 'SERVICE HISTORY',
-                style: GoogleFonts.ibmPlexMono(
+                style: GoogleFonts.jetBrainsMono(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.4,
-                  color: AppColors.gray500,
+                  color: AuroraColors.inkTertiary,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 14),
 
-          // ── Timeline entries ─────────────────────────────────────────────
-          // Only show the overdue/due-now entry when the task is actually
-          // past its due date — not for future scheduled tasks.
           if (!isDone && _isOverdueOrDue(widget.task)) ...[
             _OverdueEntry(task: widget.task, isLast: completions.isEmpty),
           ],
 
-          // Scheduled entry — shown whenever the task is not yet done and
-          // not currently overdue/due. Covers both "never completed" (first
-          // service preview) and "just completed a recurring task" (next
-          // occurrence). Hidden for overdue/due tasks where _OverdueEntry
-          // already anchors the timeline.
           if (!isDone && !_isOverdueOrDue(widget.task))
             FadeTransition(
               opacity: _nextFade,
@@ -904,7 +856,6 @@ class _ServiceHistoryState extends State<_ServiceHistory>
               isFirst: !isDone && i == 0,
               isLast: isLast,
             );
-            // Animate only the newest entry (index 0 — sorted desc).
             if (i == 0 && !isNextShowing) {
               return FadeTransition(
                 opacity: _fade,
@@ -923,7 +874,6 @@ class _ServiceHistoryState extends State<_ServiceHistory>
 
 // ── Scheduled next entry ──────────────────────────────────────────────────────
 
-
 class _ScheduledNextEntry extends StatelessWidget {
   const _ScheduledNextEntry({
     required this.task,
@@ -939,8 +889,7 @@ class _ScheduledNextEntry extends StatelessWidget {
   Widget build(BuildContext context) {
     final next = nextDate.toLocal();
     final daysUntil = next.difference(DateTime.now()).inDays.clamp(0, 9999);
-    final dateStr =
-        DateFormat('MMM d').format(next).toUpperCase();
+    final dateStr = DateFormat('MMM d').format(next).toUpperCase();
     final yearStr = next.year.toString();
 
     return _TimelineRow(
@@ -950,9 +899,9 @@ class _ScheduledNextEntry extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.slateDim,
+          color: AuroraColors.cobaltDim,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColors.slate.withAlpha(50)),
+          border: Border.all(color: AuroraColors.cobalt.withValues(alpha: 0.20)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -962,19 +911,19 @@ class _ScheduledNextEntry extends StatelessWidget {
               children: [
                 Text(
                   '$dateStr · $yearStr',
-                  style: GoogleFonts.ibmPlexMono(
+                  style: GoogleFonts.jetBrainsMono(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
-                    color: AppColors.slate,
+                    color: AuroraColors.cobalt,
                   ),
                 ),
                 Text(
                   'in $daysUntil days',
-                  style: GoogleFonts.ibmPlexMono(
+                  style: GoogleFonts.jetBrainsMono(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.slate,
+                    color: AuroraColors.cobalt,
                   ),
                 ),
               ],
@@ -987,7 +936,7 @@ class _ScheduledNextEntry extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: AuroraColors.ink,
               ),
             ),
             const SizedBox(height: 2),
@@ -998,7 +947,7 @@ class _ScheduledNextEntry extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w400,
-                color: AppColors.slate,
+                color: AuroraColors.cobalt,
               ),
             ),
           ],
@@ -1014,14 +963,14 @@ class _ScheduledDot extends StatelessWidget {
         width: 24,
         height: 24,
         decoration: BoxDecoration(
-          color: AppColors.slateDim,
+          color: AuroraColors.cobaltDim,
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.slate.withAlpha(100)),
+          border: Border.all(color: AuroraColors.cobalt.withValues(alpha: 0.40)),
         ),
         child: const Center(
           child: Icon(
             Icons.event_rounded,
-            color: AppColors.slate,
+            color: AuroraColors.cobalt,
             size: 13,
           ),
         ),
@@ -1042,8 +991,7 @@ class _OverdueEntry extends StatelessWidget {
     final days = now.difference(due).inDays;
     final lateLabel = days == 0 ? 'due today' : '${days}d late';
     final today = DateFormat('MMM d').format(now).toUpperCase();
-    final scheduledLabel =
-        'Was scheduled ${DateFormat('MMM d').format(due)}';
+    final scheduledLabel = 'Was scheduled ${DateFormat('MMM d').format(due)}';
 
     return _TimelineRow(
       isLast: isLast,
@@ -1052,9 +1000,9 @@ class _OverdueEntry extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.accentDim,
+          color: AuroraColors.coralDim,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColors.accent.withAlpha(40)),
+          border: Border.all(color: AuroraColors.coral.withValues(alpha: 0.16)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1064,19 +1012,19 @@ class _OverdueEntry extends StatelessWidget {
               children: [
                 Text(
                   '$today · TODAY',
-                  style: GoogleFonts.ibmPlexMono(
+                  style: GoogleFonts.jetBrainsMono(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
-                    color: AppColors.accent,
+                    color: AuroraColors.coral,
                   ),
                 ),
                 Text(
                   lateLabel,
-                  style: GoogleFonts.ibmPlexMono(
+                  style: GoogleFonts.jetBrainsMono(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.accent,
+                    color: AuroraColors.coral,
                   ),
                 ),
               ],
@@ -1087,7 +1035,7 @@ class _OverdueEntry extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: AuroraColors.ink,
               ),
             ),
             const SizedBox(height: 2),
@@ -1096,7 +1044,7 @@ class _OverdueEntry extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w400,
-                color: AppColors.accent,
+                color: AuroraColors.coral,
               ),
             ),
           ],
@@ -1151,8 +1099,6 @@ class _CompletionEntry extends ConsumerWidget {
     final hasCost = _totalCost > 0;
     final meta = _metaLine();
 
-    // Resolve linked receipt names from the already-loaded documents provider.
-    // No extra Supabase query — falls back to "Receipt" if docs aren't loaded yet.
     final allDocs = ref.watch(documentsProvider).value ?? const <Document>[];
     final linkedDocs = completion.linkedDocumentIds.isEmpty
         ? const <Document>[]
@@ -1167,9 +1113,9 @@ class _CompletionEntry extends ConsumerWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AuroraColors.paper,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1179,20 +1125,20 @@ class _CompletionEntry extends ConsumerWidget {
               children: [
                 Text(
                   dateStr,
-                  style: GoogleFonts.ibmPlexMono(
+                  style: GoogleFonts.jetBrainsMono(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
-                    color: AppColors.gray500,
+                    color: AuroraColors.inkTertiary,
                   ),
                 ),
                 if (hasCost)
                   Text(
                     '\$${_totalCost.toInt()}',
-                    style: GoogleFonts.ibmPlexMono(
+                    style: GoogleFonts.jetBrainsMono(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textSecondary,
+                      color: AuroraColors.inkSecondary,
                     ),
                   ),
               ],
@@ -1203,32 +1149,29 @@ class _CompletionEntry extends ConsumerWidget {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: AuroraColors.ink,
               ),
             ),
             if (meta.isNotEmpty) ...[
               const SizedBox(height: 2),
               Text(
                 meta,
-                style: GoogleFonts.ibmPlexMono(
+                style: GoogleFonts.jetBrainsMono(
                   fontSize: 10,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.gray500,
+                  color: AuroraColors.inkTertiary,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ],
-            // Linked receipt chips
             if (completion.linkedDocumentIds.isNotEmpty) ...[
               const SizedBox(height: 8),
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
                 children: completion.linkedDocumentIds.map((docId) {
-                  final doc = linkedDocs
-                      .where((d) => d.id == docId)
-                      .firstOrNull;
+                  final doc = linkedDocs.where((d) => d.id == docId).firstOrNull;
                   final label = doc?.name ?? 'Receipt';
                   return GestureDetector(
                     onTap: () => context.push('/documents/$docId'),
@@ -1236,9 +1179,9 @@ class _CompletionEntry extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.warmFill,
+                        color: AuroraColors.butter,
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(color: AuroraColors.inkBorder),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -1246,22 +1189,22 @@ class _CompletionEntry extends ConsumerWidget {
                           Icon(
                             Icons.receipt_outlined,
                             size: 11,
-                            color: AppColors.gray500,
+                            color: AuroraColors.inkTertiary,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             label,
-                            style: GoogleFonts.ibmPlexMono(
+                            style: GoogleFonts.jetBrainsMono(
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
-                              color: AppColors.textSecondary,
+                              color: AuroraColors.inkSecondary,
                             ),
                           ),
                           const SizedBox(width: 3),
                           Icon(
                             Icons.chevron_right,
                             size: 11,
-                            color: AppColors.gray500,
+                            color: AuroraColors.inkTertiary,
                           ),
                         ],
                       ),
@@ -1297,7 +1240,6 @@ class _TimelineRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Left rail: dot + line ─────────────────────────────────────
           SizedBox(
             width: 24,
             child: Column(
@@ -1307,13 +1249,12 @@ class _TimelineRow extends StatelessWidget {
                   Container(
                     width: 1.5,
                     height: 56,
-                    color: AppColors.divider,
+                    color: AuroraColors.inkBorder,
                   ),
               ],
             ),
           ),
           const SizedBox(width: 10),
-          // ── Content ───────────────────────────────────────────────────
           Expanded(child: content),
         ],
       ),
@@ -1327,13 +1268,13 @@ class _TerracottaDot extends StatelessWidget {
         width: 24,
         height: 24,
         decoration: const BoxDecoration(
-          color: AppColors.accent,
+          color: AuroraColors.coral,
           shape: BoxShape.circle,
         ),
         child: const Center(
           child: Icon(
             Icons.priority_high_rounded,
-            color: AppColors.textInverse,
+            color: Colors.white,
             size: 13,
           ),
         ),
@@ -1346,14 +1287,14 @@ class _OliveDot extends StatelessWidget {
         width: 24,
         height: 24,
         decoration: BoxDecoration(
-          color: AppColors.oliveDim,
+          color: AuroraColors.limeDim,
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.olive.withAlpha(100)),
+          border: Border.all(color: AuroraColors.lime.withValues(alpha: 0.40)),
         ),
         child: const Center(
           child: Icon(
             Icons.check_rounded,
-            color: AppColors.olive,
+            color: AuroraColors.limeDeep,
             size: 13,
           ),
         ),
@@ -1369,14 +1310,14 @@ class _EmptyHistory extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.history, size: 32, color: AppColors.gray500),
+            Icon(Icons.history, size: 32, color: AuroraColors.inkTertiary),
             const SizedBox(height: 8),
             Text(
               'No history yet',
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: AppColors.gray500,
+                color: AuroraColors.inkTertiary,
               ),
             ),
             const SizedBox(height: 3),
@@ -1384,7 +1325,7 @@ class _EmptyHistory extends StatelessWidget {
               'Complete this task to start your service log.',
               style: GoogleFonts.inter(
                 fontSize: 11,
-                color: AppColors.gray500,
+                color: AuroraColors.inkTertiary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -1416,20 +1357,19 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
 
     return Container(
       padding: EdgeInsets.fromLTRB(
-        AppSizes.screenPadding,
-        AppSizes.md,
-        AppSizes.screenPadding,
-        AppSizes.sm + bottomPad,
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.space5,
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.space3 + bottomPad,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.warmOffWhite,
-        border: Border(top: BorderSide(color: AppColors.divider, width: 1)),
+      decoration: BoxDecoration(
+        color: AuroraColors.paper,
+        border: Border(top: BorderSide(color: AuroraColors.inkBorder, width: 1)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ── Mark Complete ───────────────────────────────────────────────
           SizedBox(
             height: 52,
             child: ElevatedButton(
@@ -1437,9 +1377,10 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
                   ? null
                   : _handleMarkComplete,
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    widget.isDone ? AppColors.gray300 : AppColors.accent,
-                foregroundColor: AppColors.textInverse,
+                backgroundColor: widget.isDone
+                    ? AuroraColors.inkTertiary
+                    : AuroraColors.coral,
+                foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
@@ -1449,21 +1390,19 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: AppColors.textInverse),
+                          strokeWidth: 2, color: Colors.white),
                     )
                   : Text(
                       widget.isDone ? 'Already Done' : 'Mark Complete',
                       style: GoogleFonts.inter(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textInverse,
+                        color: Colors.white,
                       ),
                     ),
             ),
           ),
           const SizedBox(height: 8),
-
-          // ── Add Details + Skip ─────────────────────────────────────────
           Row(
             children: [
               Expanded(
@@ -1473,8 +1412,9 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
                     onPressed: widget.isDone ? null : _handleAddDetails,
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(
-                        color:
-                            widget.isDone ? AppColors.border : AppColors.accent.withAlpha(140),
+                        color: widget.isDone
+                            ? AuroraColors.inkBorder
+                            : AuroraColors.coral.withValues(alpha: 0.55),
                       ),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10)),
@@ -1484,7 +1424,9 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: widget.isDone ? AppColors.gray500 : AppColors.accent,
+                        color: widget.isDone
+                            ? AuroraColors.inkTertiary
+                            : AuroraColors.coral,
                       ),
                     ),
                   ),
@@ -1499,7 +1441,7 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
                         ? null
                         : _handleSkip,
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.border),
+                      side: const BorderSide(color: AuroraColors.inkBorder),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10)),
                     ),
@@ -1508,7 +1450,8 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
                             width: 14,
                             height: 14,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: AppColors.gray500),
+                                strokeWidth: 2,
+                                color: AuroraColors.inkTertiary),
                           )
                         : Text(
                             'Skip',
@@ -1516,8 +1459,8 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                               color: widget.isDone
-                                  ? AppColors.gray500
-                                  : AppColors.error,
+                                  ? AuroraColors.inkTertiary
+                                  : AuroraColors.coral,
                             ),
                           ),
                   ),
@@ -1546,7 +1489,7 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
         ..hideCurrentSnackBar()
         ..showSnackBar(SnackBar(
           content: const Text("Couldn't complete task. Try again."),
-          backgroundColor: AppColors.error,
+          backgroundColor: AuroraColors.coral,
           behavior: SnackBarBehavior.floating,
         ));
       setState(() => _isCompleting = false);
@@ -1566,7 +1509,7 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
         behavior: SnackBarBehavior.floating,
         action: SnackBarAction(
           label: 'Undo',
-          textColor: AppColors.goldAccent,
+          textColor: AuroraColors.yellow,
           onPressed: () {
             ref
                 .read(taskDetailProvider(widget.taskId).notifier)
@@ -1594,7 +1537,7 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
         behavior: SnackBarBehavior.floating,
         action: SnackBarAction(
           label: 'Undo',
-          textColor: AppColors.goldAccent,
+          textColor: AuroraColors.yellow,
           onPressed: () {
             ref
                 .read(taskDetailProvider(widget.taskId).notifier)
@@ -1621,7 +1564,7 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
         ..hideCurrentSnackBar()
         ..showSnackBar(SnackBar(
           content: const Text("Couldn't skip task. Try again."),
-          backgroundColor: AppColors.error,
+          backgroundColor: AuroraColors.coral,
           behavior: SnackBarBehavior.floating,
         ));
     } finally {
@@ -1630,7 +1573,7 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
   }
 }
 
-// ── Skip reason sheet (unchanged) ─────────────────────────────────────────────
+// ── Skip reason sheet ─────────────────────────────────────────────────────────
 
 class _SkipReasonSheet extends ConsumerStatefulWidget {
   const _SkipReasonSheet();
@@ -1656,11 +1599,9 @@ class _SkipReasonSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: AuroraColors.paper,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSizes.radiusLg),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (_) => Padding(
         padding: EdgeInsets.only(
@@ -1696,16 +1637,14 @@ class _SkipReasonSheetState extends ConsumerState<_SkipReasonSheet> {
 
     return Container(
       padding: EdgeInsets.fromLTRB(
-        AppSizes.screenPadding,
-        AppSizes.lg,
-        AppSizes.screenPadding,
-        AppSizes.screenPadding + MediaQuery.of(context).padding.bottom,
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.space7,
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.screenPadH + MediaQuery.of(context).padding.bottom,
       ),
       decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSizes.radiusLg),
-        ),
+        color: AuroraColors.paper,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1716,46 +1655,44 @@ class _SkipReasonSheetState extends ConsumerState<_SkipReasonSheet> {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.gray300,
+                color: AuroraColors.inkBorder,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
-          const SizedBox(height: AppSizes.lg),
-          Text('Skip Task', style: AppTextStyles.h3),
-          const SizedBox(height: AppSizes.xs),
+          const SizedBox(height: AuroraSpacing.space7),
+          Text('Skip Task', style: AuroraType.h3),
+          const SizedBox(height: AuroraSpacing.space2),
           Text(
             'Reason (optional)',
-            style: AppTextStyles.bodySmall
-                .copyWith(color: AppColors.textSecondary),
+            style: AuroraType.bodySm.copyWith(color: AuroraColors.inkSecondary),
           ),
-          const SizedBox(height: AppSizes.md),
+          const SizedBox(height: AuroraSpacing.space5),
           TextField(
             controller: _controller,
             maxLines: 3,
             autofocus: true,
             decoration: InputDecoration(
               hintText: 'e.g. Already done by contractor',
-              hintStyle: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textDisabled),
+              hintStyle: AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
               border: OutlineInputBorder(
-                borderRadius: AppRadius.md,
-                borderSide: const BorderSide(color: AppColors.border),
+                borderRadius: AuroraRadius.md,
+                borderSide: const BorderSide(color: AuroraColors.inkBorder),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: AppRadius.md,
-                borderSide: const BorderSide(color: AppColors.border),
+                borderRadius: AuroraRadius.md,
+                borderSide: const BorderSide(color: AuroraColors.inkBorder),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: AppRadius.md,
-                borderSide: const BorderSide(color: AppColors.deepNavy),
+                borderRadius: AuroraRadius.md,
+                borderSide: const BorderSide(color: AuroraColors.ink),
               ),
               filled: true,
-              fillColor: AppColors.gray50,
-              contentPadding: const EdgeInsets.all(AppSizes.md),
+              fillColor: AuroraColors.butter,
+              contentPadding: const EdgeInsets.all(AuroraSpacing.space5),
             ),
           ),
-          const SizedBox(height: AppSizes.md),
+          const SizedBox(height: AuroraSpacing.space5),
           if (isIOS) ...[
             CupertinoButton.filled(
               onPressed: _confirm,
@@ -1765,7 +1702,7 @@ class _SkipReasonSheetState extends ConsumerState<_SkipReasonSheet> {
               onPressed: _cancel,
               child: Text(
                 'Cancel',
-                style: TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: AuroraColors.inkSecondary),
               ),
             ),
           ] else ...[
@@ -1775,30 +1712,37 @@ class _SkipReasonSheetState extends ConsumerState<_SkipReasonSheet> {
                   child: OutlinedButton(
                     onPressed: _cancel,
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.border),
+                      side: const BorderSide(color: AuroraColors.inkBorder),
                       shape: RoundedRectangleBorder(
-                        borderRadius: AppRadius.md,
+                        borderRadius: AuroraRadius.md,
                       ),
                     ),
-                    child: Text('Cancel', style: AppTextStyles.bodyMediumSemibold),
+                    child: Text(
+                      'Cancel',
+                      style: AuroraType.body.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(width: AppSizes.sm),
+                const SizedBox(width: AuroraSpacing.space3),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: _confirm,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.error,
-                      foregroundColor: AppColors.textInverse,
+                      backgroundColor: AuroraColors.coral,
+                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                        borderRadius: AppRadius.md,
+                        borderRadius: AuroraRadius.md,
                       ),
                       elevation: 0,
                     ),
                     child: Text(
                       'Skip Task',
-                      style: AppTextStyles.bodyMediumSemibold
-                          .copyWith(color: AppColors.textInverse),
+                      style: AuroraType.body.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
