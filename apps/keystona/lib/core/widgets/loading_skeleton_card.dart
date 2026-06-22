@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_sizes.dart';
+import '../theme/aurora_colors.dart';
 
 /// Shimmer placeholder card shown while content is loading.
 ///
@@ -23,20 +22,20 @@ class LoadingSkeletonCard extends StatelessWidget {
   /// Optional explicit width. Defaults to `double.infinity` (full-width).
   final double? width;
 
-  /// Corner radius. Defaults to [AppSizes.radiusMd] (12px).
+  /// Corner radius. Defaults to 12px.
   final BorderRadius? borderRadius;
 
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: AppColors.gray200,
-      highlightColor: AppColors.gray100,
+      baseColor: const Color(0xFFEEEDF2),
+      highlightColor: AuroraColors.butter,
       child: Container(
         height: height,
         width: width ?? double.infinity,
         decoration: BoxDecoration(
-          color: AppColors.gray200,
-          borderRadius: borderRadius ?? BorderRadius.circular(AppSizes.radiusMd),
+          color: const Color(0xFFEEEDF2),
+          borderRadius: borderRadius ?? BorderRadius.circular(12),
         ),
       ),
     );

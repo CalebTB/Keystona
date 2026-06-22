@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_sizes.dart';
-import '../theme/app_text_styles.dart';
+import '../theme/aurora_colors.dart';
+import '../theme/aurora_typography.dart';
 
 /// Reusable filter chip for project sub-pages (Documents, Budget, etc.).
 ///
-/// Visually consistent: deepNavy fill when selected, outlined when unselected.
+/// Visually consistent: ink fill when selected, outlined when unselected.
 /// Matches the chip style used across the Projects feature.
 class ProjectSubpageFilterChip extends StatelessWidget {
   const ProjectSubpageFilterChip({
@@ -26,21 +25,20 @@ class ProjectSubpageFilterChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.xs,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         decoration: BoxDecoration(
-          color: selected ? AppColors.deepNavy : AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+          color: selected ? AuroraColors.ink : AuroraColors.paper,
+          borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: selected ? AppColors.deepNavy : AppColors.gray300,
+            color: selected ? AuroraColors.ink : const Color(0xFFE0DFEA),
           ),
         ),
         child: Text(
           label,
-          style: AppTextStyles.labelSmall.copyWith(
-            color: selected ? Colors.white : AppColors.textSecondary,
+          style: AuroraType.bodySm.copyWith(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: selected ? Colors.white : AuroraColors.inkSecondary,
           ),
         ),
       ),

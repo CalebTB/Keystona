@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_sizes.dart';
-import '../theme/app_text_styles.dart';
+import '../theme/aurora_colors.dart';
+import '../theme/aurora_radius.dart';
+import '../theme/aurora_typography.dart';
 
 /// Full-screen error state displayed when an async operation fails.
 ///
@@ -30,37 +30,38 @@ class ErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSizes.lg),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(
               Icons.error_outline,
-              size: AppSizes.iconXl,
-              color: AppColors.error,
+              size: 48,
+              color: AuroraColors.coral,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: 16),
             Text(
               message,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+              style: AuroraType.body.copyWith(
+                color: AuroraColors.inkSecondary,
               ),
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
-              const SizedBox(height: AppSizes.lg),
+              const SizedBox(height: 24),
               FilledButton(
                 onPressed: onRetry,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                  backgroundColor: AuroraColors.coral,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: AuroraRadius.sm,
                   ),
                 ),
                 child: Text(
                   retryLabel,
-                  style: AppTextStyles.button.copyWith(
-                    color: AppColors.textInverse,
+                  style: AuroraType.bodyLg.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
                 ),
               ),

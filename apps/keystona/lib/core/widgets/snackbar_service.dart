@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_text_styles.dart';
+import '../theme/aurora_colors.dart';
+import '../theme/aurora_typography.dart';
 
 /// Static helper for showing consistent snackbars across the app.
 ///
@@ -15,7 +15,7 @@ abstract final class SnackbarService {
     _show(
       context,
       message: message,
-      backgroundColor: AppColors.error,
+      backgroundColor: const Color(0xFFD32F2F),
       duration: const Duration(seconds: 3),
     );
   }
@@ -27,7 +27,7 @@ abstract final class SnackbarService {
     _show(
       context,
       message: message,
-      backgroundColor: AppColors.success,
+      backgroundColor: AuroraColors.limeDeep,
       duration: const Duration(seconds: 2),
     );
   }
@@ -39,7 +39,7 @@ abstract final class SnackbarService {
     _show(
       context,
       message: message,
-      backgroundColor: AppColors.warning,
+      backgroundColor: AuroraColors.yellow,
       duration: const Duration(seconds: 2),
     );
   }
@@ -56,9 +56,7 @@ abstract final class SnackbarService {
         SnackBar(
           content: Text(
             message,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textInverse,
-            ),
+            style: AuroraType.body.copyWith(color: Colors.white),
           ),
           backgroundColor: backgroundColor,
           duration: duration,

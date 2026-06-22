@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../services/providers/service_providers.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_sizes.dart';
-import '../theme/app_text_styles.dart';
+import '../theme/aurora_colors.dart';
+import '../theme/aurora_typography.dart';
 
 /// Amber banner displayed at the top of the screen when the device is offline.
 ///
@@ -25,24 +24,22 @@ class OfflineBanner extends ConsumerWidget {
 
     return Container(
       width: double.infinity,
-      color: AppColors.warningLight,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
-      ),
+      color: AuroraColors.yellowDim,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(
             Icons.wifi_off,
-            size: AppSizes.iconSm,
-            color: AppColors.warning,
+            size: 16,
+            color: AuroraColors.yellowDeep,
           ),
-          const SizedBox(width: AppSizes.xs),
+          const SizedBox(width: 4),
           Text(
             'No internet connection',
-            style: AppTextStyles.labelMedium.copyWith(
-              color: AppColors.warning,
+            style: AuroraType.bodySm.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AuroraColors.yellowDeep,
             ),
           ),
         ],

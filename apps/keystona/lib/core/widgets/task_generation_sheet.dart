@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/maintenance/providers/maintenance_tasks_provider.dart';
 import '../../services/supabase_service.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_text_styles.dart';
+import '../theme/aurora_colors.dart';
+import '../theme/aurora_typography.dart';
 
 /// A suggested maintenance task returned by the generate-item-tasks function.
 class SuggestedTask {
@@ -226,7 +226,7 @@ class _TaskSelectionSheetState extends State<_TaskSelectionSheet> {
       type: MaterialType.transparency,
       child: Container(
         decoration: const BoxDecoration(
-          color: AppColors.surface,
+          color: AuroraColors.paper,
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         ),
         child: SafeArea(
@@ -241,7 +241,7 @@ class _TaskSelectionSheetState extends State<_TaskSelectionSheet> {
                   width: 36,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.gray300,
+                    color: const Color(0xFFE0DFEA),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -254,22 +254,27 @@ class _TaskSelectionSheetState extends State<_TaskSelectionSheet> {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: AppColors.deepNavy.withValues(alpha: 0.08),
+                        color: AuroraColors.ink.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(Icons.task_alt_outlined,
-                          color: AppColors.deepNavy, size: 20),
+                          color: AuroraColors.ink, size: 20),
                     ),
                     const SizedBox(width: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Suggested Tasks',
-                            style: AppTextStyles.bodyMediumSemibold),
+                        Text(
+                          'Suggested Tasks',
+                          style: AuroraType.body.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         Text(
                           'Select which tasks to add',
-                          style: AppTextStyles.caption.copyWith(
-                              color: AppColors.textSecondary),
+                          style: AuroraType.bodySm.copyWith(
+                            color: AuroraColors.inkSecondary,
+                          ),
                         ),
                       ],
                     ),
@@ -294,16 +299,18 @@ class _TaskSelectionSheetState extends State<_TaskSelectionSheet> {
                       value: _selected[i],
                       onChanged: (v) =>
                           setState(() => _selected[i] = v ?? false),
-                      activeColor: AppColors.deepNavy,
-                      title: Text(t.name,
-                          style: AppTextStyles.bodyMedium
-                              .copyWith(fontSize: 14)),
+                      activeColor: AuroraColors.ink,
+                      title: Text(
+                        t.name,
+                        style: AuroraType.body.copyWith(fontSize: 14),
+                      ),
                       subtitle: Text(
                         '${_recurrenceLabel(t.recurrence)} · '
                         '${t.diyOrPro.toUpperCase()} · '
                         '~${t.estimatedMinutes}min',
-                        style: AppTextStyles.caption.copyWith(
-                            color: AppColors.textSecondary),
+                        style: AuroraType.bodySm.copyWith(
+                          color: AuroraColors.inkSecondary,
+                        ),
                       ),
                       controlAffinity: ListTileControlAffinity.leading,
                     );
@@ -326,8 +333,9 @@ class _TaskSelectionSheetState extends State<_TaskSelectionSheet> {
                                 .pop(false),
                         child: Text(
                           'Skip',
-                          style: AppTextStyles.bodyMedium
-                              .copyWith(color: AppColors.textSecondary),
+                          style: AuroraType.body.copyWith(
+                            color: AuroraColors.inkSecondary,
+                          ),
                         ),
                       ),
                     ),
@@ -337,19 +345,19 @@ class _TaskSelectionSheetState extends State<_TaskSelectionSheet> {
                       child: CupertinoButton(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         color: _selectedCount == 0 || _adding
-                            ? AppColors.gray300
-                            : AppColors.deepNavy,
+                            ? const Color(0xFFE0DFEA)
+                            : AuroraColors.ink,
                         borderRadius: BorderRadius.circular(12),
                         onPressed:
                             _selectedCount == 0 || _adding ? null : _addTasks,
                         child: _adding
                             ? const CupertinoActivityIndicator(
-                                color: AppColors.textInverse)
+                                color: Colors.white)
                             : Text(
                                 'Add $_selectedCount Task${_selectedCount == 1 ? '' : 's'}',
-                                style:
-                                    AppTextStyles.bodyMediumSemibold.copyWith(
-                                  color: AppColors.textInverse,
+                                style: AuroraType.body.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
                                 ),
                               ),
                       ),
@@ -372,4 +380,3 @@ class _TaskSelectionSheetState extends State<_TaskSelectionSheet> {
         _ => 'One-time',
       };
 }
-

@@ -3,9 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../router/app_router.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_sizes.dart';
-import '../theme/app_text_styles.dart';
+import '../theme/aurora_colors.dart';
+import '../theme/aurora_radius.dart';
+import '../theme/aurora_typography.dart';
 
 /// Configuration for an [UpgradeSheet] presentation.
 class UpgradeSheetConfig {
@@ -76,7 +76,7 @@ class UpgradeSheet extends StatelessWidget {
       useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSizes.radiusLg),
+          top: Radius.circular(16),
         ),
       ),
       builder: (sheetContext) => UpgradeSheet._(config: config),
@@ -103,12 +103,7 @@ class UpgradeSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSizes.md,
-          AppSizes.sm,
-          AppSizes.md,
-          AppSizes.xl,
-        ),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -119,68 +114,62 @@ class UpgradeSheet extends StatelessWidget {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.gray300,
-                  borderRadius:
-                      BorderRadius.circular(AppSizes.radiusFull),
+                  color: const Color(0xFFE0DFEA),
+                  borderRadius: BorderRadius.circular(999),
                 ),
               ),
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: 24),
             // Gold home icon
             const Center(
               child: Icon(
                 Icons.home_work_rounded,
-                color: AppColors.goldAccent,
-                size: AppSizes.iconXl,
+                color: AuroraColors.yellow,
+                size: 48,
               ),
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: 16),
             // Headline
             Text(
               config.headline,
-              style: AppTextStyles.h3,
+              style: AuroraType.h3,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: 8),
             // Reason
             Text(
               config.reason,
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textSecondary),
+              style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: 24),
             // Features label
             Text(
               'With Premium, you get:',
-              style: AppTextStyles.labelLarge
-                  .copyWith(fontWeight: FontWeight.w600),
+              style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: 8),
             // Feature bullets
             ...config.features.map(
               (f) => Padding(
-                padding:
-                    const EdgeInsets.only(bottom: AppSizes.xs),
+                padding: const EdgeInsets.only(bottom: 4),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '\u2726 ',
-                      style: AppTextStyles.bodyMedium
-                          .copyWith(color: AppColors.goldAccent),
+                      '✦ ',
+                      style: AuroraType.body.copyWith(
+                        color: AuroraColors.yellow,
+                      ),
                     ),
                     Expanded(
-                      child: Text(
-                        f,
-                        style: AppTextStyles.bodyMedium,
-                      ),
+                      child: Text(f, style: AuroraType.body),
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: 24),
             // Primary CTA
             FilledButton(
               onPressed: () {
@@ -188,21 +177,21 @@ class UpgradeSheet extends StatelessWidget {
                 context.push(AppRoutes.settingsPaywall);
               },
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                minimumSize:
-                    const Size.fromHeight(AppSizes.buttonHeight),
-                shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppSizes.radiusSm),
+                backgroundColor: AuroraColors.coral,
+                minimumSize: const Size.fromHeight(48),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: AuroraRadius.sm,
                 ),
               ),
               child: Text(
                 'See Premium Plans',
-                style: AppTextStyles.button
-                    .copyWith(color: AppColors.textInverse),
+                style: AuroraType.bodyLg.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
               ),
             ),
-            const SizedBox(height: AppSizes.xs),
+            const SizedBox(height: 4),
             // Dismiss button
             TextButton(
               onPressed: () {
@@ -211,8 +200,10 @@ class UpgradeSheet extends StatelessWidget {
               },
               child: Text(
                 'Maybe Later',
-                style: AppTextStyles.button
-                    .copyWith(color: AppColors.textSecondary),
+                style: AuroraType.bodyLg.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AuroraColors.inkSecondary,
+                ),
               ),
             ),
           ],

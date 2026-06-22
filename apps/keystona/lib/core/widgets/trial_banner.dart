@@ -3,9 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../router/app_router.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_sizes.dart';
-import '../theme/app_text_styles.dart';
+import '../theme/aurora_colors.dart';
+import '../theme/aurora_typography.dart';
 import '../../features/subscription/providers/subscription_provider.dart';
 
 /// Displays a contextual banner at the top of the Home Profile screen.
@@ -73,46 +72,43 @@ class _TrialEndingBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSizes.md),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
-      ),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.goldAccent,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        color: AuroraColors.yellow,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
           Expanded(
             child: Text(
               'Your Premium trial ends in $daysRemaining day${daysRemaining == 1 ? '' : 's'}.',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.deepNavy,
+              style: AuroraType.body.copyWith(
+                color: AuroraColors.ink,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
-          const SizedBox(width: AppSizes.sm),
+          const SizedBox(width: 8),
           GestureDetector(
             onTap: onView,
             child: Text(
               'View',
-              style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.deepNavy,
+              style: AuroraType.bodySm.copyWith(
+                color: AuroraColors.ink,
                 fontWeight: FontWeight.w700,
                 decoration: TextDecoration.underline,
-                decorationColor: AppColors.deepNavy,
+                decorationColor: AuroraColors.ink,
               ),
             ),
           ),
-          const SizedBox(width: AppSizes.sm),
+          const SizedBox(width: 8),
           GestureDetector(
             onTap: onDismiss,
             child: Icon(
               Icons.close,
-              size: AppSizes.iconSm,
-              color: AppColors.deepNavy.withValues(alpha: 0.7),
+              size: 16,
+              color: AuroraColors.ink.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -134,41 +130,37 @@ class _GraceBanner extends StatelessWidget {
   final VoidCallback onDismiss;
   final VoidCallback onUpgrade;
 
-  // Amber background — Bootstrap-style warning palette, not a hardcoded brand color.
-  static const _background = AppColors.trialBannerBg;
-  static const _foreground = AppColors.trialBannerText;
+  static const _background = AuroraColors.yellowDim;
+  static const _foreground = AuroraColors.yellowDeep;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSizes.md),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
-      ),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: _background,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: _foreground.withValues(alpha: 0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Icon(Icons.warning_amber_rounded, size: 18, color: _foreground),
-          const SizedBox(width: AppSizes.xs),
+          const SizedBox(width: 4),
           Expanded(
             child: Text(
               '$daysUntilArchive document${daysUntilArchive == 1 ? '' : 's'} '
               'will be archived in $daysUntilArchive days.',
-              style: AppTextStyles.bodyMedium.copyWith(color: _foreground),
+              style: AuroraType.body.copyWith(color: _foreground),
             ),
           ),
-          const SizedBox(width: AppSizes.sm),
+          const SizedBox(width: 8),
           GestureDetector(
             onTap: onUpgrade,
             child: Text(
               'Upgrade',
-              style: AppTextStyles.labelMedium.copyWith(
+              style: AuroraType.bodySm.copyWith(
                 color: _foreground,
                 fontWeight: FontWeight.w700,
                 decoration: TextDecoration.underline,
@@ -176,12 +168,12 @@ class _GraceBanner extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: AppSizes.sm),
+          const SizedBox(width: 8),
           GestureDetector(
             onTap: onDismiss,
             child: Icon(
               Icons.close,
-              size: AppSizes.iconSm,
+              size: 16,
               color: _foreground.withValues(alpha: 0.7),
             ),
           ),

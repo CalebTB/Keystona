@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_sizes.dart';
-import '../theme/app_text_styles.dart';
+import '../theme/aurora_colors.dart';
+import '../theme/aurora_radius.dart';
+import '../theme/aurora_typography.dart';
 
 /// Configurable empty state widget used whenever a list or section has no data.
 ///
@@ -37,43 +37,44 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSizes.lg),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              size: AppSizes.iconXl,
-              color: AppColors.gray400,
+              size: 48,
+              color: AuroraColors.inkTertiary,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: 16),
             Text(
               title,
-              style: AppTextStyles.h3,
+              style: AuroraType.h3,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: 8),
             Text(
               subtitle,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+              style: AuroraType.body.copyWith(
+                color: AuroraColors.inkSecondary,
               ),
               textAlign: TextAlign.center,
             ),
             if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: AppSizes.lg),
+              const SizedBox(height: 24),
               OutlinedButton(
                 onPressed: onAction,
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.accent),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                  side: const BorderSide(color: AuroraColors.coral),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: AuroraRadius.sm,
                   ),
                 ),
                 child: Text(
                   actionLabel!,
-                  style: AppTextStyles.button.copyWith(
-                    color: AppColors.accent,
+                  style: AuroraType.bodyLg.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AuroraColors.coral,
                   ),
                 ),
               ),
