@@ -21,7 +21,15 @@ class AppConfig {
     defaultValue: 'test_bjTwAPcHTznQgOXzvyNPXCRwirU',
   );
   static const String revenuecatGoogleKey = String.fromEnvironment('REVENUECAT_GOOGLE_KEY');
-  static const String appEnv = String.fromEnvironment('APP_ENV', defaultValue: 'development');
+  /// Defaults to 'production', NOT 'development'. The default is the value a
+  /// build gets when someone forgets --dart-define, and the two failure modes
+  /// are not symmetric: defaulting to development ships a release with crash
+  /// reporting silently off, which is how you find out from an empty Sentry
+  /// dashboard weeks later. Defaulting to production means a forgotten define
+  /// ships WITH reporting. Debug-build noise is held back by kReleaseMode in
+  /// SentryInit.isEnabled instead of by this value.
+  static const String appEnv =
+      String.fromEnvironment('APP_ENV', defaultValue: 'production');
 
   static bool get isDevelopment => appEnv == 'development';
   static bool get isStaging => appEnv == 'staging';

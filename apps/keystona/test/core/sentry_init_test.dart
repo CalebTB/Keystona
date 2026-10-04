@@ -160,8 +160,76 @@ void main() {
   group('isEnabled', () {
     test('off without a DSN — safe to ship before Sentry exists', () {
       // AppConfig.sentryDsn is empty unless SENTRY_DSN is passed at build
-      // time, and the default build env is development. Both gates closed.
+      // time, and tests are not a release build. Both gates closed.
       expect(SentryInit.isEnabled, isFalse);
+    });
+  });
+
+  // These are the regression tests for a bug that shipped silently: APP_ENV
+  // defaulted to 'development' while the gate read `!isDevelopment`, so any
+  // release build that didn't explicitly pass the define — an Xcode archive,
+  // a bare `flutter build` — had crash reporting switched off with no
+  // indication. Nothing failed; the dashboard was just empty.
+  group('shouldEnable', () {
+    const dsn = 'https://abc@o1.ingest.us.sentry.io/1';
+
+    test('a release build with NO env define reports — the whole fix', () {
+      // APP_ENV now defaults to 'production', so this is what a forgotten
+      // --dart-define actually produces. It must be ON.
+      expect(
+        SentryInit.shouldEnable(
+            dsn: dsn, isReleaseMode: true, appEnv: 'production'),
+        isTrue,
+      );
+    });
+
+    test('a release build EXPLICITLY marked development stays off', () {
+      expect(
+        SentryInit.shouldEnable(
+            dsn: dsn, isReleaseMode: true, appEnv: 'development'),
+        isFalse,
+      );
+    });
+
+    test('debug builds stay off even when env says production', () {
+      // kReleaseMode is the primary gate precisely because it cannot be
+      // forgotten. Hot reloads must never spend quota.
+      expect(
+        SentryInit.shouldEnable(
+            dsn: dsn, isReleaseMode: false, appEnv: 'production'),
+        isFalse,
+      );
+    });
+
+    test('staging opts in from a non-release build — app-run-staging', () {
+      // The one deliberate exception: `make app-run-staging` exists to
+      // exercise this instrumentation locally, which needs events to flow.
+      expect(
+        SentryInit.shouldEnable(
+            dsn: dsn, isReleaseMode: false, appEnv: 'staging'),
+        isTrue,
+      );
+    });
+
+    test('staging in a release build also reports', () {
+      expect(
+        SentryInit.shouldEnable(
+            dsn: dsn, isReleaseMode: true, appEnv: 'staging'),
+        isTrue,
+      );
+    });
+
+    test('an empty DSN wins over every other signal', () {
+      for (final release in [true, false]) {
+        for (final env in ['production', 'staging', 'development']) {
+          expect(
+            SentryInit.shouldEnable(
+                dsn: '', isReleaseMode: release, appEnv: env),
+            isFalse,
+            reason: 'leaked with release=$release env=$env',
+          );
+        }
+      }
     });
   });
 }

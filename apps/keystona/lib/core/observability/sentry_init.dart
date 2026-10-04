@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../config.dart';
@@ -16,12 +17,42 @@ import 'pii_scrubber.dart';
 abstract final class SentryInit {
   /// Whether crash reporting should run at all.
   ///
-  /// Requires a DSN and a non-development build. Gating on environment keeps
-  /// simulator hot-reload noise out of the project and off the quota; gating
-  /// on the DSN means this is safe to call before one is configured, so the
-  /// wiring can land before the Sentry project exists.
-  static bool get isEnabled =>
-      AppConfig.sentryDsn.isNotEmpty && !AppConfig.isDevelopment;
+  /// Thin wrapper over [shouldEnable] applied to the real build.
+  static bool get isEnabled => shouldEnable(
+        dsn: AppConfig.sentryDsn,
+        isReleaseMode: kReleaseMode,
+        appEnv: AppConfig.appEnv,
+      );
+
+  /// The enable/disable decision as a pure function.
+  ///
+  /// Split out from [isEnabled] because the interesting cases depend on
+  /// compile-time constants that a unit test cannot vary, and this decision has
+  /// already been wrong once in a way nothing caught: APP_ENV defaulted to
+  /// 'development' while the gate read `!isDevelopment`, so every release build
+  /// that did not explicitly pass the define — an Xcode archive, a bare
+  /// `flutter build` — shipped with crash reporting silently off.
+  ///
+  /// The ordering below is the whole point:
+  ///
+  ///  1. No DSN -> off. Safe to call before a Sentry project exists.
+  ///  2. Not a release build -> off, so hot-reload noise never spends quota.
+  ///     [isReleaseMode] comes from the compiler and cannot be forgotten the
+  ///     way a --dart-define can, which is why it is the primary gate rather
+  ///     than APP_ENV. `staging` is a deliberate escape hatch for
+  ///     `make app-run-staging`, which exists to exercise this code locally.
+  ///  3. Release build -> ON unless EXPLICITLY marked development. A forgotten
+  ///     define now ships *with* reporting instead of without it.
+  @visibleForTesting
+  static bool shouldEnable({
+    required String dsn,
+    required bool isReleaseMode,
+    required String appEnv,
+  }) {
+    if (dsn.isEmpty) return false;
+    if (!isReleaseMode && appEnv != 'staging') return false;
+    return appEnv != 'development';
+  }
 
   /// Runs [appRunner] with Sentry active, or directly if disabled.
   ///
