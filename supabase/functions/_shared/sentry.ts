@@ -72,6 +72,30 @@ async function _ensureInit(): Promise<SentryModule | null> {
       tracesSampleRate: 0.2,
       // Never send IP or user identifiers from the server side.
       sendDefaultPii: false,
+      // Drop breadcrumbs at the source, before they ever reach an event.
+      //
+      // The console integration is the critical one: every function calls
+      // console.error("...", err) with the RAW error immediately before
+      // captureError. That becomes a console breadcrumb, which would carry
+      // the exact PII that beforeSend strips out of exception.values — the
+      // same field is scrubbed in one place and leaked in another. Console
+      // breadcrumbs are pure duplication of the exception here, so they are
+      // dropped outright rather than redacted.
+      beforeBreadcrumb: (crumb: SentryModule) => {
+        try {
+          if (!crumb) return null;
+          if (crumb.category === "console") return null;
+          return {
+            ...crumb,
+            message: redact(crumb.message),
+            // fetch/xhr breadcrumb data holds URLs, query strings and bodies.
+            // The category and status are the useful part; the payload is not.
+            data: undefined,
+          };
+        } catch {
+          return null;
+        }
+      },
       beforeSend: (event: SentryModule) => {
         try {
           if (event?.exception?.values) {
@@ -80,6 +104,32 @@ async function _ensureInit(): Promise<SentryModule | null> {
             }
           }
           if (event?.message) event.message = redact(event.message);
+
+          // Defence in depth: beforeBreadcrumb should already have cleaned
+          // these, but a breadcrumb added by another path would bypass it.
+          if (Array.isArray(event?.breadcrumbs)) {
+            event.breadcrumbs = event.breadcrumbs.map((b: SentryModule) => ({
+              ...b,
+              message: redact(b?.message),
+              data: undefined,
+            }));
+          }
+
+          // Free-form fields set by the SDK or by feature code. Request data
+          // carries auth headers and query strings; extra and contexts are
+          // unbounded. None are worth the exposure on a short edge handler.
+          delete event.request;
+          delete event.extra;
+          delete event.contexts;
+
+          if (event?.tags) {
+            for (const [k, v] of Object.entries(event.tags)) {
+              if (typeof v === "string") event.tags[k] = redact(v);
+            }
+          }
+          if (event?.transaction) event.transaction = redact(event.transaction);
+          if (event?.culprit) event.culprit = redact(event.culprit);
+
           // Server name identifies infrastructure, not useful here.
           event.server_name = undefined;
           if (event?.user) event.user = { id: event.user.id };
