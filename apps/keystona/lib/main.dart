@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'core/config.dart';
 import 'core/observability/sentry_init.dart';
@@ -33,9 +34,14 @@ Future<void> main() async {
       PurchasesConfiguration(AppConfig.revenuecatAppleKey),
     );
 
+    // SentryWidget is required for user-interaction tracing. It is inside
+    // ProviderScope so Riverpod remains the outermost scope.
     runApp(
-      const ProviderScope(
-        child: KeystonaApp(),
+      // Not const: SentryWidget has no const constructor.
+      ProviderScope(
+        child: SentryWidget(
+          child: const KeystonaApp(),
+        ),
       ),
     );
   });

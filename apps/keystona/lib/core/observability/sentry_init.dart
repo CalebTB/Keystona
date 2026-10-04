@@ -51,8 +51,25 @@ abstract final class SentryInit {
         options.beforeBreadcrumb =
             (breadcrumb, hint) => _scrubBreadcrumb(breadcrumb);
 
+        // ── Tracing ───────────────────────────────────────────────────────
         // 20% of transactions per §5.4 — enough signal without the volume.
         options.tracesSampleRate = 0.2;
+
+        // Auto-instruments app start, navigation, HTTP and UI interactions.
+        // Interaction tracing additionally needs the SentryWidget wrapper in
+        // main.dart; without it these produce nothing.
+        options.enableAutoPerformanceTracing = true;
+        options.enableUserInteractionTracing = true;
+
+        // Supabase REST/auth failures become captured HTTP errors.
+        options.captureFailedRequests = true;
+        // Request bodies can hold document metadata and addresses — never
+        // send them, regardless of the scrubber.
+        options.maxRequestBodySize = MaxRequestBodySize.never;
+
+        // Session Replay is deliberately NOT enabled: it records the widget
+        // tree, and §8 bans attachScreenshot for the same reason. Revisit
+        // only with an explicit decision.
 
         // Local logging stays off; errors reach Sentry, not the console.
         options.debug = false;
