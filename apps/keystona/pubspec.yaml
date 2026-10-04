@@ -110,5 +110,14 @@ sentry:
   # Web-only; this app targets iOS and Android.
   upload_source_maps: false
 
+  # Commit integration is OFF. `set-commits --auto` needs a Sentry<->GitHub
+  # integration installed at the ORG level with this repo linked; without one
+  # the call returns 403 and fails the build *after* symbols have already
+  # uploaded successfully — all the work done, exit code 1. Turn this back on
+  # (delete the line) once the GitHub integration is connected in Sentry, which
+  # buys suspect-commit attribution on new issues.
+  commits: false
+
+
   # Fail the upload step loudly rather than silently skipping absent artifacts.
   ignore_missing: false

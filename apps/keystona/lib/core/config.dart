@@ -11,6 +11,11 @@ class AppConfig {
   static const String posthogApiKey = String.fromEnvironment('POSTHOG_API_KEY');
   static const String posthogHost = String.fromEnvironment('POSTHOG_HOST');
   static const String sentryDsn = String.fromEnvironment('SENTRY_DSN');
+  /// Must match the release sentry_dart_plugin creates at upload time, or
+  /// events land on a release that has no debug files attached. The Makefile
+  /// computes one string and passes it to both. Empty in dev builds, where
+  /// Sentry is disabled anyway.
+  static const String sentryRelease = String.fromEnvironment('SENTRY_RELEASE');
   static const String revenuecatAppleKey = String.fromEnvironment(
     'REVENUECAT_APPLE_KEY',
     defaultValue: 'test_bjTwAPcHTznQgOXzvyNPXCRwirU',

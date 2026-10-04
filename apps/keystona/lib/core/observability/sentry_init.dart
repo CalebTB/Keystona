@@ -39,6 +39,16 @@ abstract final class SentryInit {
         options.dsn = AppConfig.sentryDsn;
         options.environment = AppConfig.appEnv;
 
+        // Pin the release so it matches the one sentry_dart_plugin uploads
+        // debug files against. Left unset, the SDK derives
+        // "<bundleId>@<version>" while the plugin derives
+        // "<pubspecName>@<version>" — two different releases, and the one
+        // events actually report has no artifacts. Guarded because dev builds
+        // pass no SENTRY_RELEASE and an empty string is not a valid release.
+        if (AppConfig.sentryRelease.isNotEmpty) {
+          options.release = AppConfig.sentryRelease;
+        }
+
         // ── §8 checklist: these three are non-negotiable ──────────────────
         // All three are also the v9 defaults, but they are set explicitly so
         // an upstream default change cannot silently start leaking data.

@@ -3,6 +3,23 @@
 APP := apps/keystona
 DEFINES := dart-defines.json
 
+# Sentry release identity — one string, two consumers.
+#
+# Left to their own defaults these disagree: the Flutter SDK reports
+# "<bundleId>@<version>" at runtime, while sentry_dart_plugin creates
+# "<pubspecName>@<version>" at upload time. The result is debug files attached
+# to a release no event ever reports, so symbolication, release health and
+# regression detection all silently point at the wrong thing.
+#
+# So compute it here and feed the SAME value to the app (--dart-define) and to
+# the plugin (SENTRY_RELEASE env, which takes precedence over its pubspec
+# default). Keep BUNDLE_ID in sync with android applicationId and iOS
+# PRODUCT_BUNDLE_IDENTIFIER — both are com.keystona.keystona today.
+BUNDLE_ID := com.keystona.keystona
+APP_VERSION := $(shell sed -n 's/^version:[[:space:]]*//p' $(APP)/pubspec.yaml)
+SENTRY_RELEASE := $(BUNDLE_ID)@$(APP_VERSION)
+export SENTRY_RELEASE
+
 # ─── Setup ───────────────────────────────────
 setup:
 	cd $(APP) && flutter pub get
@@ -40,7 +57,13 @@ missing=[k for k in ('SUPABASE_URL','SUPABASE_ANON_KEY','SENTRY_DSN') if not d.g
 sys.exit('ERROR: $(DEFINES) missing values for: '+', '.join(missing)) if missing else None; \
 sys.exit('ERROR: SENTRY_DSN looks like a placeholder (%s).\n       Get the real DSN from Sentry > Settings > Client Keys.' % dsn) if '/123' in dsn or 'ingest' not in dsn else None" \
 		|| exit 1
+	@test -n "$(APP_VERSION)" || { \
+		echo "ERROR: could not read 'version:' from $(APP)/pubspec.yaml."; \
+		echo "       SENTRY_RELEASE would become '$(BUNDLE_ID)@' and artifacts"; \
+		echo "       would attach to a release no event reports."; \
+		exit 1; }
 	@echo "release env OK — SENTRY_DSN present, APP_ENV forced to production below"
+	@echo "release id: $(SENTRY_RELEASE)"
 
 # Symbol upload needs a token the app itself never sees. Missing it makes
 # sentry_dart_plugin fail rather than silently ship unsymbolicated builds.
@@ -61,7 +84,9 @@ app-run:
 # Dev run WITH Sentry active, for testing instrumentation locally.
 # The trailing --dart-define overrides the value in the file.
 app-run-staging:
-	cd $(APP) && flutter run --dart-define-from-file=$(DEFINES) --dart-define=APP_ENV=staging
+	cd $(APP) && flutter run --dart-define-from-file=$(DEFINES) \
+		--dart-define=APP_ENV=staging \
+		--dart-define=SENTRY_RELEASE=$(SENTRY_RELEASE)
 
 app-test:
 	cd $(APP) && flutter test
@@ -72,13 +97,15 @@ app-test:
 app-build-apk: check-release-env check-symbol-env
 	cd $(APP) && flutter build apk --release \
 		--dart-define-from-file=$(DEFINES) \
-		--dart-define=APP_ENV=production
+		--dart-define=APP_ENV=production \
+		--dart-define=SENTRY_RELEASE=$(SENTRY_RELEASE)
 	$(MAKE) symbols-upload
 
 app-build-ios: check-release-env check-symbol-env
 	cd $(APP) && flutter build ios --release \
 		--dart-define-from-file=$(DEFINES) \
-		--dart-define=APP_ENV=production
+		--dart-define=APP_ENV=production \
+		--dart-define=SENTRY_RELEASE=$(SENTRY_RELEASE)
 	$(MAKE) symbols-upload
 
 # Uploads whatever debug files the preceding build produced. Must run AFTER the
