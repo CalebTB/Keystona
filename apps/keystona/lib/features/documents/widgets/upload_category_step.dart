@@ -11,6 +11,7 @@ import '../providers/document_categories_provider.dart';
 import '../providers/document_types_provider.dart';
 import '../providers/document_upload_provider.dart';
 import '../widgets/category_form_sheet.dart';
+import '../../../core/widgets/aurora/aurora_button.dart';
 
 /// Step 1 of the upload wizard — category and optional document type selection.
 ///
@@ -288,15 +289,9 @@ class _SkipRow extends StatelessWidget {
         AuroraSpacing.space5,
         AuroraSpacing.space3,
       ),
-      child: TextButton(
+      child: GhostButton(
+        label: 'Skip — just use category',
         onPressed: onSkip,
-        child: Text(
-          'Skip — just use category',
-          style: AuroraType.bodySm.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AuroraColors.inkSecondary,
-          ),
-        ),
       ),
     );
   }

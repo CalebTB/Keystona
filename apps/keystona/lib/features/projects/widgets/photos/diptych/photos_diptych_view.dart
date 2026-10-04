@@ -1,6 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/theme/aurora_colors.dart';
 import '../../../../../core/theme/aurora_typography.dart';
@@ -225,11 +224,7 @@ class _PairCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     _cardTitle(),
-                    style: GoogleFonts.inter(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
-                      color: AuroraColors.ink,
-                    ),
+                    style: AuroraType.bodyLg.copyWith(fontWeight: FontWeight.w600, color: AuroraColors.ink),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -267,12 +262,7 @@ class _PairCard extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
               child: Text(
                 '“${before.caption ?? after.caption}”',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontStyle: FontStyle.italic,
-                  color: _kCaptionColor,
-                  height: 1.5,
-                ),
+                style: AuroraType.body.copyWith(color: _kCaptionColor, height: 1.5),
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),

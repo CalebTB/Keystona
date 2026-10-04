@@ -11,6 +11,7 @@ import 'photo_grid_tile.dart';
 import 'photos_grid_filter_chips.dart';
 import 'photos_grid_skeleton.dart';
 import 'photos_summary_strip.dart';
+import '../../../../../core/widgets/aurora/aurora_button.dart';
 
 
 /// Full-screen curated photo grid for a project.
@@ -273,15 +274,7 @@ class _EmptyFilterState extends StatelessWidget {
             ),
             if (hasTypeFilter) ...[
               const SizedBox(height: AuroraSpacing.space3),
-              TextButton(
-                onPressed: onClear,
-                child: Text(
-                  'Clear filter',
-                  style: AuroraType.body.copyWith(
-                    color: AuroraColors.ink,
-                  ),
-                ),
-              ),
+              GhostButton(label: 'Clear filter', onPressed: onClear),
             ],
           ],
         ),

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/aurora_colors.dart';
@@ -49,11 +48,7 @@ class ContactCard extends ConsumerWidget {
                 children: [
                   Text(
                     contact.name,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: AuroraColors.ink,
-                    ),
+                    style: AuroraType.body.copyWith(fontWeight: FontWeight.w700, color: AuroraColors.ink),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -152,11 +147,7 @@ class _Avatar extends StatelessWidget {
       child: Center(
         child: Text(
           name.isNotEmpty ? name[0].toUpperCase() : '?',
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: isFavorite ? AuroraColors.yellowDeep : AuroraColors.ink,
-          ),
+          style: AuroraType.body.copyWith(fontWeight: FontWeight.w700, color: isFavorite ? AuroraColors.yellowDeep : AuroraColors.ink),
         ),
       ),
     );

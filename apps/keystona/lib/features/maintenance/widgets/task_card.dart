@@ -144,7 +144,7 @@ class _TaskInfo extends StatelessWidget {
               const SizedBox(width: 4),
               Text(
                 '·',
-                style: TextStyle(color: AuroraColors.inkSecondary, fontSize: 12),
+                style: AuroraType.bodySm.copyWith(color: AuroraColors.inkSecondary),
               ),
               const SizedBox(width: 4),
               Flexible(

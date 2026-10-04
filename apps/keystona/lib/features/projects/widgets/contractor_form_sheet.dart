@@ -140,7 +140,7 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
                   },
                   child: Text(
                     ContractorRoles.labelFor(r),
-                    style: TextStyle(
+                    style: AuroraType.body.copyWith(
                       color: _role == r
                           ? AuroraColors.yellow
                           : AuroraColors.ink,

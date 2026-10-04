@@ -102,8 +102,7 @@ class _Segment extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 12,
+                style: AuroraType.bodySm.copyWith(
                   fontWeight:
                       active ? FontWeight.w700 : FontWeight.w500,
                   color: active

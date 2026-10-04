@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
@@ -59,11 +58,7 @@ class ShutoffCard extends StatelessWidget {
                 children: [
                   Text(
                     utilityType.utilityLabel,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AuroraColors.ink,
-                    ),
+                    style: AuroraType.body.copyWith(fontWeight: FontWeight.w600, color: AuroraColors.ink),
                   ),
                   if (isSetUp) ...[
                     const SizedBox(height: 2),

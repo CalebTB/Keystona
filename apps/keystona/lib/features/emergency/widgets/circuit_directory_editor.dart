@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_radius.dart';
@@ -80,11 +79,7 @@ class _CircuitDirectoryEditorState extends State<CircuitDirectoryEditor> {
       children: [
         Text(
           'Circuit Directory',
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AuroraColors.ink,
-          ),
+          style: AuroraType.body.copyWith(fontWeight: FontWeight.w600, color: AuroraColors.ink),
         ),
         const SizedBox(height: AuroraSpacing.space1),
         Text(
@@ -339,11 +334,7 @@ class _AddCircuitButton extends StatelessWidget {
             const SizedBox(width: AuroraSpacing.space1),
             Text(
               'Add Circuit',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AuroraColors.ink,
-              ),
+              style: AuroraType.body.copyWith(fontWeight: FontWeight.w600, color: AuroraColors.ink),
             ),
           ],
         ),
@@ -359,11 +350,7 @@ class _AddCircuitButton extends StatelessWidget {
       ),
       label: Text(
         'Add Circuit',
-        style: GoogleFonts.inter(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: AuroraColors.ink,
-        ),
+        style: AuroraType.body.copyWith(fontWeight: FontWeight.w600, color: AuroraColors.ink),
       ),
     );
   }

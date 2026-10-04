@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
@@ -28,11 +27,7 @@ class InsuranceSection extends StatelessWidget {
           children: [
             Text(
               'Insurance',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: AuroraColors.ink,
-              ),
+              style: AuroraType.body.copyWith(fontWeight: FontWeight.w700, color: AuroraColors.ink),
             ),
             const Spacer(),
             if (policies.isNotEmpty)
@@ -106,11 +101,7 @@ class _PolicyRow extends StatelessWidget {
               children: [
                 Text(
                   '${policy.policyType.policyTypeLabel} · ${policy.carrier}',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AuroraColors.ink,
-                  ),
+                  style: AuroraType.body.copyWith(fontWeight: FontWeight.w600, color: AuroraColors.ink),
                 ),
                 if (policy.policyNumber != null) ...[
                   const SizedBox(height: 2),

@@ -5,6 +5,7 @@ import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../../../services/supabase_service.dart';
 import '../providers/maintenance_tasks_provider.dart';
+import '../../../core/widgets/snackbar_service.dart';
 
 /// Empty state for the Maintenance Calendar — Pattern A (Motivational).
 ///
@@ -45,9 +46,7 @@ class _TaskEmptyStateState extends ConsumerState<TaskEmptyState> {
 
       if (propertyRow == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No property found.')),
-          );
+          SnackbarService.showError(context, 'No property found.');
         }
         return;
       }
@@ -63,9 +62,7 @@ class _TaskEmptyStateState extends ConsumerState<TaskEmptyState> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to generate tasks: $e')),
-        );
+        SnackbarService.showError(context, 'Failed to generate tasks: $e');
       }
     } finally {
       if (mounted) setState(() => _generating = false);

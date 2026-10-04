@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../models/emergency_contact.dart';
+import '../../../core/widgets/snackbar_service.dart';
 
 /// Contacts preview section on the Emergency Hub main screen.
 class ContactsSection extends StatelessWidget {
@@ -30,11 +30,7 @@ class ContactsSection extends StatelessWidget {
           children: [
             Text(
               'Emergency Contacts',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: AuroraColors.ink,
-              ),
+              style: AuroraType.body.copyWith(fontWeight: FontWeight.w700, color: AuroraColors.ink),
             ),
             const Spacer(),
             if (totalCount > 0)
@@ -96,11 +92,7 @@ class _ContactRow extends StatelessWidget {
                 contact.name.isNotEmpty
                     ? contact.name[0].toUpperCase()
                     : '?',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: AuroraColors.ink,
-                ),
+                style: AuroraType.body.copyWith(fontWeight: FontWeight.w700, color: AuroraColors.ink),
               ),
             ),
           ),
@@ -112,11 +104,7 @@ class _ContactRow extends StatelessWidget {
               children: [
                 Text(
                   contact.name,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AuroraColors.ink,
-                  ),
+                  style: AuroraType.body.copyWith(fontWeight: FontWeight.w600, color: AuroraColors.ink),
                 ),
                 Text(
                   contact.is24x7
@@ -163,9 +151,7 @@ class _CallButton extends StatelessWidget {
   }
 
   Future<void> _call(BuildContext context) async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Calling $name — $phone')),
-    );
+    SnackbarService.showInfo(context, 'Calling $name — $phone');
   }
 }
 

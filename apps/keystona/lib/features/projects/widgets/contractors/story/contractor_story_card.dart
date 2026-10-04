@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../../core/theme/aurora_colors.dart';
@@ -234,11 +233,7 @@ class _QuoteBlock extends StatelessWidget {
     if (!hasNotes) {
       return Text(
         'No review yet',
-        style: GoogleFonts.inter(
-          fontSize: 13,
-          fontStyle: FontStyle.italic,
-          color: Colors.white.withValues(alpha: 0.35),
-        ),
+        style: AuroraType.body.copyWith(color: Colors.white.withValues(alpha: 0.35)),
       );
     }
 
@@ -251,13 +246,7 @@ class _QuoteBlock extends StatelessWidget {
       children: [
         Text(
           '"${notes.trim()}"',
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w400,
-            fontStyle: FontStyle.italic,
-            color: Colors.white.withValues(alpha: 0.8),
-            height: 1.5,
-          ),
+          style: AuroraType.body.copyWith(color: Colors.white.withValues(alpha: 0.8), height: 1.5),
           maxLines: 4,
           overflow: TextOverflow.ellipsis,
         ),
@@ -476,11 +465,7 @@ class _ProjectsSection extends StatelessWidget {
                 children: [
                   Text(
                     project.name,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AuroraColors.ink,
-                    ),
+                    style: AuroraType.body.copyWith(fontWeight: FontWeight.w600, color: AuroraColors.ink),
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
@@ -593,11 +578,7 @@ class _PillButton extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               label,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: fg,
-              ),
+              style: AuroraType.body.copyWith(fontWeight: FontWeight.w600, color: fg),
             ),
           ],
         ),

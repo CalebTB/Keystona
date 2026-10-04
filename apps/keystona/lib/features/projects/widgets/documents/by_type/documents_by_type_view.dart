@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/theme/aurora_colors.dart';
 
@@ -223,11 +222,7 @@ class _SectionHeader extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             type.pluralName,
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: AuroraColors.ink,
-            ),
+            style: AuroraType.h3.copyWith(color: AuroraColors.ink),
           ),
           const Spacer(),
           Text(
@@ -289,11 +284,7 @@ class _DocumentCard extends StatelessWidget {
                           link.documentName.isNotEmpty
                               ? link.documentName
                               : 'Untitled document',
-                          style: GoogleFonts.inter(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w600,
-                            color: AuroraColors.ink,
-                          ),
+                          style: AuroraType.bodyLg.copyWith(fontWeight: FontWeight.w600, color: AuroraColors.ink),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -371,11 +362,7 @@ class _DashedLinkCard extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               'Link a document',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AuroraColors.inkSecondary,
-              ),
+              style: AuroraType.body.copyWith(fontWeight: FontWeight.w600, color: AuroraColors.inkSecondary),
             ),
           ],
         ),
@@ -403,19 +390,12 @@ class _EmptyGuard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             'No documents linked yet',
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: AuroraColors.inkSecondary,
-            ),
+            style: AuroraType.h3.copyWith(fontWeight: FontWeight.w600, color: AuroraColors.inkSecondary),
           ),
           const SizedBox(height: 4),
           Text(
             'Link a document from your vault to get started.',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: AuroraColors.inkTertiary,
-            ),
+            style: AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
             textAlign: TextAlign.center,
           ),
         ],

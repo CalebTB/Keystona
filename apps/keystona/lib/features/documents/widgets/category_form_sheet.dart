@@ -9,6 +9,7 @@ import '../../../core/theme/aurora_typography.dart';
 import '../models/document_category.dart';
 import '../providers/document_categories_provider.dart';
 import '../../../core/widgets/aurora/aurora_sheet.dart';
+import '../../../core/widgets/snackbar_service.dart';
 
 // ── Icon catalog ──────────────────────────────────────────────────────────────
 
@@ -165,14 +166,11 @@ class _CategoryFormSheetState extends ConsumerState<CategoryFormSheet> {
     } catch (_) {
       if (mounted) {
         setState(() => _loading = false);
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_isEdit
-                ? 'Failed to update category.'
-                : 'Failed to create category.'),
-            backgroundColor: AuroraColors.coral,
-          ),
+        SnackbarService.showError(
+          context,
+          _isEdit
+              ? 'Failed to update category.'
+              : 'Failed to create category.',
         );
       }
     }
@@ -251,7 +249,7 @@ class _IOSSheet extends StatelessWidget {
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: CupertinoColors.systemGroupedBackground,
+            color: AuroraColors.paper,
             borderRadius: AuroraSheet.topRadius(context),
           ),
           padding: EdgeInsets.only(
@@ -268,8 +266,8 @@ class _IOSSheet extends StatelessWidget {
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: CupertinoColors.systemGrey3,
-                      borderRadius: BorderRadius.circular(2),
+                      color: AuroraColors.inkBorderStrong,
+                      borderRadius: AuroraRadius.full,
                     ),
                   ),
                   const SizedBox(height: AuroraSpacing.space3),
