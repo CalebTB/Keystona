@@ -11,6 +11,7 @@ import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/photo_picker.dart';
 import '../providers/document_upload_provider.dart';
+import '../../../core/widgets/aurora/aurora_sheet.dart';
 
 /// Adaptive bottom sheet for choosing a document source.
 ///
@@ -98,10 +99,8 @@ abstract final class UploadSourceSheet {
 
     await showModalBottomSheet<void>(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(16),
-        ),
+      shape: RoundedRectangleBorder(
+        borderRadius: AuroraSheet.topRadius(context),
       ),
       builder: (sheetContext) => _MaterialSourceSheet(
         onCamera: () async {

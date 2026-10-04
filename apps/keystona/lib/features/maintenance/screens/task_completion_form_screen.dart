@@ -613,10 +613,8 @@ class _ReceiptPickerSheet extends ConsumerStatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: AuroraColors.paper,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(16),
-        ),
+      shape: RoundedRectangleBorder(
+        borderRadius: AuroraSheet.topRadius(context),
       ),
       builder: (_) => DraggableScrollableSheet(
         initialChildSize: 0.6,
@@ -666,11 +664,9 @@ class _ReceiptPickerSheetState extends ConsumerState<_ReceiptPickerSheet> {
     final docsAsync = ref.watch(documentsProvider);
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(16),
-        ),
+        borderRadius: AuroraSheet.topRadius(context),
       ),
       child: Column(
         children: [

@@ -5,6 +5,7 @@ import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../../../services/supabase_service.dart';
+import '../../../core/widgets/aurora/aurora_sheet.dart';
 
 Future<({String id, String name})?> showDocumentLinkPicker(
   BuildContext context,
@@ -20,8 +21,8 @@ Future<({String id, String name})?> showDocumentLinkPicker(
       context: context,
       backgroundColor: AuroraColors.paper,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: AuroraSheet.topRadius(context),
       ),
       builder: (_) => const _DocumentPickerSheet(),
     );
@@ -96,9 +97,9 @@ class _DocumentPickerSheetState extends State<_DocumentPickerSheet> {
         child: SafeArea(
           top: false,
           child: Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: AuroraColors.paper,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: AuroraSheet.topRadius(context),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,

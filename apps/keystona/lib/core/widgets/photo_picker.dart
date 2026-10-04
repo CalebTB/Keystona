@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../theme/aurora_colors.dart';
 import '../theme/aurora_typography.dart';
+import '../widgets/aurora/aurora_sheet.dart';
 
 /// Unified camera and gallery photo picker with automatic compression.
 ///
@@ -45,8 +46,8 @@ abstract final class PhotoPicker {
 
     await showModalBottomSheet<void>(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: AuroraSheet.topRadius(context),
       ),
       builder: (sheetContext) => _PhotoPickerSheet(
         onCamera: () async {

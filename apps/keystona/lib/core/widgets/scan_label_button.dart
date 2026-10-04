@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../services/label_scanner_service.dart';
 import '../theme/aurora_colors.dart';
 import '../theme/aurora_typography.dart';
+import '../widgets/aurora/aurora_sheet.dart';
 
 /// A camera button that scans an appliance/system label and returns the
 /// extracted data via [onResult]. Shows a confirmation sheet before calling
@@ -189,9 +190,9 @@ class _ScanResultSheet extends StatelessWidget {
     return Material(
       type: MaterialType.transparency,
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          borderRadius: AuroraSheet.topRadius(context),
         ),
         child: SafeArea(
           top: false,

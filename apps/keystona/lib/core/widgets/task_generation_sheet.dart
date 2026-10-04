@@ -7,6 +7,7 @@ import '../../features/maintenance/providers/maintenance_tasks_provider.dart';
 import '../../services/supabase_service.dart';
 import '../theme/aurora_colors.dart';
 import '../theme/aurora_typography.dart';
+import '../widgets/aurora/aurora_sheet.dart';
 
 /// A suggested maintenance task returned by the generate-item-tasks function.
 class SuggestedTask {
@@ -225,9 +226,9 @@ class _TaskSelectionSheetState extends State<_TaskSelectionSheet> {
     return Material(
       type: MaterialType.transparency,
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          borderRadius: AuroraSheet.topRadius(context),
         ),
         child: SafeArea(
           top: false,

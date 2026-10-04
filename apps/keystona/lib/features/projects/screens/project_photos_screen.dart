@@ -619,9 +619,9 @@ class _PairPickerSheet extends StatelessWidget {
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.55,
         ),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          borderRadius: AuroraSheet.topRadius(context),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -753,9 +753,9 @@ class _PairEditFormSheetState extends State<_PairEditFormSheet> {
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.6,
         ),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          borderRadius: AuroraSheet.topRadius(context),
         ),
         child: Padding(
           padding: EdgeInsets.only(

@@ -8,6 +8,7 @@ import '../theme/aurora_radius.dart';
 import '../theme/aurora_spacing.dart';
 import '../theme/aurora_typography.dart';
 import 'aurora/aurora_button.dart';
+import 'aurora/aurora_sheet.dart';
 
 /// Configuration for an [UpgradeSheet] presentation.
 class UpgradeSheetConfig {
@@ -77,10 +78,8 @@ class UpgradeSheet extends StatelessWidget {
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: AuroraColors.paper,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(22),
-        ),
+      shape: RoundedRectangleBorder(
+        borderRadius: AuroraSheet.topRadius(context),
       ),
       builder: (sheetContext) => UpgradeSheet._(config: config),
     );

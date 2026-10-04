@@ -659,9 +659,7 @@ class _PhotoSourceSheet {
     return showModalBottomSheet<ImageSource>(
       context: context,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: AuroraRadius.xl.topLeft,
-        ),
+        borderRadius: AuroraSheet.topRadius(context),
       ),
       builder: (_) => Column(
         mainAxisSize: MainAxisSize.min,

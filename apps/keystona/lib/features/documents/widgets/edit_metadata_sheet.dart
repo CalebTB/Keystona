@@ -11,6 +11,7 @@ import '../../../core/widgets/snackbar_service.dart';
 import '../models/document.dart';
 import '../providers/document_categories_provider.dart';
 import '../providers/document_detail_provider.dart';
+import '../../../core/widgets/aurora/aurora_sheet.dart';
 
 /// Bottom sheet for editing a document's mutable metadata fields.
 ///
@@ -29,10 +30,8 @@ class EditMetadataSheet extends ConsumerStatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: AuroraColors.paper,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(16),
-        ),
+      shape: RoundedRectangleBorder(
+        borderRadius: AuroraSheet.topRadius(context),
       ),
       builder: (_) => EditMetadataSheet(document: document),
     );

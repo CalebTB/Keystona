@@ -1509,7 +1509,7 @@ class _SkipReasonSheet extends ConsumerStatefulWidget {
       isScrollControlled: true,
       backgroundColor: AuroraColors.paper,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: AuroraRadius.xl.topLeft),
+        borderRadius: AuroraSheet.topRadius(context),
       ),
       builder: (_) => Padding(
         padding: EdgeInsets.only(
@@ -1552,7 +1552,7 @@ class _SkipReasonSheetState extends ConsumerState<_SkipReasonSheet> {
       ),
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.vertical(top: AuroraRadius.xl.topLeft),
+        borderRadius: AuroraSheet.topRadius(context),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

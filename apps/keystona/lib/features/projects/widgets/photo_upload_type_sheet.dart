@@ -6,6 +6,7 @@ import '../../../core/theme/aurora_typography.dart';
 import '../../../core/theme/aurora_spacing.dart';
 
 import '../models/project_photo.dart';
+import '../../../core/widgets/aurora/aurora_sheet.dart';
 
 /// Shows a platform-adaptive sheet for selecting photo type and optional room tag.
 ///
@@ -54,9 +55,9 @@ class _TypeSheetState extends State<_TypeSheet> {
         padding:
             EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: AuroraSheet.topRadius(context),
           ),
           padding: EdgeInsets.all(AuroraSpacing.screenPadH),
           child: Column(

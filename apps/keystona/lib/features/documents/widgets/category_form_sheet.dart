@@ -8,6 +8,7 @@ import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../models/document_category.dart';
 import '../providers/document_categories_provider.dart';
+import '../../../core/widgets/aurora/aurora_sheet.dart';
 
 // ── Icon catalog ──────────────────────────────────────────────────────────────
 
@@ -85,8 +86,8 @@ Future<bool> showCategoryFormSheet(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: AuroraSheet.topRadius(context),
       ),
       builder: (_) => CategoryFormSheet(existing: existing),
     );
@@ -249,9 +250,9 @@ class _IOSSheet extends StatelessWidget {
           maxHeight: MediaQuery.of(context).size.height * 0.85,
         ),
         child: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: CupertinoColors.systemGroupedBackground,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            borderRadius: AuroraSheet.topRadius(context),
           ),
           padding: EdgeInsets.only(
             bottom: MediaQuery.viewInsetsOf(context).bottom,

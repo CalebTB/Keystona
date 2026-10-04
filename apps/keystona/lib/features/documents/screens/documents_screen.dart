@@ -1479,8 +1479,8 @@ class _SortButton extends StatelessWidget {
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: AuroraColors.paper,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: AuroraSheet.topRadius(context),
       ),
       builder: (_) => SafeArea(
         child: Column(

@@ -11,6 +11,7 @@ import '../../emergency/models/emergency_contact.dart';
 import '../../emergency/providers/emergency_hub_provider.dart';
 import '../models/project_contractor.dart';
 import '../providers/project_contractors_provider.dart';
+import '../../../core/widgets/aurora/aurora_sheet.dart';
 
 /// Shows a form sheet to link an existing contact or create a new contractor.
 Future<void> showContractorFormSheet({
@@ -235,9 +236,9 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
       child: SingleChildScrollView(
         padding: EdgeInsets.only(bottom: bottomPad),
         child: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: AuroraSheet.topRadius(context),
           ),
           padding: EdgeInsets.all(AuroraSpacing.screenPadH),
           child: Form(

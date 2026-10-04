@@ -358,8 +358,8 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
       await showModalBottomSheet<void>(
         context: context,
         backgroundColor: AuroraColors.paper,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: AuroraSheet.topRadius(context),
         ),
         builder: (_) => SafeArea(
           child: Column(
@@ -573,10 +573,8 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
                 final result = await showModalBottomSheet<String>(
                   context: context,
                   backgroundColor: AuroraColors.paper,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(16),
-                    ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AuroraSheet.topRadius(context),
                   ),
                   builder: (_) => _CategoryPicker(current: _category),
                 );
@@ -587,10 +585,8 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
                 final result = await showModalBottomSheet<RecurrenceType>(
                   context: context,
                   backgroundColor: AuroraColors.paper,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(16),
-                    ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AuroraSheet.topRadius(context),
                   ),
                   builder: (_) => _EnumPicker<RecurrenceType>(
                     title: 'Recurrence',
@@ -604,10 +600,8 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
                 final result = await showModalBottomSheet<TaskPriority>(
                   context: context,
                   backgroundColor: AuroraColors.paper,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(16),
-                    ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AuroraSheet.topRadius(context),
                   ),
                   builder: (_) => _EnumPicker<TaskPriority>(
                     title: 'Priority',
@@ -625,10 +619,8 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
                 final result = await showModalBottomSheet<TaskDifficulty>(
                   context: context,
                   backgroundColor: AuroraColors.paper,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(16),
-                    ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AuroraSheet.topRadius(context),
                   ),
                   builder: (_) => _EnumPicker<TaskDifficulty>(
                     title: 'Difficulty',
@@ -647,10 +639,8 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
                 final result = await showModalBottomSheet<DiyOrPro>(
                   context: context,
                   backgroundColor: AuroraColors.paper,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(16),
-                    ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AuroraSheet.topRadius(context),
                   ),
                   builder: (_) => _EnumPicker<DiyOrPro>(
                     title: 'Recommendation',

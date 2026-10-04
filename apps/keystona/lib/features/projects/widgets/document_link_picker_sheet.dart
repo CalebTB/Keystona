@@ -7,6 +7,7 @@ import '../../../core/theme/aurora_spacing.dart';
 
 import '../models/project_document_link.dart';
 import '../providers/project_documents_provider.dart';
+import '../../../core/widgets/aurora/aurora_sheet.dart';
 
 /// Shows a platform-adaptive picker sheet for linking a document to a project.
 ///
@@ -52,9 +53,9 @@ class _DocumentLinkPickerSheetState
         maxHeight: MediaQuery.of(context).size.height * 0.75,
       ),
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: AuroraSheet.topRadius(context),
         ),
         padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(

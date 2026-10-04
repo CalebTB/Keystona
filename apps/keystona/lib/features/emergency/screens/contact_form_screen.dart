@@ -114,8 +114,8 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
   Future<void> _pickCategoryAndroid(BuildContext context) async {
     await showModalBottomSheet<void>(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      shape: RoundedRectangleBorder(
+        borderRadius: AuroraSheet.topRadius(context),
       ),
       builder: (ctx) => SafeArea(
         child: Column(
