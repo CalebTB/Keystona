@@ -51,7 +51,7 @@ class LifespanEmptyState extends StatelessWidget {
               onPressed: () => context.push(AppRoutes.homeSystemsAdd),
               style: FilledButton.styleFrom(
                 backgroundColor: AuroraColors.yellow,
-                foregroundColor: Colors.white,
+                foregroundColor: AuroraColors.paper,
                 padding: const EdgeInsets.symmetric(
                   horizontal: AuroraSpacing.space8,
                   vertical: AuroraSpacing.space5,

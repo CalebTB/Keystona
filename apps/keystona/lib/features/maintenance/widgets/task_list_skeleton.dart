@@ -3,6 +3,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Shimmer loading placeholder that matches the [TaskCard] layout exactly.
 ///
@@ -48,7 +49,7 @@ class _SkeletonCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: const BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.all(Radius.circular(12)),
+        borderRadius: AuroraRadius.md,
       ),
       child: Row(
         children: [
@@ -83,7 +84,7 @@ class _SkeletonCard extends StatelessWidget {
             height: 28,
             decoration: BoxDecoration(
               color: AuroraColors.butter,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AuroraRadius.sm,
             ),
           ),
         ],

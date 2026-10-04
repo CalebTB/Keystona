@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../models/maintenance_task.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Horizontal 7-day week strip with dot indicators per day.
 ///
@@ -72,10 +73,10 @@ class _DayCol extends StatelessWidget {
     final Color textColor;
     if (isToday) {
       bg = AuroraColors.ink;
-      textColor = Colors.white;
+      textColor = AuroraColors.paper;
     } else if (isSelected) {
       bg = AuroraColors.coral;
-      textColor = Colors.white;
+      textColor = AuroraColors.paper;
     } else {
       bg = Colors.transparent;
       textColor = AuroraColors.ink;
@@ -91,7 +92,7 @@ class _DayCol extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 6),
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AuroraRadius.md,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -102,7 +103,7 @@ class _DayCol extends StatelessWidget {
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.2,
                 color: (isToday || isSelected)
-                    ? Colors.white.withValues(alpha: 0.7)
+                    ? AuroraColors.paper.withValues(alpha: 0.7)
                     : AuroraColors.inkTertiary,
               ),
             ),

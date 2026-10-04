@@ -8,6 +8,7 @@ import '../../../core/theme/aurora_typography.dart';
 import '../models/home_health_score.dart';
 import '../providers/home_health_score_provider.dart';
 import 'health_score_skeleton.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Displays the maintenance-pillar health score on the Tasks tab header.
 ///
@@ -83,7 +84,7 @@ class _ScoreCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AuroraRadius.md,
           border: Border.all(color: AuroraColors.inkBorder),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),

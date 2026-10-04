@@ -8,6 +8,7 @@ import '../../../core/theme/aurora_spacing.dart';
 import '../models/project_document_link.dart';
 import '../providers/project_documents_provider.dart';
 import '../../../core/widgets/aurora/aurora_sheet.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Shows a platform-adaptive picker sheet for linking a document to a project.
 ///
@@ -54,7 +55,7 @@ class _DocumentLinkPickerSheetState
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AuroraColors.paper,
           borderRadius: AuroraSheet.topRadius(context),
         ),
         padding: EdgeInsets.all(AuroraSpacing.screenPadH),
@@ -71,7 +72,7 @@ class _DocumentLinkPickerSheetState
                 decoration: BoxDecoration(
                   color: const Color(0xFFE0DFEA),
                   borderRadius:
-                      BorderRadius.circular(999.0),
+                      AuroraRadius.full,
                 ),
               ),
             ),
@@ -174,7 +175,7 @@ class _DocumentLinkPickerSheetState
                       color:
                           selected ? AuroraColors.ink : AuroraColors.paper,
                       borderRadius:
-                          BorderRadius.circular(999.0),
+                          AuroraRadius.full,
                       border: Border.all(
                         color: selected
                             ? AuroraColors.ink
@@ -185,7 +186,7 @@ class _DocumentLinkPickerSheetState
                       t.label,
                       style: AuroraType.label.copyWith(
                         color: selected
-                            ? Colors.white
+                            ? AuroraColors.paper
                             : AuroraColors.ink,
                       ),
                     ),

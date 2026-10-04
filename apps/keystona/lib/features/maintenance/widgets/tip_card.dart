@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Spring maintenance tip card shown below the agenda on the Tasks screen.
 class TipCard extends StatelessWidget {
@@ -13,7 +14,7 @@ class TipCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AuroraColors.limeDim,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AuroraRadius.md,
         border: Border.all(color: AuroraColors.limeDeep.withValues(alpha: 0.10), width: 1),
       ),
       child: Row(

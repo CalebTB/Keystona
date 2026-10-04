@@ -7,6 +7,7 @@ import '../../../core/theme/aurora_typography.dart';
 
 
 import '../models/system_lifespan_entry.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Card displaying lifespan data for a single system.
 ///
@@ -26,7 +27,7 @@ class LifespanCard extends StatelessWidget {
       padding: const EdgeInsets.all(AuroraSpacing.space5),
       decoration: BoxDecoration(
         color: entry.isEndOfLife ? AuroraColors.coralDim : AuroraColors.paper,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AuroraRadius.lg,
         border: Border.all(
           color: entry.isEndOfLife
               ? AuroraColors.coral.withValues(alpha: 0.20)
@@ -129,7 +130,7 @@ class _LifespanBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: AuroraRadius.full,
       child: LinearProgressIndicator(
         value: entry.isUnknown ? 0.0 : entry.barFraction,
         minHeight: 8,
@@ -158,7 +159,7 @@ class _HealthChip extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: entry.healthColor.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: AuroraRadius.full,
       ),
       child: Text(
         entry.healthLabel,

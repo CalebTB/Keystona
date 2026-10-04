@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Pulse-shimmer skeleton matching the shutoff detail form layout.
 class ShutoffDetailSkeleton extends StatefulWidget {
@@ -99,7 +100,7 @@ class _FieldBar extends StatelessWidget {
       height: 50,
       decoration: BoxDecoration(
         color: AuroraColors.ink.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AuroraRadius.sm,
         border: Border.all(color: AuroraColors.inkBorder),
       ),
     );
@@ -115,7 +116,7 @@ class _MultilineBar extends StatelessWidget {
       height: 88,
       decoration: BoxDecoration(
         color: AuroraColors.ink.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AuroraRadius.sm,
         border: Border.all(color: AuroraColors.inkBorder),
       ),
     );
@@ -131,7 +132,7 @@ class _SaveButtonBar extends StatelessWidget {
       height: 48,
       decoration: BoxDecoration(
         color: AuroraColors.ink.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AuroraRadius.sm,
       ),
     );
   }
@@ -151,7 +152,7 @@ class _SkeletonBar extends StatelessWidget {
         height: height,
         decoration: BoxDecoration(
           color: AuroraColors.ink.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AuroraRadius.sm,
         ),
       ),
     );

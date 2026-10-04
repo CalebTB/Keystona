@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Shimmer skeleton for the budget screen while data loads.
 class BudgetSkeleton extends StatefulWidget {
@@ -38,7 +39,7 @@ class _BudgetSkeletonState extends State<BudgetSkeleton>
         height: height,
         decoration: BoxDecoration(
           color: const Color(0xFFEEEDF2),
-          borderRadius: BorderRadius.circular(8.0),
+          borderRadius: AuroraRadius.sm,
         ),
       );
 
@@ -56,7 +57,7 @@ class _BudgetSkeletonState extends State<BudgetSkeleton>
               height: 100,
               decoration: BoxDecoration(
                 color: const Color(0xFFEEEDF2),
-                borderRadius: BorderRadius.circular(12.0),
+                borderRadius: AuroraRadius.md,
               ),
             ),
             const SizedBox(height: AuroraSpacing.space7),
@@ -65,7 +66,7 @@ class _BudgetSkeletonState extends State<BudgetSkeleton>
               height: 120,
               decoration: BoxDecoration(
                 color: const Color(0xFFEEEDF2),
-                borderRadius: BorderRadius.circular(12.0),
+                borderRadius: AuroraRadius.md,
               ),
             ),
             const SizedBox(height: AuroraSpacing.space7),
@@ -78,7 +79,7 @@ class _BudgetSkeletonState extends State<BudgetSkeleton>
                   height: 72,
                   decoration: BoxDecoration(
                     color: const Color(0xFFEEEDF2),
-                    borderRadius: BorderRadius.circular(12.0),
+                    borderRadius: AuroraRadius.md,
                   ),
                   padding: const EdgeInsets.symmetric(
                     horizontal: AuroraSpacing.space7,

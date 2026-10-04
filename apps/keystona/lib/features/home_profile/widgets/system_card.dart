@@ -9,6 +9,7 @@ import '../../../core/router/app_router.dart';
 
 
 import '../models/system.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// A 72px card representing a single home system in the grouped list.
 ///
@@ -39,7 +40,7 @@ class SystemCard extends StatelessWidget {
         padding: const EdgeInsets.all(AuroraSpacing.space6),
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AuroraRadius.lg,
           border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(
@@ -101,7 +102,7 @@ class _CategoryIcon extends StatelessWidget {
       height: 40,
       decoration: BoxDecoration(
         color: AuroraColors.ink.withAlpha(20),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AuroraRadius.sm,
       ),
       child: Icon(
         _iconFor(category),
@@ -143,7 +144,7 @@ class _StatusChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withAlpha(20),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: AuroraRadius.full,
         border: Border.all(color: color.withAlpha(60)),
       ),
       child: Text(

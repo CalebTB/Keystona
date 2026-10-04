@@ -6,6 +6,7 @@ import '../../../core/router/app_router.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../models/maintenance_task.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// A list-item card representing a single maintenance task.
 ///
@@ -31,7 +32,7 @@ class TaskCard extends StatelessWidget {
 
     return Material(
       color: AuroraColors.paper,
-      borderRadius: const BorderRadius.all(Radius.circular(14)),
+      borderRadius: AuroraRadius.lg,
       child: InkWell(
         onTap: () {
           final path = AppRoutes.maintenanceTaskDetail.replaceFirst(
@@ -40,10 +41,10 @@ class TaskCard extends StatelessWidget {
           );
           context.push(path);
         },
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        borderRadius: AuroraRadius.lg,
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: const BorderRadius.all(Radius.circular(14)),
+            borderRadius: AuroraRadius.lg,
             border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
             boxShadow: [
               BoxShadow(
@@ -263,7 +264,7 @@ class _Badge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withAlpha(25),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AuroraRadius.sm,
         border: Border.all(color: color.withAlpha(80)),
       ),
       child: Text(

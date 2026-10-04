@@ -182,7 +182,7 @@ class _CircuitRow extends StatelessWidget {
             height: 32,
             decoration: BoxDecoration(
               color: AuroraColors.coral.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AuroraRadius.sm,
             ),
             child: const Icon(
               Icons.remove,
@@ -229,7 +229,7 @@ class _IOSField extends StatelessWidget {
       decoration: BoxDecoration(
         color: AuroraColors.paper,
         border: Border.all(color: AuroraColors.inkBorder),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AuroraRadius.sm,
       ),
     );
   }
@@ -287,7 +287,7 @@ class _EmptyCircuitPlaceholder extends StatelessWidget {
       padding: const EdgeInsets.all(AuroraSpacing.space7),
       decoration: BoxDecoration(
         color: AuroraColors.butter,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AuroraRadius.sm,
         border: Border.all(color: AuroraColors.inkBorder),
       ),
       child: Row(

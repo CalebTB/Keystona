@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../models/project.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Card for a single project — board/list shared component.
 ///
@@ -69,7 +70,7 @@ class ProjectCard extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: AuroraColors.paper,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: AuroraRadius.md,
               ),
               child: _CondensedRow(
                 project: project,
@@ -88,7 +89,7 @@ class ProjectCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AuroraRadius.lg,
           border: Border.all(color: borderColor, width: 3),
         ),
         child: ClipRRect(
@@ -207,7 +208,7 @@ class _HeroSection extends StatelessWidget {
               project.name,
               style: AuroraType.h2.copyWith(
                 fontSize: 17,
-                color: Colors.white,
+                color: AuroraColors.paper,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -471,7 +472,7 @@ class _BudgetRow extends StatelessWidget {
         const SizedBox(width: 10),
         Expanded(
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(999.0),
+            borderRadius: AuroraRadius.full,
             child: LinearProgressIndicator(
               value: pct,
               minHeight: 4,
@@ -552,7 +553,7 @@ class _WorkTypePill extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
         border: Border.all(color: color.withValues(alpha: 0.35)),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: AuroraRadius.xs,
       ),
       child: Text(
         workType.workTypeLabel.toUpperCase(),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 class InsuranceListSkeleton extends StatefulWidget {
   const InsuranceListSkeleton({super.key});
@@ -65,7 +66,7 @@ class _PolicyCardSkeleton extends StatelessWidget {
       height: 96,
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AuroraRadius.md,
         border: Border.all(color: AuroraColors.inkBorder),
       ),
       padding: const EdgeInsets.all(AuroraSpacing.space7),

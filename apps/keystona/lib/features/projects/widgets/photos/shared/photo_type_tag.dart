@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/aurora_colors.dart';
 import '../../../../../core/theme/aurora_typography.dart';
+import '../../../../../core/theme/aurora_radius.dart';
 
 
 /// Colored badge shown at the top-left of each photo tile.
@@ -34,7 +35,7 @@ class PhotoTypeTag extends StatelessWidget {
     final bgColor = _colors[photoType] ?? _fallback;
 
     return ClipRRect(
-      borderRadius: const BorderRadius.all(Radius.circular(4)),
+      borderRadius: AuroraRadius.xs,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: Container(
@@ -42,7 +43,7 @@ class PhotoTypeTag extends StatelessWidget {
           color: bgColor,
           child: Text(
             _label,
-            style: AuroraType.labelSm.copyWith(color: Colors.white, height: 1.2),
+            style: AuroraType.labelSm.copyWith(color: AuroraColors.paper, height: 1.2),
           ),
         ),
       ),

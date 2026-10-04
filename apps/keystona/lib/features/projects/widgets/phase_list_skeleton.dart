@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 
 /// Pulse-shimmer skeleton matching [PhaseCard] layout.
@@ -69,7 +70,7 @@ class _SkeletonPhaseCard extends StatelessWidget {
       padding: const EdgeInsets.all(AuroraSpacing.space7),
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: AuroraRadius.md,
         border: Border.all(color: const Color(0xFFEEEDF2)),
       ),
       child: Row(
@@ -110,7 +111,7 @@ class _SkeletonPhaseCard extends StatelessWidget {
             height: 24,
             decoration: BoxDecoration(
               color: const Color(0xFFEEEDF2),
-              borderRadius: BorderRadius.circular(999.0),
+              borderRadius: AuroraRadius.full,
             ),
           ),
         ],

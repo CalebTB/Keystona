@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Pulse-shimmer skeleton that matches [HealthScoreWidget]'s layout exactly.
 ///
@@ -46,7 +47,7 @@ class _HealthScoreSkeletonState extends State<HealthScoreSkeleton>
             height: 104,
             decoration: BoxDecoration(
               color: AuroraColors.paper,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AuroraRadius.md,
               border: Border.all(color: AuroraColors.inkBorder),
             ),
             padding: const EdgeInsets.all(12),
@@ -103,7 +104,7 @@ class _Bar extends StatelessWidget {
         height: 10,
         decoration: BoxDecoration(
           color: AuroraColors.butter,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AuroraRadius.sm,
         ),
       ),
     );

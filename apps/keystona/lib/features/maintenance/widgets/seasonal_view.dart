@@ -9,6 +9,7 @@ import '../../../core/theme/aurora_typography.dart';
 import '../../home_profile/providers/home_profile_provider.dart';
 import '../models/maintenance_task.dart';
 import '../providers/maintenance_tasks_provider.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 // ── Season helpers ─────────────────────────────────────────────────────────────
 
@@ -223,7 +224,7 @@ class _HeroCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AuroraColors.ink,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AuroraRadius.xl,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,12 +243,12 @@ class _HeroCard extends StatelessWidget {
               Text(
                 '$phase · IN SEASON',
                 style: AuroraType.label.copyWith(
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: AuroraColors.paper.withValues(alpha: 0.7),
                   letterSpacing: 0.8,
                 ),
               ),
               const Spacer(),
-              Icon(icon, size: 28, color: Colors.white.withValues(alpha: 0.7)),
+              Icon(icon, size: 28, color: AuroraColors.paper.withValues(alpha: 0.7)),
             ],
           ),
           const SizedBox(height: 12),
@@ -263,7 +264,7 @@ class _HeroCard extends StatelessWidget {
             Text(
               locationLine,
               style: AuroraType.bodySm.copyWith(
-                color: Colors.white.withValues(alpha: 0.6),
+                color: AuroraColors.paper.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -304,7 +305,7 @@ class _StatBlock extends StatelessWidget {
         Text(
           label,
           style: AuroraType.labelSm.copyWith(
-            color: Colors.white.withValues(alpha: 0.6),
+            color: AuroraColors.paper.withValues(alpha: 0.6),
           ),
         ),
       ],
@@ -337,7 +338,7 @@ class _SpotlightCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        borderRadius: AuroraRadius.lg,
         border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
       ),
       child: Row(
@@ -418,7 +419,7 @@ class _SeasonalTaskCard extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: const BorderRadius.all(Radius.circular(14)),
+          borderRadius: AuroraRadius.lg,
           border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
         ),
         child: Row(
@@ -429,7 +430,7 @@ class _SeasonalTaskCard extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: AuroraColors.butter,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AuroraRadius.sm,
               ),
               child: Icon(icon, size: 20, color: AuroraColors.inkSecondary),
             ),
@@ -520,7 +521,7 @@ class _Tag extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: background ?? color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: AuroraRadius.xs,
       ),
       child: Text(
         label,
@@ -540,7 +541,7 @@ class _AllDoneCard extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AuroraColors.limeDeep.withValues(alpha: 0.08),
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        borderRadius: AuroraRadius.lg,
         border: Border.all(
             color: AuroraColors.limeDeep.withValues(alpha: 0.2), width: 1.5),
       ),
@@ -583,7 +584,7 @@ class _EmptyState extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        borderRadius: AuroraRadius.lg,
         border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
       ),
       child: Column(
@@ -625,7 +626,7 @@ class _SeasonalSkeleton extends StatelessWidget {
               height: 196,
               decoration: BoxDecoration(
                 color: AuroraColors.butter,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: AuroraRadius.xl,
               ),
             ),
             const SizedBox(height: 16),
@@ -654,7 +655,7 @@ class _SkeletonTaskCard extends StatelessWidget {
       height: 96,
       decoration: BoxDecoration(
         color: AuroraColors.butter,
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        borderRadius: AuroraRadius.lg,
       ),
     );
   }

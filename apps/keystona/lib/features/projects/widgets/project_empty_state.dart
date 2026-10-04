@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 
 /// Empty state for the Projects tab — Pattern B: Showcase.
@@ -68,7 +69,7 @@ class ProjectEmptyState extends StatelessWidget {
             onPressed: onCreateProject,
             style: FilledButton.styleFrom(
               backgroundColor: AuroraColors.yellow,
-              foregroundColor: Colors.white,
+              foregroundColor: AuroraColors.paper,
               padding: const EdgeInsets.symmetric(
                 horizontal: AuroraSpacing.space10,
                 vertical: AuroraSpacing.space7,
@@ -108,7 +109,7 @@ class _ExampleProjectCard extends StatelessWidget {
       padding: const EdgeInsets.all(AuroraSpacing.space7),
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: AuroraRadius.md,
         border: Border.all(color: const Color(0xFFEEEDF2)),
       ),
       child: Column(
@@ -129,7 +130,7 @@ class _ExampleProjectCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AuroraColors.ink.withValues(alpha: 0.1),
                   borderRadius:
-                      BorderRadius.circular(999.0),
+                      AuroraRadius.full,
                 ),
                 child: Text(
                   status,
@@ -153,7 +154,7 @@ class _ExampleProjectCard extends StatelessWidget {
               Expanded(
                 child: ClipRRect(
                   borderRadius:
-                      BorderRadius.circular(999.0),
+                      AuroraRadius.full,
                   child: LinearProgressIndicator(
                     value: progressFraction,
                     minHeight: 6,

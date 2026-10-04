@@ -4,6 +4,7 @@ import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../models/utility_shutoff.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Card showing a single utility shutoff's setup status.
 class ShutoffCard extends StatelessWidget {
@@ -29,7 +30,7 @@ class ShutoffCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AuroraRadius.md,
           border: Border.all(
             color: isComplete ? AuroraColors.limeDeep : AuroraColors.inkBorder,
           ),
@@ -42,7 +43,7 @@ class ShutoffCard extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: _iconBg(isComplete),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AuroraRadius.sm,
               ),
               child: Icon(
                 _icon,

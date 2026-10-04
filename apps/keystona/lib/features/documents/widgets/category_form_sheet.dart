@@ -412,14 +412,14 @@ class _AndroidSheet extends StatelessWidget {
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: AuroraColors.paper,
                         ),
                       )
                     : Text(
                         'Save',
                         style: AuroraType.bodyLg.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: AuroraColors.paper,
                         ),
                       ),
               ),
@@ -532,7 +532,7 @@ class _IconPicker extends StatelessWidget {
               child: Icon(
                 entry.value,
                 size: 20,
-                color: isSelected ? Colors.white : AuroraColors.inkSecondary,
+                color: isSelected ? AuroraColors.paper : AuroraColors.inkSecondary,
               ),
             ),
           );
@@ -586,7 +586,7 @@ class _ColorPicker extends StatelessWidget {
                   : null,
             ),
             child: isSelected
-                ? const Icon(Icons.check, size: 18, color: Colors.white)
+                ? const Icon(Icons.check, size: 18, color: AuroraColors.paper)
                 : null,
           ),
         );

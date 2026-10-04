@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Shimmer skeleton for the linked documents list.
 class LinkedDocumentsSkeleton extends StatefulWidget {
@@ -49,7 +50,7 @@ class _LinkedDocumentsSkeletonState
             height: 72,
             decoration: BoxDecoration(
               color: const Color(0xFFEEEDF2),
-              borderRadius: BorderRadius.circular(12.0),
+              borderRadius: AuroraRadius.md,
             ),
             padding: const EdgeInsets.symmetric(
               horizontal: AuroraSpacing.space7,
@@ -63,7 +64,7 @@ class _LinkedDocumentsSkeletonState
                   decoration: BoxDecoration(
                     color: const Color(0xFFE0DFEA),
                     borderRadius:
-                        BorderRadius.circular(8.0),
+                        AuroraRadius.sm,
                   ),
                 ),
                 const SizedBox(width: AuroraSpacing.space7),
@@ -78,8 +79,7 @@ class _LinkedDocumentsSkeletonState
                           height: 14,
                           decoration: BoxDecoration(
                             color: const Color(0xFFE0DFEA),
-                            borderRadius: BorderRadius.circular(
-                                8.0),
+                            borderRadius: AuroraRadius.sm,
                           ),
                         ),
                       ),
@@ -90,8 +90,7 @@ class _LinkedDocumentsSkeletonState
                           height: 11,
                           decoration: BoxDecoration(
                             color: const Color(0xFFE0DFEA),
-                            borderRadius: BorderRadius.circular(
-                                8.0),
+                            borderRadius: AuroraRadius.sm,
                           ),
                         ),
                       ),

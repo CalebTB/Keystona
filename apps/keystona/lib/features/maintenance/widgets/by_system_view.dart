@@ -13,6 +13,7 @@ import '../../home_profile/providers/appliances_provider.dart';
 import '../../home_profile/providers/systems_provider.dart';
 import '../models/maintenance_task.dart';
 import '../providers/maintenance_tasks_provider.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 // ── Category helpers ───────────────────────────────────────────────────────────
 
@@ -338,7 +339,7 @@ class _SystemCardState extends State<_SystemCard> {
     return Container(
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        borderRadius: AuroraRadius.lg,
         border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
         boxShadow: [
           BoxShadow(
@@ -349,7 +350,7 @@ class _SystemCardState extends State<_SystemCard> {
         ],
       ),
       child: ClipRRect(
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        borderRadius: AuroraRadius.lg,
         child: Column(
           children: [
             GestureDetector(
@@ -500,14 +501,14 @@ class _ApplianceCardState extends State<_ApplianceCard> {
     return Container(
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        borderRadius: AuroraRadius.lg,
         border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
         boxShadow: [
           BoxShadow(color: const Color(0x0A071238), blurRadius: 4, offset: const Offset(0, 1)),
         ],
       ),
       child: ClipRRect(
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        borderRadius: AuroraRadius.lg,
         child: Column(
           children: [
             GestureDetector(
@@ -674,14 +675,14 @@ class _UncategorizedCardState extends State<_UncategorizedCard> {
     return Container(
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        borderRadius: AuroraRadius.lg,
         border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
         boxShadow: [
           BoxShadow(color: const Color(0x0A071238), blurRadius: 4, offset: const Offset(0, 1)),
         ],
       ),
       child: ClipRRect(
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        borderRadius: AuroraRadius.lg,
         child: Column(
           children: [
             GestureDetector(
@@ -786,7 +787,7 @@ class _AllClearCard extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AuroraColors.limeDim,
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        borderRadius: AuroraRadius.lg,
         border: Border.all(
           color: AuroraColors.limeDeep.withValues(alpha: 0.2),
           width: 1.5,
@@ -845,7 +846,7 @@ class _AllClearCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
                     decoration: BoxDecoration(
                       color: AuroraColors.paper,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: AuroraRadius.sm,
                       border: Border.all(color: AuroraColors.inkBorder, width: 1),
                     ),
                     child: Row(
@@ -891,7 +892,7 @@ class _AllClearCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
                     decoration: BoxDecoration(
                       color: AuroraColors.paper,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: AuroraRadius.sm,
                       border: Border.all(color: AuroraColors.inkBorder, width: 1),
                     ),
                     child: Row(
@@ -945,7 +946,7 @@ class _NoSystemsEmptyState extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: AuroraColors.paper,
-              borderRadius: const BorderRadius.all(Radius.circular(14)),
+              borderRadius: AuroraRadius.lg,
               border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
             ),
             child: Column(
@@ -955,7 +956,7 @@ class _NoSystemsEmptyState extends StatelessWidget {
                   height: 56,
                   decoration: BoxDecoration(
                     color: AuroraColors.cobalt.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AuroraRadius.md,
                   ),
                   child: Icon(Icons.home_repair_service_outlined,
                       size: 26, color: AuroraColors.cobalt),
@@ -1013,7 +1014,7 @@ class _SkeletonSystemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: const BorderRadius.all(Radius.circular(14)),
+      borderRadius: AuroraRadius.lg,
       child: Column(
         children: [
           Container(height: 72, color: AuroraColors.inkBorder),

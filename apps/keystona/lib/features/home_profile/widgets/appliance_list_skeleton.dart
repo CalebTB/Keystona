@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 
 
@@ -76,7 +77,7 @@ class _SkeletonCard extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        borderRadius: AuroraRadius.lg,
         border: Border.all(color: AuroraColors.inkBorder),
       ),
       child: Row(
@@ -86,7 +87,7 @@ class _SkeletonCard extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               color: AuroraColors.inkBorder,
-              borderRadius: const BorderRadius.all(Radius.circular(8)),
+              borderRadius: AuroraRadius.sm,
             ),
           ),
           const SizedBox(width: AuroraSpacing.space5),
@@ -102,7 +103,7 @@ class _SkeletonCard extends StatelessWidget {
                     height: 13,
                     decoration: BoxDecoration(
                       color: AuroraColors.inkBorder,
-                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      borderRadius: AuroraRadius.sm,
                     ),
                   ),
                 ),
@@ -114,7 +115,7 @@ class _SkeletonCard extends StatelessWidget {
                     height: 11,
                     decoration: BoxDecoration(
                       color: AuroraColors.inkBorder,
-                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      borderRadius: AuroraRadius.sm,
                     ),
                   ),
                 ),
@@ -127,7 +128,7 @@ class _SkeletonCard extends StatelessWidget {
             height: 22,
             decoration: BoxDecoration(
               color: AuroraColors.inkBorder,
-              borderRadius: const BorderRadius.all(Radius.circular(999)),
+              borderRadius: AuroraRadius.full,
             ),
           ),
         ],

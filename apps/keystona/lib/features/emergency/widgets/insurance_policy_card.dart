@@ -5,6 +5,7 @@ import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../models/insurance_policy.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Card displaying an insurance policy summary.
 class InsurancePolicyCard extends StatelessWidget {
@@ -67,7 +68,7 @@ class InsurancePolicyCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AuroraRadius.md,
           border: Border.all(color: borderColor, width: expiringSoon ? 1.5 : 1),
         ),
         padding: const EdgeInsets.all(AuroraSpacing.space7),
@@ -83,7 +84,7 @@ class InsurancePolicyCard extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: AuroraColors.ink.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AuroraRadius.sm,
                   ),
                   child: Icon(
                     _iconFor(policy.policyType),
@@ -244,7 +245,7 @@ class _MetricChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: AuroraColors.butter,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AuroraRadius.sm,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

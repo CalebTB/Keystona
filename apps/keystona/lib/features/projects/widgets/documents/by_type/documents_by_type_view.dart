@@ -7,6 +7,7 @@ import '../shared/document_link_type.dart';
 import '../shared/file_type_icon_block.dart';
 import '../shared/link_type_palette.dart';
 import '../../../../../core/theme/aurora_typography.dart';
+import '../../../../../core/theme/aurora_radius.dart';
 
 /// Groups linked project documents by their link type (Permits, Contracts, etc.).
 ///
@@ -261,7 +262,7 @@ class _DocumentCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AuroraColors.paper,
           border: Border.all(color: AuroraColors.inkBorder),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AuroraRadius.md,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -344,7 +345,7 @@ class _DashedLinkCard extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AuroraRadius.md,
           border: Border.all(
             color: AuroraColors.inkTertiary,
             width: 1.5,

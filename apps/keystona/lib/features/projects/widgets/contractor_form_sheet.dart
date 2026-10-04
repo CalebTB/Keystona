@@ -237,7 +237,7 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
         padding: EdgeInsets.only(bottom: bottomPad),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AuroraColors.paper,
             borderRadius: AuroraSheet.topRadius(context),
           ),
           padding: EdgeInsets.all(AuroraSpacing.screenPadH),
@@ -256,7 +256,7 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
                     decoration: BoxDecoration(
                       color: const Color(0xFFE0DFEA),
                       borderRadius:
-                          BorderRadius.circular(999.0),
+                          AuroraRadius.full,
                     ),
                   ),
                 ),
@@ -308,7 +308,7 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
                         decoration: BoxDecoration(
                           color: AuroraColors.ink.withValues(alpha: 0.05),
                           borderRadius:
-                              BorderRadius.circular(8.0),
+                              AuroraRadius.sm,
                         ),
                         child: Text(
                           'No contacts yet. Go to Emergency Hub → Contacts to add some, or switch to "Create new".',
@@ -376,7 +376,7 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
                         decoration: BoxDecoration(
                           color: AuroraColors.ink.withValues(alpha: 0.06),
                           borderRadius:
-                              BorderRadius.circular(8.0),
+                              AuroraRadius.sm,
                           border: Border.all(
                               color:
                                   AuroraColors.ink.withValues(alpha: 0.2)),
@@ -494,7 +494,7 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
               ),
               decoration: BoxDecoration(
                 border: Border.all(color: AuroraColors.inkBorder),
-                borderRadius: BorderRadius.circular(8.0),
+                borderRadius: AuroraRadius.sm,
               ),
               child: Row(
                 children: [
@@ -573,7 +573,7 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white),
+                      strokeWidth: 2, color: AuroraColors.paper),
                 )
               : Text(_isEditing ? 'Save Changes' : 'Add'),
         ),
@@ -615,7 +615,7 @@ class _ModeChip extends StatelessWidget {
             horizontal: AuroraSpacing.space3 + 4, vertical: AuroraSpacing.space1 + 2),
         decoration: BoxDecoration(
           color: selected ? AuroraColors.ink : AuroraColors.paper,
-          borderRadius: BorderRadius.circular(999.0),
+          borderRadius: AuroraRadius.full,
           border: Border.all(
             color: selected ? AuroraColors.ink : AuroraColors.inkBorder,
           ),
@@ -624,7 +624,7 @@ class _ModeChip extends StatelessWidget {
           label,
           style: AuroraType.label.copyWith(
             color:
-                selected ? Colors.white : AuroraColors.ink,
+                selected ? AuroraColors.paper : AuroraColors.ink,
             fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
           ),
         ),

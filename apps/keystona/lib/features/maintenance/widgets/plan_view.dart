@@ -11,6 +11,7 @@ import '../../../core/theme/aurora_typography.dart';
 import '../models/maintenance_task.dart';
 import '../providers/maintenance_tasks_provider.dart';
 import '../providers/task_detail_provider.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 // ── Month helpers ──────────────────────────────────────────────────────────────
 
@@ -162,7 +163,7 @@ class _PlanViewState extends ConsumerState<PlanView> {
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: AuroraColors.coral.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: AuroraRadius.xs,
                     ),
                     child: Text(
                       '$overdueInMonth overdue',
@@ -326,7 +327,7 @@ class _MonthTaskList extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: const BorderRadius.all(Radius.circular(14)),
+          borderRadius: AuroraRadius.lg,
           border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
         ),
         child: Column(
@@ -394,7 +395,7 @@ class _MonthChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
           color: selected ? AuroraColors.ink : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AuroraRadius.md,
           border: selected
               ? null
               : Border.all(color: AuroraColors.inkBorder, width: 1.5),
@@ -406,7 +407,7 @@ class _MonthChip extends StatelessWidget {
               DateFormat('MMM').format(month),
               style: AuroraType.label.copyWith(
                 color: selected
-                    ? Colors.white
+                    ? AuroraColors.paper
                     : isPast
                         ? AuroraColors.inkTertiary
                         : AuroraColors.ink,
@@ -418,7 +419,7 @@ class _MonthChip extends StatelessWidget {
                 '$taskCount',
                 style: AuroraType.labelSm.copyWith(
                   color: selected
-                      ? Colors.white.withValues(alpha: 0.6)
+                      ? AuroraColors.paper.withValues(alpha: 0.6)
                       : overdueCount > 0
                           ? AuroraColors.coral
                           : AuroraColors.inkSecondary,
@@ -430,7 +431,7 @@ class _MonthChip extends StatelessWidget {
                 height: 4,
                 decoration: BoxDecoration(
                   color: selected
-                      ? Colors.white.withValues(alpha: 0.4)
+                      ? AuroraColors.paper.withValues(alpha: 0.4)
                       : AuroraColors.inkBorder,
                   shape: BoxShape.circle,
                 ),
@@ -530,7 +531,7 @@ class _PlanTaskRow extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: AuroraColors.butter,
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: AuroraRadius.xs,
                 ),
                 child: Text(
                   'Reschedule',
@@ -563,7 +564,7 @@ class _EmptyMonthState extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: const BorderRadius.all(Radius.circular(14)),
+          borderRadius: AuroraRadius.lg,
           border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
         ),
         child: Column(
@@ -613,7 +614,7 @@ class _PlanSkeleton extends StatelessWidget {
                     height: 64,
                     decoration: BoxDecoration(
                       color: AuroraColors.butter,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: AuroraRadius.md,
                     ),
                   ),
                   if (i < 4) const SizedBox(width: 4),
@@ -628,7 +629,7 @@ class _PlanSkeleton extends StatelessWidget {
               height: 200,
               decoration: BoxDecoration(
                 color: AuroraColors.butter,
-                borderRadius: const BorderRadius.all(Radius.circular(14)),
+                borderRadius: AuroraRadius.lg,
               ),
             ),
           ),

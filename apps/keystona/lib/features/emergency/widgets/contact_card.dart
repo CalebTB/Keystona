@@ -10,6 +10,7 @@ import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../models/emergency_contact.dart';
 import '../providers/contacts_list_provider.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// A 60px-content-height row card for a single [EmergencyContact].
 class ContactCard extends ConsumerWidget {
@@ -29,7 +30,7 @@ class ContactCard extends ConsumerWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AuroraRadius.md,
           border: Border.all(color: AuroraColors.inkBorder),
         ),
         padding: const EdgeInsets.symmetric(

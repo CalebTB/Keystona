@@ -4,6 +4,7 @@ import '../../../core/theme/aurora_typography.dart';
 import '../../../core/theme/aurora_spacing.dart';
 
 import '../models/project_contractor.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Single contractor card in the project contractors list.
 class ContractorCard extends StatelessWidget {
@@ -36,7 +37,7 @@ class ContractorCard extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.circular(12.0),
+          borderRadius: AuroraRadius.md,
           border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(

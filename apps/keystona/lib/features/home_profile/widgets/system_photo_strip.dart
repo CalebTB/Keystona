@@ -8,6 +8,7 @@ import '../../../core/theme/aurora_typography.dart';
 
 
 import '../models/item_photo.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Horizontal photo strip shown on the System Detail screen.
 ///
@@ -62,7 +63,7 @@ class _PhotoTile extends StatelessWidget {
     final url = photoUrlBuilder?.call(photo.filePath) ?? photo.filePath;
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: AuroraRadius.sm,
       child: CachedNetworkImage(
         imageUrl: url,
         width: 80,
@@ -102,7 +103,7 @@ class _AddPhotoTile extends StatelessWidget {
         height: 80,
         decoration: BoxDecoration(
           color: AuroraColors.butter,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AuroraRadius.sm,
           border: Border.all(
             color: AuroraColors.inkBorder,
             style: BorderStyle.solid,

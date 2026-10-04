@@ -299,14 +299,14 @@ class _EditMetadataSheetState extends ConsumerState<EditMetadataSheet> {
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: AuroraColors.paper,
                     ),
                   )
                 : Text(
                     'Save Changes',
                     style: AuroraType.bodyLg.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: AuroraColors.paper,
                     ),
                   ),
           ),

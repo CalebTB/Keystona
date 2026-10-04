@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Pulse-shimmer skeleton matching the Emergency Hub main screen layout.
 class EmergencyHubSkeleton extends StatefulWidget {
@@ -87,7 +88,7 @@ class _ShutoffCardSkeleton extends StatelessWidget {
       height: 72,
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AuroraRadius.md,
         border: Border.all(color: AuroraColors.inkBorder),
       ),
       padding: const EdgeInsets.all(AuroraSpacing.space7),
@@ -98,7 +99,7 @@ class _ShutoffCardSkeleton extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               color: AuroraColors.ink.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AuroraRadius.sm,
             ),
           ),
           const SizedBox(width: AuroraSpacing.space7),
@@ -136,7 +137,7 @@ class _ContactRowSkeleton extends StatelessWidget {
       height: 60,
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AuroraRadius.md,
         border: Border.all(color: AuroraColors.inkBorder),
       ),
       padding: const EdgeInsets.symmetric(
@@ -188,7 +189,7 @@ class _PolicyRowSkeleton extends StatelessWidget {
       height: 60,
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AuroraRadius.md,
         border: Border.all(color: AuroraColors.inkBorder),
       ),
       padding: const EdgeInsets.symmetric(
@@ -202,7 +203,7 @@ class _PolicyRowSkeleton extends StatelessWidget {
             height: 36,
             decoration: BoxDecoration(
               color: AuroraColors.ink.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AuroraRadius.sm,
             ),
           ),
           const SizedBox(width: AuroraSpacing.space7),
@@ -235,7 +236,7 @@ class _Bar extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         color: AuroraColors.ink.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AuroraRadius.sm,
       ),
     );
   }

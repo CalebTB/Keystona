@@ -42,7 +42,7 @@ class AppliancesEmptyState extends StatelessWidget {
             FilledButton.icon(
               style: FilledButton.styleFrom(
                 backgroundColor: AuroraColors.ink,
-                foregroundColor: Colors.white,
+                foregroundColor: AuroraColors.paper,
                 padding: const EdgeInsets.symmetric(
                   horizontal: AuroraSpacing.space7,
                   vertical: AuroraSpacing.space5,

@@ -56,7 +56,7 @@ class _TypeSheetState extends State<_TypeSheet> {
             EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AuroraColors.paper,
             borderRadius: AuroraSheet.topRadius(context),
           ),
           padding: EdgeInsets.all(AuroraSpacing.screenPadH),
@@ -73,7 +73,7 @@ class _TypeSheetState extends State<_TypeSheet> {
                   decoration: BoxDecoration(
                     color: const Color(0xFFE0DFEA),
                     borderRadius:
-                        BorderRadius.circular(999.0),
+                        AuroraRadius.full,
                   ),
                 ),
               ),
@@ -97,7 +97,7 @@ class _TypeSheetState extends State<_TypeSheet> {
                             ? AuroraColors.ink
                             : AuroraColors.paper,
                         borderRadius:
-                            BorderRadius.circular(999.0),
+                            AuroraRadius.full,
                         border: Border.all(
                           color: selected
                               ? AuroraColors.ink
@@ -108,7 +108,7 @@ class _TypeSheetState extends State<_TypeSheet> {
                         t.label,
                         style: AuroraType.label.copyWith(
                           color: selected
-                              ? Colors.white
+                              ? AuroraColors.paper
                               : AuroraColors.ink,
                           fontWeight: selected
                               ? FontWeight.w600

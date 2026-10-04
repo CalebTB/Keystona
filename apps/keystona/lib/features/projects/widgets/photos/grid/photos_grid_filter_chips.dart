@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/theme/aurora_colors.dart';
 import '../../../../../core/theme/aurora_typography.dart';
 import '../../../../../core/theme/aurora_spacing.dart';
+import '../../../../../core/theme/aurora_radius.dart';
 
 
 /// Horizontally-scrollable type filter chip row for the photos curated grid.
@@ -79,7 +80,7 @@ class _Chip extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: selected ? AuroraColors.ink : AuroraColors.paper,
-          borderRadius: BorderRadius.circular(999.0),
+          borderRadius: AuroraRadius.full,
           border: Border.all(
             color: selected ? AuroraColors.ink : AuroraColors.inkBorder,
           ),
@@ -87,7 +88,7 @@ class _Chip extends StatelessWidget {
         child: Text(
           label,
           style: AuroraType.label.copyWith(
-            color: selected ? Colors.white : AuroraColors.inkSecondary,
+            color: selected ? AuroraColors.paper : AuroraColors.inkSecondary,
             fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
           ),
         ),

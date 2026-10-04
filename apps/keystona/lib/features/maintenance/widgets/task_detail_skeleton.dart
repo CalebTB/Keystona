@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Shimmer skeleton for [TaskDetailScreen].
 ///
@@ -119,7 +120,7 @@ class _SkeletonChip extends StatelessWidget {
       height: 28,
       decoration: BoxDecoration(
         color: AuroraColors.butter,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AuroraRadius.sm,
       ),
     );
   }
@@ -181,7 +182,7 @@ class _SkeletonCompletionRow extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        borderRadius: AuroraRadius.md,
         border: Border.all(color: AuroraColors.inkBorder),
       ),
       child: Row(

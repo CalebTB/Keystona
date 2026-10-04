@@ -6,6 +6,7 @@ import '../../../../../core/theme/aurora_typography.dart';
 
 import '../../../models/project_photo.dart';
 import '../shared/photo_type_tag.dart';
+import '../../../../../core/theme/aurora_radius.dart';
 
 const Color _kCardSurface = AuroraColors.paper;
 const Color _kCardBorder = AuroraColors.inkBorder;
@@ -205,7 +206,7 @@ class _PairCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: _kCardSurface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AuroraRadius.lg,
         border: Border.all(color: _kCardBorder),
       ),
       clipBehavior: Clip.hardEdge,
@@ -347,7 +348,7 @@ class _PhotoTile extends StatelessWidget {
             right: 8,
             child: Text(
               date,
-              style: AuroraType.labelSm.copyWith(color: Colors.white),
+              style: AuroraType.labelSm.copyWith(color: AuroraColors.paper),
             ),
           ),
         ],
@@ -368,7 +369,7 @@ class _RoomTagChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: AuroraColors.butter,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: AuroraRadius.xs,
       ),
       child: Text(
         label.toUpperCase(),

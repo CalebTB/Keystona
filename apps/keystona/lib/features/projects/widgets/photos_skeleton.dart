@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Shimmer skeleton for the photos grid.
 class PhotosSkeleton extends StatefulWidget {
@@ -53,7 +54,7 @@ class _PhotosSkeletonState extends State<PhotosSkeleton>
             itemBuilder: (_, _) => Container(
               decoration: BoxDecoration(
                 color: const Color(0xFFEEEDF2),
-                borderRadius: BorderRadius.circular(8.0),
+                borderRadius: AuroraRadius.sm,
               ),
             ),
           ),

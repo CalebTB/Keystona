@@ -4,6 +4,7 @@ import '../../../core/theme/aurora_typography.dart';
 import '../../../core/theme/aurora_spacing.dart';
 
 import '../models/project_phase.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Card displaying a single project phase.
 ///
@@ -51,7 +52,7 @@ class PhaseCard extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: 72.0),
       decoration: BoxDecoration(
         color: _bgColor(phase.status),
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: AuroraRadius.md,
         border: Border.all(color: AuroraColors.inkBorder),
       ),
       child: ClipRRect(
@@ -242,7 +243,7 @@ class _StatusBadge extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: _badgeBg(status),
-        borderRadius: BorderRadius.circular(999.0),
+        borderRadius: AuroraRadius.full,
       ),
       child: Text(
         status.phaseStatusLabel,

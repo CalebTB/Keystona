@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../models/project_photo.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Single photo tile in the project photos grid.
 ///
@@ -36,7 +37,7 @@ class PhotoGridItem extends StatelessWidget {
         children: [
           // Photo.
           ClipRRect(
-            borderRadius: BorderRadius.circular(8.0),
+            borderRadius: AuroraRadius.sm,
             child: photo.signedUrl != null
                 ? Image.network(
                     photo.signedUrl!,
@@ -60,7 +61,7 @@ class PhotoGridItem extends StatelessWidget {
               decoration: BoxDecoration(
                 color: colors.background,
                 borderRadius:
-                    BorderRadius.circular(999.0),
+                    AuroraRadius.full,
               ),
               child: Text(
                 PhotoTypes.labelFor(photo.photoType),
@@ -82,7 +83,7 @@ class PhotoGridItem extends StatelessWidget {
                   color: AuroraColors.lime.withValues(alpha: 0.9),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.compare, size: 10, color: Colors.white),
+                child: const Icon(Icons.compare, size: 10, color: AuroraColors.paper),
               ),
             ),
 
@@ -104,7 +105,7 @@ class PhotoGridItem extends StatelessWidget {
                   child: Text(
                     'Add after →',
                     style: AuroraType.label
-                        .copyWith(color: Colors.white, fontSize: 9),
+                        .copyWith(color: AuroraColors.paper, fontSize: 9),
                     textAlign: TextAlign.center,
                   ),
                 ),

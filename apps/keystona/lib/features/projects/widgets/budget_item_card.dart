@@ -4,6 +4,7 @@ import '../../../core/theme/aurora_typography.dart';
 import '../../../core/theme/aurora_spacing.dart';
 
 import '../models/project_budget_item.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Single budget line item row.
 class BudgetItemCard extends StatelessWidget {
@@ -33,7 +34,7 @@ class BudgetItemCard extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: BorderRadius.circular(12.0),
+          borderRadius: AuroraRadius.md,
           border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(

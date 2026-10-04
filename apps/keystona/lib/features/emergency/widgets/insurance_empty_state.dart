@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 class InsuranceEmptyState extends StatelessWidget {
   const InsuranceEmptyState({super.key, this.onAddPolicy});
@@ -47,13 +48,13 @@ class InsuranceEmptyState extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: AuroraColors.ink,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AuroraRadius.sm,
                   ),
                   child: Text(
                     'Add Policy',
                     style: AuroraType.body.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: AuroraColors.paper,
                     ),
                   ),
                 ),

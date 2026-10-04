@@ -5,6 +5,7 @@ import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../models/emergency_contact.dart';
 import '../../../core/widgets/snackbar_service.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Contacts preview section on the Emergency Hub main screen.
 class ContactsSection extends StatelessWidget {
@@ -71,7 +72,7 @@ class _ContactRow extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AuroraRadius.md,
         border: Border.all(color: AuroraColors.inkBorder),
       ),
       padding: const EdgeInsets.symmetric(
@@ -165,7 +166,7 @@ class _EmptyContacts extends StatelessWidget {
       padding: const EdgeInsets.all(AuroraSpacing.space7),
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AuroraRadius.md,
         border: Border.all(color: AuroraColors.inkBorder),
       ),
       child: Row(

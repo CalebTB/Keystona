@@ -3,6 +3,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Shimmer loading placeholder matching the [ContactCard] layout.
 class ContactsListSkeleton extends StatelessWidget {
@@ -42,7 +43,7 @@ class _SkeletonContactCard extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AuroraRadius.md,
       ),
       child: Row(
         children: [

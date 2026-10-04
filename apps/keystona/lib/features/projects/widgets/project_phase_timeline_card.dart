@@ -8,6 +8,7 @@ import '../../../core/theme/aurora_typography.dart';
 import '../models/project.dart';
 import '../models/project_phase.dart';
 import '../providers/project_phases_provider.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 String _compact(double v) {
   if (v >= 1000) {
@@ -175,7 +176,7 @@ class _CardShell extends StatelessWidget {
                       child: Text(
                         _statusLabel(project.status),
                         style: AuroraType.label.copyWith(
-                          color: Colors.white.withValues(alpha: 0.55),
+                          color: AuroraColors.paper.withValues(alpha: 0.55),
                           fontSize: 9,
                           letterSpacing: 1.0,
                         ),
@@ -191,7 +192,7 @@ class _CardShell extends StatelessWidget {
                   style: AuroraType.h2.copyWith(
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                    color: AuroraColors.paper,
                     height: 1.05,
                   ),
                   maxLines: 2,
@@ -314,7 +315,7 @@ class _InCardFooter extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: AuroraColors.coral,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AuroraRadius.sm,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -349,7 +350,7 @@ class _Stat extends StatelessWidget {
       text,
       style: AuroraType.label.copyWith(
         fontSize: 11,
-        color: Colors.white.withValues(alpha: 0.75),
+        color: AuroraColors.paper.withValues(alpha: 0.75),
       ),
     );
   }
@@ -365,7 +366,7 @@ class _StatDot extends StatelessWidget {
         height: 4,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.white.withValues(alpha: 0.35),
+          color: AuroraColors.paper.withValues(alpha: 0.35),
         ),
       ),
     );
@@ -587,7 +588,7 @@ class _Dot extends StatelessWidget {
               '$number',
               style: AuroraType.label.copyWith(
                 fontSize: 10,
-                color: Colors.white,
+                color: AuroraColors.paper,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -667,7 +668,7 @@ class _PhasesSkeleton extends StatelessWidget {
                     height: 14,
                     decoration: BoxDecoration(
                       color: AuroraColors.ink.withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: AuroraRadius.xs,
                     ),
                   ),
                 ),

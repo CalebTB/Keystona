@@ -101,7 +101,7 @@ class _TaskEmptyStateState extends ConsumerState<TaskEmptyState> {
             FilledButton.icon(
               style: FilledButton.styleFrom(
                 backgroundColor: AuroraColors.coral,
-                foregroundColor: Colors.white,
+                foregroundColor: AuroraColors.paper,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,

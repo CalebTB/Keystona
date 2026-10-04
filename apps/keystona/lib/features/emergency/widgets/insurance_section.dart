@@ -4,6 +4,7 @@ import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../models/insurance_policy.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Insurance quick reference section on the Emergency Hub main screen.
 class InsuranceSection extends StatelessWidget {
@@ -69,7 +70,7 @@ class _PolicyRow extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AuroraRadius.md,
         border: Border.all(
           color: expiring ? AuroraColors.yellowDeep : AuroraColors.inkBorder,
         ),
@@ -85,7 +86,7 @@ class _PolicyRow extends StatelessWidget {
             height: 36,
             decoration: BoxDecoration(
               color: AuroraColors.ink.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AuroraRadius.sm,
             ),
             child: Icon(
               _policyIcon,
@@ -172,7 +173,7 @@ class _EmptyInsurance extends StatelessWidget {
       padding: const EdgeInsets.all(AuroraSpacing.space7),
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AuroraRadius.md,
         border: Border.all(color: AuroraColors.inkBorder),
       ),
       child: Row(

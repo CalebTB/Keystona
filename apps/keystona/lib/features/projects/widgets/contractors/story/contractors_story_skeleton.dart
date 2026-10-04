@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/aurora_colors.dart';
+import '../../../../../core/theme/aurora_radius.dart';
 
 
 /// Skeleton for [ContractorsStoryView].
@@ -52,7 +53,7 @@ class _ContractorsStorySkeletonState extends State<ContractorsStorySkeleton>
           child: Container(
             decoration: BoxDecoration(
               color: AuroraColors.ink,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: AuroraRadius.xl,
             ),
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -87,7 +88,7 @@ class _ContractorsStorySkeletonState extends State<ContractorsStorySkeleton>
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: const Color(0xFF0E1530),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AuroraRadius.sm,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,7 +133,7 @@ class _ContractorsStorySkeletonState extends State<ContractorsStorySkeleton>
                   height: 56,
                   decoration: BoxDecoration(
                     color: const Color(0xFF0E1530),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AuroraRadius.md,
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -170,7 +171,7 @@ class _Bar extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: AuroraRadius.xs,
       ),
     );
   }
@@ -204,7 +205,7 @@ class _StatCell extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: const Color(0xFF0E1530),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AuroraRadius.sm,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

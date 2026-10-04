@@ -210,7 +210,7 @@ class _CategoryBadge extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: color.withAlpha(25),
-        borderRadius: const BorderRadius.all(Radius.circular(999)),
+        borderRadius: AuroraRadius.full,
       ),
       child: Text(
         category.name.toUpperCase(),

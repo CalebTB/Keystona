@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 
 
@@ -72,7 +73,7 @@ class _PropertyCardSkeleton extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AuroraRadius.lg,
         border: Border.all(color: AuroraColors.inkBorder),
       ),
       padding: const EdgeInsets.all(AuroraSpacing.space5),
@@ -85,7 +86,7 @@ class _PropertyCardSkeleton extends StatelessWidget {
             height: 80,
             decoration: BoxDecoration(
               color: AuroraColors.inkBorder,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AuroraRadius.sm,
             ),
           ),
           const SizedBox(width: AuroraSpacing.space5),
@@ -115,7 +116,7 @@ class _SectionRowSkeleton extends StatelessWidget {
       height: 60,
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AuroraRadius.lg,
         border: Border.all(color: AuroraColors.inkBorder),
       ),
       padding: const EdgeInsets.symmetric(
@@ -129,7 +130,7 @@ class _SectionRowSkeleton extends StatelessWidget {
             height: 36,
             decoration: BoxDecoration(
               color: AuroraColors.inkBorder,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AuroraRadius.sm,
             ),
           ),
           const SizedBox(width: AuroraSpacing.space5),
@@ -161,7 +162,7 @@ class _Bar extends StatelessWidget {
         height: 10,
         decoration: BoxDecoration(
           color: AuroraColors.inkBorder,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AuroraRadius.sm,
         ),
       ),
     );

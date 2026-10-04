@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Empty state shown when the user has no emergency contacts yet.
 class ContactsEmptyState extends StatelessWidget {
@@ -53,18 +54,18 @@ class ContactsEmptyState extends StatelessWidget {
                 height: 48,
                 decoration: BoxDecoration(
                   color: AuroraColors.ink,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AuroraRadius.sm,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.add, size: 16, color: Colors.white),
+                    const Icon(Icons.add, size: 16, color: AuroraColors.paper),
                     const SizedBox(width: 6),
                     Text(
                       'Add Contact',
                       style: AuroraType.body.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: AuroraColors.paper,
                       ),
                     ),
                   ],

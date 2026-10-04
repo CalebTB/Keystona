@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../models/maintenance_task.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Compact overdue strip shown below the day header when overdue tasks exist.
 ///
@@ -28,7 +29,7 @@ class OverdueBanner extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: AuroraColors.coralDim,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AuroraRadius.sm,
           border: Border.all(color: AuroraColors.yellow.withValues(alpha: 0.125), width: 1),
         ),
         child: Row(

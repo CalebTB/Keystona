@@ -172,7 +172,7 @@ class _SuccessView extends StatelessWidget {
                 'Done',
                 style: AuroraType.bodyLg.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: AuroraColors.paper,
                 ),
               ),
             ),
@@ -291,7 +291,7 @@ class _ErrorView extends StatelessWidget {
                   'Try Again',
                   style: AuroraType.bodyLg.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: AuroraColors.paper,
                   ),
                 ),
               ),
@@ -348,7 +348,7 @@ class _AnimatedUploadIconState extends State<_AnimatedUploadIcon>
         ),
         child: const Icon(
           Icons.upload_rounded,
-          color: Colors.white,
+          color: AuroraColors.paper,
           size: 32,
         ),
       ),

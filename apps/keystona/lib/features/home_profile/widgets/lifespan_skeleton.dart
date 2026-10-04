@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 
 
@@ -73,7 +74,7 @@ class _SkeletonCard extends StatelessWidget {
       padding: const EdgeInsets.all(AuroraSpacing.space5),
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AuroraRadius.lg,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,7 +94,7 @@ class _SkeletonCard extends StatelessWidget {
                 height: 22,
                 decoration: BoxDecoration(
                   color: AuroraColors.inkBorder,
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: AuroraRadius.full,
                 ),
               ),
             ],
@@ -104,7 +105,7 @@ class _SkeletonCard extends StatelessWidget {
             height: 8,
             decoration: BoxDecoration(
               color: AuroraColors.inkBorder,
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: AuroraRadius.full,
             ),
           ),
           const SizedBox(height: AuroraSpacing.space3),

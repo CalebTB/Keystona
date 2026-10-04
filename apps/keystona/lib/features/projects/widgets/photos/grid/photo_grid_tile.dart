@@ -7,6 +7,7 @@ import '../../../models/project_photo.dart';
 import '../shared/photo_thumb.dart';
 import '../shared/photo_type_tag.dart';
 import '../../../../../core/theme/aurora_typography.dart';
+import '../../../../../core/theme/aurora_radius.dart';
 
 /// Single tile in the curated photo grid.
 ///
@@ -77,7 +78,7 @@ class PhotoGridTile extends StatelessWidget {
                     color: const Color(0x80000000),
                     child: const Icon(
                       Icons.link,
-                      color: Colors.white,
+                      color: AuroraColors.paper,
                       size: 14,
                     ),
                   ),
@@ -102,7 +103,7 @@ class PhotoGridTile extends StatelessWidget {
                     color: const Color(0x66000000),
                     child: const Icon(
                       Icons.add_link,
-                      color: Colors.white,
+                      color: AuroraColors.paper,
                       size: 14,
                     ),
                   ),
@@ -140,7 +141,7 @@ class PhotoGridTile extends StatelessWidget {
     );
 
     Widget clipped = ClipRRect(
-      borderRadius: BorderRadius.circular(12.0),
+      borderRadius: AuroraRadius.md,
       child: imageStack,
     );
 
@@ -148,7 +149,7 @@ class PhotoGridTile extends StatelessWidget {
     if (isIssue) {
       clipped = Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12.0),
+          borderRadius: AuroraRadius.md,
           border: Border.all(color: AuroraColors.coral, width: 2),
         ),
         child: clipped,

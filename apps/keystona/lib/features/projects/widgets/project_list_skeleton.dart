@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 
 /// Pulse-shimmer skeleton matching [ProjectCard] layout.
@@ -67,7 +68,7 @@ class _SkeletonCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AuroraRadius.lg,
         border: Border.all(color: const Color(0xFFEEEDF2), width: 3),
       ),
       child: ClipRRect(
@@ -127,7 +128,7 @@ class _SkeletonCard extends StatelessWidget {
                           height: 4,
                           decoration: BoxDecoration(
                             color: const Color(0xFFEEEDF2),
-                            borderRadius: BorderRadius.circular(999.0),
+                            borderRadius: AuroraRadius.full,
                           ),
                         ),
                       ),
@@ -142,7 +143,7 @@ class _SkeletonCard extends StatelessWidget {
                         height: 20,
                         decoration: BoxDecoration(
                           color: const Color(0xFFEEEDF2),
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: AuroraRadius.xs,
                         ),
                       ),
                       const Spacer(),

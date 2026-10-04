@@ -35,7 +35,7 @@ class PhotoCameraFAB extends StatelessWidget {
         ),
         child: const Icon(
           Icons.camera_alt_outlined,
-          color: Colors.white,
+          color: AuroraColors.paper,
           size: 22,
         ),
       ),

@@ -6,6 +6,7 @@ import '../../../../../core/theme/aurora_colors.dart';
 import '../../../models/project.dart';
 import '../../../models/project_contractor.dart';
 import '../../../../../core/theme/aurora_typography.dart';
+import '../../../../../core/theme/aurora_radius.dart';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -71,7 +72,7 @@ class ContractorStoryCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AuroraColors.ink,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AuroraRadius.xl,
           border: Border.all(color: const Color(0xFF141D3B), width: 1.5),
         ),
         child: Column(
@@ -233,7 +234,7 @@ class _QuoteBlock extends StatelessWidget {
     if (!hasNotes) {
       return Text(
         'No review yet',
-        style: AuroraType.body.copyWith(color: Colors.white.withValues(alpha: 0.35)),
+        style: AuroraType.body.copyWith(color: AuroraColors.paper.withValues(alpha: 0.35)),
       );
     }
 
@@ -246,14 +247,14 @@ class _QuoteBlock extends StatelessWidget {
       children: [
         Text(
           '"${notes.trim()}"',
-          style: AuroraType.body.copyWith(color: Colors.white.withValues(alpha: 0.8), height: 1.5),
+          style: AuroraType.body.copyWith(color: AuroraColors.paper.withValues(alpha: 0.8), height: 1.5),
           maxLines: 4,
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 6),
         Text(
           attribution,
-          style: AuroraType.labelSm.copyWith(color: Colors.white.withValues(alpha: 0.55)),
+          style: AuroraType.labelSm.copyWith(color: AuroraColors.paper.withValues(alpha: 0.55)),
         ),
       ],
     );
@@ -316,7 +317,7 @@ class _StatCell extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: 72),
       decoration: BoxDecoration(
         color: AuroraColors.butter,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AuroraRadius.sm,
         border: Border.all(color: AuroraColors.inkBorderStrong, width: 1),
       ),
       child: Column(
@@ -350,7 +351,7 @@ class _RatingCell extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: 72),
       decoration: BoxDecoration(
         color: AuroraColors.butter,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AuroraRadius.sm,
         border: Border.all(color: AuroraColors.inkBorderStrong, width: 1),
       ),
       child: Column(
@@ -389,7 +390,7 @@ class _PhoneCell extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: 72),
       decoration: BoxDecoration(
         color: AuroraColors.butter,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AuroraRadius.sm,
         border: Border.all(color: AuroraColors.inkBorderStrong, width: 1),
       ),
       child: Column(
@@ -560,8 +561,8 @@ class _PillButton extends StatelessWidget {
         ? AuroraColors.ink
         : AuroraColors.ink.withValues(alpha: 0.35);
     final fg = enabled
-        ? Colors.white
-        : Colors.white.withValues(alpha: 0.5);
+        ? AuroraColors.paper
+        : AuroraColors.paper.withValues(alpha: 0.5);
 
     return GestureDetector(
       onTap: enabled ? onTap : null,

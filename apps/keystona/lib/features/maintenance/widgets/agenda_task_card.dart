@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../models/maintenance_task.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 final _kSuccessGreen = AuroraColors.limeDeep;
 
@@ -103,7 +104,7 @@ class _AgendaTaskCardState extends State<AgendaTaskCard>
                       color: isOverdue
                           ? AuroraColors.coralDim
                           : AuroraColors.paper,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: AuroraRadius.md,
                       border: Border.all(
                         color: isOverdue
                             ? AuroraColors.coral.withValues(alpha: 0.2)
@@ -244,7 +245,7 @@ class _AgendaTaskCardState extends State<AgendaTaskCard>
                                       child: const Icon(
                                         Icons.check_rounded,
                                         size: 15,
-                                        color: Colors.white,
+                                        color: AuroraColors.paper,
                                       ),
                                     ),
                                   ),
@@ -349,7 +350,7 @@ class _DiyProBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
       decoration: BoxDecoration(
         color: isPro ? AuroraColors.cobaltDim : AuroraColors.limeDim,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: AuroraRadius.xs,
       ),
       child: Text(
         isPro ? 'PRO' : 'DIY',

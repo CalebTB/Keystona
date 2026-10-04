@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Shimmer skeleton for the contractors list.
 class ContractorSkeleton extends StatefulWidget {
@@ -47,7 +48,7 @@ class _ContractorSkeletonState extends State<ContractorSkeleton>
             height: 80,
             decoration: BoxDecoration(
               color: const Color(0xFFEEEDF2),
-              borderRadius: BorderRadius.circular(12.0),
+              borderRadius: AuroraRadius.md,
             ),
             padding: const EdgeInsets.symmetric(
               horizontal: AuroraSpacing.space7,
@@ -77,7 +78,7 @@ class _ContractorSkeletonState extends State<ContractorSkeleton>
                           decoration: BoxDecoration(
                             color: const Color(0xFFE0DFEA),
                             borderRadius:
-                                BorderRadius.circular(8.0),
+                                AuroraRadius.sm,
                           ),
                         ),
                       ),
@@ -89,7 +90,7 @@ class _ContractorSkeletonState extends State<ContractorSkeleton>
                           decoration: BoxDecoration(
                             color: const Color(0xFFE0DFEA),
                             borderRadius:
-                                BorderRadius.circular(8.0),
+                                AuroraRadius.sm,
                           ),
                         ),
                       ),

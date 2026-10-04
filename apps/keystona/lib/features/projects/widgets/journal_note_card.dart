@@ -5,6 +5,7 @@ import '../../../core/theme/aurora_typography.dart';
 import '../../../core/theme/aurora_spacing.dart';
 
 import '../models/project_journal_note.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Card displaying a single project journal note.
 ///
@@ -31,7 +32,7 @@ class JournalNoteCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: AuroraRadius.md,
         border: Border.all(color: AuroraColors.inkBorder),
       ),
       child: ClipRRect(
@@ -110,7 +111,7 @@ class _PhaseBadge extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: AuroraColors.cobaltDim,
-        borderRadius: BorderRadius.circular(999.0),
+        borderRadius: AuroraRadius.full,
       ),
       child: Text(
         name,

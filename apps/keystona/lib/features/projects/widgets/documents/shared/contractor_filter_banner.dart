@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/aurora_colors.dart';
 import '../../../../../core/theme/aurora_typography.dart';
+import '../../../../../core/theme/aurora_radius.dart';
 
 
 /// Shown when the documents screen is entered with an active contractor filter.
@@ -23,7 +24,7 @@ class ContractorFilterBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: AuroraColors.ink.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AuroraRadius.sm,
       ),
       child: Row(
         children: [
