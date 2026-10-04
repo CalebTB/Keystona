@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+
+
+
 
 /// Empty state for the Lifespan screen when the user has no systems.
 ///
@@ -17,7 +20,7 @@ class LifespanEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -25,33 +28,33 @@ class LifespanEmptyState extends StatelessWidget {
             Icon(
               Icons.home_repair_service_outlined,
               size: 120,
-              color: AppColors.deepNavy,
+              color: AuroraColors.ink,
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space7),
             Text(
               'Add your home\'s systems',
-              style: AppTextStyles.h2,
+              style: AuroraType.h2,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             Text(
               'Systems are the major components of your home — HVAC, plumbing, '
               'electrical, roofing, and more. Adding them unlocks personalized '
               'maintenance tasks and lifespan tracking.',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+              style: AuroraType.body.copyWith(
+                color: AuroraColors.inkSecondary,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.xl),
+            const SizedBox(height: AuroraSpacing.space8),
             FilledButton(
               onPressed: () => context.push(AppRoutes.homeSystemsAdd),
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.goldAccent,
-                foregroundColor: Colors.white,
+                backgroundColor: AuroraColors.yellow,
+                foregroundColor: AuroraColors.paper,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.xl,
-                  vertical: AppSizes.md,
+                  horizontal: AuroraSpacing.space8,
+                  vertical: AuroraSpacing.space5,
                 ),
               ),
               child: const Text('+ Add First System'),

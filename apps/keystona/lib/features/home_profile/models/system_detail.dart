@@ -9,11 +9,11 @@ class SystemDetail {
   const SystemDetail({
     required this.system,
     required this.photos,
+    this.photoUrls = const {},
   });
 
-  /// The full system record.
   final HomeSystem system;
-
-  /// Photos attached to this system, ordered by [ItemPhoto.createdAt] desc.
   final List<ItemPhoto> photos;
+  /// Signed URLs keyed by [ItemPhoto.filePath]. Valid for 1 hour.
+  final Map<String, String> photoUrls;
 }

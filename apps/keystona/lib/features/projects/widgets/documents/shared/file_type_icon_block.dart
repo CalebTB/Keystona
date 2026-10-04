@@ -1,0 +1,130 @@
+import 'package:flutter/material.dart';
+import '../../../../../core/theme/aurora_colors.dart';
+import '../../../../../core/theme/aurora_typography.dart';
+
+
+/// 44×56 colored file-type block with folded corner effect.
+///
+/// Displays the file type abbreviation (PDF, JPG, PNG, etc.) centered in a
+/// rounded container. A subtle triangle at the top-right corner simulates
+/// the classic folded-corner document icon.
+class FileTypeIconBlock extends StatelessWidget {
+  const FileTypeIconBlock({super.key, required this.mimeType});
+
+  final String mimeType;
+
+  static ({Color bg, Color fg, String label}) _infoFor(String mime) {
+    final lower = mime.toLowerCase();
+    if (lower == 'application/pdf' || lower.endsWith('/pdf')) {
+      return (
+        bg: AuroraColors.coralDim,
+        fg: AuroraColors.coral,
+        label: 'PDF',
+      );
+    }
+    if (lower.contains('jpeg') || lower.contains('jpg')) {
+      return (
+        bg: AuroraColors.limeDim,
+        fg: AuroraColors.lime,
+        label: 'JPG',
+      );
+    }
+    if (lower.contains('png')) {
+      return (
+        bg: AuroraColors.limeDim,
+        fg: AuroraColors.lime,
+        label: 'PNG',
+      );
+    }
+    if (lower.contains('heic') || lower.contains('heif')) {
+      return (
+        bg: AuroraColors.cobaltDim,
+        fg: AuroraColors.cobalt,
+        label: 'HEIC',
+      );
+    }
+    if (lower.contains('vnd') ||
+        lower.contains('word') ||
+        lower.contains('docx') ||
+        lower.contains('officedocument')) {
+      return (
+        bg: AuroraColors.cobaltDim,
+        fg: AuroraColors.cobalt,
+        label: 'DOCX',
+      );
+    }
+    return (
+      bg: AuroraColors.butter,
+      fg: AuroraColors.inkSecondary,
+      label: 'FILE',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final info = _infoFor(mimeType);
+    return SizedBox(
+      width: 44,
+      height: 56,
+      child: Stack(
+        children: [
+          // Main block
+          Container(
+            width: 44,
+            height: 56,
+            decoration: BoxDecoration(
+              color: info.bg,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              info.label,
+              style: AuroraType.label.copyWith(color: info.fg),
+            ),
+          ),
+          // Folded corner triangle — top-right 12×12 area
+          Positioned(
+            top: 0,
+            right: 0,
+            child: _FoldedCorner(fgColor: info.bg),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A small folded-corner triangle painted at the top-right of the file block.
+class _FoldedCorner extends StatelessWidget {
+  const _FoldedCorner({required this.fgColor});
+
+  final Color fgColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: const Size(12, 12),
+      painter: _CornerPainter(),
+    );
+  }
+}
+
+class _CornerPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AuroraColors.ink.withValues(alpha: 0.10)
+      ..style = PaintingStyle.fill;
+
+    final path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width, size.height)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_CornerPainter old) => false;
+}

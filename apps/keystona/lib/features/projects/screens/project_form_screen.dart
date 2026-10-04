@@ -5,10 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/photo_picker.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../core/widgets/upgrade_sheet.dart';
@@ -152,7 +153,7 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
       context: context,
       builder: (_) => Container(
         height: 300,
-        color: CupertinoColors.systemBackground.resolveFrom(context),
+        color: AuroraColors.paper,
         child: Column(
           children: [
             Row(
@@ -217,10 +218,10 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
                       child: Text(
                         o.label,
                         textAlign: TextAlign.center,
-                        style: AppTextStyles.bodyLarge.copyWith(
+                        style: AuroraType.bodyLg.copyWith(
                           color: o.value == current
-                              ? AppColors.goldAccent
-                              : AppColors.textPrimary,
+                              ? AuroraColors.yellow
+                              : AuroraColors.ink,
                           fontWeight: o.value == current
                               ? FontWeight.w600
                               : FontWeight.normal,
@@ -351,10 +352,8 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
               ? const CupertinoActivityIndicator()
               : Text(
                   'Save',
-                  style: TextStyle(
-                    color: _saving
-                        ? CupertinoColors.inactiveGray
-                        : CupertinoColors.activeBlue,
+                  style: AuroraType.label.copyWith(
+                    color: AuroraColors.cobalt,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -365,17 +364,18 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: AppPadding.screen,
+            padding: EdgeInsets.all(AuroraSpacing.screenPadH),
             children: [
               _CoverPhotoField(
                 localFile: _localCoverPhoto,
                 existingPath: _existingCoverPhotoPath,
                 onTap: _pickCoverPhoto,
               ),
-              const SizedBox(height: AppSizes.md),
+              const SizedBox(height: AuroraSpacing.space7),
               _SectionHeader('Project Details'),
               _FormField(
                 label: 'Project name',
+                required: true,
                 child: TextFormField(
                   controller: _nameController,
                   textCapitalization: TextCapitalization.words,
@@ -463,7 +463,7 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
                     ? () => setState(() => _plannedEndDate = null)
                     : null,
               ),
-              const SizedBox(height: AppSizes.xl),
+              const SizedBox(height: AuroraSpacing.space10),
             ],
           ),
         ),
@@ -484,8 +484,8 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
         actions: [
           if (_saving)
             const Padding(
-              padding: EdgeInsets.all(AppSizes.sm),
-              child: CircularProgressIndicator(strokeWidth: 2),
+              padding: EdgeInsets.all(AuroraSpacing.space3),
+              child: CupertinoActivityIndicator(color: AuroraColors.ink),
             )
           else
             TextButton(
@@ -497,17 +497,18 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: AppPadding.screen,
+          padding: EdgeInsets.all(AuroraSpacing.screenPadH),
           children: [
             _CoverPhotoField(
               localFile: _localCoverPhoto,
               existingPath: _existingCoverPhotoPath,
               onTap: _pickCoverPhoto,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space7),
             _SectionHeader('Project Details'),
             _FormField(
               label: 'Project name',
+              required: true,
               child: TextFormField(
                 controller: _nameController,
                 textCapitalization: TextCapitalization.words,
@@ -605,7 +606,7 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
                   ? () => setState(() => _plannedEndDate = null)
                   : null,
             ),
-            const SizedBox(height: AppSizes.xl),
+            const SizedBox(height: AuroraSpacing.space10),
           ],
         ),
       ),
@@ -617,13 +618,22 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
   InputDecoration _inputDecoration(String hint) => InputDecoration(
         hintText: hint,
         hintStyle:
-            AppTextStyles.bodyMedium.copyWith(color: AppColors.gray400),
+            AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.coral, width: 2.0),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
+          horizontal: AuroraSpacing.space7,
+          vertical: AuroraSpacing.space3,
         ),
       );
 }
@@ -637,37 +647,59 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: AppSizes.md, bottom: AppSizes.xs),
-      child: Text(
-        title.toUpperCase(),
-        style: AppTextStyles.caption.copyWith(
-          color: AppColors.textSecondary,
-          letterSpacing: 0.8,
-          fontWeight: FontWeight.w600,
-        ),
+      padding: const EdgeInsets.only(top: AuroraSpacing.space7, bottom: AuroraSpacing.space3),
+      child: Row(
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: AuroraColors.cobalt,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            title.toUpperCase(),
+            style: AuroraType.label.copyWith(
+              color: AuroraColors.inkSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
 class _FormField extends StatelessWidget {
-  const _FormField({required this.label, required this.child});
+  const _FormField({required this.label, required this.child, this.required = false});
   final String label;
   final Widget child;
+  final bool required;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.sm),
+      padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style:
-                AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+          Row(
+            children: [
+              Text(
+                label.toUpperCase(),
+                style: AuroraType.label,
+              ),
+              if (required) ...[
+                const SizedBox(width: 2),
+                Text(
+                  '*',
+                  style: AuroraType.label.copyWith(color: AuroraColors.coral),
+                ),
+              ],
+            ],
           ),
-          const SizedBox(height: AppSizes.xs),
+          const SizedBox(height: AuroraSpacing.space1),
           child,
         ],
       ),
@@ -693,13 +725,13 @@ class _TapRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm + 2,
+          horizontal: AuroraSpacing.space7,
+          vertical: AuroraSpacing.space3 + 2,
         ),
-        margin: const EdgeInsets.only(bottom: AppSizes.sm),
+        margin: const EdgeInsets.only(bottom: AuroraSpacing.space3),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.border),
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          border: Border.all(color: AuroraColors.inkBorder),
+          borderRadius: AuroraRadius.sm,
         ),
         child: Row(
           children: [
@@ -709,17 +741,17 @@ class _TapRow extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: AppTextStyles.bodySmall
-                        .copyWith(color: AppColors.textSecondary),
+                    style: AuroraType.bodySm
+                        .copyWith(color: AuroraColors.inkSecondary),
                   ),
                   const SizedBox(height: 2),
-                  Text(value, style: AppTextStyles.bodyLarge),
+                  Text(value, style: AuroraType.bodyLg),
                 ],
               ),
             ),
             const Icon(
               Icons.chevron_right,
-              color: AppColors.gray400,
+              color: AuroraColors.inkTertiary,
               size: 20,
             ),
           ],
@@ -752,13 +784,13 @@ class _DateRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm + 2,
+          horizontal: AuroraSpacing.space7,
+          vertical: AuroraSpacing.space3 + 2,
         ),
-        margin: const EdgeInsets.only(bottom: AppSizes.sm),
+        margin: const EdgeInsets.only(bottom: AuroraSpacing.space3),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.border),
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          border: Border.all(color: AuroraColors.inkBorder),
+          borderRadius: AuroraRadius.sm,
         ),
         child: Row(
           children: [
@@ -768,15 +800,15 @@ class _DateRow extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: AppTextStyles.bodySmall
-                        .copyWith(color: AppColors.textSecondary),
+                    style: AuroraType.bodySm
+                        .copyWith(color: AuroraColors.inkSecondary),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     formatted,
-                    style: AppTextStyles.bodyLarge.copyWith(
+                    style: AuroraType.bodyLg.copyWith(
                       color:
-                          date == null ? AppColors.gray400 : AppColors.textPrimary,
+                          date == null ? AuroraColors.inkTertiary : AuroraColors.ink,
                     ),
                   ),
                 ],
@@ -787,14 +819,14 @@ class _DateRow extends StatelessWidget {
                 onTap: onClear,
                 child: const Icon(
                   Icons.clear,
-                  color: AppColors.gray400,
+                  color: AuroraColors.inkTertiary,
                   size: 18,
                 ),
               )
             else
               const Icon(
                 Icons.calendar_today_outlined,
-                color: AppColors.gray400,
+                color: AuroraColors.inkTertiary,
                 size: 18,
               ),
           ],
@@ -825,9 +857,9 @@ class _CoverPhotoField extends StatelessWidget {
       child: Container(
         height: 160,
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: AppColors.border),
+          color: AuroraColors.paper,
+          borderRadius: AuroraRadius.md,
+          border: Border.all(color: AuroraColors.inkBorder),
         ),
         clipBehavior: Clip.antiAlias,
         child: hasPhoto
@@ -844,21 +876,21 @@ class _CoverPhotoField extends StatelessWidget {
         children: [
           Image.file(localFile!, fit: BoxFit.cover),
           Positioned(
-            bottom: AppSizes.sm,
-            right: AppSizes.sm,
+            bottom: AuroraSpacing.space3,
+            right: AuroraSpacing.space3,
             child: Container(
               padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.sm,
+                horizontal: AuroraSpacing.space3,
                 vertical: 4,
               ),
               decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                color: AuroraColors.inkSecondary,
+                borderRadius: AuroraRadius.sm,
               ),
               child: Text(
                 'Tap to change',
-                style: AppTextStyles.caption
-                    .copyWith(color: AppColors.textInverse),
+                style: AuroraType.bodySm
+                    .copyWith(color: AuroraColors.paper),
               ),
             ),
           ),
@@ -869,26 +901,26 @@ class _CoverPhotoField extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        ColoredBox(color: AppColors.gray200),
+        ColoredBox(color: AuroraColors.butter),
         const Center(
-          child: Icon(Icons.image_outlined, color: AppColors.gray400, size: 40),
+          child: Icon(Icons.image_outlined, color: AuroraColors.inkTertiary, size: 40),
         ),
         Positioned(
-          bottom: AppSizes.sm,
-          right: AppSizes.sm,
+          bottom: AuroraSpacing.space3,
+          right: AuroraSpacing.space3,
           child: Container(
             padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.sm,
+              horizontal: AuroraSpacing.space3,
               vertical: 4,
             ),
             decoration: BoxDecoration(
-              color: Colors.black54,
-              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+              color: AuroraColors.inkSecondary,
+              borderRadius: AuroraRadius.sm,
             ),
             child: Text(
               'Tap to change',
               style:
-                  AppTextStyles.caption.copyWith(color: AppColors.textInverse),
+                  AuroraType.bodySm.copyWith(color: AuroraColors.paper),
             ),
           ),
         ),
@@ -902,14 +934,14 @@ class _CoverPhotoField extends StatelessWidget {
       children: [
         const Icon(
           Icons.add_photo_alternate_outlined,
-          color: AppColors.gray400,
+          color: AuroraColors.inkTertiary,
           size: 36,
         ),
-        const SizedBox(height: AppSizes.xs),
+        const SizedBox(height: AuroraSpacing.space1),
         Text(
           'Add cover photo (optional)',
           style:
-              AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+              AuroraType.bodySm.copyWith(color: AuroraColors.inkSecondary),
         ),
       ],
     );

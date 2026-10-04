@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_text_styles.dart';
+import '../theme/aurora_colors.dart';
+import '../theme/aurora_typography.dart';
 
 /// Thin wrapper around [Scaffold] used by every screen in Keystona.
 ///
@@ -42,16 +42,16 @@ class AppScaffold extends StatelessWidget {
     final canPop = Navigator.of(context).canPop();
 
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       appBar: AppBar(
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         elevation: 0,
         scrolledUnderElevation: 0,
         automaticallyImplyLeading: showBackButton && canPop,
         title: title != null
             ? Text(
                 title!,
-                style: AppTextStyles.h3,
+                style: AuroraType.h3,
               )
             : null,
         actions: actions,

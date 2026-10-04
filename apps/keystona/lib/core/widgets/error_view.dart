@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_sizes.dart';
-import '../theme/app_text_styles.dart';
+import '../theme/aurora_colors.dart';
+import '../theme/aurora_spacing.dart';
+import '../theme/aurora_typography.dart';
+import 'aurora/aurora_button.dart';
 
 /// Full-screen error state displayed when an async operation fails.
 ///
 /// Always includes a retry mechanism so users are never left stuck.
 /// Use this as the `error` branch of every `AsyncValue.when()` call.
+///
+/// Aurora spec: 48px inkTertiary icon, body inkSecondary text,
+/// GhostButton retry (coral text).
 class ErrorView extends StatelessWidget {
   const ErrorView({
     super.key,
@@ -30,39 +34,28 @@ class ErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSizes.lg),
+        padding: const EdgeInsets.all(AuroraSpacing.space9),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(
-              Icons.error_outline,
-              size: AppSizes.iconXl,
-              color: AppColors.error,
+              Icons.error_outline_rounded,
+              size: 48,
+              color: AuroraColors.inkTertiary,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space7),
             Text(
               message,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+              style: AuroraType.body.copyWith(
+                color: AuroraColors.inkSecondary,
               ),
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
-              const SizedBox(height: AppSizes.lg),
-              FilledButton(
+              const SizedBox(height: AuroraSpacing.space7),
+              GhostButton(
+                label: retryLabel,
                 onPressed: onRetry,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.deepNavy,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-                  ),
-                ),
-                child: Text(
-                  retryLabel,
-                  style: AppTextStyles.button.copyWith(
-                    color: AppColors.textInverse,
-                  ),
-                ),
               ),
             ],
           ],

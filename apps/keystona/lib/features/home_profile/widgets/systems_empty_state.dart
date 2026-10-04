@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+
+
+
 
 /// Empty state for the Systems list screen.
 ///
@@ -25,39 +28,39 @@ class SystemsEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.home_repair_service_outlined,
               size: 120,
-              color: AppColors.deepNavy.withAlpha(180),
+              color: AuroraColors.ink.withAlpha(180),
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space7),
             Text(
               "Add your home's systems",
-              style: AppTextStyles.h2,
+              style: AuroraType.h2,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             Text(
               'Systems are the major components of your home — HVAC, '
               'plumbing, electrical, roofing, and more. Adding them unlocks '
               'personalized maintenance tasks and lifespan tracking.',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+              style: AuroraType.body.copyWith(
+                color: AuroraColors.inkSecondary,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.xl),
+            const SizedBox(height: AuroraSpacing.space8),
             FilledButton.icon(
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.deepNavy,
-                foregroundColor: AppColors.textInverse,
+                backgroundColor: AuroraColors.ink,
+                foregroundColor: AuroraColors.paper,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.lg,
-                  vertical: AppSizes.md,
+                  horizontal: AuroraSpacing.space7,
+                  vertical: AuroraSpacing.space5,
                 ),
               ),
               onPressed: onAddSystem,

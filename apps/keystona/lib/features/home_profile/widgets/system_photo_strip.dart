@@ -1,10 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+
+
+
 import '../models/item_photo.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Horizontal photo strip shown on the System Detail screen.
 ///
@@ -31,9 +35,9 @@ class SystemPhotoStrip extends StatelessWidget {
       height: 96,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.screenPadding),
+        padding: const EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
         itemCount: photos.length + 1, // +1 for the "Add" tile.
-        separatorBuilder: (_, _) => const SizedBox(width: AppSizes.sm),
+        separatorBuilder: (_, _) => const SizedBox(width: AuroraSpacing.space3),
         itemBuilder: (context, index) {
           if (index == photos.length) {
             return _AddPhotoTile(onTap: onAddPhoto);
@@ -59,7 +63,7 @@ class _PhotoTile extends StatelessWidget {
     final url = photoUrlBuilder?.call(photo.filePath) ?? photo.filePath;
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+      borderRadius: AuroraRadius.sm,
       child: CachedNetworkImage(
         imageUrl: url,
         width: 80,
@@ -68,15 +72,15 @@ class _PhotoTile extends StatelessWidget {
         placeholder: (_, _) => Container(
           width: 80,
           height: 80,
-          color: AppColors.gray200,
+          color: AuroraColors.inkBorder,
         ),
         errorWidget: (_, _, _) => Container(
           width: 80,
           height: 80,
-          color: AppColors.gray100,
+          color: AuroraColors.butter,
           child: const Icon(
             Icons.broken_image_outlined,
-            color: AppColors.textDisabled,
+            color: AuroraColors.inkTertiary,
             size: 32,
           ),
         ),
@@ -98,10 +102,10 @@ class _AddPhotoTile extends StatelessWidget {
         width: 80,
         height: 80,
         decoration: BoxDecoration(
-          color: AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          color: AuroraColors.butter,
+          borderRadius: AuroraRadius.sm,
           border: Border.all(
-            color: AppColors.border,
+            color: AuroraColors.inkBorder,
             style: BorderStyle.solid,
           ),
         ),
@@ -109,12 +113,12 @@ class _AddPhotoTile extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.add_photo_alternate_outlined,
-                size: 28, color: AppColors.textSecondary),
+                size: 28, color: AuroraColors.inkSecondary),
             const SizedBox(height: 2),
             Text(
               'Add',
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textSecondary,
+              style: AuroraType.bodySm.copyWith(
+                color: AuroraColors.inkSecondary,
               ),
             ),
           ],

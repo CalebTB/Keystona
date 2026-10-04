@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../models/project_budget_item.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Single budget line item row.
 class BudgetItemCard extends StatelessWidget {
@@ -26,15 +27,15 @@ class BudgetItemCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        constraints: const BoxConstraints(minHeight: AppSizes.cardMinHeight),
+        constraints: const BoxConstraints(minHeight: 72.0),
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm + 2,
+          horizontal: AuroraSpacing.space7,
+          vertical: AuroraSpacing.space3 + 2,
         ),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: AppColors.border),
+          color: AuroraColors.paper,
+          borderRadius: AuroraRadius.md,
+          border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(
           children: [
@@ -44,19 +45,19 @@ class BudgetItemCard extends StatelessWidget {
               height: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: item.isPaid ? AppColors.success : AppColors.gray300,
+                color: item.isPaid ? AuroraColors.lime : const Color(0xFFE0DFEA),
               ),
             ),
-            const SizedBox(width: AppSizes.sm),
+            const SizedBox(width: AuroraSpacing.space3),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item.name, style: AppTextStyles.bodyMediumSemibold),
+                  Text(item.name, style: AuroraType.h3),
                   Text(
                     item.category.budgetCategoryLabel,
-                    style: AppTextStyles.bodySmall
-                        .copyWith(color: AppColors.textSecondary),
+                    style: AuroraType.bodySm
+                        .copyWith(color: AuroraColors.inkSecondary),
                   ),
                 ],
               ),
@@ -67,25 +68,25 @@ class BudgetItemCard extends StatelessWidget {
                 if (hasActual)
                   Text(
                     _fmt(item.actualCost),
-                    style: AppTextStyles.bodyMediumSemibold.copyWith(
-                      color: isOver ? AppColors.error : AppColors.textPrimary,
+                    style: AuroraType.h3.copyWith(
+                      color: isOver ? AuroraColors.coral : AuroraColors.ink,
                     ),
                   )
                 else
                   Text(
                     _fmt(item.estimatedCost),
-                    style: AppTextStyles.bodyMedium
-                        .copyWith(color: AppColors.textSecondary),
+                    style: AuroraType.body
+                        .copyWith(color: AuroraColors.inkSecondary),
                   ),
                 Text(
                   hasActual ? 'est. ${_fmt(item.estimatedCost)}' : 'estimated',
-                  style: AppTextStyles.caption
-                      .copyWith(color: AppColors.textSecondary),
+                  style: AuroraType.bodySm
+                      .copyWith(color: AuroraColors.inkSecondary),
                 ),
               ],
             ),
-            const SizedBox(width: AppSizes.xs),
-            const Icon(Icons.chevron_right, color: AppColors.gray400, size: 18),
+            const SizedBox(width: AuroraSpacing.space1),
+            const Icon(Icons.chevron_right, color: AuroraColors.inkTertiary, size: 18),
           ],
         ),
       ),

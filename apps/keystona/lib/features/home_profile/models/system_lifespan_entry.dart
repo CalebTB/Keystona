@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/aurora_colors.dart';
 
-import '../../../core/theme/app_colors.dart';
+
 
 /// A single row returned by the `get_system_lifespan_overview` RPC.
 ///
@@ -63,13 +64,13 @@ class SystemLifespanEntry {
   Color get healthColor {
     switch (healthStatus) {
       case 'end_of_life':
-        return AppColors.error;
+        return AuroraColors.coral;
       case 'aging':
-        return AppColors.warning;
+        return AuroraColors.yellow;
       case 'healthy':
-        return AppColors.success;
+        return AuroraColors.lime;
       default:
-        return AppColors.gray400;
+        return AuroraColors.inkTertiary;
     }
   }
 

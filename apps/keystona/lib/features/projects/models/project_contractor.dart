@@ -19,6 +19,7 @@ abstract class ProjectContractor with _$ProjectContractor {
     required String contactName,
     String? contactPhone,
     String? contactEmail,
+    String? contactCompany,
     // Join-table specific fields.
     String? role,
     double? contractAmount,

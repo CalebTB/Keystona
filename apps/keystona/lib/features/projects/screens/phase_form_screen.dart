@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../models/project_phase.dart';
 import '../providers/project_phases_provider.dart';
@@ -163,10 +164,10 @@ class _PhaseFormScreenState extends ConsumerState<PhaseFormScreen> {
                 },
                 child: Text(
                   s.label,
-                  style: AppTextStyles.bodyLarge.copyWith(
+                  style: AuroraType.bodyLg.copyWith(
                     color: _status == s.value
-                        ? AppColors.goldAccent
-                        : AppColors.textPrimary,
+                        ? AuroraColors.yellow
+                        : AuroraColors.ink,
                     fontWeight: _status == s.value
                         ? FontWeight.w600
                         : FontWeight.normal,
@@ -252,7 +253,7 @@ class _PhaseFormScreenState extends ConsumerState<PhaseFormScreen> {
                   style: TextStyle(
                     color: _saving
                         ? CupertinoColors.inactiveGray
-                        : CupertinoColors.activeBlue,
+                        : AuroraColors.cobalt,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -276,7 +277,7 @@ class _PhaseFormScreenState extends ConsumerState<PhaseFormScreen> {
         actions: [
           if (_saving)
             const Padding(
-              padding: EdgeInsets.all(AppSizes.sm),
+              padding: EdgeInsets.all(AuroraSpacing.space3),
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           else
@@ -293,21 +294,30 @@ class _PhaseFormScreenState extends ConsumerState<PhaseFormScreen> {
   Widget _buildFormBody({required bool isIOS}) {
     final decoration = InputDecoration(
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+        borderRadius: AuroraRadius.md,
+        borderSide: const BorderSide(color: AuroraColors.inkBorder),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: AuroraRadius.md,
+        borderSide: const BorderSide(color: AuroraColors.inkBorder),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: AuroraRadius.md,
+        borderSide: const BorderSide(color: AuroraColors.cobalt, width: 1.5),
       ),
       contentPadding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
+        horizontal: AuroraSpacing.space7,
+        vertical: AuroraSpacing.space3,
       ),
     );
 
     return Form(
       key: _formKey,
       child: ListView(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         children: [
           // ── Name ───────────────────────────────────────────────────────
-          _SectionLabel('Phase Name'),
+          _SectionLabel('Phase Name', required: true),
           TextFormField(
             controller: _nameController,
             textCapitalization: TextCapitalization.words,
@@ -316,7 +326,7 @@ class _PhaseFormScreenState extends ConsumerState<PhaseFormScreen> {
             validator: (v) =>
                 (v == null || v.trim().isEmpty) ? 'Name is required' : null,
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
 
           // ── Description ────────────────────────────────────────────────
           _SectionLabel('Description (optional)'),
@@ -329,7 +339,7 @@ class _PhaseFormScreenState extends ConsumerState<PhaseFormScreen> {
               hintText: 'What happens during this phase?',
             ),
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
 
           // ── Status ─────────────────────────────────────────────────────
           _SectionLabel('Status'),
@@ -353,7 +363,7 @@ class _PhaseFormScreenState extends ConsumerState<PhaseFormScreen> {
                       ))
                   .toList(),
             ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
 
           // ── Planned dates ──────────────────────────────────────────────
           _SectionLabel('Planned Start (optional)'),
@@ -364,7 +374,7 @@ class _PhaseFormScreenState extends ConsumerState<PhaseFormScreen> {
                 : 'Not set',
             onTap: () => _pickDate(isStart: true),
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
 
           _SectionLabel('Planned End (optional)'),
           _TapRow(
@@ -375,7 +385,7 @@ class _PhaseFormScreenState extends ConsumerState<PhaseFormScreen> {
             onTap: () => _pickDate(isStart: false),
           ),
 
-          const SizedBox(height: AppSizes.xl),
+          const SizedBox(height: AuroraSpacing.space10),
         ],
       ),
     );
@@ -385,16 +395,34 @@ class _PhaseFormScreenState extends ConsumerState<PhaseFormScreen> {
 // ── Form helpers ──────────────────────────────────────────────────────────────
 
 class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
+  const _SectionLabel(this.text, {this.required = false});
   final String text;
+  final bool required;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.xs),
-      child: Text(
-        text,
-        style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+      padding: const EdgeInsets.only(bottom: AuroraSpacing.space1),
+      child: Row(
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: AuroraColors.cobalt,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            text.toUpperCase(),
+            style: AuroraType.label,
+          ),
+          if (required) ...[
+            const SizedBox(width: 2),
+            Text('*', style: AuroraType.label.copyWith(color: AuroraColors.coral)),
+          ],
+        ],
       ),
     );
   }
@@ -417,12 +445,12 @@ class _TapRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm + 2,
+          horizontal: AuroraSpacing.space7,
+          vertical: AuroraSpacing.space3 + 2,
         ),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.border),
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          border: Border.all(color: AuroraColors.inkBorder),
+          borderRadius: BorderRadius.circular(8.0),
         ),
         child: Row(
           children: [
@@ -432,17 +460,17 @@ class _TapRow extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: AppTextStyles.bodySmall
-                        .copyWith(color: AppColors.textSecondary),
+                    style: AuroraType.bodySm
+                        .copyWith(color: AuroraColors.inkSecondary),
                   ),
                   const SizedBox(height: 2),
-                  Text(value, style: AppTextStyles.bodyLarge),
+                  Text(value, style: AuroraType.bodyLg),
                 ],
               ),
             ),
             const Icon(
               Icons.chevron_right,
-              color: AppColors.gray400,
+              color: AuroraColors.inkTertiary,
               size: 20,
             ),
           ],

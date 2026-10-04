@@ -5,10 +5,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+
+
+
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
+
+import '../../../core/widgets/scan_label_button.dart';
 import '../../../core/widgets/snackbar_service.dart';
+import '../../../core/widgets/task_generation_sheet.dart';
+import '../../../services/label_scanner_service.dart';
+import '../../../services/supabase_service.dart';
 import '../models/system.dart';
 import '../providers/system_detail_provider.dart';
 import '../providers/systems_provider.dart';
@@ -66,6 +78,13 @@ class _SystemFormScreenState extends ConsumerState<SystemFormScreen> {
   String? _warrantyExpiration;
 
   bool _saving = false;
+
+  /// Label photo captured during scan — uploaded after save.
+  XFile? _labelPhoto;
+
+  /// Task generation started immediately on scan confirm so it runs in
+  /// parallel while the user reviews the pre-filled form.
+  Future<List<SuggestedTask>>? _tasksFuture;
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -153,8 +172,8 @@ class _SystemFormScreenState extends ConsumerState<SystemFormScreen> {
                 ? const CupertinoActivityIndicator()
                 : Text(
                     _isEditing ? 'Save' : 'Add',
-                    style: const TextStyle(
-                      color: AppColors.goldAccent,
+                    style: AuroraType.label.copyWith(
+                      color: AuroraColors.cobalt,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -189,16 +208,25 @@ class _SystemFormScreenState extends ConsumerState<SystemFormScreen> {
             onWarrantyExpirationChanged: (v) =>
                 setState(() => _warrantyExpiration = v),
             isIOS: true,
+            onPhotoReady: (photo) {
+              setState(() => _labelPhoto = photo);
+              _tasksFuture = prefetchItemTasks(
+                itemName: _nameCtrl.text.trim(),
+                brand: _brandCtrl.text.trim(),
+                category: _category.value,
+                formType: 'system',
+              );
+            },
           ),
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       appBar: AppBar(
-        title: Text(title, style: AppTextStyles.h3),
-        backgroundColor: AppColors.warmOffWhite,
+        title: Text(title, style: AuroraType.h3),
+        backgroundColor: AuroraColors.paper,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
@@ -206,20 +234,13 @@ class _SystemFormScreenState extends ConsumerState<SystemFormScreen> {
           onPressed: _saving ? null : () => context.pop(),
         ),
         actions: [
-          TextButton(
-            onPressed: _saving ? null : _handleSave,
-            child: _saving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(
-                    _isEditing ? 'Save' : 'Add',
-                    style: AppTextStyles.bodyMediumSemibold.copyWith(
-                      color: AppColors.deepNavy,
-                    ),
-                  ),
+          Padding(
+            padding: const EdgeInsets.only(right: AuroraSpacing.space3),
+            child: SaveButton(
+              label: _isEditing ? 'Save' : 'Add',
+              loading: _saving,
+              onPressed: _saving ? null : _handleSave,
+            ),
           ),
         ],
       ),
@@ -250,8 +271,58 @@ class _SystemFormScreenState extends ConsumerState<SystemFormScreen> {
         onWarrantyExpirationChanged: (v) =>
             setState(() => _warrantyExpiration = v),
         isIOS: false,
+        onPhotoReady: (photo) => setState(() => _labelPhoto = photo),
       ),
     );
+  }
+
+  // ── Label photo + property helpers ───────────────────────────────────────────
+
+  Future<void> _uploadLabelPhoto(String systemId, XFile photo) async {
+    try {
+      final user = SupabaseService.client.auth.currentUser;
+      if (user == null) return;
+      final propertyId = await _fetchPropertyId();
+      if (propertyId == null) return;
+
+      final bytes = await photo.readAsBytes();
+      final ext = photo.name.split('.').last.toLowerCase();
+      final path =
+          '${user.id}/$propertyId/$systemId/${DateTime.now().millisecondsSinceEpoch}_label.$ext';
+      final mime = switch (ext) {
+        'jpg' || 'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'heic' => 'image/heic',
+        _ => 'image/jpeg',
+      };
+
+      await SupabaseService.client.storage
+          .from('item-photos')
+          .uploadBinary(path, bytes, fileOptions: FileOptions(contentType: mime));
+
+      await SupabaseService.client.from('item_photos').insert({
+        'user_id': user.id,
+        'system_id': systemId,
+        'file_path': path,
+        'photo_type': 'model_label',
+      });
+    } catch (_) {
+      // Non-fatal — photo upload failure should not block form completion.
+    }
+  }
+
+  Future<String?> _fetchPropertyId() async {
+    final user = SupabaseService.client.auth.currentUser;
+    if (user == null) return null;
+    final row = await SupabaseService.client
+        .from('properties')
+        .select('id')
+        .eq('user_id', user.id)
+        .isFilter('deleted_at', null)
+        .order('created_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+    return row?['id'] as String?;
   }
 
   // ── Save handler ─────────────────────────────────────────────────────────────
@@ -296,20 +367,44 @@ class _SystemFormScreenState extends ConsumerState<SystemFormScreen> {
     try {
       if (_isEditing) {
         await ref
-            .read(
-              systemDetailProvider(widget.existingSystem!.id).notifier,
-            )
+            .read(systemDetailProvider(widget.existingSystem!.id).notifier)
             .updateSystem(data);
+        if (!mounted) return;
+        SnackbarService.showSuccess(context, 'System updated.');
+        context.pop();
       } else {
-        await ref.read(systemsProvider.notifier).addSystem(data);
-      }
+        final systemId =
+            await ref.read(systemsProvider.notifier).addSystem(data);
 
-      if (!mounted) return;
-      SnackbarService.showSuccess(
-        context,
-        _isEditing ? 'System updated.' : 'System added.',
-      );
-      context.pop();
+        // Upload label photo if captured during scan.
+        if (_labelPhoto != null) {
+          _uploadLabelPhoto(systemId, _labelPhoto!).ignore();
+        }
+
+        if (!mounted) return;
+
+        // Show task sheet BEFORE popping — context must still be alive.
+        if (_labelPhoto != null) {
+          final propertyId = await _fetchPropertyId();
+          if (mounted && propertyId != null) {
+            await showTaskGenerationSheet(
+              context: context,
+              ref: ref,
+              itemName: _nameCtrl.text.trim(),
+              brand: _brandCtrl.text.trim(),
+              category: _category.value,
+              formType: 'system',
+              linkedSystemId: systemId,
+              propertyId: propertyId,
+              prefetchedFuture: _tasksFuture,
+            );
+          }
+        }
+
+        if (!mounted) return;
+        SnackbarService.showSuccess(context, 'System added.');
+        context.pop();
+      }
     } catch (e) {
       if (!mounted) return;
       SnackbarService.showError(
@@ -351,6 +446,7 @@ class _FormBody extends StatelessWidget {
     required this.onInstallationDateChanged,
     required this.onWarrantyExpirationChanged,
     required this.isIOS,
+    this.onPhotoReady,
   });
 
   final GlobalKey<FormState> formKey;
@@ -377,6 +473,22 @@ class _FormBody extends StatelessWidget {
   final ValueChanged<String?> onInstallationDateChanged;
   final ValueChanged<String?> onWarrantyExpirationChanged;
   final bool isIOS;
+  final void Function(XFile)? onPhotoReady;
+
+  static SystemCategory? _categoryFromString(String raw) {
+    return switch (raw.toLowerCase()) {
+      'hvac' => SystemCategory.hvac,
+      'plumbing' => SystemCategory.plumbing,
+      'electrical' => SystemCategory.electrical,
+      'roofing' => SystemCategory.roofing,
+      'foundation' => SystemCategory.foundation,
+      'siding' => SystemCategory.siding,
+      'windows_doors' || 'windows' || 'doors' => SystemCategory.windowsDoors,
+      'insulation' => SystemCategory.insulation,
+      'garage' => SystemCategory.garage,
+      _ => SystemCategory.other,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -384,14 +496,54 @@ class _FormBody extends StatelessWidget {
       key: formKey,
       child: SingleChildScrollView(
         padding: EdgeInsets.only(
-          left: AppSizes.screenPadding,
-          right: AppSizes.screenPadding,
-          top: AppSizes.md,
-          bottom: MediaQuery.of(context).viewInsets.bottom + AppSizes.xl,
+          left: AuroraSpacing.screenPadH,
+          right: AuroraSpacing.screenPadH,
+          top: AuroraSpacing.space5,
+          bottom: MediaQuery.of(context).viewInsets.bottom + AuroraSpacing.space8,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ── Label scanner ─────────────────────────────────────────────────
+            ScanLabelButton(
+              onResult: (LabelScanResult r) {
+                if (r.brand != null) brandCtrl.text = r.brand!;
+                // name from the label = system type (e.g. "Central Air Conditioner")
+                if (r.name != null) systemTypeCtrl.text = r.name!;
+                // Only pre-fill the display name if the user hasn't typed one
+                if (r.name != null && nameCtrl.text.isEmpty) {
+                  nameCtrl.text = r.name!;
+                }
+                if (r.modelNumber != null) modelCtrl.text = r.modelNumber!;
+                if (r.serialNumber != null) serialCtrl.text = r.serialNumber!;
+                if (r.category != null) {
+                  final cat = _categoryFromString(r.category!);
+                  if (cat != null) onCategoryChanged(cat);
+                }
+                if (r.estimatedLifespanYears != null) {
+                  lifespanMinCtrl.text = r.estimatedLifespanYears.toString();
+                  lifespanMaxCtrl.text =
+                      (r.estimatedLifespanYears! + 5).toString();
+                }
+                if (r.estimatedReplacementCostUsd != null) {
+                  replacementCostCtrl.text =
+                      r.estimatedReplacementCostUsd.toString();
+                }
+                if (r.notes != null) notesCtrl.text = r.notes!;
+                if (r.manufactureDate != null) {
+                  final parts = r.manufactureDate!.split('-');
+                  final normalised = parts.length == 2
+                      ? '${parts[0]}-${parts[1]}-01'
+                      : '${parts[0]}-01-01';
+                  onInstallationDateChanged(normalised);
+                } else if (r.estimatedYear != null) {
+                  onInstallationDateChanged('${r.estimatedYear}-01-01');
+                }
+              },
+              onPhotoReady: onPhotoReady,
+            ),
+            const SizedBox(height: AuroraSpacing.space5),
+
             // ── Required fields ───────────────────────────────────────────────
             _FormSectionLabel(label: 'Required'),
 
@@ -401,7 +553,7 @@ class _FormBody extends StatelessWidget {
               value: category,
               onChanged: onCategoryChanged,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             // Display name.
             _FieldLabel(label: 'Name'),
@@ -412,7 +564,7 @@ class _FormBody extends StatelessWidget {
                   ? 'Name is required'
                   : null,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             // System type.
             _FieldLabel(label: 'System Type'),
@@ -423,7 +575,7 @@ class _FormBody extends StatelessWidget {
                   ? 'System type is required'
                   : null,
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space7),
 
             // ── Identification ────────────────────────────────────────────────
             _FormSectionLabel(label: 'Identification'),
@@ -432,7 +584,7 @@ class _FormBody extends StatelessWidget {
               controller: brandCtrl,
               hint: 'e.g. Carrier, Rheem',
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             _FieldLabel(label: 'Model Number'),
             _TextField(
@@ -442,7 +594,7 @@ class _FormBody extends StatelessWidget {
                 FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9\-_\. ]')),
               ],
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             _FieldLabel(label: 'Serial Number'),
             _TextField(
@@ -452,14 +604,14 @@ class _FormBody extends StatelessWidget {
                 FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9\-_]')),
               ],
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             _FieldLabel(label: 'Location'),
             _TextField(
               controller: locationCtrl,
               hint: 'e.g. Basement, Attic, Garage',
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space7),
 
             // ── Installation ──────────────────────────────────────────────────
             _FormSectionLabel(label: 'Installation'),
@@ -469,14 +621,14 @@ class _FormBody extends StatelessWidget {
               hint: 'Select date',
               onChanged: onInstallationDateChanged,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             _FieldLabel(label: 'Installer'),
             _TextField(
               controller: installerCtrl,
               hint: 'Company or person who installed',
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             _FieldLabel(label: 'Purchase Price'),
             _TextField(
@@ -487,7 +639,7 @@ class _FormBody extends StatelessWidget {
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
               ],
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space7),
 
             // ── Lifespan ──────────────────────────────────────────────────────
             _FormSectionLabel(label: 'Lifespan'),
@@ -509,7 +661,7 @@ class _FormBody extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: AppSizes.md),
+                const SizedBox(width: AuroraSpacing.space5),
                 Flexible(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -528,7 +680,7 @@ class _FormBody extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             _FieldLabel(label: 'Custom Lifespan Override (years)'),
             _TextField(
@@ -537,7 +689,7 @@ class _FormBody extends StatelessWidget {
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             _FieldLabel(label: 'Estimated Replacement Cost'),
             _TextField(
@@ -548,7 +700,7 @@ class _FormBody extends StatelessWidget {
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
               ],
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space7),
 
             // ── Warranty ──────────────────────────────────────────────────────
             _FormSectionLabel(label: 'Warranty'),
@@ -558,14 +710,14 @@ class _FormBody extends StatelessWidget {
               hint: 'Select date',
               onChanged: onWarrantyExpirationChanged,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
 
             _FieldLabel(label: 'Warranty Provider'),
             _TextField(
               controller: warrantyProviderCtrl,
               hint: 'e.g. Carrier, HomeServe',
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space7),
 
             // ── Status ────────────────────────────────────────────────────────
             _FormSectionLabel(label: 'Status'),
@@ -573,7 +725,7 @@ class _FormBody extends StatelessWidget {
               value: status,
               onChanged: onStatusChanged,
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space7),
 
             // ── Notes ─────────────────────────────────────────────────────────
             _FormSectionLabel(label: 'Notes'),
@@ -599,13 +751,25 @@ class _FormSectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.sm),
-      child: Text(
-        label.toUpperCase(),
-        style: AppTextStyles.labelSmall.copyWith(
-          color: AppColors.textSecondary,
-          letterSpacing: 0.8,
-        ),
+      padding: const EdgeInsets.only(top: AuroraSpacing.space8, bottom: AuroraSpacing.space3),
+      child: Row(
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: const BoxDecoration(
+              color: AuroraColors.cobalt,
+              borderRadius: AuroraRadius.xs,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label.toUpperCase(),
+            style: AuroraType.label.copyWith(
+              color: AuroraColors.inkSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -620,7 +784,10 @@ class _FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
-      child: Text(label, style: AppTextStyles.labelLarge),
+      child: Text(
+        label.toUpperCase(),
+        style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
+      ),
     );
   }
 }
@@ -652,30 +819,34 @@ class _TextField extends StatelessWidget {
       maxLines: maxLines,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: AppTextStyles.bodyMedium.copyWith(
-          color: AppColors.textDisabled,
+        hintStyle: AuroraType.body.copyWith(
+          color: AuroraColors.inkTertiary,
         ),
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: AuroraColors.paper,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.deepNavy),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.error),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.coral),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
+          horizontal: AuroraSpacing.space5,
+          vertical: AuroraSpacing.space3,
         ),
       ),
     );
@@ -694,29 +865,29 @@ class _CategoryDropdown extends StatelessWidget {
       initialValue: value,
       decoration: InputDecoration(
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: AuroraColors.paper,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.deepNavy),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
+          horizontal: AuroraSpacing.space5,
+          vertical: AuroraSpacing.space3,
         ),
       ),
       items: SystemCategory.values
           .map(
             (c) => DropdownMenuItem(
               value: c,
-              child: Text(c.label, style: AppTextStyles.bodyMedium),
+              child: Text(c.label, style: AuroraType.body),
             ),
           )
           .toList(),
@@ -739,29 +910,29 @@ class _StatusDropdown extends StatelessWidget {
       initialValue: value,
       decoration: InputDecoration(
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: AuroraColors.paper,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.deepNavy),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
+          horizontal: AuroraSpacing.space5,
+          vertical: AuroraSpacing.space3,
         ),
       ),
       items: ItemStatus.values
           .map(
             (s) => DropdownMenuItem(
               value: s,
-              child: Text(s.label, style: AppTextStyles.bodyMedium),
+              child: Text(s.label, style: AuroraType.body),
             ),
           )
           .toList(),
@@ -802,12 +973,12 @@ class _DatePickerField extends StatelessWidget {
     return GestureDetector(
       onTap: () => _pick(context),
       child: Container(
-        height: AppSizes.inputHeight,
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
+        height: 48.0,
+        padding: const EdgeInsets.symmetric(horizontal: AuroraSpacing.space5),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: AppColors.border),
+          color: AuroraColors.paper,
+          borderRadius: AuroraRadius.xl,
+          border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(
           children: [
@@ -815,16 +986,16 @@ class _DatePickerField extends StatelessWidget {
               child: Text(
                 _display,
                 style: value != null
-                    ? AppTextStyles.bodyMedium
-                    : AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textDisabled,
+                    ? AuroraType.body
+                    : AuroraType.body.copyWith(
+                        color: AuroraColors.inkTertiary,
                       ),
               ),
             ),
             const Icon(
               Icons.calendar_today_outlined,
               size: 18,
-              color: AppColors.textSecondary,
+              color: AuroraColors.inkSecondary,
             ),
           ],
         ),
@@ -843,7 +1014,7 @@ class _DatePickerField extends StatelessWidget {
       lastDate: DateTime(2100),
       builder: (context, child) => Theme(
         data: ThemeData.light().copyWith(
-          colorScheme: const ColorScheme.light(primary: AppColors.deepNavy),
+          colorScheme: const ColorScheme.light(primary: AuroraColors.ink),
         ),
         child: child!,
       ),

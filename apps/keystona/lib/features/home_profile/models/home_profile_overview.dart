@@ -10,6 +10,7 @@ class HomeProfileOverview {
     required this.systemCount,
     required this.systemsNearingEndOfLife,
     required this.applianceCount,
+    this.exteriorPhotoSignedUrl,
   });
 
   /// The user's property record.
@@ -28,4 +29,8 @@ class HomeProfileOverview {
 
   /// Total active appliances.
   final int applianceCount;
+
+  /// Time-limited signed URL for the property's exterior cover photo.
+  /// Null when no photo has been uploaded yet.
+  final String? exteriorPhotoSignedUrl;
 }

@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Empty state shown when the user has no emergency contacts yet.
-///
-/// Copy: "Add your emergency contacts"
-/// Subtitle: "Save your plumbers, electricians, and other contractors
-///            so they're ready when you need them."
 class ContactsEmptyState extends StatelessWidget {
   const ContactsEmptyState({super.key, required this.onAddContact});
 
@@ -18,48 +15,60 @@ class ContactsEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.xl),
+        padding: const EdgeInsets.symmetric(horizontal: AuroraSpacing.space10),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: AppSizes.iconXl + AppSizes.xl,
-              height: AppSizes.iconXl + AppSizes.xl,
+              width: 72,
+              height: 72,
               decoration: BoxDecoration(
-                color: AppColors.deepNavy.withValues(alpha: 0.08),
+                color: AuroraColors.ink.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.contacts_outlined,
-                size: AppSizes.iconXl,
-                color: AppColors.deepNavy,
+                size: 40,
+                color: AuroraColors.ink,
               ),
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space9),
             Text(
               'Add your emergency contacts',
-              style: AppTextStyles.h3,
+              style: AuroraType.h3,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             Text(
               'Save your plumbers, electricians, and other contractors so they\'re ready when you need them.',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+              style: AuroraType.body.copyWith(
+                color: AuroraColors.inkSecondary,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.xl),
-            FilledButton.icon(
-              onPressed: onAddContact,
-              icon: const Icon(Icons.add, size: AppSizes.iconSm),
-              label: const Text('Add Contact'),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.deepNavy,
-                foregroundColor: AppColors.textInverse,
-                minimumSize: const Size(double.infinity, AppSizes.buttonHeight),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+            const SizedBox(height: AuroraSpacing.space10),
+            GestureDetector(
+              onTap: onAddContact,
+              child: Container(
+                width: double.infinity,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AuroraColors.ink,
+                  borderRadius: AuroraRadius.sm,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.add, size: 16, color: AuroraColors.paper),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Add Contact',
+                      style: AuroraType.body.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AuroraColors.paper,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

@@ -3,16 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../router/app_router.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_sizes.dart';
-import '../theme/app_text_styles.dart';
+import '../theme/aurora_colors.dart';
+import '../theme/aurora_radius.dart';
+import '../theme/aurora_spacing.dart';
+import '../theme/aurora_typography.dart';
 import '../../features/subscription/providers/subscription_provider.dart';
 
-/// Displays a contextual banner at the top of the Home Profile screen.
+/// Contextual banner displayed at the top of the Home Profile screen.
 ///
 /// Two states:
-/// - **Trial banner**: gold background — shown when trial ends in <= 5 days.
-/// - **Grace banner**: amber background — shown during the 14-day grace period.
+/// - **Trial banner**: coral background — shown when trial ends in <= 5 days.
+/// - **Grace banner**: yellowDim background — shown during the 14-day grace period.
 ///
 /// Dismissible per session (the banner hides for the current app session only;
 /// no persistence). Returns [SizedBox.shrink] when no banner is needed or while
@@ -73,46 +74,62 @@ class _TrialEndingBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSizes.md),
+      margin: const EdgeInsets.only(bottom: AuroraSpacing.space7),
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
+        horizontal: AuroraSpacing.screenPadH,
+        vertical: AuroraSpacing.space3,
       ),
-      decoration: BoxDecoration(
-        color: AppColors.goldAccent,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+      decoration: const BoxDecoration(
+        color: AuroraColors.coral,
+        borderRadius: AuroraRadius.lg,
       ),
       child: Row(
         children: [
+          // PRO badge in lime JetBrains Mono
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: const BoxDecoration(
+              color: AuroraColors.lime,
+              borderRadius: AuroraRadius.xs,
+            ),
+            child: Text(
+              'PRO',
+              style: AuroraType.labelSm.copyWith(
+                color: AuroraColors.limeDeep,
+              ),
+            ),
+          ),
+          const SizedBox(width: AuroraSpacing.space3),
           Expanded(
             child: Text(
-              'Your Premium trial ends in $daysRemaining day${daysRemaining == 1 ? '' : 's'}.',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.deepNavy,
+              'Trial ends in $daysRemaining day${daysRemaining == 1 ? '' : 's'}.',
+              style: AuroraType.body.copyWith(
+                color: Colors.white,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
-          const SizedBox(width: AppSizes.sm),
+          const SizedBox(width: AuroraSpacing.space3),
+          // GhostButton-style link — white text on coral
           GestureDetector(
             onTap: onView,
             child: Text(
               'View',
-              style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.deepNavy,
+              style: AuroraType.bodySm.copyWith(
+                color: Colors.white,
                 fontWeight: FontWeight.w700,
                 decoration: TextDecoration.underline,
-                decorationColor: AppColors.deepNavy,
+                decorationColor: Colors.white,
               ),
             ),
           ),
-          const SizedBox(width: AppSizes.sm),
+          const SizedBox(width: AuroraSpacing.space3),
           GestureDetector(
             onTap: onDismiss,
             child: Icon(
               Icons.close,
-              size: AppSizes.iconSm,
-              color: AppColors.deepNavy.withValues(alpha: 0.7),
+              size: 16,
+              color: Colors.white.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -134,55 +151,64 @@ class _GraceBanner extends StatelessWidget {
   final VoidCallback onDismiss;
   final VoidCallback onUpgrade;
 
-  // Amber background — Bootstrap-style warning palette, not a hardcoded brand color.
-  static const _background = Color(0xFFFFF3CD);
-  static const _foreground = Color(0xFF856404);
-
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSizes.md),
+      margin: const EdgeInsets.only(bottom: AuroraSpacing.space7),
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
+        horizontal: AuroraSpacing.screenPadH,
+        vertical: AuroraSpacing.space3,
       ),
       decoration: BoxDecoration(
-        color: _background,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: _foreground.withValues(alpha: 0.3)),
+        color: AuroraColors.coralDim,
+        borderRadius: AuroraRadius.lg,
+        border: Border.all(color: AuroraColors.coral.withValues(alpha: 0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.warning_amber_rounded, size: 18, color: _foreground),
-          const SizedBox(width: AppSizes.xs),
+          // PRO badge in lime JetBrains Mono
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: const BoxDecoration(
+              color: AuroraColors.lime,
+              borderRadius: AuroraRadius.xs,
+            ),
+            child: Text(
+              'PRO',
+              style: AuroraType.labelSm.copyWith(
+                color: AuroraColors.limeDeep,
+              ),
+            ),
+          ),
+          const SizedBox(width: AuroraSpacing.space3),
           Expanded(
             child: Text(
               '$daysUntilArchive document${daysUntilArchive == 1 ? '' : 's'} '
               'will be archived in $daysUntilArchive days.',
-              style: AppTextStyles.bodyMedium.copyWith(color: _foreground),
+              style: AuroraType.body.copyWith(color: AuroraColors.coral),
             ),
           ),
-          const SizedBox(width: AppSizes.sm),
+          const SizedBox(width: AuroraSpacing.space3),
           GestureDetector(
             onTap: onUpgrade,
             child: Text(
               'Upgrade',
-              style: AppTextStyles.labelMedium.copyWith(
-                color: _foreground,
+              style: AuroraType.bodySm.copyWith(
+                color: AuroraColors.coral,
                 fontWeight: FontWeight.w700,
                 decoration: TextDecoration.underline,
-                decorationColor: _foreground,
+                decorationColor: AuroraColors.coral,
               ),
             ),
           ),
-          const SizedBox(width: AppSizes.sm),
+          const SizedBox(width: AuroraSpacing.space3),
           GestureDetector(
             onTap: onDismiss,
             child: Icon(
               Icons.close,
-              size: AppSizes.iconSm,
-              color: _foreground.withValues(alpha: 0.7),
+              size: 16,
+              color: AuroraColors.coral.withValues(alpha: 0.7),
             ),
           ),
         ],

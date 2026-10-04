@@ -1,15 +1,16 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../models/project.dart';
+import '../../../core/theme/aurora_radius.dart';
 
-/// Card displaying a single project in the list.
+/// Card for a single project — board/list shared component.
 ///
-/// Shows: name, project type, status badge, budget summary, date range.
-/// Cover photo support wired for #5.6 (no photo = gradient placeholder).
+/// Active projects: dark gradient hero + body.
+/// Completed projects: simplified warm-fill hero, dashed olive border, faded.
 class ProjectCard extends StatelessWidget {
   const ProjectCard({
     super.key,
@@ -20,138 +21,418 @@ class ProjectCard extends StatelessWidget {
   final Project project;
   final VoidCallback onTap;
 
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        ),
-        clipBehavior: Clip.hardEdge,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Cover photo / placeholder ──────────────────────────────
-            _CoverPhoto(coverPhotoPath: project.coverPhotoPath),
+  static const Map<String, String> _emoji = {
+    'kitchen_remodel':    '🍳',
+    'bathroom_remodel':   '🛁',
+    'deck_build':         '🪵',
+    'addition':           '🏗️',
+    'roofing':            '🏠',
+    'flooring':           '🪟',
+    'painting':           '🎨',
+    'landscaping':        '🌿',
+    'hvac_replacement':   '❄️',
+    'plumbing':           '🔧',
+    'electrical':         '⚡',
+    'general_renovation': '🔨',
+    'other':              '🏡',
+  };
 
-            // ── Card content ───────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.all(AppSizes.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Name + status chip.
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          project.name,
-                          style: AppTextStyles.bodyLargeSemibold,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: AppSizes.sm),
-                      _StatusChip(status: project.status),
-                    ],
-                  ),
-                  const SizedBox(height: AppSizes.xs),
-                  // Project type.
-                  Text(
-                    project.projectType.projectTypeLabel,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  // Budget row (only when budget is set).
-                  if (project.estimatedBudget != null) ...[
-                    const SizedBox(height: AppSizes.xs),
-                    _BudgetRow(project: project),
-                  ],
-                  // Date range (only when dates are set).
-                  if (project.plannedStartDate != null ||
-                      project.plannedEndDate != null) ...[
-                    const SizedBox(height: AppSizes.xs),
-                    _DateRow(project: project),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Cover photo ──────────────────────────────────────────────────────────────
-
-class _CoverPhoto extends StatelessWidget {
-  const _CoverPhoto({required this.coverPhotoPath});
-
-  final String? coverPhotoPath;
-
-  @override
-  Widget build(BuildContext context) {
-    // [#5.6] When cover_photo_path is set, load from Supabase Storage.
-    // For now, show a Deep Navy gradient placeholder.
-    return Container(
-      height: 100,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.deepNavy,
-            AppColors.deepNavy.withValues(alpha: 0.7),
-          ],
-        ),
-      ),
-      child: const Center(
-        child: Icon(
-          Icons.construction_outlined,
-          color: Colors.white38,
-          size: AppSizes.iconXl,
-        ),
-      ),
-    );
-  }
-}
-
-// ── Status chip ───────────────────────────────────────────────────────────────
-
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.status});
-
-  final String status;
-
-  Color get _chipColor => switch (status) {
-        'in_progress' => AppColors.success,
-        'on_hold'     => AppColors.warning,
-        'completed'   => AppColors.deepNavy,
-        'cancelled'   => AppColors.error,
-        _             => AppColors.gray400,
+  static Color _statusColor(String status) => switch (status) {
+        'in_progress' => AuroraColors.cobalt,
+        'planning'    => AuroraColors.yellow,
+        'on_hold'     => AuroraColors.yellow,
+        'completed'   => AuroraColors.lime,
+        'cancelled'   => const Color(0xFFE0DFEA),
+        _             => AuroraColors.inkBorder,
       };
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.sm,
-        vertical: 3,
-      ),
-      decoration: BoxDecoration(
-        color: _chipColor.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-      ),
-      child: Text(
-        status.statusLabel,
-        style: AppTextStyles.labelSmall.copyWith(color: _chipColor),
+    final isCompleted = project.status == 'completed';
+    final emoji = _emoji[project.projectType] ?? '🏠';
+
+    final isCancelled = project.status == 'cancelled';
+
+    if (isCompleted || isCancelled) {
+      final borderColor = isCompleted ? AuroraColors.lime : const Color(0xFFE0DFEA);
+      return Opacity(
+        opacity: isCompleted ? 0.72 : 0.55,
+        child: GestureDetector(
+          onTap: onTap,
+          child: CustomPaint(
+            foregroundPainter: _DashedBorderPainter(
+              color: borderColor,
+              radius: 12,
+              strokeWidth: 1.5,
+              dashLength: 5,
+              gapLength: 4,
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AuroraColors.paper,
+                borderRadius: AuroraRadius.md,
+              ),
+              child: _CondensedRow(
+                project: project,
+                icon: isCompleted ? Icons.check : Icons.close,
+                iconColor: isCompleted ? AuroraColors.lime : const Color(0xFF9D9BB0),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final borderColor = _statusColor(project.status);
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AuroraColors.paper,
+          borderRadius: AuroraRadius.lg,
+          border: Border.all(color: borderColor, width: 3),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(11),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _HeroSection(
+                project: project,
+                emoji: emoji,
+              ),
+              _CardBody(project: project),
+            ],
+          ),
+        ),
       ),
     );
+  }
+}
+
+// ── Dashed border painter ─────────────────────────────────────────────────────
+
+class _DashedBorderPainter extends CustomPainter {
+  const _DashedBorderPainter({
+    required this.color,
+    required this.radius,
+    required this.strokeWidth,
+    required this.dashLength,
+    required this.gapLength,
+  });
+
+  final Color color;
+  final double radius;
+  final double strokeWidth;
+  final double dashLength;
+  final double gapLength;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(
+        strokeWidth / 2,
+        strokeWidth / 2,
+        size.width - strokeWidth,
+        size.height - strokeWidth,
+      ),
+      Radius.circular(radius),
+    );
+
+    final path = Path()..addRRect(rrect);
+    final metrics = path.computeMetrics();
+    for (final metric in metrics) {
+      double distance = 0;
+      while (distance < metric.length) {
+        canvas.drawPath(
+          metric.extractPath(distance, distance + dashLength),
+          paint,
+        );
+        distance += dashLength + gapLength;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedBorderPainter old) =>
+      old.color != color ||
+      old.radius != radius ||
+      old.strokeWidth != strokeWidth ||
+      old.dashLength != dashLength ||
+      old.gapLength != gapLength;
+}
+
+// ── Hero ─────────────────────────────────────────────────────────────────────
+
+class _HeroSection extends StatelessWidget {
+  const _HeroSection({required this.project, required this.emoji});
+
+  final Project project;
+  final String emoji;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 80,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AuroraColors.ink, Color(0xFF3D3028)],
+        ),
+      ),
+      child: Stack(
+        children: [
+          // Emoji — top-right, 60% opacity
+          Positioned(
+            top: 10,
+            right: 12,
+            child: Opacity(
+              opacity: 0.6,
+              child: Text(emoji, style: const TextStyle(fontSize: 28)),
+            ),
+          ),
+          // Project name — bottom-left, h1 bold
+          Positioned(
+            bottom: 12,
+            left: 14,
+            right: 54,
+            child: Text(
+              project.name,
+              style: AuroraType.h2.copyWith(
+                fontSize: 17,
+                color: AuroraColors.paper,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Condensed row (completed + cancelled) ─────────────────────────────────────
+
+class _CondensedRow extends StatelessWidget {
+  const _CondensedRow({
+    required this.project,
+    required this.icon,
+    required this.iconColor,
+  });
+
+  final Project project;
+  final IconData icon;
+  final Color iconColor;
+
+  static String _compact(double v) {
+    if (v >= 1000) {
+      final k = v / 1000;
+      return '\$${k % 1 == 0 ? k.toInt().toString() : k.toStringAsFixed(1)}k';
+    }
+    return '\$${NumberFormat('#,###').format(v.toInt())}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = <String>[];
+    if (project.estimatedBudget != null) {
+      parts.add(_compact(project.estimatedBudget!));
+    }
+    if (project.plannedEndDate != null) {
+      parts.add(DateFormat("MMM ''yy").format(project.plannedEndDate!));
+    }
+    parts.add(project.workType.workTypeLabel);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(icon, size: 14, color: iconColor),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  project.name,
+                  style: AuroraType.h3.copyWith(
+                    fontSize: 14,
+                    color: AuroraColors.ink,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (parts.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    parts.join(' · '),
+                    style: AuroraType.label.copyWith(
+                      color: AuroraColors.inkSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Card body ─────────────────────────────────────────────────────────────────
+
+class _CardBody extends StatelessWidget {
+  const _CardBody({required this.project});
+
+  final Project project;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasPhases = project.phaseCount > 0;
+    final hasBudget = project.estimatedBudget != null;
+    final dotCount = math.min(project.phaseCount, 7);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (hasPhases) ...[
+            _PhaseDots(
+              count: dotCount,
+              currentPhaseIndex: project.currentPhaseIndex != null
+                  ? math.min(project.currentPhaseIndex!, dotCount - 1)
+                  : null,
+              currentPhaseName: project.currentPhaseName,
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (hasBudget) ...[
+            _BudgetRow(project: project),
+            const SizedBox(height: 10),
+          ],
+          _FooterRow(project: project),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Phase dots ────────────────────────────────────────────────────────────────
+
+enum _DotState { completed, active, upcoming }
+
+class _PhaseDots extends StatelessWidget {
+  const _PhaseDots({
+    required this.count,
+    this.currentPhaseIndex,
+    this.currentPhaseName,
+  });
+
+  final int count;
+  final int? currentPhaseIndex;
+  final String? currentPhaseName;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasProgress = currentPhaseIndex != null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            for (int i = 0; i < count; i++) ...[
+              if (i > 0)
+                Expanded(
+                  child: Container(
+                    height: 2,
+                    color: hasProgress && i <= currentPhaseIndex!
+                        ? AuroraColors.lime.withValues(alpha: 0.65)
+                        : const Color(0xFFEEEDF2),
+                  ),
+                ),
+              _PhaseDot(
+                state: !hasProgress
+                    ? _DotState.upcoming
+                    : i < currentPhaseIndex!
+                        ? _DotState.completed
+                        : i == currentPhaseIndex!
+                            ? _DotState.active
+                            : _DotState.upcoming,
+              ),
+            ],
+          ],
+        ),
+        if (hasProgress && currentPhaseName != null) ...[
+          const SizedBox(height: 5),
+          Text(
+            'Phase ${currentPhaseIndex! + 1} of $count · $currentPhaseName',
+            style: AuroraType.label.copyWith(
+              fontSize: 10,
+              color: AuroraColors.inkSecondary,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _PhaseDot extends StatelessWidget {
+  const _PhaseDot({required this.state});
+
+  final _DotState state;
+
+  @override
+  Widget build(BuildContext context) {
+    return switch (state) {
+      _DotState.completed => Container(
+          width: 9,
+          height: 9,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: AuroraColors.lime,
+          ),
+        ),
+      _DotState.active => Container(
+          width: 11,
+          height: 11,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AuroraColors.coral,
+            boxShadow: [
+              BoxShadow(
+                color: AuroraColors.coral.withValues(alpha: 0.45),
+                blurRadius: 6,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+        ),
+      _DotState.upcoming => Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: const Color(0xFFE0DFEA), width: 1.5),
+          ),
+        ),
+    };
   }
 }
 
@@ -162,42 +443,43 @@ class _BudgetRow extends StatelessWidget {
 
   final Project project;
 
+  static String _compact(double v) {
+    if (v >= 1000) {
+      final k = v / 1000;
+      return '\$${k % 1 == 0 ? k.toInt().toString() : k.toStringAsFixed(1)}k';
+    }
+    return '\$${NumberFormat('#,###').format(v.toInt())}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final estimated = project.estimatedBudget!;
     final spent = project.actualSpent;
     final pct = estimated > 0 ? (spent / estimated).clamp(0.0, 1.0) : 0.0;
-    final fmt = NumberFormat.currency(symbol: '\$', decimalDigits: 0);
+    final isOver = pct >= 1.0;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Row(
-          children: [
-            Text(
-              '${fmt.format(spent)} of ${fmt.format(estimated)}',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              '${(pct * 100).toStringAsFixed(0)}%',
-              style: AppTextStyles.labelSmall.copyWith(
-                color: pct >= 1.0 ? AppColors.error : AppColors.textSecondary,
-              ),
-            ),
-          ],
+        Text(
+          '\$${NumberFormat('#,###').format(spent.toInt())} / ${_compact(estimated)}',
+          style: AuroraType.label.copyWith(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AuroraColors.ink,
+          ),
         ),
-        const SizedBox(height: 4),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-          child: LinearProgressIndicator(
-            value: pct,
-            minHeight: 5,
-            backgroundColor: AppColors.gray200,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              pct >= 1.0 ? AppColors.error : AppColors.deepNavy,
+        const SizedBox(width: 10),
+        Expanded(
+          child: ClipRRect(
+            borderRadius: AuroraRadius.full,
+            child: LinearProgressIndicator(
+              value: pct,
+              minHeight: 4,
+              backgroundColor: const Color(0xFFEEEDF2),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isOver ? AuroraColors.coral : AuroraColors.lime,
+              ),
             ),
           ),
         ),
@@ -206,44 +488,80 @@ class _BudgetRow extends StatelessWidget {
   }
 }
 
-// ── Date row ──────────────────────────────────────────────────────────────────
+// ── Footer row ────────────────────────────────────────────────────────────────
 
-class _DateRow extends StatelessWidget {
-  const _DateRow({required this.project});
+class _FooterRow extends StatelessWidget {
+  const _FooterRow({required this.project});
 
   final Project project;
 
-  static final _fmt = DateFormat('MMM d, yyyy');
+  static String _dateRange(DateTime? start, DateTime? end) {
+    if (start == null && end == null) return '';
+    final mFmt = DateFormat('MMM');
+    final yFmt = DateFormat("''yy");
+    if (start != null && end != null) {
+      if (start.year == end.year) {
+        return '${mFmt.format(start)} – ${mFmt.format(end)} ${yFmt.format(end)}';
+      }
+      return '${mFmt.format(start)} ${yFmt.format(start)} – ${mFmt.format(end)} ${yFmt.format(end)}';
+    }
+    if (start != null) return 'From ${mFmt.format(start)} ${yFmt.format(start)}';
+    return 'Until ${mFmt.format(end!)} ${yFmt.format(end)}';
+  }
 
   @override
   Widget build(BuildContext context) {
-    final start = project.plannedStartDate;
-    final end = project.plannedEndDate;
-
-    String text;
-    if (start != null && end != null) {
-      text = '${_fmt.format(start)} – ${_fmt.format(end)}';
-    } else if (start != null) {
-      text = 'Starts ${_fmt.format(start)}';
-    } else {
-      text = 'Ends ${_fmt.format(end!)}';
-    }
+    final dateStr = _dateRange(project.plannedStartDate, project.plannedEndDate);
 
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Icon(
-          Icons.calendar_today_outlined,
-          size: AppSizes.iconSm,
-          color: AppColors.textSecondary,
-        ),
-        const SizedBox(width: 4),
-        Text(
-          text,
-          style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondary,
+        _WorkTypePill(workType: project.workType),
+        if (dateStr.isNotEmpty) ...[
+          const Spacer(),
+          Text(
+            dateStr,
+            style: AuroraType.label.copyWith(
+              color: AuroraColors.inkSecondary,
+            ),
           ),
-        ),
+        ],
       ],
+    );
+  }
+}
+
+// ── Work-type pill ────────────────────────────────────────────────────────────
+
+class _WorkTypePill extends StatelessWidget {
+  const _WorkTypePill({required this.workType});
+
+  final String workType;
+
+  Color get _color => switch (workType) {
+        'diy'        => AuroraColors.lime,
+        'contractor' => AuroraColors.cobalt,
+        'mixed'      => AuroraColors.yellow,
+        _            => AuroraColors.inkTertiary,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _color;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+        borderRadius: AuroraRadius.xs,
+      ),
+      child: Text(
+        workType.workTypeLabel.toUpperCase(),
+        style: AuroraType.labelSm.copyWith(
+          color: color,
+          letterSpacing: 1.0,
+        ),
+      ),
     );
   }
 }

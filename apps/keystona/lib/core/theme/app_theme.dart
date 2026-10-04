@@ -1,366 +1,363 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-import 'app_colors.dart';
-import 'app_sizes.dart';
-import 'app_text_styles.dart';
+import 'aurora_colors.dart';
+import 'aurora_radius.dart';
+import 'aurora_typography.dart';
 
-/// Keystona Material 3 theme.
+/// Keystona Material 3 theme — Aurora Design System v2.0.
 ///
 /// Wire in [MaterialApp.theme] via [AppTheme.light].
-///
-/// Rules:
-/// - No hardcoded hex values — always reference [AppColors].
-/// - No inline TextStyle definitions — always reference [AppTextStyles].
-/// - No raw numeric sizes — always reference [AppSizes].
 abstract final class AppTheme {
   static ThemeData get light {
     return ThemeData(
       useMaterial3: true,
+      brightness: Brightness.light,
 
-      // ─── Color Scheme ──────────────────────────────────────────────────────
-      colorScheme: const ColorScheme(
-        brightness: Brightness.light,
-        primary: AppColors.deepNavy,
-        onPrimary: AppColors.textInverse,
-        primaryContainer: AppColors.infoLight,
-        onPrimaryContainer: AppColors.deepNavy,
-        secondary: AppColors.goldAccent,
-        onSecondary: AppColors.textInverse,
-        secondaryContainer: AppColors.warningLight,
-        onSecondaryContainer: AppColors.gray900,
-        tertiary: AppColors.success,
-        onTertiary: AppColors.textInverse,
-        tertiaryContainer: AppColors.successLight,
-        onTertiaryContainer: AppColors.gray900,
-        error: AppColors.error,
-        onError: AppColors.textInverse,
-        errorContainer: AppColors.errorLight,
-        onErrorContainer: AppColors.error,
-        surface: AppColors.warmOffWhite,
-        onSurface: AppColors.textPrimary,
-        surfaceContainerHighest: AppColors.surfaceVariant,
-        onSurfaceVariant: AppColors.textSecondary,
-        outline: AppColors.border,
-        outlineVariant: AppColors.divider,
-        shadow: AppColors.gray900,
-        scrim: AppColors.gray900,
-        inverseSurface: AppColors.gray900,
-        onInverseSurface: AppColors.textInverse,
-        inversePrimary: AppColors.goldAccent,
+      // ─── Canvas ─────────────────────────────────────────────────────────────
+      scaffoldBackgroundColor: AuroraColors.paper,
+      canvasColor: AuroraColors.paper,
+
+      // ─── Color Scheme ────────────────────────────────────────────────────────
+      colorScheme: const ColorScheme.light(
+        primary: AuroraColors.coral,
+        onPrimary: Color(0xFFFFFFFF),
+        primaryContainer: AuroraColors.coralDim,
+        onPrimaryContainer: AuroraColors.coralDeep,
+        secondary: AuroraColors.cobalt,
+        onSecondary: Color(0xFFFFFFFF),
+        secondaryContainer: AuroraColors.cobaltDim,
+        onSecondaryContainer: AuroraColors.cobaltDeep,
+        tertiary: AuroraColors.lime,
+        onTertiary: AuroraColors.ink,
+        tertiaryContainer: AuroraColors.limeDim,
+        onTertiaryContainer: AuroraColors.limeDeep,
+        error: AuroraColors.coral,
+        onError: Color(0xFFFFFFFF),
+        errorContainer: AuroraColors.coralDim,
+        onErrorContainer: AuroraColors.coralDeep,
+        surface: AuroraColors.paper,
+        onSurface: AuroraColors.ink,
+        surfaceContainerHighest: AuroraColors.butter,
+        onSurfaceVariant: AuroraColors.inkSecondary,
+        outline: AuroraColors.inkBorder,
+        outlineVariant: AuroraColors.inkBorderStrong,
+        shadow: AuroraColors.ink,
+        scrim: AuroraColors.ink,
+        inverseSurface: AuroraColors.ink,
+        onInverseSurface: Color(0xFFFFFFFF),
+        inversePrimary: AuroraColors.lime,
       ),
 
-      // ─── Scaffold ──────────────────────────────────────────────────────────
-      scaffoldBackgroundColor: AppColors.warmOffWhite,
+      // ─── Page Transitions ────────────────────────────────────────────────────
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.android: ZoomPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: ZoomPageTransitionsBuilder(),
+          TargetPlatform.linux: ZoomPageTransitionsBuilder(),
+          TargetPlatform.windows: ZoomPageTransitionsBuilder(),
+        },
+      ),
 
-      // ─── Text Theme ────────────────────────────────────────────────────────
-      // Maps Keystona named styles to Material text theme roles.
+      // ─── Text Theme ──────────────────────────────────────────────────────────
       textTheme: TextTheme(
-        displayLarge: AppTextStyles.displayLarge,
-        displayMedium: AppTextStyles.displayMedium,
-        displaySmall: AppTextStyles.h1,
-        headlineLarge: AppTextStyles.h1,
-        headlineMedium: AppTextStyles.h2,
-        headlineSmall: AppTextStyles.h3,
-        titleLarge: AppTextStyles.h3,
-        titleMedium: AppTextStyles.h4,
-        titleSmall: AppTextStyles.bodyLargeSemibold,
-        bodyLarge: AppTextStyles.bodyLarge,
-        bodyMedium: AppTextStyles.bodyMedium,
-        bodySmall: AppTextStyles.bodySmall,
-        labelLarge: AppTextStyles.labelLarge,
-        labelMedium: AppTextStyles.labelMedium,
-        labelSmall: AppTextStyles.labelSmall,
+        displayLarge: AuroraType.displayXl,
+        displayMedium: AuroraType.displayLg,
+        displaySmall: AuroraType.h1,
+        headlineLarge: AuroraType.h1,
+        headlineMedium: AuroraType.h2,
+        headlineSmall: AuroraType.h3,
+        titleLarge: AuroraType.h3,
+        titleMedium: AuroraType.bodyLg,
+        titleSmall: AuroraType.body,
+        bodyLarge: AuroraType.bodyLg,
+        bodyMedium: AuroraType.body,
+        bodySmall: AuroraType.bodySm,
+        labelLarge: AuroraType.label,
+        labelMedium: AuroraType.label,
+        labelSmall: AuroraType.labelSm,
       ),
 
-      // ─── AppBar ────────────────────────────────────────────────────────────
+      // ─── AppBar ──────────────────────────────────────────────────────────────
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.warmOffWhite,
-        foregroundColor: AppColors.deepNavy,
+        backgroundColor: AuroraColors.paper,
+        foregroundColor: AuroraColors.ink,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: AppTextStyles.h2.copyWith(color: AppColors.deepNavy),
-        iconTheme: const IconThemeData(
-          color: AppColors.deepNavy,
-          size: AppSizes.iconMd,
-        ),
-        actionsIconTheme: const IconThemeData(
-          color: AppColors.deepNavy,
-          size: AppSizes.iconMd,
-        ),
+        titleTextStyle: AuroraType.h2.copyWith(color: AuroraColors.ink),
+        iconTheme: const IconThemeData(color: AuroraColors.ink, size: 24),
+        actionsIconTheme: const IconThemeData(color: AuroraColors.ink, size: 24),
       ),
 
-      // ─── Bottom Navigation Bar ─────────────────────────────────────────────
-      bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: AppColors.surface,
-        selectedItemColor: AppColors.deepNavy,
-        unselectedItemColor: AppColors.gray400,
-        selectedLabelStyle: AppTextStyles.labelSmall,
-        unselectedLabelStyle: AppTextStyles.labelSmall,
+      // ─── Bottom Navigation Bar ────────────────────────────────────────────────
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: AuroraColors.paper,
+        selectedItemColor: AuroraColors.coral,
+        unselectedItemColor: AuroraColors.inkTertiary,
         showSelectedLabels: true,
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
+        selectedLabelStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
       ),
 
-      // ─── Navigation Bar (Material 3) ───────────────────────────────────────
+      // ─── Navigation Bar (Material 3) ──────────────────────────────────────────
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.deepNavy.withValues(alpha: 0.12),
+        backgroundColor: AuroraColors.paper,
+        indicatorColor: AuroraColors.coralDim,
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const IconThemeData(
-              color: AppColors.deepNavy,
-              size: AppSizes.iconMd,
-            );
+            return const IconThemeData(color: AuroraColors.coral, size: 24);
           }
-          return const IconThemeData(
-            color: AppColors.gray400,
-            size: AppSizes.iconMd,
-          );
+          return const IconThemeData(color: AuroraColors.inkTertiary, size: 24);
         }),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return AppTextStyles.labelSmall
-                .copyWith(color: AppColors.deepNavy);
+            return const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: AuroraColors.coral,
+            );
           }
-          return AppTextStyles.labelSmall.copyWith(color: AppColors.gray400);
+          return const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: AuroraColors.inkTertiary,
+          );
         }),
         elevation: 0,
       ),
 
-      // ─── Elevated Button ───────────────────────────────────────────────────
+      // ─── Elevated Button ──────────────────────────────────────────────────────
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.deepNavy,
-          foregroundColor: AppColors.textInverse,
-          disabledBackgroundColor: AppColors.gray300,
-          disabledForegroundColor: AppColors.textDisabled,
-          textStyle: AppTextStyles.button.copyWith(color: AppColors.textInverse),
-          minimumSize: const Size(double.infinity, AppSizes.buttonHeight),
-          padding: AppPadding.button,
-          shape: RoundedRectangleBorder(
-            borderRadius: AppRadius.sm,
-          ),
+          backgroundColor: AuroraColors.coral,
+          foregroundColor: const Color(0xFFFFFFFF),
+          disabledBackgroundColor: AuroraColors.coralDim,
+          disabledForegroundColor: AuroraColors.coral,
+          textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+          minimumSize: const Size(double.infinity, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.full),
           elevation: 0,
         ),
       ),
 
-      // ─── Outlined Button ───────────────────────────────────────────────────
+      // ─── Filled Button ────────────────────────────────────────────────────────
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: AuroraColors.cobalt,
+          foregroundColor: const Color(0xFFFFFFFF),
+          disabledBackgroundColor: AuroraColors.cobaltDim,
+          disabledForegroundColor: AuroraColors.cobalt,
+          textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+          minimumSize: const Size(double.infinity, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.full),
+          elevation: 0,
+        ),
+      ),
+
+      // ─── Outlined Button ──────────────────────────────────────────────────────
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.deepNavy,
-          disabledForegroundColor: AppColors.textDisabled,
-          textStyle: AppTextStyles.button.copyWith(color: AppColors.deepNavy),
-          minimumSize: const Size(double.infinity, AppSizes.buttonHeight),
-          padding: AppPadding.button,
-          side: const BorderSide(color: AppColors.deepNavy, width: 1.5),
-          shape: RoundedRectangleBorder(
-            borderRadius: AppRadius.sm,
-          ),
+          foregroundColor: AuroraColors.ink,
+          disabledForegroundColor: AuroraColors.inkTertiary,
+          textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+          minimumSize: const Size(double.infinity, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 11.5),
+          side: const BorderSide(color: AuroraColors.inkBorderStrong, width: 1.5),
+          shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.full),
         ),
       ),
 
-      // ─── Text Button ───────────────────────────────────────────────────────
+      // ─── Text Button ─────────────────────────────────────────────────────────
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.deepNavy,
-          disabledForegroundColor: AppColors.textDisabled,
-          textStyle: AppTextStyles.button.copyWith(color: AppColors.deepNavy),
-          padding: AppPadding.button,
-          shape: RoundedRectangleBorder(
-            borderRadius: AppRadius.sm,
-          ),
+          foregroundColor: AuroraColors.coral,
+          disabledForegroundColor: AuroraColors.inkTertiary,
+          textStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.md),
         ),
       ),
 
-      // ─── Card ──────────────────────────────────────────────────────────────
-      cardTheme: CardThemeData(
-        color: AppColors.surface,
+      // ─── Card ─────────────────────────────────────────────────────────────────
+      cardTheme: const CardThemeData(
+        color: AuroraColors.paper,
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: AppRadius.md,
-          side: const BorderSide(color: AppColors.border, width: 1),
-        ),
         margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: AuroraRadius.xl,
+          side: BorderSide(color: AuroraColors.inkBorder, width: 1),
+        ),
       ),
 
-      // ─── Input Decoration ──────────────────────────────────────────────────
+      // ─── Input Decoration ─────────────────────────────────────────────────────
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.gray50,
-        labelStyle: AppTextStyles.labelLarge,
-        hintStyle:
-            AppTextStyles.bodyMedium.copyWith(color: AppColors.textDisabled),
-        floatingLabelStyle:
-            AppTextStyles.labelMedium.copyWith(color: AppColors.deepNavy),
-        errorStyle:
-            AppTextStyles.caption.copyWith(color: AppColors.error),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: 14,
+        fillColor: AuroraColors.paper,
+        labelStyle: AuroraType.label,
+        hintStyle: AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
+        floatingLabelStyle: AuroraType.label.copyWith(color: AuroraColors.coral),
+        errorStyle: AuroraType.bodySm.copyWith(color: AuroraColors.coral),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        border: const OutlineInputBorder(
+          borderRadius: AuroraRadius.md,
+          borderSide: BorderSide(color: AuroraColors.inkBorder, width: 1.5),
         ),
-        border: OutlineInputBorder(
-          borderRadius: AppRadius.sm,
-          borderSide: const BorderSide(color: AppColors.gray300, width: 1),
+        enabledBorder: const OutlineInputBorder(
+          borderRadius: AuroraRadius.md,
+          borderSide: BorderSide(color: AuroraColors.inkBorder, width: 1.5),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: AppRadius.sm,
-          borderSide: const BorderSide(color: AppColors.gray300, width: 1),
+        focusedBorder: const OutlineInputBorder(
+          borderRadius: AuroraRadius.md,
+          borderSide: BorderSide(color: AuroraColors.coral, width: 2),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: AppRadius.sm,
-          borderSide: const BorderSide(color: AppColors.deepNavy, width: 1.5),
+        errorBorder: const OutlineInputBorder(
+          borderRadius: AuroraRadius.md,
+          borderSide: BorderSide(color: AuroraColors.coral, width: 1.5),
         ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: AppRadius.sm,
-          borderSide: const BorderSide(color: AppColors.error, width: 1),
+        focusedErrorBorder: const OutlineInputBorder(
+          borderRadius: AuroraRadius.md,
+          borderSide: BorderSide(color: AuroraColors.coral, width: 2),
         ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: AppRadius.sm,
-          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
-        ),
-        disabledBorder: OutlineInputBorder(
-          borderRadius: AppRadius.sm,
-          borderSide: const BorderSide(color: AppColors.gray200, width: 1),
+        disabledBorder: const OutlineInputBorder(
+          borderRadius: AuroraRadius.md,
+          borderSide: BorderSide(color: AuroraColors.inkBorder, width: 1),
         ),
       ),
 
-      // ─── Divider ───────────────────────────────────────────────────────────
+      // ─── Divider ─────────────────────────────────────────────────────────────
       dividerTheme: const DividerThemeData(
-        color: AppColors.divider,
-        thickness: 1,
-        space: 1,
+        color: AuroraColors.inkBorder,
+        thickness: 0.5,
+        space: 0,
       ),
 
-      // ─── Chip ──────────────────────────────────────────────────────────────
+      // ─── Chip ─────────────────────────────────────────────────────────────────
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.gray100,
-        selectedColor: AppColors.deepNavy.withValues(alpha: 0.12),
-        disabledColor: AppColors.gray200,
-        labelStyle: AppTextStyles.labelMedium,
-        secondaryLabelStyle:
-            AppTextStyles.labelMedium.copyWith(color: AppColors.deepNavy),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.sm + AppSizes.xs, // 12px
-          vertical: AppSizes.sm - 2,              // 6px
+        backgroundColor: AuroraColors.paper,
+        selectedColor: AuroraColors.ink,
+        disabledColor: AuroraColors.butter,
+        labelStyle: AuroraType.body.copyWith(fontWeight: FontWeight.w500),
+        secondaryLabelStyle: AuroraType.body.copyWith(
+          fontWeight: FontWeight.w500,
+          color: const Color(0xFFFFFFFF),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: AppRadius.sm,
-          side: BorderSide.none,
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+        shape: const RoundedRectangleBorder(
+          borderRadius: AuroraRadius.full,
+          side: BorderSide(color: AuroraColors.inkBorder, width: 1),
         ),
         elevation: 0,
         pressElevation: 0,
       ),
 
-      // ─── List Tile ─────────────────────────────────────────────────────────
+      // ─── List Tile ────────────────────────────────────────────────────────────
       listTileTheme: ListTileThemeData(
-        tileColor: AppColors.surface,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.xs,
+        tileColor: AuroraColors.paper,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        titleTextStyle: AuroraType.body,
+        subtitleTextStyle: AuroraType.bodySm.copyWith(
+          color: AuroraColors.inkSecondary,
         ),
-        titleTextStyle: AppTextStyles.bodyMedium,
-        subtitleTextStyle:
-            AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
-        iconColor: AppColors.deepNavy,
-        minLeadingWidth: AppSizes.iconMd,
-        shape: RoundedRectangleBorder(
-          borderRadius: AppRadius.md,
-        ),
+        iconColor: AuroraColors.ink,
+        minLeadingWidth: 24,
+        shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.lg),
       ),
 
-      // ─── Icon ──────────────────────────────────────────────────────────────
-      iconTheme: const IconThemeData(
-        color: AppColors.deepNavy,
-        size: AppSizes.iconMd,
-      ),
+      // ─── Icon ─────────────────────────────────────────────────────────────────
+      iconTheme: const IconThemeData(color: AuroraColors.ink, size: 24),
 
-      // ─── Snack Bar ─────────────────────────────────────────────────────────
+      // ─── Snack Bar ────────────────────────────────────────────────────────────
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: AppColors.gray900,
-        contentTextStyle:
-            AppTextStyles.bodyMedium.copyWith(color: AppColors.textInverse),
-        actionTextColor: AppColors.goldAccent,
+        backgroundColor: AuroraColors.ink,
+        contentTextStyle: AuroraType.body.copyWith(color: const Color(0xFFFFFFFF)),
+        actionTextColor: AuroraColors.lime,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.sm),
+        shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.md),
         elevation: 4,
       ),
 
-      // ─── Dialog ────────────────────────────────────────────────────────────
+      // ─── Dialog ───────────────────────────────────────────────────────────────
       dialogTheme: DialogThemeData(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AuroraColors.paper,
         elevation: 0,
-        titleTextStyle: AppTextStyles.h3,
-        contentTextStyle: AppTextStyles.bodyMedium,
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.lg),
+        titleTextStyle: AuroraType.h2,
+        contentTextStyle: AuroraType.body,
+        shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.xl),
       ),
 
-      // ─── Bottom Sheet ──────────────────────────────────────────────────────
-      bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: AppColors.surface,
+      // ─── Bottom Sheet ─────────────────────────────────────────────────────────
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AuroraColors.paper,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(AppSizes.radiusXl),
-            topRight: Radius.circular(AppSizes.radiusXl),
+            topLeft: Radius.circular(22),
+            topRight: Radius.circular(22),
           ),
         ),
-        modalBackgroundColor: AppColors.surface,
+        modalBackgroundColor: AuroraColors.paper,
         modalElevation: 0,
       ),
 
-      // ─── Progress Indicator ────────────────────────────────────────────────
+      // ─── Progress Indicator ───────────────────────────────────────────────────
       progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: AppColors.deepNavy,
-        linearTrackColor: AppColors.gray200,
-        circularTrackColor: AppColors.gray200,
+        color: AuroraColors.coral,
+        linearTrackColor: AuroraColors.butter,
+        circularTrackColor: AuroraColors.butter,
       ),
 
-      // ─── Switch ────────────────────────────────────────────────────────────
+      // ─── Switch ───────────────────────────────────────────────────────────────
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return AppColors.surface;
+            return const Color(0xFFFFFFFF);
           }
-          return AppColors.gray400;
+          return AuroraColors.inkTertiary;
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return AppColors.deepNavy;
-          }
-          return AppColors.gray300;
+          if (states.contains(WidgetState.selected)) return AuroraColors.coral;
+          return AuroraColors.butter;
         }),
       ),
 
-      // ─── Checkbox ──────────────────────────────────────────────────────────
+      // ─── Checkbox ─────────────────────────────────────────────────────────────
       checkboxTheme: CheckboxThemeData(
         fillColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return AppColors.deepNavy;
-          }
-          return AppColors.surface;
+          if (states.contains(WidgetState.selected)) return AuroraColors.cobalt;
+          return AuroraColors.paper;
         }),
-        checkColor: WidgetStateProperty.all(AppColors.textInverse),
-        side: const BorderSide(color: AppColors.gray400, width: 1.5),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm / 2),
-        ),
+        checkColor: WidgetStateProperty.all(const Color(0xFFFFFFFF)),
+        side: const BorderSide(color: AuroraColors.inkBorder, width: 1.5),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),
 
-      // ─── Tab Bar ───────────────────────────────────────────────────────────
-      tabBarTheme: TabBarThemeData(
-        labelColor: AppColors.deepNavy,
-        unselectedLabelColor: AppColors.textSecondary,
-        labelStyle: AppTextStyles.labelLarge
-            .copyWith(color: AppColors.deepNavy),
-        unselectedLabelStyle: AppTextStyles.labelLarge
-            .copyWith(color: AppColors.textSecondary),
-        indicator: const UnderlineTabIndicator(
-          borderSide: BorderSide(color: AppColors.goldAccent, width: 2),
+      // ─── Tab Bar ──────────────────────────────────────────────────────────────
+      tabBarTheme: const TabBarThemeData(
+        labelColor: AuroraColors.coral,
+        unselectedLabelColor: AuroraColors.inkTertiary,
+        labelStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+        indicator: UnderlineTabIndicator(
+          borderSide: BorderSide(color: AuroraColors.coral, width: 2),
         ),
         indicatorSize: TabBarIndicatorSize.label,
-        dividerColor: AppColors.divider,
+        dividerColor: AuroraColors.inkBorder,
+      ),
+
+      // ─── FAB ──────────────────────────────────────────────────────────────────
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: AuroraColors.coral,
+        foregroundColor: Color(0xFFFFFFFF),
+        elevation: 0,
+        shape: CircleBorder(),
       ),
     );
   }

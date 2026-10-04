@@ -2,10 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../models/project_phase.dart';
 import '../providers/project_phases_provider.dart';
@@ -14,8 +15,8 @@ import '../widgets/phase_list_skeleton.dart';
 
 /// Project Phases list screen.
 ///
-/// Shows all phases for a project with reordering via up/down arrows and
-/// swipe-to-delete. FAB/nav-bar button opens the phase create form.
+/// Shows all phases for a project with drag-to-reorder and swipe-to-delete.
+/// FAB/nav-bar button opens the phase create form.
 ///
 /// Route: /projects/:projectId/phases
 class PhasesScreen extends ConsumerWidget {
@@ -61,10 +62,10 @@ class PhasesScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Phases')),
       body: body,
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: AuroraFAB(
+        icon: Icons.add,
         onPressed: onAddTap,
-        backgroundColor: AppColors.deepNavy,
-        child: const Icon(Icons.add, color: Colors.white),
+        tooltip: 'Add phase',
       ),
     );
   }
@@ -81,23 +82,94 @@ class _PhaseList extends ConsumerWidget {
   final List<ProjectPhase> phases;
   final String projectId;
 
-  Future<void> _reorderPhase(
+  Future<void> _onReorder(
     BuildContext context,
     WidgetRef ref,
     int oldIndex,
     int newIndex,
   ) async {
-    final notifier =
-        ref.read(projectPhasesProvider(projectId).notifier);
+    // SliverReorderableList passes newIndex computed before removal;
+    // adjust when moving an item down the list.
+    if (newIndex > oldIndex) newIndex -= 1;
     final reordered = List<ProjectPhase>.from(phases);
-    final moved = reordered.removeAt(oldIndex);
-    reordered.insert(newIndex, moved);
+    reordered.insert(newIndex, reordered.removeAt(oldIndex));
     final ids = reordered.map((p) => p.id).toList();
     try {
-      await notifier.reorderPhases(ids);
+      await ref.read(projectPhasesProvider(projectId).notifier).reorderPhases(ids);
     } catch (_) {
       if (!context.mounted) return;
       SnackbarService.showError(context, 'Could not reorder phases.');
+    }
+  }
+
+  Future<void> _showStatusPicker(
+    BuildContext context,
+    WidgetRef ref,
+    ProjectPhase phase,
+  ) async {
+    final next = PhaseStatusTransitions.nextFor(phase.status);
+    if (next.isEmpty) return;
+
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    String? picked;
+
+    if (isIOS) {
+      await showCupertinoModalPopup<void>(
+        context: context,
+        builder: (ctx) => CupertinoActionSheet(
+          title: Text(phase.name),
+          message: const Text('Move to status'),
+          actions: next
+              .map(
+                (s) => CupertinoActionSheetAction(
+                  onPressed: () {
+                    picked = s;
+                    Navigator.of(ctx).pop();
+                  },
+                  child: Text(s.phaseStatusLabel),
+                ),
+              )
+              .toList(),
+          cancelButton: CupertinoActionSheetAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+        ),
+      );
+    } else {
+      picked = await showModalBottomSheet<String>(
+        context: context,
+        builder: (ctx) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    AuroraSpacing.space7, AuroraSpacing.space7, AuroraSpacing.space7, AuroraSpacing.space1),
+                child: Text('Move to status',
+                    style: AuroraType.h3),
+              ),
+              ...next.map(
+                (s) => ListTile(
+                  title: Text(s.phaseStatusLabel),
+                  onTap: () => Navigator.of(ctx).pop(s),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (picked == null || !context.mounted) return;
+
+    final notifier = ref.read(projectPhasesProvider(projectId).notifier);
+    try {
+      await notifier.updatePhase(phase.id, {'status': picked});
+    } catch (_) {
+      if (!context.mounted) return;
+      SnackbarService.showError(context, 'Could not update status.');
     }
   }
 
@@ -144,7 +216,7 @@ class _PhaseList extends ConsumerWidget {
                 TextButton(
                   onPressed: () => Navigator.of(ctx).pop(true),
                   child: Text('Delete',
-                      style: TextStyle(color: AppColors.error)),
+                      style: TextStyle(color: AuroraColors.coral)),
                 ),
               ],
             ),
@@ -175,42 +247,132 @@ class _PhaseList extends ConsumerWidget {
           onRefresh: () =>
               ref.read(projectPhasesProvider(projectId).notifier).refresh(),
         ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.all(AuroraSpacing.screenPadH).copyWith(bottom: 0),
+            child: _ProgressHeader(phases: phases),
+          ),
+        ),
         SliverPadding(
-          padding: AppPadding.screen.copyWith(top: AppSizes.sm),
-          sliver: SliverList.separated(
+          padding: EdgeInsets.all(AuroraSpacing.screenPadH).copyWith(top: AuroraSpacing.space3),
+          sliver: SliverReorderableList(
             itemCount: phases.length,
-            separatorBuilder: (_, _) => const SizedBox(height: AppSizes.sm),
+            onReorder: (oldIndex, newIndex) =>
+                _onReorder(context, ref, oldIndex, newIndex),
             itemBuilder: (ctx, i) {
               final phase = phases[i];
-              return Dismissible(
+              return ReorderableDelayedDragStartListener(
                 key: ValueKey(phase.id),
-                direction: DismissDirection.endToStart,
-                background: _DeleteBackground(),
-                confirmDismiss: (_) async {
-                  await _deletePhase(ctx, ref, phase);
-                  return false;
-                },
-                child: PhaseCard(
-                  phase: phase,
-                  onTap: () => ctx.push(
-                    '/projects/$projectId/phases/${phase.id}/edit',
-                    extra: phase,
+                index: i,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
+                  child: Dismissible(
+                    key: Key('dismiss_${phase.id}'),
+                    direction: DismissDirection.endToStart,
+                    background: _DeleteBackground(),
+                    confirmDismiss: (_) async {
+                      await _deletePhase(ctx, ref, phase);
+                      return false;
+                    },
+                    child: PhaseCard(
+                      phase: phase,
+                      onTap: () => ctx.push(
+                        '/projects/$projectId/phases/${phase.id}/edit',
+                        extra: phase,
+                      ),
+                      onStatusTap: () => _showStatusPicker(ctx, ref, phase),
+                      leading: Icon(
+                        Icons.drag_handle,
+                        size: 20,
+                        color: AuroraColors.inkTertiary,
+                      ),
+                    ),
                   ),
-                  onMoveUp: i > 0
-                      ? () => _reorderPhase(ctx, ref, i, i - 1)
-                      : null,
-                  onMoveDown: i < phases.length - 1
-                      ? () => _reorderPhase(ctx, ref, i, i + 1)
-                      : null,
                 ),
               );
             },
           ),
         ),
         const SliverToBoxAdapter(
-          child: SizedBox(height: AppSizes.xxl + AppSizes.xl),
+          child: SizedBox(height: 48.0 + AuroraSpacing.space10),
         ),
       ],
+    );
+  }
+}
+
+// ── Progress header ───────────────────────────────────────────────────────────
+
+class _ProgressHeader extends StatelessWidget {
+  const _ProgressHeader({required this.phases});
+
+  final List<ProjectPhase> phases;
+
+  @override
+  Widget build(BuildContext context) {
+    final active = phases
+        .where((p) => p.status != 'cancelled' && p.deletedAt == null)
+        .toList();
+    final total = active.length;
+    if (total == 0) return const SizedBox.shrink();
+
+    final completed = active.where((p) => p.status == 'completed').length;
+    final inProgress = active.where((p) => p.status == 'in_progress').length;
+    final fraction = completed / total;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AuroraSpacing.space3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AuroraSpacing.space7,
+        vertical: AuroraSpacing.space3 + 4,
+      ),
+      decoration: BoxDecoration(
+        color: AuroraColors.paper,
+        borderRadius: BorderRadius.circular(14.0),
+        border: Border.all(color: AuroraColors.inkBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                '$completed of $total complete',
+                style: AuroraType.h3,
+              ),
+              if (inProgress > 0) ...[
+                const SizedBox(width: AuroraSpacing.space1),
+                Text(
+                  '· $inProgress in progress',
+                  style: AuroraType.body.copyWith(
+                    color: AuroraColors.cobalt,
+                  ),
+                ),
+              ],
+              const Spacer(),
+              Text(
+                '${(fraction * 100).round()}%',
+                style: AuroraType.label.copyWith(
+                  color: AuroraColors.inkSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AuroraSpacing.space3),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999.0),
+            child: LinearProgressIndicator(
+              value: fraction,
+              minHeight: 6,
+              backgroundColor: AuroraColors.butter,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                completed == total ? AuroraColors.lime : AuroraColors.cobalt,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -220,10 +382,10 @@ class _DeleteBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       alignment: Alignment.centerRight,
-      padding: const EdgeInsets.only(right: AppSizes.lg),
+      padding: const EdgeInsets.only(right: AuroraSpacing.space9),
       decoration: BoxDecoration(
-        color: AppColors.error,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        color: AuroraColors.coral,
+        borderRadius: BorderRadius.circular(12.0),
       ),
       child: const Icon(Icons.delete_outline, color: Colors.white),
     );
@@ -240,37 +402,30 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.playlist_add_outlined,
-              size: AppSizes.iconXl,
-              color: AppColors.gray400,
+              size: 48.0,
+              color: AuroraColors.inkTertiary,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space7),
             Text(
               'Break your project into phases',
-              style: AppTextStyles.h3,
+              style: AuroraType.h3,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             Text(
               'Phases keep your project organized from start to finish.',
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textSecondary),
+              style: AuroraType.body
+                  .copyWith(color: AuroraColors.inkSecondary),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.xl),
-            FilledButton(
-              onPressed: onAddTap,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.deepNavy,
-                padding: AppPadding.button,
-              ),
-              child: const Text('+ Add Phase'),
-            ),
+            const SizedBox(height: AuroraSpacing.space10),
+            PrimaryButton(label: '+ Add Phase', onPressed: onAddTap),
           ],
         ),
       ),
@@ -288,22 +443,17 @@ class _ErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.error_outline,
-                size: AppSizes.iconXl, color: AppColors.error),
-            const SizedBox(height: AppSizes.md),
+                size: 48.0, color: AuroraColors.coral),
+            const SizedBox(height: AuroraSpacing.space7),
             Text("Couldn't load phases",
-                style: AppTextStyles.h3, textAlign: TextAlign.center),
-            const SizedBox(height: AppSizes.lg),
-            FilledButton(
-              onPressed: onRetry,
-              style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.deepNavy),
-              child: const Text('Retry'),
-            ),
+                style: AuroraType.h3, textAlign: TextAlign.center),
+            const SizedBox(height: AuroraSpacing.space9),
+            PrimaryButton(label: 'Retry', onPressed: onRetry),
           ],
         ),
       ),

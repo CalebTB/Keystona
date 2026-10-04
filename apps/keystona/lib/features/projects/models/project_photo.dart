@@ -1,6 +1,8 @@
 // ignore_for_file: invalid_annotation_target
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import '../../../core/theme/aurora_colors.dart';
+
 
 part 'project_photo.freezed.dart';
 part 'project_photo.g.dart';
@@ -45,28 +47,28 @@ abstract final class PhotoTypes {
   static ({Color background, Color foreground}) colorFor(String value) =>
       switch (value) {
         'before' => (
-            background: const Color(0xFFE3EAF5),
-            foreground: const Color(0xFF1A2B4A)
+            background: AuroraColors.cobaltDim,
+            foreground: AuroraColors.cobaltDeep,
           ),
         'after' => (
-            background: const Color(0xFFE8F5E9),
-            foreground: const Color(0xFF2E7D32)
+            background: AuroraColors.limeDim,
+            foreground: AuroraColors.limeDeep,
           ),
         'progress' => (
-            background: const Color(0xFFFFF8E1),
-            foreground: const Color(0xFFC9A84C)
+            background: AuroraColors.yellowDim,
+            foreground: AuroraColors.yellow,
           ),
         'inspiration' => (
-            background: const Color(0xFFF3E5F5),
-            foreground: const Color(0xFF7B1FA2)
+            background: AuroraColors.coralDim,
+            foreground: AuroraColors.coralDeep,
           ),
         'issue' => (
-            background: const Color(0xFFFFEBEE),
-            foreground: const Color(0xFFC62828)
+            background: AuroraColors.coralDim,
+            foreground: AuroraColors.coral,
           ),
         _ => (
-            background: const Color(0xFFF5F5F5),
-            foreground: const Color(0xFF616161)
+            background: AuroraColors.butter,
+            foreground: AuroraColors.inkSecondary,
           ),
       };
 }

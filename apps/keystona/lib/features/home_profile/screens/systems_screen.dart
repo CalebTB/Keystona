@@ -2,11 +2,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+
+
+
 import '../../../core/widgets/error_view.dart';
 import '../models/system.dart';
 import '../providers/systems_provider.dart';
@@ -58,8 +61,8 @@ class _IOSLayout extends ConsumerWidget {
           ),
           // iOS FAB — Stack + Positioned pattern.
           Positioned(
-            bottom: MediaQuery.of(context).padding.bottom + AppSizes.md,
-            right: AppSizes.md,
+            bottom: MediaQuery.of(context).padding.bottom + AuroraSpacing.space5,
+            right: AuroraSpacing.space5,
             child: _AddFab(
               onPressed: () => context.push(AppRoutes.homeSystemsAdd),
             ),
@@ -78,21 +81,21 @@ class _AndroidLayout extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       body: RefreshIndicator(
-        color: AppColors.deepNavy,
+        color: AuroraColors.ink,
         onRefresh: () => ref.read(systemsProvider.notifier).refresh(),
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
-              title: Text('Systems', style: AppTextStyles.h3),
+              title: Text('Systems', style: AuroraType.h3),
               floating: true,
-              backgroundColor: AppColors.warmOffWhite,
+              backgroundColor: AuroraColors.paper,
               scrolledUnderElevation: 0,
               elevation: 0,
             ),
             const _SystemsContentSliver(),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
+            const SliverToBoxAdapter(child: SizedBox(height: AuroraSpacing.space8)),
           ],
         ),
       ),
@@ -164,15 +167,15 @@ class _GroupedSystemsSliver extends StatelessWidget {
       children.add(_CategoryHeader(category: entry.key));
       for (final system in entry.value) {
         children.add(Padding(
-          padding: const EdgeInsets.only(bottom: AppSizes.sm),
+          padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
           child: SystemCard(system: system),
         ));
       }
-      children.add(const SizedBox(height: AppSizes.md));
+      children.add(const SizedBox(height: AuroraSpacing.space5));
     }
 
     return SliverPadding(
-      padding: AppPadding.screen,
+      padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
       sliver: SliverList.list(children: children),
     );
   }
@@ -186,13 +189,23 @@ class _CategoryHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.sm),
-      child: Text(
-        category.label.toUpperCase(),
-        style: AppTextStyles.labelSmall.copyWith(
-          color: AppColors.textSecondary,
-          letterSpacing: 0.8,
-        ),
+      padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
+      child: Row(
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: const BoxDecoration(
+              color: AuroraColors.inkSecondary,
+              borderRadius: BorderRadius.all(Radius.circular(2)),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            category.label.toUpperCase(),
+            style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
+          ),
+        ],
       ),
     );
   }
@@ -209,8 +222,8 @@ class _AddFab extends StatelessWidget {
   Widget build(BuildContext context) {
     return FloatingActionButton(
       onPressed: onPressed,
-      backgroundColor: AppColors.deepNavy,
-      foregroundColor: AppColors.textInverse,
+      backgroundColor: AuroraColors.coral,
+      foregroundColor: Colors.white,
       child: const Icon(Icons.add),
     );
   }

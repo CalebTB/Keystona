@@ -1,18 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 
 /// Editable list of circuit breaker entries (breaker number → description).
-///
-/// Renders one row per entry showing the circuit number and label. The user
-/// can add new rows, edit inline, or remove rows. All mutations are reported
-/// back to the parent via [onChanged] so the parent owns the canonical state.
-///
-/// Data model: [Map<String, String>] where key = circuit number string
-/// (e.g. "1", "2A") and value = description label (e.g. "Kitchen outlets").
 class CircuitDirectoryEditor extends StatefulWidget {
   const CircuitDirectoryEditor({
     super.key,
@@ -20,10 +14,7 @@ class CircuitDirectoryEditor extends StatefulWidget {
     required this.onChanged,
   });
 
-  /// Starting entries. Not mutated directly — a copy is built internally.
   final Map<String, String> initialValue;
-
-  /// Called whenever the user adds, edits, or removes a circuit entry.
   final ValueChanged<Map<String, String>> onChanged;
 
   @override
@@ -31,8 +22,6 @@ class CircuitDirectoryEditor extends StatefulWidget {
 }
 
 class _CircuitDirectoryEditorState extends State<CircuitDirectoryEditor> {
-  // Maintain a stable ordered list of entries so row order is preserved
-  // across add/remove operations.
   late final List<_CircuitEntry> _entries;
 
   @override
@@ -51,8 +40,6 @@ class _CircuitDirectoryEditorState extends State<CircuitDirectoryEditor> {
     super.dispose();
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
-
   void _notify() {
     final map = <String, String>{
       for (final e in _entries) e.number: e.label,
@@ -64,7 +51,6 @@ class _CircuitDirectoryEditorState extends State<CircuitDirectoryEditor> {
     setState(() {
       _entries.add(_CircuitEntry(number: '', label: ''));
     });
-    // No _notify() here — empty strings are filtered on save.
   }
 
   void _removeEntry(int index) {
@@ -84,8 +70,6 @@ class _CircuitDirectoryEditorState extends State<CircuitDirectoryEditor> {
     _notify();
   }
 
-  // ── Build ─────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
@@ -93,23 +77,19 @@ class _CircuitDirectoryEditorState extends State<CircuitDirectoryEditor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section header.
         Text(
           'Circuit Directory',
-          style: AppTextStyles.labelLarge.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: AuroraType.body.copyWith(fontWeight: FontWeight.w600, color: AuroraColors.ink),
         ),
-        const SizedBox(height: AppSizes.xs),
+        const SizedBox(height: AuroraSpacing.space1),
         Text(
           'Add each breaker number and what it controls.',
-          style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondary,
+          style: AuroraType.bodySm.copyWith(
+            color: AuroraColors.inkSecondary,
           ),
         ),
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: AuroraSpacing.space3),
 
-        // Entry rows.
         if (_entries.isEmpty)
           _EmptyCircuitPlaceholder()
         else
@@ -117,7 +97,7 @@ class _CircuitDirectoryEditorState extends State<CircuitDirectoryEditor> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _entries.length,
-            separatorBuilder: (_, _) => const SizedBox(height: AppSizes.sm),
+            separatorBuilder: (_, _) => const SizedBox(height: AuroraSpacing.space3),
             itemBuilder: (_, index) {
               final entry = _entries[index];
               return _CircuitRow(
@@ -131,9 +111,7 @@ class _CircuitDirectoryEditorState extends State<CircuitDirectoryEditor> {
             },
           ),
 
-        const SizedBox(height: AppSizes.sm),
-
-        // Add circuit button.
+        const SizedBox(height: AuroraSpacing.space3),
         _AddCircuitButton(isIOS: isIOS, onPressed: _addEntry),
       ],
     );
@@ -164,7 +142,6 @@ class _CircuitRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Circuit number — narrow field.
         SizedBox(
           width: 72,
           child: isIOS
@@ -180,9 +157,8 @@ class _CircuitRow extends StatelessWidget {
                   onChanged: onNumberChanged,
                 ),
         ),
-        const SizedBox(width: AppSizes.sm),
+        const SizedBox(width: AuroraSpacing.space3),
 
-        // Label — expands to fill remaining space.
         Expanded(
           child: isIOS
               ? _IOSField(
@@ -197,22 +173,21 @@ class _CircuitRow extends StatelessWidget {
                   onChanged: onLabelChanged,
                 ),
         ),
-        const SizedBox(width: AppSizes.xs),
+        const SizedBox(width: AuroraSpacing.space1),
 
-        // Remove button.
         GestureDetector(
           onTap: onRemove,
           child: Container(
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: AppColors.errorLight,
-              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+              color: AuroraColors.coral.withValues(alpha: 0.1),
+              borderRadius: AuroraRadius.sm,
             ),
-            child: Icon(
+            child: const Icon(
               Icons.remove,
-              size: AppSizes.iconSm,
-              color: AppColors.error,
+              size: 16,
+              color: AuroraColors.coral,
             ),
           ),
         ),
@@ -244,17 +219,17 @@ class _IOSField extends StatelessWidget {
       keyboardType: keyboardType,
       onChanged: onChanged,
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.sm,
+        horizontal: AuroraSpacing.space3,
         vertical: 10,
       ),
-      style: AppTextStyles.bodyMedium,
-      placeholderStyle: AppTextStyles.bodyMedium.copyWith(
-        color: AppColors.textDisabled,
+      style: AuroraType.body,
+      placeholderStyle: AuroraType.body.copyWith(
+        color: AuroraColors.inkTertiary,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border.all(color: AppColors.border),
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+        color: AuroraColors.paper,
+        border: Border.all(color: AuroraColors.inkBorder),
+        borderRadius: AuroraRadius.sm,
       ),
     );
   }
@@ -276,30 +251,28 @@ class _AndroidField extends StatelessWidget {
     return TextField(
       controller: controller,
       onChanged: onChanged,
-      style: AppTextStyles.bodyMedium,
+      style: AuroraType.body,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: AppTextStyles.bodyMedium.copyWith(
-          color: AppColors.textDisabled,
-        ),
+        hintStyle: AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.sm,
+          horizontal: AuroraSpacing.space3,
           vertical: 10,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: BorderSide(color: AppColors.border),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: BorderSide(color: AppColors.border),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: BorderSide(color: AppColors.deepNavy),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.ink),
         ),
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: AuroraColors.paper,
       ),
     );
   }
@@ -311,24 +284,24 @@ class _EmptyCircuitPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSizes.md),
+      padding: const EdgeInsets.all(AuroraSpacing.space7),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-        border: Border.all(color: AppColors.border),
+        color: AuroraColors.butter,
+        borderRadius: AuroraRadius.sm,
+        border: Border.all(color: AuroraColors.inkBorder),
       ),
       child: Row(
         children: [
           Icon(
             Icons.electric_bolt_outlined,
-            size: AppSizes.iconSm,
-            color: AppColors.textSecondary,
+            size: 16,
+            color: AuroraColors.inkSecondary,
           ),
-          const SizedBox(width: AppSizes.sm),
+          const SizedBox(width: AuroraSpacing.space3),
           Text(
             'No circuits added yet',
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textSecondary,
+            style: AuroraType.bodySm.copyWith(
+              color: AuroraColors.inkSecondary,
             ),
           ),
         ],
@@ -355,15 +328,13 @@ class _AddCircuitButton extends StatelessWidget {
           children: [
             Icon(
               CupertinoIcons.add_circled,
-              size: AppSizes.iconSm,
-              color: AppColors.deepNavy,
+              size: 16,
+              color: AuroraColors.ink,
             ),
-            const SizedBox(width: AppSizes.xs),
+            const SizedBox(width: AuroraSpacing.space1),
             Text(
               'Add Circuit',
-              style: AppTextStyles.labelLarge.copyWith(
-                color: AppColors.deepNavy,
-              ),
+              style: AuroraType.body.copyWith(fontWeight: FontWeight.w600, color: AuroraColors.ink),
             ),
           ],
         ),
@@ -374,14 +345,12 @@ class _AddCircuitButton extends StatelessWidget {
       onPressed: onPressed,
       icon: Icon(
         Icons.add_circle_outline,
-        size: AppSizes.iconSm,
-        color: AppColors.deepNavy,
+        size: 16,
+        color: AuroraColors.ink,
       ),
       label: Text(
         'Add Circuit',
-        style: AppTextStyles.labelLarge.copyWith(
-          color: AppColors.deepNavy,
-        ),
+        style: AuroraType.body.copyWith(fontWeight: FontWeight.w600, color: AuroraColors.ink),
       ),
     );
   }
@@ -389,10 +358,6 @@ class _AddCircuitButton extends StatelessWidget {
 
 // ── Data container ────────────────────────────────────────────────────────────
 
-/// Mutable container for a single circuit breaker entry.
-///
-/// Owns the [TextEditingController]s for the number and label fields so they
-/// survive rebuilds. Call [dispose] when removing an entry.
 class _CircuitEntry {
   _CircuitEntry({required this.number, required this.label})
       : numberCtrl = TextEditingController(text: number),

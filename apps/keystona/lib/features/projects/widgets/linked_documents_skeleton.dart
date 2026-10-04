@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Shimmer skeleton for the linked documents list.
 class LinkedDocumentsSkeleton extends StatefulWidget {
@@ -44,18 +43,18 @@ class _LinkedDocumentsSkeletonState
       builder: (_, _) => Opacity(
         opacity: _opacity.value,
         child: ListView.separated(
-          padding: AppPadding.screen,
+          padding: EdgeInsets.all(AuroraSpacing.screenPadH),
           itemCount: 3,
-          separatorBuilder: (_, _) => const SizedBox(height: AppSizes.sm),
+          separatorBuilder: (_, _) => const SizedBox(height: AuroraSpacing.space3),
           itemBuilder: (_, _) => Container(
             height: 72,
             decoration: BoxDecoration(
-              color: AppColors.gray200,
-              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              color: const Color(0xFFEEEDF2),
+              borderRadius: AuroraRadius.md,
             ),
             padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.md,
-              vertical: AppSizes.sm,
+              horizontal: AuroraSpacing.space7,
+              vertical: AuroraSpacing.space3,
             ),
             child: Row(
               children: [
@@ -63,12 +62,12 @@ class _LinkedDocumentsSkeletonState
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppColors.gray300,
+                    color: const Color(0xFFE0DFEA),
                     borderRadius:
-                        BorderRadius.circular(AppSizes.radiusSm),
+                        AuroraRadius.sm,
                   ),
                 ),
-                const SizedBox(width: AppSizes.md),
+                const SizedBox(width: AuroraSpacing.space7),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,9 +78,8 @@ class _LinkedDocumentsSkeletonState
                         child: Container(
                           height: 14,
                           decoration: BoxDecoration(
-                            color: AppColors.gray300,
-                            borderRadius: BorderRadius.circular(
-                                AppSizes.radiusSm),
+                            color: const Color(0xFFE0DFEA),
+                            borderRadius: AuroraRadius.sm,
                           ),
                         ),
                       ),
@@ -91,9 +89,8 @@ class _LinkedDocumentsSkeletonState
                         child: Container(
                           height: 11,
                           decoration: BoxDecoration(
-                            color: AppColors.gray300,
-                            borderRadius: BorderRadius.circular(
-                                AppSizes.radiusSm),
+                            color: const Color(0xFFE0DFEA),
+                            borderRadius: AuroraRadius.sm,
                           ),
                         ),
                       ),

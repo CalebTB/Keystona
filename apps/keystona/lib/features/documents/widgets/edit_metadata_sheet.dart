@@ -3,13 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../models/document.dart';
 import '../providers/document_categories_provider.dart';
 import '../providers/document_detail_provider.dart';
+import '../../../core/widgets/aurora/aurora_sheet.dart';
 
 /// Bottom sheet for editing a document's mutable metadata fields.
 ///
@@ -27,11 +29,9 @@ class EditMetadataSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSizes.radiusLg),
-        ),
+      backgroundColor: AuroraColors.paper,
+      shape: RoundedRectangleBorder(
+        borderRadius: AuroraSheet.topRadius(context),
       ),
       builder: (_) => EditMetadataSheet(document: document),
     );
@@ -106,7 +106,7 @@ class _EditMetadataSheetState extends ConsumerState<EditMetadataSheet> {
       context: context,
       builder: (_) => Container(
         height: 300,
-        color: AppColors.surface,
+        color: AuroraColors.paper,
         child: Column(
           children: [
             Row(
@@ -146,7 +146,7 @@ class _EditMetadataSheetState extends ConsumerState<EditMetadataSheet> {
       lastDate: DateTime(2100),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(primary: AppColors.deepNavy),
+          colorScheme: const ColorScheme.light(primary: AuroraColors.ink),
         ),
         child: child!,
       ),
@@ -161,10 +161,10 @@ class _EditMetadataSheetState extends ConsumerState<EditMetadataSheet> {
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        AppSizes.md,
-        AppSizes.md,
-        AppSizes.md,
-        AppSizes.xl + bottomInset,
+        AuroraSpacing.space5,
+        AuroraSpacing.space5,
+        AuroraSpacing.space5,
+        AuroraSpacing.space8 + bottomInset,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -175,62 +175,62 @@ class _EditMetadataSheetState extends ConsumerState<EditMetadataSheet> {
             child: Container(
               width: 40,
               height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.gray300,
-                borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+              decoration: const BoxDecoration(
+                color: AuroraColors.inkBorder,
+                borderRadius: AuroraRadius.full,
               ),
             ),
           ),
-          const SizedBox(height: AppSizes.md),
+          const SizedBox(height: AuroraSpacing.space5),
 
-          Text('Edit Document', style: AppTextStyles.h3),
-          const SizedBox(height: AppSizes.lg),
+          Text('Edit Document', style: AuroraType.h3),
+          const SizedBox(height: AuroraSpacing.space7),
 
           // Name field.
           _FieldLabel(label: 'Name'),
-          const SizedBox(height: AppSizes.xs),
+          const SizedBox(height: AuroraSpacing.space1),
           TextField(
             controller: _nameController,
             decoration: _inputDecoration('Document name'),
             textCapitalization: TextCapitalization.words,
             maxLength: 120,
           ),
-          const SizedBox(height: AppSizes.md),
+          const SizedBox(height: AuroraSpacing.space5),
 
           // Category picker.
           _FieldLabel(label: 'Category'),
-          const SizedBox(height: AppSizes.xs),
+          const SizedBox(height: AuroraSpacing.space1),
           categoriesState.when(
-            loading: () => const SizedBox(height: AppSizes.inputHeight),
+            loading: () => const SizedBox(height: 48),
             error: (e, s) => const SizedBox.shrink(),
             data: (categories) => DropdownButtonFormField<String>(
               initialValue: _selectedCategoryId,
               decoration: _inputDecoration('Select category'),
-              dropdownColor: AppColors.surface,
+              dropdownColor: AuroraColors.paper,
               items: categories
                   .map(
                     (cat) => DropdownMenuItem<String>(
                       value: cat.id,
-                      child: Text(cat.name, style: AppTextStyles.bodyMedium),
+                      child: Text(cat.name, style: AuroraType.body),
                     ),
                   )
                   .toList(),
               onChanged: (id) => setState(() => _selectedCategoryId = id),
             ),
           ),
-          const SizedBox(height: AppSizes.md),
+          const SizedBox(height: AuroraSpacing.space5),
 
           // Expiration date picker.
           _FieldLabel(label: 'Expiration date'),
-          const SizedBox(height: AppSizes.xs),
+          const SizedBox(height: AuroraSpacing.space1),
           GestureDetector(
             onTap: _pickDate,
             child: Container(
-              height: AppSizes.inputHeight,
-              padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
+              height: 48,
+              padding: const EdgeInsets.symmetric(horizontal: AuroraSpacing.space5),
               decoration: BoxDecoration(
-                border: Border.all(color: AppColors.border),
-                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                border: Border.all(color: AuroraColors.inkBorder),
+                borderRadius: AuroraRadius.sm,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -239,10 +239,10 @@ class _EditMetadataSheetState extends ConsumerState<EditMetadataSheet> {
                     _expirationDate != null
                         ? DateFormat('MMM d, yyyy').format(_expirationDate!)
                         : 'No expiration date',
-                    style: AppTextStyles.bodyMedium.copyWith(
+                    style: AuroraType.body.copyWith(
                       color: _expirationDate != null
-                          ? AppColors.textPrimary
-                          : AppColors.textSecondary,
+                          ? AuroraColors.ink
+                          : AuroraColors.inkSecondary,
                     ),
                   ),
                   Row(
@@ -250,17 +250,17 @@ class _EditMetadataSheetState extends ConsumerState<EditMetadataSheet> {
                       if (_expirationDate != null)
                         GestureDetector(
                           onTap: () => setState(() => _expirationDate = null),
-                          child: const Icon(
+                          child: Icon(
                             Icons.close,
-                            size: AppSizes.iconSm,
-                            color: AppColors.textSecondary,
+                            size: 16,
+                            color: AuroraColors.inkSecondary,
                           ),
                         ),
-                      const SizedBox(width: AppSizes.sm),
-                      const Icon(
+                      const SizedBox(width: AuroraSpacing.space3),
+                      Icon(
                         Icons.calendar_today_outlined,
-                        size: AppSizes.iconSm,
-                        color: AppColors.textSecondary,
+                        size: 16,
+                        color: AuroraColors.inkSecondary,
                       ),
                     ],
                   ),
@@ -268,11 +268,11 @@ class _EditMetadataSheetState extends ConsumerState<EditMetadataSheet> {
               ),
             ),
           ),
-          const SizedBox(height: AppSizes.md),
+          const SizedBox(height: AuroraSpacing.space5),
 
           // Notes field.
           _FieldLabel(label: 'Notes'),
-          const SizedBox(height: AppSizes.xs),
+          const SizedBox(height: AuroraSpacing.space1),
           TextField(
             controller: _notesController,
             decoration: _inputDecoration('Optional notes'),
@@ -280,17 +280,17 @@ class _EditMetadataSheetState extends ConsumerState<EditMetadataSheet> {
             maxLength: 500,
             textCapitalization: TextCapitalization.sentences,
           ),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AuroraSpacing.space7),
 
           // Save button.
           FilledButton(
             onPressed: _saving ? null : _save,
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.deepNavy,
-              disabledBackgroundColor: AppColors.gray300,
-              minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+              backgroundColor: AuroraColors.coral,
+              disabledBackgroundColor: AuroraColors.inkBorder,
+              minimumSize: const Size.fromHeight(56),
+              shape: const RoundedRectangleBorder(
+                borderRadius: AuroraRadius.sm,
               ),
             ),
             child: _saving
@@ -299,13 +299,14 @@ class _EditMetadataSheetState extends ConsumerState<EditMetadataSheet> {
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: AppColors.textInverse,
+                      color: AuroraColors.paper,
                     ),
                   )
                 : Text(
                     'Save Changes',
-                    style: AppTextStyles.button.copyWith(
-                      color: AppColors.textInverse,
+                    style: AuroraType.bodyLg.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AuroraColors.paper,
                     ),
                   ),
           ),
@@ -317,22 +318,22 @@ class _EditMetadataSheetState extends ConsumerState<EditMetadataSheet> {
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+      hintStyle: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
       contentPadding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.md,
+        horizontal: AuroraSpacing.space5,
+        vertical: AuroraSpacing.space5,
       ),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-        borderSide: const BorderSide(color: AppColors.border),
+        borderRadius: AuroraRadius.md,
+        borderSide: const BorderSide(color: AuroraColors.inkBorder),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-        borderSide: const BorderSide(color: AppColors.border),
+        borderRadius: AuroraRadius.md,
+        borderSide: const BorderSide(color: AuroraColors.inkBorder),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-        borderSide: const BorderSide(color: AppColors.deepNavy, width: 2),
+        borderRadius: AuroraRadius.md,
+        borderSide: const BorderSide(color: AuroraColors.ink, width: 2),
       ),
       counterText: '',
     );
@@ -347,8 +348,8 @@ class _FieldLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      label,
-      style: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary),
+      label.toUpperCase(),
+      style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
     );
   }
 }

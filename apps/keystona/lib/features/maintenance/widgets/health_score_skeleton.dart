@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Pulse-shimmer skeleton that matches [HealthScoreWidget]'s layout exactly.
 ///
@@ -38,10 +38,7 @@ class _HealthScoreSkeletonState extends State<HealthScoreSkeleton>
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: AppPadding.screenHorizontal.copyWith(
-        top: AppSizes.sm,
-        bottom: AppSizes.sm,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: AnimatedBuilder(
         animation: _opacity,
         builder: (_, _) => Opacity(
@@ -49,11 +46,11 @@ class _HealthScoreSkeletonState extends State<HealthScoreSkeleton>
           child: Container(
             height: 104,
             decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-              border: Border.all(color: AppColors.border),
+              color: AuroraColors.paper,
+              borderRadius: AuroraRadius.md,
+              border: Border.all(color: AuroraColors.inkBorder),
             ),
-            padding: const EdgeInsets.all(AppSizes.md),
+            padding: const EdgeInsets.all(12),
             child: Row(
               children: [
                 // Circular gauge placeholder.
@@ -61,11 +58,11 @@ class _HealthScoreSkeletonState extends State<HealthScoreSkeleton>
                   width: 72,
                   height: 72,
                   decoration: BoxDecoration(
-                    color: AppColors.gray200,
+                    color: AuroraColors.butter,
                     shape: BoxShape.circle,
                   ),
                 ),
-                const SizedBox(width: AppSizes.md),
+                const SizedBox(width: 12),
                 // Stats lines.
                 Expanded(
                   child: Column(
@@ -73,13 +70,13 @@ class _HealthScoreSkeletonState extends State<HealthScoreSkeleton>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _Bar(width: 0.5),
-                      const SizedBox(height: AppSizes.xs),
+                      const SizedBox(height: 4),
                       _Bar(width: 0.75),
-                      const SizedBox(height: AppSizes.sm),
+                      const SizedBox(height: 8),
                       Row(
                         children: [
                           Expanded(child: _Bar(width: 1.0)),
-                          const SizedBox(width: AppSizes.sm),
+                          const SizedBox(width: 8),
                           Expanded(child: _Bar(width: 1.0)),
                         ],
                       ),
@@ -106,8 +103,8 @@ class _Bar extends StatelessWidget {
         width: constraints.maxWidth * width,
         height: 10,
         decoration: BoxDecoration(
-          color: AppColors.gray200,
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          color: AuroraColors.butter,
+          borderRadius: AuroraRadius.sm,
         ),
       ),
     );

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
+
+
 
 /// Pulse-shimmer skeleton that matches [LifespanCard] layout.
 ///
@@ -46,14 +49,14 @@ class _LifespanSkeletonState extends State<LifespanSkeleton>
       builder: (_, _) => Opacity(
         opacity: _opacity.value,
         child: ListView(
-          padding: AppPadding.screen,
+          padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
           children: const [
             _SkeletonCard(),
-            SizedBox(height: AppSizes.sm),
+            SizedBox(height: AuroraSpacing.space3),
             _SkeletonCard(),
-            SizedBox(height: AppSizes.sm),
+            SizedBox(height: AuroraSpacing.space3),
             _SkeletonCard(),
-            SizedBox(height: AppSizes.sm),
+            SizedBox(height: AuroraSpacing.space3),
             _SkeletonCard(),
           ],
         ),
@@ -68,10 +71,10 @@ class _SkeletonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSizes.md),
+      padding: const EdgeInsets.all(AuroraSpacing.space5),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        color: AuroraColors.paper,
+        borderRadius: AuroraRadius.lg,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,35 +86,35 @@ class _SkeletonCard extends StatelessWidget {
                 child: FractionallySizedBox(
                   widthFactor: 0.5,
                   alignment: Alignment.centerLeft,
-                  child: Container(height: 14, color: AppColors.gray200),
+                  child: Container(height: 14, color: AuroraColors.inkBorder),
                 ),
               ),
               Container(
                 width: 72,
                 height: 22,
                 decoration: BoxDecoration(
-                  color: AppColors.gray200,
-                  borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                  color: AuroraColors.inkBorder,
+                  borderRadius: AuroraRadius.full,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
           // Progress bar.
           Container(
             height: 8,
             decoration: BoxDecoration(
-              color: AppColors.gray200,
-              borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+              color: AuroraColors.inkBorder,
+              borderRadius: AuroraRadius.full,
             ),
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
           // Age / years remaining row.
           Row(
             children: [
-              Container(width: 80, height: 11, color: AppColors.gray200),
+              Container(width: 80, height: 11, color: AuroraColors.inkBorder),
               const Spacer(),
-              Container(width: 64, height: 11, color: AppColors.gray200),
+              Container(width: 64, height: 11, color: AuroraColors.inkBorder),
             ],
           ),
         ],

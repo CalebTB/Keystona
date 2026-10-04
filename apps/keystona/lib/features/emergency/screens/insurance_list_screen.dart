@@ -4,9 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 import '../../../core/widgets/error_view.dart';
 import '../models/insurance_policy.dart';
 import '../providers/emergency_hub_provider.dart';
@@ -14,10 +15,6 @@ import '../widgets/insurance_empty_state.dart';
 import '../widgets/insurance_list_skeleton.dart';
 import '../widgets/insurance_policy_card.dart';
 
-/// Displays the full list of insurance policies for the property.
-///
-/// iOS: CupertinoPageScaffold + CupertinoSliverNavigationBar with "+" button.
-/// Android: Scaffold + SliverAppBar + FloatingActionButton.
 class InsuranceListScreen extends ConsumerWidget {
   const InsuranceListScreen({super.key});
 
@@ -36,22 +33,33 @@ class _IOSLayout extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return CupertinoPageScaffold(
-      child: CustomScrollView(
-        slivers: [
-          CupertinoSliverNavigationBar(
-            largeTitle: const Text('Insurance'),
-            trailing: CupertinoButton(
-              padding: EdgeInsets.zero,
-              onPressed: () => context.push(AppRoutes.emergencyInsuranceAdd),
-              child: const Icon(CupertinoIcons.add),
+      backgroundColor: AuroraColors.paper,
+      child: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
+              CupertinoSliverNavigationBar(
+                largeTitle: const Text('Insurance'),
+                backgroundColor: AuroraColors.paper,
+              ),
+              CupertinoSliverRefreshControl(
+                onRefresh: () =>
+                    ref.read(emergencyHubProvider.notifier).refresh(),
+              ),
+              const _ContentSliver(),
+              const SliverToBoxAdapter(child: SizedBox(height: 88)),
+            ],
+          ),
+          Positioned(
+            right: AuroraSpacing.space9,
+            bottom: AuroraSpacing.space10,
+            child: AuroraFAB(
+              icon: Icons.add,
+              onPressed: () =>
+                  context.push(AppRoutes.emergencyInsuranceAdd),
+              tooltip: 'Add Policy',
             ),
           ),
-          CupertinoSliverRefreshControl(
-            onRefresh: () =>
-                ref.read(emergencyHubProvider.notifier).refresh(),
-          ),
-          const _ContentSliver(),
-          const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
         ],
       ),
     );
@@ -66,26 +74,27 @@ class _AndroidLayout extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.deepNavy,
+      backgroundColor: AuroraColors.paper,
+      floatingActionButton: AuroraFAB(
+        icon: Icons.add,
         onPressed: () => context.push(AppRoutes.emergencyInsuranceAdd),
-        child: const Icon(Icons.add, color: AppColors.textInverse),
+        tooltip: 'Add Policy',
       ),
       body: RefreshIndicator(
-        color: AppColors.deepNavy,
+        color: AuroraColors.coral,
         onRefresh: () => ref.read(emergencyHubProvider.notifier).refresh(),
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
-              title: Text('Insurance', style: AppTextStyles.h3),
+              title: Text('Insurance', style: AuroraType.h3),
               floating: true,
-              backgroundColor: AppColors.warmOffWhite,
+              backgroundColor: AuroraColors.paper,
               scrolledUnderElevation: 0,
               elevation: 0,
             ),
             const _ContentSliver(),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
+            const SliverToBoxAdapter(
+                child: SizedBox(height: AuroraSpacing.space10)),
           ],
         ),
       ),
@@ -107,7 +116,7 @@ class _ContentSliver extends ConsumerWidget {
         hasScrollBody: false,
         child: InsuranceListSkeleton(),
       ),
-      error: (error, stackTrace) => SliverFillRemaining(
+      error: (_, _) => SliverFillRemaining(
         hasScrollBody: false,
         child: ErrorView(
           message: "Couldn't load insurance policies.",
@@ -117,18 +126,21 @@ class _ContentSliver extends ConsumerWidget {
       data: (overview) {
         final policies = overview.policies;
         if (policies.isEmpty) {
-          return const SliverFillRemaining(
+          return SliverFillRemaining(
             hasScrollBody: false,
-            child: InsuranceEmptyState(),
+            child: InsuranceEmptyState(
+              onAddPolicy: () =>
+                  context.push(AppRoutes.emergencyInsuranceAdd),
+            ),
           );
         }
         return SliverPadding(
-          padding: AppPadding.screen,
+          padding: const EdgeInsets.all(AuroraSpacing.screenPadH),
           sliver: SliverList.builder(
             itemCount: policies.length,
             itemBuilder: (_, i) => Padding(
               padding: EdgeInsets.only(
-                bottom: i < policies.length - 1 ? AppSizes.sm : 0,
+                bottom: i < policies.length - 1 ? AuroraSpacing.space3 : 0,
               ),
               child: InsurancePolicyCard(
                 policy: policies[i],

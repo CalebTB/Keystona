@@ -4,29 +4,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/error_view.dart';
 import '../providers/emergency_hub_provider.dart';
 import '../widgets/contacts_section.dart';
 import '../widgets/emergency_hub_skeleton.dart';
 import '../widgets/insurance_section.dart';
-import '../widgets/shutoff_card.dart';
 
 /// Emergency Hub main screen — lives at [AppRoutes.emergency].
 ///
 /// Accessed via a quick-action button on the Home tab (NOT a bottom nav tab).
-///
-/// Shows:
-///   • Three utility shutoff cards (Water / Gas / Electrical) with completion status
-///   • Emergency contacts preview (favorites, "See all" link)
-///   • Insurance quick reference (policy summaries, "See all" link)
-///   • "Last synced" timestamp stub (implemented by #50 Offline Sync)
-///
-/// Adaptive layout:
-///   iOS  → CupertinoPageScaffold + CupertinoSliverNavigationBar (large title)
-///   Android → Scaffold + SliverAppBar
 class EmergencyHubScreen extends ConsumerWidget {
   const EmergencyHubScreen({super.key});
 
@@ -45,17 +35,20 @@ class _IOSLayout extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return CupertinoPageScaffold(
+      backgroundColor: AuroraColors.paper,
       child: CustomScrollView(
         slivers: [
           const CupertinoSliverNavigationBar(
             largeTitle: Text('Emergency Hub'),
+            backgroundColor: AuroraColors.paper,
           ),
           CupertinoSliverRefreshControl(
             onRefresh: () =>
                 ref.read(emergencyHubProvider.notifier).refresh(),
           ),
           const _ContentSliver(),
-          const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
+          const SliverToBoxAdapter(
+              child: SizedBox(height: AuroraSpacing.space10)),
         ],
       ),
     );
@@ -70,21 +63,22 @@ class _AndroidLayout extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       body: RefreshIndicator(
-        color: AppColors.deepNavy,
+        color: AuroraColors.coral,
         onRefresh: () => ref.read(emergencyHubProvider.notifier).refresh(),
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
-              title: Text('Emergency Hub', style: AppTextStyles.h3),
+              title: Text('Emergency Hub', style: AuroraType.h3),
               floating: true,
-              backgroundColor: AppColors.warmOffWhite,
+              backgroundColor: AuroraColors.paper,
               scrolledUnderElevation: 0,
               elevation: 0,
             ),
             const _ContentSliver(),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
+            const SliverToBoxAdapter(
+                child: SizedBox(height: AuroraSpacing.space10)),
           ],
         ),
       ),
@@ -114,44 +108,34 @@ class _ContentSliver extends ConsumerWidget {
         ),
       ),
       data: (overview) => SliverPadding(
-        padding: AppPadding.screen,
+        padding: const EdgeInsets.fromLTRB(
+          AuroraSpacing.screenPadH,
+          AuroraSpacing.screenPadTop,
+          AuroraSpacing.screenPadH,
+          0,
+        ),
         sliver: SliverList.list(
           children: [
-            // ── Utility Shutoffs ────────────────────────────────────────────
-            Text(
-              'Utility Shutoffs',
-              style: AppTextStyles.labelLarge.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: AppSizes.sm),
-            ShutoffCard(
-              utilityType: 'water',
-              shutoff: overview.shutoffFor('water'),
-              onTap: () => context.push(
-                AppRoutes.emergencyShutoffDetail.replaceFirst(':type', 'water'),
-              ),
-            ),
-            const SizedBox(height: AppSizes.sm),
-            ShutoffCard(
-              utilityType: 'gas',
-              shutoff: overview.shutoffFor('gas'),
-              onTap: () => context.push(
-                AppRoutes.emergencyShutoffDetail.replaceFirst(':type', 'gas'),
-              ),
-            ),
-            const SizedBox(height: AppSizes.sm),
-            ShutoffCard(
-              utilityType: 'electrical',
-              shutoff: overview.shutoffFor('electrical'),
-              onTap: () => context.push(
-                AppRoutes.emergencyShutoffDetail
-                    .replaceFirst(':type', 'electrical'),
-              ),
-            ),
-            const SizedBox(height: AppSizes.lg),
+            // ── Call 911 hero card ───────────────────────────────────────────
+            _Call911Card(),
+            const SizedBox(height: AuroraSpacing.space9),
 
-            // ── Emergency Contacts ──────────────────────────────────────────
+            // ── Utility Shutoffs section ─────────────────────────────────────
+            _SectionHeader(label: 'UTILITY SHUTOFFS'),
+            const SizedBox(height: AuroraSpacing.space3),
+            _ShutoffGrid(
+              shutoffs: {
+                'water': overview.shutoffFor('water'),
+                'gas': overview.shutoffFor('gas'),
+                'electrical': overview.shutoffFor('electrical'),
+              },
+              onTap: (type) => context.push(
+                AppRoutes.emergencyShutoffDetail.replaceFirst(':type', type),
+              ),
+            ),
+            const SizedBox(height: AuroraSpacing.space9),
+
+            // ── Emergency Contacts section ───────────────────────────────────
             ContactsSection(
               favorites: overview.favoriteContacts,
               totalCount: overview.totalContactCount,
@@ -159,23 +143,243 @@ class _ContentSliver extends ConsumerWidget {
               onAddContact: () =>
                   context.push(AppRoutes.emergencyContactsAdd),
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space9),
 
-            // ── Insurance ───────────────────────────────────────────────────
+            // ── Insurance section ────────────────────────────────────────────
             InsuranceSection(
               policies: overview.policies,
               onSeeAll: () => context.push(AppRoutes.emergencyInsurance),
               onAddPolicy: () => context.push(AppRoutes.emergencyInsurance),
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space9),
 
-            // ── Last synced timestamp (stub for #50) ────────────────────────
             _LastSyncedRow(lastSyncedAt: overview.lastSyncedAt),
           ],
         ),
       ),
     );
   }
+}
+
+// ── Call 911 hero card ────────────────────────────────────────────────────────
+
+class _Call911Card extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AuroraColors.coral,
+        borderRadius: AuroraRadius.xxl,
+      ),
+      clipBehavior: Clip.hardEdge,
+      child: Stack(
+        children: [
+          // Decorative yellow blob — top right
+          Positioned(
+            top: -32,
+            right: -32,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: AuroraColors.yellow.withValues(alpha: 0.32),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AuroraSpacing.space7),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AuroraColors.paper.withValues(alpha: 0.20),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.emergency_outlined,
+                    color: AuroraColors.paper,
+                    size: 26,
+                  ),
+                ),
+                const SizedBox(width: AuroraSpacing.space5),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'EMERGENCY',
+                        style: AuroraType.label.copyWith(
+                          color: AuroraColors.paper.withValues(alpha: 0.78),
+                        ),
+                      ),
+                      const SizedBox(height: AuroraSpacing.space1),
+                      Text(
+                        'Call 911',
+                        style: AuroraType.h1.copyWith(color: AuroraColors.paper),
+                      ),
+                      const SizedBox(height: AuroraSpacing.space1),
+                      Text(
+                        'Tap to call emergency services',
+                        style: AuroraType.bodySm.copyWith(
+                          color: AuroraColors.paper.withValues(alpha: 0.78),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.phone_in_talk_outlined,
+                  color: AuroraColors.paper,
+                  size: 28,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Section header (dot + label) ──────────────────────────────────────────────
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 7,
+          height: 7,
+          decoration: const BoxDecoration(
+            color: AuroraColors.inkSecondary,
+            borderRadius: AuroraRadius.xs,
+          ),
+        ),
+        const SizedBox(width: AuroraSpacing.space2),
+        Text(
+          label,
+          style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Shutoff grid (3-up row) ───────────────────────────────────────────────────
+
+class _ShutoffGrid extends StatelessWidget {
+  const _ShutoffGrid({required this.shutoffs, required this.onTap});
+
+  final Map<String, dynamic> shutoffs;
+  final void Function(String type) onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    const types = ['water', 'gas', 'electrical'];
+    return Row(
+      children: [
+        for (int i = 0; i < types.length; i++) ...[
+          Expanded(
+            child: _ShutoffTile(
+              utilityType: types[i],
+              shutoff: shutoffs[types[i]],
+              onTap: () => onTap(types[i]),
+            ),
+          ),
+          if (i < types.length - 1)
+            const SizedBox(width: AuroraSpacing.space3),
+        ],
+      ],
+    );
+  }
+}
+
+class _ShutoffTile extends StatelessWidget {
+  const _ShutoffTile({
+    required this.utilityType,
+    required this.shutoff,
+    required this.onTap,
+  });
+
+  final String utilityType;
+  final dynamic shutoff;
+  final VoidCallback onTap;
+
+  bool get _isComplete => shutoff?.isComplete == true;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 80),
+        decoration: BoxDecoration(
+          color: _isComplete ? AuroraColors.limeDim : AuroraColors.paper,
+          borderRadius: AuroraRadius.lg,
+          border: Border.all(
+            color: _isComplete
+                ? AuroraColors.limeDeep.withValues(alpha: 0.35)
+                : AuroraColors.inkBorder,
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AuroraSpacing.space3,
+          vertical: AuroraSpacing.space3,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              _icon,
+              size: 20,
+              color: _isComplete ? AuroraColors.limeDeep : AuroraColors.inkSecondary,
+            ),
+            const SizedBox(height: AuroraSpacing.space2),
+            Text(
+              _label,
+              style: AuroraType.bodySm.copyWith(
+                fontWeight: FontWeight.w600,
+                color: _isComplete ? AuroraColors.limeDeep : AuroraColors.ink,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: AuroraSpacing.space1),
+            Text(
+              _isComplete ? 'Set up' : 'Not set up',
+              style: AuroraType.labelSm.copyWith(
+                color: _isComplete
+                    ? AuroraColors.limeDeep
+                    : AuroraColors.inkTertiary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData get _icon => switch (utilityType) {
+        'water' => Icons.water_drop_outlined,
+        'gas' => Icons.local_fire_department_outlined,
+        'electrical' => Icons.electric_bolt_outlined,
+        _ => Icons.settings_outlined,
+      };
+
+  String get _label => switch (utilityType) {
+        'water' => 'Water',
+        'gas' => 'Gas',
+        'electrical' => 'Electric',
+        _ => utilityType,
+      };
 }
 
 // ── Last synced row ───────────────────────────────────────────────────────────
@@ -196,14 +400,12 @@ class _LastSyncedRow extends StatelessWidget {
         Icon(
           Icons.sync_outlined,
           size: 13,
-          color: AppColors.textSecondary,
+          color: AuroraColors.inkSecondary,
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: AuroraSpacing.space1),
         Text(
           label,
-          style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
         ),
       ],
     );

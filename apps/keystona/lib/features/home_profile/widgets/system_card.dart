@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+
+
+
 import '../models/system.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// A 72px card representing a single home system in the grouped list.
 ///
@@ -32,18 +36,18 @@ class SystemCard extends StatelessWidget {
         context.push(path);
       },
       child: Container(
-        constraints: const BoxConstraints(minHeight: AppSizes.cardMinHeight),
-        padding: AppPadding.card,
+        constraints: const BoxConstraints(minHeight: 72),
+        padding: const EdgeInsets.all(AuroraSpacing.space6),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: AppColors.border),
+          color: AuroraColors.paper,
+          borderRadius: AuroraRadius.lg,
+          border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(
           children: [
             // Category icon.
             _CategoryIcon(category: system.category),
-            const SizedBox(width: AppSizes.md),
+            const SizedBox(width: AuroraSpacing.space5),
 
             // Name + type.
             Expanded(
@@ -53,15 +57,15 @@ class SystemCard extends StatelessWidget {
                 children: [
                   Text(
                     system.name,
-                    style: AppTextStyles.bodyMediumSemibold,
+                    style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
                     system.systemType,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+                    style: AuroraType.bodySm.copyWith(
+                      color: AuroraColors.inkSecondary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -69,15 +73,15 @@ class SystemCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: AppSizes.sm),
+            const SizedBox(width: AuroraSpacing.space3),
 
             // Status chip.
             _StatusChip(status: system.status),
-            const SizedBox(width: AppSizes.xs),
+            const SizedBox(width: AuroraSpacing.space1),
             const Icon(
               Icons.chevron_right,
               size: 18,
-              color: AppColors.textSecondary,
+              color: AuroraColors.inkSecondary,
             ),
           ],
         ),
@@ -97,13 +101,13 @@ class _CategoryIcon extends StatelessWidget {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: AppColors.deepNavy.withAlpha(20),
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+        color: AuroraColors.ink.withAlpha(20),
+        borderRadius: AuroraRadius.sm,
       ),
       child: Icon(
         _iconFor(category),
         size: 22,
-        color: AppColors.deepNavy,
+        color: AuroraColors.ink,
       ),
     );
   }
@@ -130,22 +134,22 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (status) {
-      ItemStatus.active => ('Active', AppColors.success),
-      ItemStatus.needsRepair => ('Repair', AppColors.warning),
-      ItemStatus.replaced => ('Replaced', AppColors.textSecondary),
-      ItemStatus.removed => ('Removed', AppColors.textDisabled),
+      ItemStatus.active => ('Active', AuroraColors.lime),
+      ItemStatus.needsRepair => ('Repair', AuroraColors.yellow),
+      ItemStatus.replaced => ('Replaced', AuroraColors.inkSecondary),
+      ItemStatus.removed => ('Removed', AuroraColors.inkTertiary),
     };
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withAlpha(20),
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+        borderRadius: AuroraRadius.full,
         border: Border.all(color: color.withAlpha(60)),
       ),
       child: Text(
         label,
-        style: AppTextStyles.labelSmall.copyWith(color: color),
+        style: AuroraType.labelSm.copyWith(color: color),
       ),
     );
   }

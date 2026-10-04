@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../models/utility_shutoff.dart';
 import '../providers/emergency_hub_provider.dart';
@@ -14,7 +16,6 @@ import '../widgets/shutoff_detail_skeleton.dart';
 
 // ── Valve type options ────────────────────────────────────────────────────────
 
-/// Valid values for the `valve_type` column on water and gas shutoffs.
 abstract final class _ValveTypes {
   static const all = [
     (value: 'gate', label: 'Gate Valve'),
@@ -22,10 +23,8 @@ abstract final class _ValveTypes {
     (value: 'butterfly', label: 'Butterfly Valve'),
     (value: 'other', label: 'Other'),
   ];
-
 }
 
-/// Valid values for the `turn_direction` column.
 abstract final class _TurnDirections {
   static const all = [
     (value: 'clockwise', label: 'Clockwise'),
@@ -35,20 +34,9 @@ abstract final class _TurnDirections {
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 
-/// Setup / edit screen for a single utility shutoff (water, gas, or electrical).
-///
-/// Parameterized by [utilityType] — the same screen is reused for all three
-/// utility types; field visibility is driven by the type.
-///
-/// Loading: fetches existing record in [initState], shows [ShutoffDetailSkeleton]
-/// while pending.
-/// Error: shown via a snackbar; form stays accessible so the user can still
-/// attempt to save.
-/// Empty: form fields start blank when no record exists yet.
 class ShutoffDetailScreen extends ConsumerStatefulWidget {
   const ShutoffDetailScreen({super.key, required this.utilityType});
 
-  /// One of 'water', 'gas', or 'electrical'.
   final String utilityType;
 
   @override
@@ -59,8 +47,6 @@ class ShutoffDetailScreen extends ConsumerStatefulWidget {
 class _ShutoffDetailScreenState extends ConsumerState<ShutoffDetailScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // ── Controllers ───────────────────────────────────────────────────────────
-
   late final TextEditingController _locationController;
   late final TextEditingController _gasPhoneController;
   late final TextEditingController _breakerLocationController;
@@ -68,18 +54,12 @@ class _ShutoffDetailScreenState extends ConsumerState<ShutoffDetailScreen> {
   late final TextEditingController _toolsController;
   late final TextEditingController _instructionsController;
 
-  // ── Local state ───────────────────────────────────────────────────────────
-
-  /// True while the initial fetch is running.
   bool _loading = true;
-
-  /// True while the save operation is in progress.
   bool _saving = false;
+  bool _isComplete = false;
 
   String? _valveType;
   String? _turnDirection;
-
-  /// Circuit directory entries — only used for electrical.
   Map<String, String> _circuitDirectory = {};
 
   @override
@@ -112,10 +92,7 @@ class _ShutoffDetailScreenState extends ConsumerState<ShutoffDetailScreen> {
       final notifier = ref.read(emergencyHubProvider.notifier);
       final shutoff = await notifier.getShutoff(widget.utilityType);
       if (!mounted) return;
-
-      if (shutoff != null) {
-        _populateFrom(shutoff);
-      }
+      if (shutoff != null) _populateFrom(shutoff);
     } catch (_) {
       if (!mounted) return;
       SnackbarService.showError(
@@ -123,9 +100,7 @@ class _ShutoffDetailScreenState extends ConsumerState<ShutoffDetailScreen> {
         'Could not load shutoff details. You can still fill in and save.',
       );
     } finally {
-      if (mounted) {
-        setState(() => _loading = false);
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -133,6 +108,7 @@ class _ShutoffDetailScreenState extends ConsumerState<ShutoffDetailScreen> {
     _locationController.text = shutoff.locationDescription;
     _instructionsController.text = shutoff.specialInstructions ?? '';
     _toolsController.text = shutoff.toolsRequired.join('\n');
+    _isComplete = shutoff.isComplete;
 
     if (widget.utilityType == 'water' || widget.utilityType == 'gas') {
       _valveType = shutoff.valveType;
@@ -147,8 +123,6 @@ class _ShutoffDetailScreenState extends ConsumerState<ShutoffDetailScreen> {
       _breakerLocationController.text = shutoff.mainBreakerLocation ?? '';
       _breakerAmperageController.text =
           shutoff.mainBreakerAmperage?.toString() ?? '';
-      // circuitDirectory on the model is List<Map<String, dynamic>>.
-      // Convert to Map<String, String> for the editor.
       _circuitDirectory = {
         for (final entry in shutoff.circuitDirectory)
           (entry['number'] as String? ?? ''): (entry['label'] as String? ?? ''),
@@ -163,7 +137,6 @@ class _ShutoffDetailScreenState extends ConsumerState<ShutoffDetailScreen> {
     if (_saving) return;
 
     setState(() => _saving = true);
-
     final notifier = ref.read(emergencyHubProvider.notifier);
 
     try {
@@ -201,9 +174,6 @@ class _ShutoffDetailScreenState extends ConsumerState<ShutoffDetailScreen> {
                 : _breakerLocationController.text.trim();
         data['main_breaker_amperage'] =
             ampText.isEmpty ? null : int.tryParse(ampText);
-
-        // Convert Map<String, String> to List<Map<String, dynamic>> for
-        // the JSONB column expected by the model.
         final circuitList = _circuitDirectory.entries
             .where((e) => e.key.isNotEmpty)
             .map((e) => {'number': e.key, 'label': e.value})
@@ -213,7 +183,6 @@ class _ShutoffDetailScreenState extends ConsumerState<ShutoffDetailScreen> {
 
       await notifier.saveShutoff(data);
       if (!mounted) return;
-
       SnackbarService.showSuccess(
         context,
         '${widget.utilityType.utilityLabel} saved successfully.',
@@ -226,9 +195,7 @@ class _ShutoffDetailScreenState extends ConsumerState<ShutoffDetailScreen> {
         'Could not save shutoff details. Please try again.',
       );
     } finally {
-      if (mounted) {
-        setState(() => _saving = false);
-      }
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -242,17 +209,21 @@ class _ShutoffDetailScreenState extends ConsumerState<ShutoffDetailScreen> {
     if (_loading) {
       return isIOS
           ? CupertinoPageScaffold(
-              navigationBar: CupertinoNavigationBar(middle: Text(title)),
-              child: SafeArea(
+              backgroundColor: AuroraColors.paper,
+              navigationBar: CupertinoNavigationBar(
+                middle: Text(title),
+                backgroundColor: AuroraColors.paper,
+              ),
+              child: const SafeArea(
                 bottom: false,
-                child: const ShutoffDetailSkeleton(),
+                child: ShutoffDetailSkeleton(),
               ),
             )
           : Scaffold(
-              backgroundColor: AppColors.warmOffWhite,
+              backgroundColor: AuroraColors.paper,
               appBar: AppBar(
-                title: Text(title, style: AppTextStyles.h3),
-                backgroundColor: AppColors.warmOffWhite,
+                title: Text(title, style: AuroraType.h3),
+                backgroundColor: AuroraColors.paper,
                 scrolledUnderElevation: 0,
                 elevation: 0,
               ),
@@ -275,6 +246,7 @@ class _ShutoffDetailScreenState extends ConsumerState<ShutoffDetailScreen> {
             turnDirection: _turnDirection,
             circuitDirectory: _circuitDirectory,
             saving: _saving,
+            isComplete: _isComplete,
             onValveTypeChanged: (v) => setState(() => _valveType = v),
             onTurnDirectionChanged: (v) => setState(() => _turnDirection = v),
             onCircuitDirectoryChanged: (m) =>
@@ -295,6 +267,7 @@ class _ShutoffDetailScreenState extends ConsumerState<ShutoffDetailScreen> {
             turnDirection: _turnDirection,
             circuitDirectory: _circuitDirectory,
             saving: _saving,
+            isComplete: _isComplete,
             onValveTypeChanged: (v) => setState(() => _valveType = v),
             onTurnDirectionChanged: (v) => setState(() => _turnDirection = v),
             onCircuitDirectoryChanged: (m) =>
@@ -304,7 +277,7 @@ class _ShutoffDetailScreenState extends ConsumerState<ShutoffDetailScreen> {
   }
 }
 
-// ── iOS layout ─────────────────────────────────────────────────────────────────
+// ── iOS layout ────────────────────────────────────────────────────────────────
 
 class _IOSLayout extends StatelessWidget {
   const _IOSLayout({
@@ -321,6 +294,7 @@ class _IOSLayout extends StatelessWidget {
     required this.turnDirection,
     required this.circuitDirectory,
     required this.saving,
+    required this.isComplete,
     required this.onValveTypeChanged,
     required this.onTurnDirectionChanged,
     required this.onCircuitDirectoryChanged,
@@ -340,6 +314,7 @@ class _IOSLayout extends StatelessWidget {
   final String? turnDirection;
   final Map<String, String> circuitDirectory;
   final bool saving;
+  final bool isComplete;
   final ValueChanged<String?> onValveTypeChanged;
   final ValueChanged<String?> onTurnDirectionChanged;
   final ValueChanged<Map<String, String>> onCircuitDirectoryChanged;
@@ -348,21 +323,10 @@ class _IOSLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
+      backgroundColor: AuroraColors.paper,
       navigationBar: CupertinoNavigationBar(
         middle: Text(title),
-        trailing: saving
-            ? const CupertinoActivityIndicator()
-            : CupertinoButton(
-                padding: EdgeInsets.zero,
-                onPressed: onSave,
-                child: Text(
-                  'Save',
-                  style: AppTextStyles.labelLarge.copyWith(
-                    color: AppColors.deepNavy,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+        backgroundColor: AuroraColors.paper,
       ),
       child: SafeArea(
         bottom: false,
@@ -379,12 +343,12 @@ class _IOSLayout extends StatelessWidget {
           turnDirection: turnDirection,
           circuitDirectory: circuitDirectory,
           saving: saving,
+          isComplete: isComplete,
           isIOS: true,
           onValveTypeChanged: onValveTypeChanged,
           onTurnDirectionChanged: onTurnDirectionChanged,
           onCircuitDirectoryChanged: onCircuitDirectoryChanged,
           onSave: onSave,
-          showSaveButton: false,
         ),
       ),
     );
@@ -408,6 +372,7 @@ class _AndroidLayout extends StatelessWidget {
     required this.turnDirection,
     required this.circuitDirectory,
     required this.saving,
+    required this.isComplete,
     required this.onValveTypeChanged,
     required this.onTurnDirectionChanged,
     required this.onCircuitDirectoryChanged,
@@ -427,6 +392,7 @@ class _AndroidLayout extends StatelessWidget {
   final String? turnDirection;
   final Map<String, String> circuitDirectory;
   final bool saving;
+  final bool isComplete;
   final ValueChanged<String?> onValveTypeChanged;
   final ValueChanged<String?> onTurnDirectionChanged;
   final ValueChanged<Map<String, String>> onCircuitDirectoryChanged;
@@ -435,36 +401,12 @@ class _AndroidLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       appBar: AppBar(
-        title: Text(title, style: AppTextStyles.h3),
-        backgroundColor: AppColors.warmOffWhite,
+        title: Text(title, style: AuroraType.h3),
+        backgroundColor: AuroraColors.paper,
         scrolledUnderElevation: 0,
         elevation: 0,
-        actions: [
-          if (saving)
-            const Padding(
-              padding: EdgeInsets.only(right: AppSizes.md),
-              child: Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            )
-          else
-            TextButton(
-              onPressed: onSave,
-              child: Text(
-                'Save',
-                style: AppTextStyles.labelLarge.copyWith(
-                  color: AppColors.deepNavy,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-        ],
       ),
       body: _FormBody(
         formKey: formKey,
@@ -479,12 +421,12 @@ class _AndroidLayout extends StatelessWidget {
         turnDirection: turnDirection,
         circuitDirectory: circuitDirectory,
         saving: saving,
+        isComplete: isComplete,
         isIOS: false,
         onValveTypeChanged: onValveTypeChanged,
         onTurnDirectionChanged: onTurnDirectionChanged,
         onCircuitDirectoryChanged: onCircuitDirectoryChanged,
         onSave: onSave,
-        showSaveButton: true,
       ),
     );
   }
@@ -492,10 +434,6 @@ class _AndroidLayout extends StatelessWidget {
 
 // ── Shared form body ──────────────────────────────────────────────────────────
 
-/// The actual form content, shared between iOS and Android layouts.
-///
-/// [showSaveButton] drives whether a bottom save button is rendered —
-/// iOS puts Save in the nav bar trailing slot; Android uses the app bar action.
 class _FormBody extends StatelessWidget {
   const _FormBody({
     required this.formKey,
@@ -510,12 +448,12 @@ class _FormBody extends StatelessWidget {
     required this.turnDirection,
     required this.circuitDirectory,
     required this.saving,
+    required this.isComplete,
     required this.isIOS,
     required this.onValveTypeChanged,
     required this.onTurnDirectionChanged,
     required this.onCircuitDirectoryChanged,
     required this.onSave,
-    required this.showSaveButton,
   });
 
   final GlobalKey<FormState> formKey;
@@ -530,12 +468,12 @@ class _FormBody extends StatelessWidget {
   final String? turnDirection;
   final Map<String, String> circuitDirectory;
   final bool saving;
+  final bool isComplete;
   final bool isIOS;
   final ValueChanged<String?> onValveTypeChanged;
   final ValueChanged<String?> onTurnDirectionChanged;
   final ValueChanged<Map<String, String>> onCircuitDirectoryChanged;
   final VoidCallback onSave;
-  final bool showSaveButton;
 
   bool get _isWater => utilityType == 'water';
   bool get _isGas => utilityType == 'gas';
@@ -547,166 +485,160 @@ class _FormBody extends StatelessWidget {
     return Form(
       key: formKey,
       child: SingleChildScrollView(
-        padding: AppPadding.screen,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AuroraSpacing.screenPadH,
+          vertical: AuroraSpacing.screenPadTop,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: AppSizes.sm),
+            // ── Status pill ────────────────────────────────────────────────
+            _StatusPill(isComplete: isComplete),
+            const SizedBox(height: AuroraSpacing.space5),
 
-            // ── Setup instructions banner ──────────────────────────────────
+            // ── Info banner ────────────────────────────────────────────────
             _InfoBanner(utilityType: utilityType),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space3),
 
-            // ── General section ────────────────────────────────────────────
-            _SectionHeader(
-              icon: Icons.location_on_outlined,
-              label: 'Location',
+            // ── Location ───────────────────────────────────────────────────
+            AuroraFormSection(
+              title: 'Location',
+              children: [
+                AuroraTextField(
+                  label: 'Location Description',
+                  required: true,
+                  controller: locationController,
+                  hintText: _locationHint,
+                  maxLines: 3,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) {
+                      return 'Please describe where to find the shutoff';
+                    }
+                    return null;
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: AppSizes.sm),
-            _FormField(
-              controller: locationController,
-              label: 'Location Description',
-              hint: _locationHint,
-              isIOS: isIOS,
-              maxLines: 2,
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) {
-                  return 'Please describe where to find the shutoff';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: AppSizes.lg),
 
-            // ── Valve / shutoff type section (water + gas) ─────────────────
+            // ── Valve Details ──────────────────────────────────────────────
             if (_hasValve) ...[
-              _SectionHeader(
-                icon: Icons.settings_outlined,
-                label: 'Valve Details',
+              AuroraFormSection(
+                title: 'Valve Details',
+                isOptional: true,
+                children: [
+                  _EnumPickerField(
+                    label: 'Valve Type',
+                    value: valveType,
+                    options: _ValveTypes.all
+                        .map((v) => (value: v.value, label: v.label))
+                        .toList(),
+                    isIOS: isIOS,
+                    onChanged: onValveTypeChanged,
+                    context: context,
+                  ),
+                  _EnumPickerField(
+                    label: 'Turn Direction to Close',
+                    value: turnDirection,
+                    options: _TurnDirections.all
+                        .map((v) => (value: v.value, label: v.label))
+                        .toList(),
+                    isIOS: isIOS,
+                    onChanged: onTurnDirectionChanged,
+                    context: context,
+                  ),
+                ],
               ),
-              const SizedBox(height: AppSizes.sm),
-              _EnumPickerField(
-                label: 'Valve Type',
-                value: valveType,
-                options: _ValveTypes.all
-                    .map((v) => (value: v.value, label: v.label))
-                    .toList(),
-                isIOS: isIOS,
-                onChanged: onValveTypeChanged,
-                context: context,
-              ),
-              const SizedBox(height: AppSizes.sm),
-              _EnumPickerField(
-                label: 'Turn Direction to Close',
-                value: turnDirection,
-                options: _TurnDirections.all
-                    .map((v) => (value: v.value, label: v.label))
-                    .toList(),
-                isIOS: isIOS,
-                onChanged: onTurnDirectionChanged,
-                context: context,
-              ),
-              const SizedBox(height: AppSizes.lg),
             ],
 
-            // ── Gas-specific ───────────────────────────────────────────────
+            // ── Gas Company ────────────────────────────────────────────────
             if (_isGas) ...[
-              _SectionHeader(
-                icon: Icons.phone_outlined,
-                label: 'Gas Company',
+              AuroraFormSection(
+                title: 'Gas Company',
+                isOptional: true,
+                children: [
+                  AuroraTextField(
+                    label: 'Emergency Phone',
+                    controller: gasPhoneController,
+                    hintText: 'e.g. 1-800-555-0123',
+                    keyboardType: TextInputType.phone,
+                  ),
+                ],
               ),
-              const SizedBox(height: AppSizes.sm),
-              _FormField(
-                controller: gasPhoneController,
-                label: 'Gas Company Emergency Phone',
-                hint: 'e.g. 1-800-555-0123',
-                isIOS: isIOS,
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: AppSizes.lg),
             ],
 
-            // ── Electrical-specific ────────────────────────────────────────
+            // ── Electrical ─────────────────────────────────────────────────
             if (_isElectrical) ...[
-              _SectionHeader(
-                icon: Icons.electrical_services_outlined,
-                label: 'Main Breaker Panel',
+              AuroraFormSection(
+                title: 'Main Breaker Panel',
+                isOptional: true,
+                children: [
+                  AuroraTextField(
+                    label: 'Panel Location',
+                    controller: breakerLocationController,
+                    hintText: 'e.g. Basement utility room, north wall',
+                    maxLines: 2,
+                  ),
+                  AuroraTextField(
+                    label: 'Main Breaker Amperage',
+                    controller: breakerAmperageController,
+                    hintText: 'e.g. 200',
+                    keyboardType: TextInputType.number,
+                    validator: (v) {
+                      if (v != null && v.isNotEmpty && int.tryParse(v) == null) {
+                        return 'Enter a whole number (e.g. 200)';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
               ),
-              const SizedBox(height: AppSizes.sm),
-              _FormField(
-                controller: breakerLocationController,
-                label: 'Panel Location',
-                hint: 'e.g. Basement utility room, north wall',
-                isIOS: isIOS,
-                maxLines: 2,
-              ),
-              const SizedBox(height: AppSizes.sm),
-              _FormField(
-                controller: breakerAmperageController,
-                label: 'Main Breaker Amperage',
-                hint: 'e.g. 200',
-                isIOS: isIOS,
-                keyboardType: TextInputType.number,
-                validator: (v) {
-                  if (v != null && v.isNotEmpty && int.tryParse(v) == null) {
-                    return 'Enter a whole number (e.g. 200)';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: AppSizes.lg),
-
-              // Circuit directory editor.
+              const SizedBox(height: AuroraSpacing.space8),
               CircuitDirectoryEditor(
                 initialValue: circuitDirectory,
                 onChanged: onCircuitDirectoryChanged,
               ),
-              const SizedBox(height: AppSizes.lg),
             ],
 
-            // ── Tools required ─────────────────────────────────────────────
-            _SectionHeader(
-              icon: Icons.build_outlined,
-              label: 'Tools Required',
-            ),
-            const SizedBox(height: AppSizes.xs),
-            Text(
-              'One tool per line.',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: AppSizes.sm),
-            _FormField(
-              controller: toolsController,
-              label: 'Tools',
-              hint: 'e.g. Adjustable wrench\nFlashlight',
-              isIOS: isIOS,
-              maxLines: 4,
-            ),
-            const SizedBox(height: AppSizes.lg),
-
-            // ── Special instructions ───────────────────────────────────────
-            _SectionHeader(
-              icon: Icons.info_outline,
-              label: 'Special Instructions',
-            ),
-            const SizedBox(height: AppSizes.sm),
-            _FormField(
-              controller: instructionsController,
-              label: 'Instructions',
-              hint: 'Any notes for yourself or emergency responders',
-              isIOS: isIOS,
-              maxLines: 4,
+            // ── Tools Required ─────────────────────────────────────────────
+            AuroraFormSection(
+              title: 'Tools Required',
+              isOptional: true,
+              children: [
+                AuroraTextField(
+                  label: 'Tools',
+                  controller: toolsController,
+                  hintText: 'e.g. Adjustable wrench\nFlashlight',
+                  helperText: 'One tool per line',
+                  maxLines: 4,
+                ),
+              ],
             ),
 
-            // Bottom save button — only shown on Android.
-            if (showSaveButton) ...[
-              const SizedBox(height: AppSizes.xl),
-              _SaveButton(saving: saving, onSave: onSave),
-            ],
+            // ── Special Instructions ───────────────────────────────────────
+            AuroraFormSection(
+              title: 'Special Instructions',
+              isOptional: true,
+              children: [
+                AuroraTextField(
+                  label: 'Instructions',
+                  controller: instructionsController,
+                  hintText: 'Any notes for yourself or emergency responders',
+                  maxLines: 4,
+                ),
+              ],
+            ),
 
-            const SizedBox(height: AppSizes.xl),
+            const SizedBox(height: AuroraSpacing.space10),
+
+            // ── Save CTA ───────────────────────────────────────────────────
+            SaveButton(
+              label: 'Save Shutoff Info',
+              onPressed: saving ? null : onSave,
+              loading: saving,
+              expand: true,
+            ),
+
+            const SizedBox(height: AuroraSpacing.space10),
           ],
         ),
       ),
@@ -721,34 +653,43 @@ class _FormBody extends StatelessWidget {
       };
 }
 
-// ── Section header ─────────────────────────────────────────────────────────────
+// ── Status pill ───────────────────────────────────────────────────────────────
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.icon, required this.label});
-  final IconData icon;
-  final String label;
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.isComplete});
+  final bool isComplete;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: AppSizes.iconSm, color: AppColors.deepNavy),
-        const SizedBox(width: AppSizes.xs),
-        Text(
-          label,
-          style: AppTextStyles.labelLarge.copyWith(
-            fontWeight: FontWeight.w700,
-            color: AppColors.deepNavy,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: isComplete ? AuroraColors.limeDim : AuroraColors.coralDim,
+        borderRadius: AuroraRadius.full,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isComplete ? Icons.check_circle_outline : Icons.radio_button_unchecked,
+            size: 13,
+            color: isComplete ? AuroraColors.limeDeep : AuroraColors.coral,
           ),
-        ),
-      ],
+          const SizedBox(width: 5),
+          Text(
+            isComplete ? 'COMPLETE' : 'INCOMPLETE',
+            style: AuroraType.labelSm.copyWith(
+              color: isComplete ? AuroraColors.limeDeep : AuroraColors.coral,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
 // ── Info banner ───────────────────────────────────────────────────────────────
 
-/// Contextual tip shown at the top of each utility type's form.
 class _InfoBanner extends StatelessWidget {
   const _InfoBanner({required this.utilityType});
   final String utilityType;
@@ -756,21 +697,21 @@ class _InfoBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: AppPadding.card,
+      padding: const EdgeInsets.all(AuroraSpacing.space5),
       decoration: BoxDecoration(
-        color: AppColors.infoLight,
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-        border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
+        color: AuroraColors.cobaltDim,
+        borderRadius: AuroraRadius.md,
+        border: Border.all(color: AuroraColors.cobalt.withValues(alpha: 0.25)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline, size: AppSizes.iconSm, color: AppColors.info),
-          const SizedBox(width: AppSizes.sm),
+          Icon(Icons.info_outline, size: 16, color: AuroraColors.cobalt),
+          const SizedBox(width: AuroraSpacing.space3),
           Expanded(
             child: Text(
               _tip,
-              style: AppTextStyles.bodySmall.copyWith(color: AppColors.info),
+              style: AuroraType.bodySm.copyWith(color: AuroraColors.cobaltDeep),
             ),
           ),
         ],
@@ -785,177 +726,13 @@ class _InfoBanner extends StatelessWidget {
           'If you smell gas, do NOT use any switches or electronics. Leave immediately and call your gas company from outside.',
         'electrical' =>
           'Turning off the main breaker cuts power to the entire home. Individual circuit breakers control specific areas.',
-        _ => 'Keep this information updated so you are prepared in an emergency.',
+        _ =>
+          'Keep this information updated so you are prepared in an emergency.',
       };
-}
-
-// ── Adaptive form field ───────────────────────────────────────────────────────
-
-class _FormField extends StatelessWidget {
-  const _FormField({
-    required this.controller,
-    required this.label,
-    required this.hint,
-    required this.isIOS,
-    this.maxLines = 1,
-    this.keyboardType = TextInputType.text,
-    this.validator,
-  });
-
-  final TextEditingController controller;
-  final String label;
-  final String hint;
-  final bool isIOS;
-  final int maxLines;
-  final TextInputType keyboardType;
-  final FormFieldValidator<String>? validator;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: AppTextStyles.labelLarge),
-        const SizedBox(height: AppSizes.xs),
-        if (isIOS)
-          _IOSFormField(
-            controller: controller,
-            hint: hint,
-            maxLines: maxLines,
-            keyboardType: keyboardType,
-            validator: validator,
-          )
-        else
-          _AndroidFormField(
-            controller: controller,
-            hint: hint,
-            maxLines: maxLines,
-            keyboardType: keyboardType,
-            validator: validator,
-          ),
-      ],
-    );
-  }
-}
-
-class _IOSFormField extends StatelessWidget {
-  const _IOSFormField({
-    required this.controller,
-    required this.hint,
-    required this.maxLines,
-    required this.keyboardType,
-    required this.validator,
-  });
-
-  final TextEditingController controller;
-  final String hint;
-  final int maxLines;
-  final TextInputType keyboardType;
-  final FormFieldValidator<String>? validator;
-
-  @override
-  Widget build(BuildContext context) {
-    // Wrap in FormField to participate in form validation.
-    return FormField<String>(
-      initialValue: controller.text,
-      validator: validator,
-      builder: (field) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CupertinoTextField(
-            controller: controller,
-            placeholder: hint,
-            maxLines: maxLines,
-            keyboardType: keyboardType,
-            onChanged: (v) => field.didChange(v),
-            padding: const EdgeInsets.all(AppSizes.sm),
-            style: AppTextStyles.bodyMedium,
-            placeholderStyle: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textDisabled,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              border: Border.all(
-                color: field.hasError ? AppColors.error : AppColors.border,
-              ),
-              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-            ),
-          ),
-          if (field.hasError) ...[
-            const SizedBox(height: AppSizes.xs),
-            Text(
-              field.errorText!,
-              style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _AndroidFormField extends StatelessWidget {
-  const _AndroidFormField({
-    required this.controller,
-    required this.hint,
-    required this.maxLines,
-    required this.keyboardType,
-    required this.validator,
-  });
-
-  final TextEditingController controller;
-  final String hint;
-  final int maxLines;
-  final TextInputType keyboardType;
-  final FormFieldValidator<String>? validator;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      maxLines: maxLines,
-      keyboardType: keyboardType,
-      validator: validator,
-      style: AppTextStyles.bodyMedium,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: AppTextStyles.bodyMedium.copyWith(
-          color: AppColors.textDisabled,
-        ),
-        contentPadding: AppPadding.card,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: BorderSide(color: AppColors.border),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: BorderSide(color: AppColors.border),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: BorderSide(color: AppColors.deepNavy, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: BorderSide(color: AppColors.error),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: BorderSide(color: AppColors.error, width: 1.5),
-        ),
-        filled: true,
-        fillColor: AppColors.surface,
-      ),
-    );
-  }
 }
 
 // ── Enum picker field ─────────────────────────────────────────────────────────
 
-/// Adaptive dropdown/picker for enum values.
-///
-/// iOS: taps open a [CupertinoActionSheet].
-/// Android: uses a [DropdownButtonFormField].
 class _EnumPickerField extends StatelessWidget {
   const _EnumPickerField({
     required this.label,
@@ -971,59 +748,68 @@ class _EnumPickerField extends StatelessWidget {
   final List<({String value, String label})> options;
   final bool isIOS;
   final ValueChanged<String?> onChanged;
-  // context passed in so the CupertinoActionSheet can be presented.
   final BuildContext context;
 
-  String get _displayLabel =>
-      value == null ? 'Select...' : options.firstWhere((o) => o.value == value, orElse: () => (value: value!, label: value!)).label;
+  String get _displayLabel => value == null
+      ? 'Select...'
+      : options
+          .firstWhere((o) => o.value == value,
+              orElse: () => (value: value!, label: value!))
+          .label;
 
   @override
   Widget build(BuildContext outerContext) {
+    if (isIOS) {
+      return AuroraSelectField(
+        label: label,
+        value: value != null ? _displayLabel : null,
+        placeholder: 'Select...',
+        onTap: () => _showIOSPicker(outerContext),
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label, style: AppTextStyles.labelLarge),
-        const SizedBox(height: AppSizes.xs),
-        if (isIOS)
-          _IOSPickerTile(
-            displayLabel: _displayLabel,
-            hasValue: value != null,
-            onTap: () => _showIOSPicker(outerContext),
-          )
-        else
-          DropdownButtonFormField<String>(
-            initialValue: value,
-            items: options
-                .map(
-                  (o) => DropdownMenuItem(
-                    value: o.value,
-                    child: Text(o.label, style: AppTextStyles.bodyMedium),
-                  ),
-                )
-                .toList(),
-            onChanged: onChanged,
-            style: AppTextStyles.bodyMedium,
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.md,
-                vertical: 14,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-                borderSide: BorderSide(color: AppColors.border),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-                borderSide: BorderSide(color: AppColors.border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-                borderSide: BorderSide(color: AppColors.deepNavy, width: 1.5),
-              ),
-              filled: true,
-              fillColor: AppColors.surface,
+        Text(
+          label.toUpperCase(),
+          style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
+        ),
+        const SizedBox(height: AuroraSpacing.space1),
+        DropdownButtonFormField<String>(
+          initialValue: value,
+          items: options
+              .map(
+                (o) => DropdownMenuItem(
+                  value: o.value,
+                  child: Text(o.label, style: AuroraType.body),
+                ),
+              )
+              .toList(),
+          onChanged: onChanged,
+          style: AuroraType.body,
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AuroraSpacing.space7,
+              vertical: 14,
             ),
+            border: OutlineInputBorder(
+              borderRadius: AuroraRadius.md,
+              borderSide: const BorderSide(color: AuroraColors.inkBorder),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: AuroraRadius.md,
+              borderSide:
+                  const BorderSide(color: AuroraColors.inkBorder, width: 1.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: AuroraRadius.md,
+              borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
+            ),
+            filled: true,
+            fillColor: AuroraColors.paper,
           ),
+        ),
       ],
     );
   }
@@ -1048,91 +834,6 @@ class _EnumPickerField extends StatelessWidget {
           onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(),
           child: const Text('Cancel'),
         ),
-      ),
-    );
-  }
-}
-
-class _IOSPickerTile extends StatelessWidget {
-  const _IOSPickerTile({
-    required this.displayLabel,
-    required this.hasValue,
-    required this.onTap,
-  });
-
-  final String displayLabel;
-  final bool hasValue;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: AppSizes.inputHeight,
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          border: Border.all(color: AppColors.border),
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              displayLabel,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: hasValue ? AppColors.textPrimary : AppColors.textDisabled,
-              ),
-            ),
-            Icon(
-              CupertinoIcons.chevron_down,
-              size: AppSizes.iconSm,
-              color: AppColors.textSecondary,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Save button (Android only) ────────────────────────────────────────────────
-
-class _SaveButton extends StatelessWidget {
-  const _SaveButton({required this.saving, required this.onSave});
-  final bool saving;
-  final VoidCallback onSave;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: AppSizes.buttonHeight,
-      child: FilledButton(
-        onPressed: saving ? null : onSave,
-        style: FilledButton.styleFrom(
-          backgroundColor: AppColors.deepNavy,
-          disabledBackgroundColor: AppColors.deepNavy.withValues(alpha: 0.5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          ),
-        ),
-        child: saving
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.textInverse,
-                ),
-              )
-            : Text(
-                'Save',
-                style: AppTextStyles.button.copyWith(
-                  color: AppColors.textInverse,
-                ),
-              ),
       ),
     );
   }

@@ -9,8 +9,7 @@ part 'project_budget_provider.g.dart';
 
 const _kColumns =
     'id, project_id, user_id, name, category, estimated_cost, actual_cost, '
-    'is_paid, vendor, receipt_document_id, phase_id, created_at, updated_at, '
-    'deleted_at';
+    'is_paid, vendor, created_at, updated_at, deleted_at';
 
 /// Manages budget line items for a single project.
 @riverpod
@@ -49,27 +48,54 @@ class ProjectBudgetNotifier extends _$ProjectBudgetNotifier {
   }
 
   /// Updates a budget line item by [id].
+  /// Optimistically patches in-memory first so the UI updates without a
+  /// loading flash, then confirms from the server.
   Future<void> updateItem(String id, Map<String, dynamic> data) async {
+    // Optimistic patch — update state immediately, no loading state
+    if (state.hasValue) {
+      state = AsyncData(
+        state.value!.map((item) {
+          if (item.id != id) return item;
+          return item.copyWith(
+            isPaid: data['is_paid'] as bool? ?? item.isPaid,
+            actualCost: (data['actual_cost'] as num?)?.toDouble() ?? item.actualCost,
+            estimatedCost: (data['estimated_cost'] as num?)?.toDouble() ?? item.estimatedCost,
+            name: data['name'] as String? ?? item.name,
+            vendor: data['vendor'] as String? ?? item.vendor,
+          );
+        }).toList(),
+      );
+    }
+
     await SupabaseService.client
         .from('project_budget_items')
         .update(data)
         .eq('id', id);
 
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetch);
+    // Confirm from server without a loading flash
+    state = AsyncData(await _fetch());
     ref.invalidate(projectDetailProvider(projectId));
     ref.invalidate(projectsProvider);
   }
 
   /// Soft-deletes a budget line item by [id].
+  /// Removes item from in-memory list immediately so the UI animates out
+  /// without a skeleton flash.
   Future<void> deleteItem(String id) async {
+    // Optimistic remove
+    if (state.hasValue) {
+      state = AsyncData(
+        state.value!.where((item) => item.id != id).toList(),
+      );
+    }
+
     await SupabaseService.client
         .from('project_budget_items')
         .update({'deleted_at': DateTime.now().toIso8601String()})
         .eq('id', id);
 
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetch);
+    // Confirm from server without a loading flash
+    state = AsyncData(await _fetch());
     ref.invalidate(projectDetailProvider(projectId));
     ref.invalidate(projectsProvider);
   }
@@ -104,22 +130,56 @@ class ProjectBudgetNotifier extends _$ProjectBudgetNotifier {
   }
 }
 
-/// Computes the budget summary from the loaded items list.
-/// Uses the project's [estimatedBudget] (set at creation) as the budget cap,
-/// and sums [actualCost] across items for the spent figure.
+/// Computes the budget summary (totals + per-category breakdown) from items.
 @riverpod
 Future<BudgetSummary> projectBudgetSummary(
     Ref ref, String projectId) async {
   final items = await ref.watch(projectBudgetProvider(projectId).future);
-  final project =
-      await ref.watch(projectDetailProvider(projectId).future);
+  final project = await ref.watch(projectDetailProvider(projectId).future);
 
-  final actual = items.fold<double>(0, (s, i) => s + i.actualCost);
+  // For paid items with no actualCost entered, fall back to estimatedCost.
+  double effectiveCost(ProjectBudgetItem i) =>
+      i.actualCost > 0 ? i.actualCost : i.estimatedCost;
+
+  // Paid items = spent; all items = committed (total exposure)
+  final actual = items
+      .where((i) => i.isPaid)
+      .fold<double>(0, (s, i) => s + effectiveCost(i));
+  final committed = items.fold<double>(0, (s, i) => s + effectiveCost(i));
   final estimated = project.estimatedBudget ?? 0;
+  final overBudgetCount =
+      items.where((i) => effectiveCost(i) > i.estimatedCost && i.estimatedCost > 0).length;
+
+  // Per-category aggregation — act = paid only, pending = unpaid count
+  final Map<String, ({double est, double act, int count, int pending})> byCategory = {};
+  for (final item in items) {
+    final e = byCategory[item.category] ??
+        (est: 0.0, act: 0.0, count: 0, pending: 0);
+    byCategory[item.category] = (
+      est: e.est + item.estimatedCost,
+      act: e.act + (item.isPaid ? effectiveCost(item) : 0),
+      count: e.count + 1,
+      pending: e.pending + (item.isPaid ? 0 : 1),
+    );
+  }
+  final breakdown = byCategory.entries
+      .map((e) => BudgetCategoryRow(
+            category: e.key,
+            estimated: e.value.est,
+            actual: e.value.act,
+            lineItemCount: e.value.count,
+            pendingCount: e.value.pending,
+          ))
+      .toList()
+    ..sort((a, b) => b.actual.compareTo(a.actual));
+
   return BudgetSummary(
     estimatedTotal: estimated,
     actualTotal: actual,
+    committedTotal: committed,
     remaining: estimated - actual,
-    categoryBreakdown: [],
+    categoryBreakdown: breakdown,
+    overBudgetCount: overBudgetCount,
+    totalItems: items.length,
   );
 }

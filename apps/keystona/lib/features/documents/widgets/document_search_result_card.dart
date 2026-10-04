@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/upgrade_sheet.dart';
 import '../../../services/providers/service_providers.dart';
 import '../models/document.dart';
@@ -84,19 +84,19 @@ class _SnippetRow extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(top: 2),
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
+        horizontal: AuroraSpacing.space5,
+        vertical: AuroraSpacing.space3,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
+        color: AuroraColors.butter,
         borderRadius: const BorderRadius.vertical(
-          bottom: Radius.circular(AppSizes.radiusMd),
+          bottom: Radius.circular(12),
         ),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AuroraColors.inkBorder),
       ),
       child: Text(
         plain,
-        style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+        style: AuroraType.bodySm.copyWith(color: AuroraColors.inkSecondary),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
@@ -120,37 +120,37 @@ class _LockedSnippetRow extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(top: 2),
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
+          horizontal: AuroraSpacing.space5,
+          vertical: AuroraSpacing.space3,
         ),
         decoration: BoxDecoration(
-          color: AppColors.goldAccent.withAlpha(15),
+          color: AuroraColors.yellow.withAlpha(15),
           borderRadius: const BorderRadius.vertical(
-            bottom: Radius.circular(AppSizes.radiusMd),
+            bottom: Radius.circular(12),
           ),
-          border: Border.all(color: AppColors.goldAccent.withAlpha(80)),
+          border: Border.all(color: AuroraColors.yellow.withAlpha(80)),
         ),
         child: Row(
           children: [
-            const Icon(
+            Icon(
               Icons.star_rounded,
-              color: AppColors.goldAccent,
-              size: AppSizes.iconSm,
+              color: AuroraColors.yellow,
+              size: 16,
             ),
-            const SizedBox(width: AppSizes.xs),
+            const SizedBox(width: AuroraSpacing.space1),
             Expanded(
               child: Text(
                 'Unlock document content search with Premium',
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.goldAccent,
+                style: AuroraType.bodySm.copyWith(
+                  color: AuroraColors.yellowDeep,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
-              color: AppColors.goldAccent,
-              size: AppSizes.iconSm,
+              color: AuroraColors.yellow,
+              size: 16,
             ),
           ],
         ),

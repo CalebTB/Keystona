@@ -152,7 +152,7 @@ class ProjectContractorsNotifier extends _$ProjectContractorsNotifier {
         .select(
           'id, project_id, contact_id, user_id, role, contract_amount, '
           'amount_paid, rating, review_notes, created_at, '
-          'emergency_contacts(name, phone_primary, phone_secondary, email)',
+          'emergency_contacts(name, phone_primary, phone_secondary, email, company_name)',
         )
         .eq('project_id', projectId)
         .order('created_at', ascending: true);
@@ -174,6 +174,7 @@ class ProjectContractorsNotifier extends _$ProjectContractorsNotifier {
       contactName: contact['name'] as String? ?? 'Unknown',
       contactPhone: contact['phone_primary'] as String?,
       contactEmail: contact['email'] as String?,
+      contactCompany: contact['company_name'] as String?,
       role: row['role'] as String?,
       contractAmount: (row['contract_amount'] as num?)?.toDouble(),
       amountPaid: (row['amount_paid'] as num?)?.toDouble(),

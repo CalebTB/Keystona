@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+
+
+
 
 class AppliancesEmptyState extends StatelessWidget {
   const AppliancesEmptyState({super.key, required this.onAdd});
@@ -13,36 +16,36 @@ class AppliancesEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.kitchen_outlined,
               size: 120,
-              color: AppColors.deepNavy.withValues(alpha: 0.4),
+              color: AuroraColors.ink.withValues(alpha: 0.4),
             ),
-            const SizedBox(height: AppSizes.lg),
+            const SizedBox(height: AuroraSpacing.space7),
             Text(
               'Add your appliances',
-              style: AppTextStyles.h2,
+              style: AuroraType.h2,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             Text(
               'Track your refrigerator, washer, dishwasher, and other appliances to stay on top of warranties and maintenance.',
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textSecondary),
+              style: AuroraType.body
+                  .copyWith(color: AuroraColors.inkSecondary),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.xl),
+            const SizedBox(height: AuroraSpacing.space8),
             FilledButton.icon(
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.deepNavy,
-                foregroundColor: AppColors.textInverse,
+                backgroundColor: AuroraColors.ink,
+                foregroundColor: AuroraColors.paper,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.lg,
-                  vertical: AppSizes.md,
+                  horizontal: AuroraSpacing.space7,
+                  vertical: AuroraSpacing.space5,
                 ),
               ),
               onPressed: onAdd,

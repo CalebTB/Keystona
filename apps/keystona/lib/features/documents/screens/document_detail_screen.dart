@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,27 +11,58 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 import '../../../core/widgets/confirm_dialog.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/supabase_service.dart';
 import '../models/document.dart';
+import '../models/document_category.dart';
 import '../providers/document_detail_provider.dart';
 import '../providers/document_links_provider.dart';
 import '../widgets/document_detail_skeleton.dart';
 import '../widgets/edit_metadata_sheet.dart';
-import '../widgets/expiration_badge.dart';
 
-/// Full document detail screen with in-app preview, metadata, and actions.
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+Color _catColor(DocumentCategory? category) {
+  final hex = category?.color;
+  if (hex == null || hex.isEmpty) return AuroraColors.cobalt;
+  try {
+    final cleaned = hex.replaceAll('#', '');
+    return Color(int.parse('FF$cleaned', radix: 16));
+  } catch (_) {
+    return AuroraColors.cobalt;
+  }
+}
+
+String _extFromMime(String? mime) {
+  if (mime == null || mime.isEmpty) return 'FILE';
+  if (mime.contains('pdf')) return 'PDF';
+  if (mime.contains('jpeg') || mime.contains('jpg')) return 'JPG';
+  if (mime.contains('png')) return 'PNG';
+  if (mime.contains('heic')) return 'HEIC';
+  if (mime.contains('gif')) return 'GIF';
+  if (mime.contains('webp')) return 'WEBP';
+  final ext = mime.split('/').last.toUpperCase();
+  return ext.length > 4 ? ext.substring(0, 4) : ext;
+}
+
+String _formatFileSize(int bytes) {
+  if (bytes < 1024) return '${bytes}B';
+  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+  return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+}
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
+
+/// Card-stack document detail screen.
 ///
 /// Route: `/documents/:documentId`
-///
-/// Adaptive layout:
-/// - iOS: [CupertinoPageScaffold] with [CupertinoNavigationBar]
-/// - Android: [Scaffold] with [AppBar]
 class DocumentDetailScreen extends ConsumerWidget {
   const DocumentDetailScreen({super.key, required this.documentId});
 
@@ -38,90 +70,24 @@ class DocumentDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    return isIOS
-        ? _IOSDetailLayout(documentId: documentId)
-        : _AndroidDetailLayout(documentId: documentId);
-  }
-}
-
-// ── iOS layout ────────────────────────────────────────────────────────────────
-
-class _IOSDetailLayout extends ConsumerWidget {
-  const _IOSDetailLayout({required this.documentId});
-
-  final String documentId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
     final detailState = ref.watch(documentDetailProvider(documentId));
-
-    return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        previousPageTitle: 'Documents',
-        middle: detailState.maybeWhen(
-          data: (doc) => Text(doc.name, overflow: TextOverflow.ellipsis),
-          orElse: () => const Text('Document'),
-        ),
-        trailing: detailState.maybeWhen(
-          data: (doc) => CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: () => EditMetadataSheet.show(context, doc),
-            child: const Text('Edit'),
-          ),
-          orElse: () => null,
-        ),
-      ),
-      child: detailState.when(
-        loading: () => const DocumentDetailSkeleton(),
-        error: (e, _) => ErrorView(
-          message: "Couldn't load document.",
-          onRetry: () => ref.invalidate(documentDetailProvider(documentId)),
-        ),
-        data: (doc) => _DetailBody(document: doc, documentId: documentId),
-      ),
-    );
-  }
-}
-
-// ── Android layout ────────────────────────────────────────────────────────────
-
-class _AndroidDetailLayout extends ConsumerWidget {
-  const _AndroidDetailLayout({required this.documentId});
-
-  final String documentId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final detailState = ref.watch(documentDetailProvider(documentId));
-
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
-      appBar: AppBar(
-        title: detailState.maybeWhen(
-          data: (doc) => Text(doc.name, style: AppTextStyles.h4),
-          orElse: () => const Text('Document'),
-        ),
-        backgroundColor: AppColors.warmOffWhite,
-        scrolledUnderElevation: 0,
-        elevation: 0,
-        actions: [
-          if (detailState.hasValue)
-            TextButton(
-              onPressed: () =>
-                  EditMetadataSheet.show(context, detailState.value!),
-              child: Text(
-                'Edit',
-                style: AppTextStyles.button.copyWith(color: AppColors.deepNavy),
-              ),
-            ),
-        ],
-      ),
+      backgroundColor: AuroraColors.paper,
       body: detailState.when(
         loading: () => const DocumentDetailSkeleton(),
-        error: (e, _) => ErrorView(
-          message: "Couldn't load document.",
-          onRetry: () => ref.invalidate(documentDetailProvider(documentId)),
+        error: (e, _) => SafeArea(
+          child: Column(
+            children: [
+              _BackButton(onTap: () => context.pop()),
+              Expanded(
+                child: ErrorView(
+                  message: "Couldn't load document.",
+                  onRetry: () =>
+                      ref.invalidate(documentDetailProvider(documentId)),
+                ),
+              ),
+            ],
+          ),
         ),
         data: (doc) => _DetailBody(document: doc, documentId: documentId),
       ),
@@ -129,7 +95,42 @@ class _AndroidDetailLayout extends ConsumerWidget {
   }
 }
 
-// ── Shared detail body ────────────────────────────────────────────────────────
+// ─── Back button (error state) ────────────────────────────────────────────────
+
+class _BackButton extends StatelessWidget {
+  const _BackButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AuroraSpacing.screenPadH, 12, 0, 0),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(CupertinoIcons.chevron_back,
+                color: AuroraColors.coral, size: 20),
+            const SizedBox(width: 2),
+            Text(
+              'Documents',
+              style: AuroraType.bodySm.copyWith(
+                color: AuroraColors.coral,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Detail Body ──────────────────────────────────────────────────────────────
 
 class _DetailBody extends ConsumerStatefulWidget {
   const _DetailBody({required this.document, required this.documentId});
@@ -212,32 +213,31 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
     } catch (_) {
       if (mounted) {
         setState(() => _deletePending = false);
-        SnackbarService.showError(context, "Couldn't delete document. Try again.");
+        SnackbarService.showError(
+            context, "Couldn't delete document. Try again.");
       }
       return;
     }
 
     if (!mounted) return;
 
-    // Show 5-second undo snackbar. If dismissed without undo, pop the screen.
     final controller = ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           'Document moved to trash.',
-          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textInverse),
+          style: AuroraType.body.copyWith(color: AuroraColors.paper),
         ),
-        backgroundColor: AppColors.gray800,
+        backgroundColor: AuroraColors.ink,
         duration: const Duration(seconds: 5),
         behavior: SnackBarBehavior.floating,
         action: SnackBarAction(
           label: 'UNDO',
-          textColor: AppColors.goldAccent,
+          textColor: AuroraColors.yellow,
           onPressed: _undoDelete,
         ),
       ),
     );
 
-    // Navigate back when the snackbar closes and undo was not pressed.
     _deleteTimer = Timer(const Duration(seconds: 5), () {
       if (mounted && _deletePending) {
         controller.close();
@@ -249,7 +249,6 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
   Future<void> _undoDelete() async {
     _deleteTimer?.cancel();
     _deleteTimer = null;
-
     try {
       await ref
           .read(documentDetailProvider(widget.documentId).notifier)
@@ -267,43 +266,108 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
 
   @override
   Widget build(BuildContext context) {
-    // Re-watch so the UI updates after edit metadata saves.
-    final doc = ref
-            .watch(documentDetailProvider(widget.documentId))
-            .value ??
+    final doc = ref.watch(documentDetailProvider(widget.documentId)).value ??
         widget.document;
-
-    return SafeArea(
-      bottom: false,
-      child: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: _DocumentPreview(document: doc),
-          ),
-          SliverPadding(
-            padding: AppPadding.screen,
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                const SizedBox(height: AppSizes.lg),
-                _ActionRow(
-                  onShare: _onShare,
-                  onDownload: _onDownload,
-                  onDelete: _deletePending ? null : _onDelete,
-                ),
-                const SizedBox(height: AppSizes.lg),
-                const Divider(height: 1, color: AppColors.divider),
-                const SizedBox(height: AppSizes.md),
-                _MetadataSection(document: doc),
-                if (doc.linkedSystemId != null || doc.linkedApplianceId != null) ...[
-                  const SizedBox(height: AppSizes.md),
-                  const Divider(height: 1, color: AppColors.divider),
-                  const SizedBox(height: AppSizes.md),
-                  _LinkedChip(document: doc),
-                ],
-                _LinkedItemsSection(documentId: widget.documentId),
-                const SizedBox(height: AppSizes.xl),
-              ]),
+    final catColor = _catColor(doc.category);
+    final daysLeft = doc.expirationDate?.difference(DateTime.now()).inDays;
+    final showExpiryCard = daysLeft != null && daysLeft < 90;
+    return Stack(
+      children: [
+        CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: SafeArea(
+                bottom: false,
+                child: _NavRow(documentId: widget.documentId, document: doc),
+              ),
             ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AuroraSpacing.screenPadH,
+              ),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  const SizedBox(height: 14),
+                  _PreviewCard(document: doc, catColor: catColor),
+                  const SizedBox(height: 16),
+                  _TitleArea(
+                    document: doc,
+                    catColor: catColor,
+                    daysLeft: daysLeft,
+                  ),
+                  if (showExpiryCard) ...[
+                    const SizedBox(height: 12),
+                    _ExpiryCountdownCard(daysLeft: daysLeft),
+                  ],
+                  const SizedBox(height: AuroraSpacing.space5),
+                  _DetailsCard(document: doc),
+                  _LinkedToCard(document: doc),
+                  _UsedInCard(documentId: widget.documentId),
+                  const SizedBox(height: AuroraSpacing.space5),
+                  _NotesCard(document: doc),
+                  const SizedBox(height: AuroraSpacing.space5),
+                  _FileInfoCard(document: doc),
+                  const SizedBox(height: 120),
+                ]),
+              ),
+            ),
+          ],
+        ),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: _BottomActionBar(
+            onShare: _onShare,
+            onDownload: _onDownload,
+            onDelete: _deletePending ? null : _onDelete,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Nav Row ──────────────────────────────────────────────────────────────────
+
+class _NavRow extends ConsumerWidget {
+  const _NavRow({required this.documentId, required this.document});
+
+  final String documentId;
+  final Document document;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AuroraSpacing.screenPadH, 8, AuroraSpacing.screenPadH, 0,
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => context.pop(),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(CupertinoIcons.chevron_back,
+                    color: AuroraColors.coral, size: 20),
+                const SizedBox(width: 2),
+                Text(
+                  'Documents',
+                  style: AuroraType.bodySm.copyWith(
+                    color: AuroraColors.coral,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Spacer(),
+          _NavIconButton(
+            icon: Icons.edit_outlined,
+            onTap: () => EditMetadataSheet.show(context, document),
           ),
         ],
       ),
@@ -311,52 +375,962 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
   }
 }
 
-// ── Document preview ──────────────────────────────────────────────────────────
+class _NavIconButton extends StatelessWidget {
+  const _NavIconButton({required this.icon, required this.onTap});
 
-/// Shows the document file inline.
-///
-/// - `application/pdf` → [PdfView] with page navigation + pinch-to-zoom
-/// - `image/*`         → [PhotoView] with pinch-to-zoom
-/// - Other MIME types  → generic file icon placeholder
-class _DocumentPreview extends StatefulWidget {
-  const _DocumentPreview({required this.document});
-
-  final Document document;
+  final IconData icon;
+  final VoidCallback onTap;
 
   @override
-  State<_DocumentPreview> createState() => _DocumentPreviewState();
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: AuroraColors.paper,
+          shape: BoxShape.circle,
+          border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: AuroraColors.ink.withValues(alpha: 0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Icon(icon, size: 16, color: AuroraColors.inkSecondary),
+      ),
+    );
+  }
 }
 
-class _DocumentPreviewState extends State<_DocumentPreview> {
-  bool get _isPdf {
-    return (widget.document.mimeType ?? '').contains('pdf');
+// ─── Preview Card ─────────────────────────────────────────────────────────────
+
+class _PreviewCard extends StatefulWidget {
+  const _PreviewCard({required this.document, required this.catColor});
+
+  final Document document;
+  final Color catColor;
+
+  @override
+  State<_PreviewCard> createState() => _PreviewCardState();
+}
+
+class _PreviewCardState extends State<_PreviewCard> {
+  String? _thumbnailUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.document.thumbnailPath != null) {
+      _fetchThumbnail();
+    }
   }
 
-  bool get _isImage {
-    return (widget.document.mimeType ?? '').startsWith('image/');
+  Future<void> _fetchThumbnail() async {
+    try {
+      final url = await SupabaseService.client.storage
+          .from('documents')
+          .createSignedUrl(widget.document.thumbnailPath!, 3600);
+      if (mounted) setState(() => _thumbnailUrl = url);
+    } catch (_) {
+      // Fall back to icon placeholder — no-op
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isPdf) return _PdfPreview(filePath: widget.document.filePath);
-    if (_isImage) return _ImagePreview(filePath: widget.document.filePath);
+    final document = widget.document;
+    final catColor = widget.catColor;
+    final ext = _extFromMime(document.mimeType);
+    final dimColor = catColor.withValues(alpha: 0.07);
+    final borderColor = catColor.withValues(alpha: 0.12);
+
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          fullscreenDialog: true,
+          builder: (_) => _FullscreenPreview(document: document),
+        ),
+      ),
+      child: Container(
+        height: 220,
+        decoration: BoxDecoration(
+          color: AuroraColors.paper,
+          borderRadius: AuroraRadius.xl,
+          border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: AuroraColors.ink.withValues(alpha: 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: AuroraRadius.xl,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // ── Background: thumbnail or gradient placeholder ──────────────
+              if (_thumbnailUrl != null)
+                CachedNetworkImage(
+                  imageUrl: _thumbnailUrl!,
+                  fit: BoxFit.cover,
+                  placeholder: (_, _) => _iconPlaceholder(
+                      dimColor, borderColor, catColor, ext, document),
+                  errorWidget: (_, _, _) => _iconPlaceholder(
+                      dimColor, borderColor, catColor, ext, document),
+                )
+              else
+                _iconPlaceholder(dimColor, borderColor, catColor, ext, document),
+
+              // ── Scrim for readability when thumbnail is shown ──────────────
+              if (_thumbnailUrl != null)
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          AuroraColors.ink.withValues(alpha: 0.35),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+              // ── "Tap to preview" hint ─────────────────────────────────────
+              Positioned(
+                bottom: 12,
+                left: 12,
+                child: Text(
+                  document.pageCount != null
+                      ? '${document.pageCount} page${document.pageCount == 1 ? '' : 's'} · Tap to preview'
+                      : 'Tap to preview',
+                  style: AuroraType.labelSm.copyWith(
+                    color: _thumbnailUrl != null
+                        ? AuroraColors.paper.withValues(alpha: 0.85)
+                        : AuroraColors.inkTertiary,
+                  ),
+                ),
+              ),
+
+              // ── Expand icon ───────────────────────────────────────────────
+              Positioned(
+                bottom: 12,
+                right: 12,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: _thumbnailUrl != null
+                        ? AuroraColors.ink.withValues(alpha: 0.35)
+                        : AuroraColors.ink.withValues(alpha: 0.06),
+                    borderRadius: AuroraRadius.sm,
+                  ),
+                  child: Icon(
+                    Icons.open_in_full_rounded,
+                    size: 16,
+                    color: _thumbnailUrl != null
+                        ? AuroraColors.paper
+                        : AuroraColors.inkSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _iconPlaceholder(Color dimColor, Color borderColor, Color catColor,
+      String ext, Document document) {
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.center,
+                colors: [dimColor, AuroraColors.paper],
+              ),
+            ),
+          ),
+        ),
+        Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: dimColor,
+                  borderRadius: AuroraRadius.sm,
+                  border: Border.all(color: borderColor, width: 1.5),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.insert_drive_file_outlined,
+                        size: 28, color: catColor),
+                    const SizedBox(height: 4),
+                    Text(
+                      ext,
+                      style: AuroraType.labelSm.copyWith(
+                        color: catColor,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Fullscreen Preview ───────────────────────────────────────────────────────
+
+/// INTENTIONAL EXCEPTION: Colors.black / Colors.white are correct here.
+/// These are design-system-exempt — brand off-white looks wrong on
+/// a black media background.
+class _FullscreenPreview extends StatelessWidget {
+  const _FullscreenPreview({required this.document});
+
+  final Document document;
+
+  bool get _isPdf => (document.mimeType ?? '').contains('pdf');
+  bool get _isImage => (document.mimeType ?? '').startsWith('image/');
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: Text(
+          document.name,
+          style: AuroraType.body.copyWith(color: Colors.white),
+        ),
+        elevation: 0,
+      ),
+      body: _isPdf
+          ? _PdfPreview(filePath: document.filePath)
+          : _isImage
+              ? _ImagePreview(filePath: document.filePath)
+              : Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.insert_drive_file_outlined,
+                          size: 64, color: Colors.white54),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Preview not available',
+                        style: AuroraType.body.copyWith(color: Colors.white54),
+                      ),
+                    ],
+                  ),
+                ),
+    );
+  }
+}
+
+// ─── Title Area ───────────────────────────────────────────────────────────────
+
+class _TitleArea extends StatelessWidget {
+  const _TitleArea({
+    required this.document,
+    required this.catColor,
+    required this.daysLeft,
+  });
+
+  final Document document;
+  final Color catColor;
+  final int? daysLeft;
+
+  @override
+  Widget build(BuildContext context) {
+    final dimColor = catColor.withValues(alpha: 0.07);
+    final showExpiryBadge = daysLeft != null && daysLeft! < 90;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          document.name,
+          style: AuroraType.h1.copyWith(color: AuroraColors.ink),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          children: [
+            if (document.category != null)
+              _TitleBadge(
+                backgroundColor: dimColor,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: catColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      document.category!.name,
+                      style: AuroraType.labelSm.copyWith(
+                        color: catColor,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            if (document.type != null)
+              _TitleBadge(
+                backgroundColor: AuroraColors.butter,
+                child: Text(
+                  document.type!.name,
+                  style: AuroraType.labelSm.copyWith(
+                    color: AuroraColors.inkTertiary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            if (showExpiryBadge)
+              _TitleBadge(
+                backgroundColor: AuroraColors.coralDim,
+                border: Border.all(
+                  color: AuroraColors.coral.withValues(alpha: 0.12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.access_time_rounded,
+                        size: 12, color: AuroraColors.coral),
+                    const SizedBox(width: 4),
+                    Text(
+                      daysLeft! < 0
+                          ? 'Expired'
+                          : daysLeft == 0
+                              ? 'Expires today'
+                              : 'Expires in ${daysLeft}d',
+                      style: AuroraType.labelSm.copyWith(
+                        color: AuroraColors.coral,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _TitleBadge extends StatelessWidget {
+  const _TitleBadge({
+    required this.child,
+    required this.backgroundColor,
+    this.border,
+  });
+
+  final Widget child;
+  final Color backgroundColor;
+  final Border? border;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: AuroraRadius.xs,
+        border: border,
+      ),
+      child: child,
+    );
+  }
+}
+
+// ─── Expiry Countdown Card ────────────────────────────────────────────────────
+
+class _ExpiryCountdownCard extends StatelessWidget {
+  const _ExpiryCountdownCard({required this.daysLeft});
+
+  final int daysLeft;
+
+  @override
+  Widget build(BuildContext context) {
+    final passedSegments = daysLeft >= 60
+        ? 1
+        : daysLeft >= 30
+            ? 2
+            : daysLeft >= 0
+                ? 3
+                : 4;
+
+    final displayDays = daysLeft < 0 ? 'Expired' : '${daysLeft}d';
 
     return Container(
-      width: double.infinity,
-      height: 240,
-      color: AppColors.gray100,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.insert_drive_file_outlined,
-                size: AppSizes.iconXl, color: AppColors.gray400),
-            const SizedBox(height: AppSizes.sm),
-            Text(
-              widget.document.mimeType ?? 'File',
-              style: AppTextStyles.caption
-                  .copyWith(color: AppColors.textSecondary),
+      padding: const EdgeInsets.all(AuroraSpacing.space5),
+      decoration: BoxDecoration(
+        color: AuroraColors.coralDim,
+        border: Border.all(
+          color: AuroraColors.coral.withValues(alpha: 0.12),
+          width: 1.5,
+        ),
+        borderRadius: AuroraRadius.lg,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.access_time_rounded,
+                  color: AuroraColors.coral, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                'Expiration Countdown',
+                style: AuroraType.bodySm.copyWith(
+                  color: AuroraColors.coral,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                displayDays,
+                style: AuroraType.number.copyWith(
+                  color: AuroraColors.coral,
+                  fontSize: 20,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: List.generate(4, (i) {
+              final isPassed = i < passedSegments;
+              final isCurrent = i == passedSegments - 1 && daysLeft >= 0;
+              return Expanded(
+                child: Container(
+                  margin: EdgeInsets.only(right: i < 3 ? 3 : 0),
+                  height: 4,
+                  decoration: BoxDecoration(
+                    borderRadius: AuroraRadius.xs,
+                    gradient: isCurrent
+                        ? LinearGradient(colors: [
+                            AuroraColors.coral,
+                            AuroraColors.coral.withValues(alpha: 0.15),
+                          ])
+                        : null,
+                    color: isCurrent
+                        ? null
+                        : isPassed
+                            ? AuroraColors.coral
+                            : AuroraColors.coral.withValues(alpha: 0.12),
+                  ),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              _ExpiryLabel('90 days ✓',
+                  passed: passedSegments > 0, align: TextAlign.left),
+              _ExpiryLabel('60 days ✓', passed: passedSegments > 1),
+              _ExpiryLabel('30 days ✓', passed: passedSegments > 2),
+              _ExpiryLabel(
+                daysLeft < 0 ? 'Expired' : '$daysLeft days left',
+                passed: true,
+                isCurrent: true,
+                align: TextAlign.right,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ExpiryLabel extends StatelessWidget {
+  const _ExpiryLabel(
+    this.text, {
+    required this.passed,
+    this.isCurrent = false,
+    this.align = TextAlign.center,
+  });
+
+  final String text;
+  final bool passed;
+  final bool isCurrent;
+  final TextAlign align;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Text(
+        text,
+        style: AuroraType.labelSm.copyWith(
+          color: isCurrent
+              ? AuroraColors.coral
+              : passed
+                  ? AuroraColors.coral.withValues(alpha: 0.6)
+                  : AuroraColors.inkTertiary,
+          fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w600,
+        ),
+        textAlign: align,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+}
+
+// ─── Shared Card Shell ────────────────────────────────────────────────────────
+
+class _InfoCard extends StatelessWidget {
+  const _InfoCard({
+    required this.icon,
+    required this.label,
+    required this.child,
+    this.trailing,
+  });
+
+  final IconData icon;
+  final String label;
+  final Widget child;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AuroraColors.paper,
+        borderRadius: AuroraRadius.lg,
+        border: Border.fromBorderSide(
+          BorderSide(color: AuroraColors.inkBorder, width: 1),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            decoration: BoxDecoration(
+              color: AuroraColors.butter,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(13),
+                topRight: Radius.circular(13),
+              ),
             ),
+            child: Row(
+              children: [
+                // Small cobalt dot for info card section headers.
+                Container(
+                  width: 6,
+                  height: 6,
+                  margin: const EdgeInsets.only(right: 6),
+                  decoration: const BoxDecoration(
+                    color: AuroraColors.inkSecondary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                Text(
+                  label.toUpperCase(),
+                  style: AuroraType.label.copyWith(
+                    color: AuroraColors.inkSecondary,
+                  ),
+                ),
+                if (trailing != null) ...[
+                  const Spacer(),
+                  trailing!,
+                ],
+              ],
+            ),
+          ),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Details Card ─────────────────────────────────────────────────────────────
+
+class _DetailsCard extends StatelessWidget {
+  const _DetailsCard({required this.document});
+
+  final Document document;
+
+  @override
+  Widget build(BuildContext context) {
+    return _InfoCard(
+      icon: Icons.info_outline_rounded,
+      label: 'DETAILS',
+      trailing: _CardEditButton(
+        onTap: () => EditMetadataSheet.show(context, document),
+      ),
+      child: _DetailsGrid(document: document),
+    );
+  }
+}
+
+class _DetailsGrid extends StatelessWidget {
+  const _DetailsGrid({required this.document});
+
+  final Document document;
+
+  // snake_case → Title Case
+  static String _formatKey(String key) => key
+      .split('_')
+      .map((w) => w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1)}')
+      .join(' ');
+
+  // Detect values that deserve mono font: codes, money, phone numbers, pure numbers.
+  static bool _isMono(dynamic value) {
+    final s = value.toString();
+    if (s.startsWith(r'$')) return true;
+    if (RegExp(r'^\(?\d{3}\)?[\s\-]\d{3}[\s\-]\d{4}$').hasMatch(s)) {
+      return true;
+    }
+    if (RegExp(r'^[A-Z0-9][A-Z0-9\-]{2,}$').hasMatch(s)) return true;
+    if (RegExp(r'^\d+(\.\d+)?$').hasMatch(s)) return true;
+    return false;
+  }
+
+  // Phone numbers get cobalt color to match the design reference.
+  static Color? _valueColor(String key, dynamic value) {
+    final s = value?.toString() ?? '';
+    if (RegExp(r'^\(?\d{3}\)?[\s\-]\d{3}[\s\-]\d{4}$').hasMatch(s)) {
+      return AuroraColors.cobalt;
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasMetadata = document.metadata.isNotEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      child: AuroraTile(
+        padding: const EdgeInsets.all(AuroraSpacing.space5),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final itemWidth = (constraints.maxWidth - 20) / 2;
+            final items = <Widget>[];
+
+            if (hasMetadata) {
+              // Type-specific fields from the metadata JSONB column.
+              for (final entry in document.metadata.entries) {
+                final value = entry.value;
+                if (value == null || value.toString().isEmpty) continue;
+                items.add(SizedBox(
+                  width: itemWidth,
+                  child: _InfoItem(
+                    label: _formatKey(entry.key),
+                    value: value.toString(),
+                    mono: _isMono(value),
+                    valueColor: _valueColor(entry.key, value),
+                  ),
+                ));
+              }
+              if (document.expirationDate != null) {
+                items.add(SizedBox(
+                  width: itemWidth,
+                  child: _InfoItem(
+                    label: 'Expiration',
+                    value: DateFormat('MMM d, yyyy')
+                        .format(document.expirationDate!),
+                    valueColor: AuroraColors.coral,
+                  ),
+                ));
+              }
+            } else {
+              // Generic fallback when no type-specific metadata is set.
+              final uploadedDate =
+                  DateFormat('MMM d, yyyy').format(document.createdAt);
+              final updatedDate =
+                  DateFormat('MMM d, yyyy').format(document.updatedAt);
+              items.addAll([
+                SizedBox(
+                  width: itemWidth,
+                  child: _InfoItem(
+                      label: 'Category',
+                      value: document.category?.name ?? '—'),
+                ),
+                SizedBox(
+                  width: itemWidth,
+                  child: _InfoItem(
+                      label: 'Type', value: document.type?.name ?? '—'),
+                ),
+                SizedBox(
+                  width: itemWidth,
+                  child: _InfoItem(label: 'Uploaded', value: uploadedDate),
+                ),
+                SizedBox(
+                  width: itemWidth,
+                  child: _InfoItem(label: 'Updated', value: updatedDate),
+                ),
+                if (document.fileSizeBytes != null)
+                  SizedBox(
+                    width: itemWidth,
+                    child: _InfoItem(
+                      label: 'Size',
+                      value: _formatFileSize(document.fileSizeBytes!),
+                      mono: true,
+                    ),
+                  ),
+                if (document.pageCount != null)
+                  SizedBox(
+                    width: itemWidth,
+                    child: _InfoItem(
+                      label: 'Pages',
+                      value: '${document.pageCount}',
+                      mono: true,
+                    ),
+                  ),
+                if (document.expirationDate != null)
+                  SizedBox(
+                    width: itemWidth,
+                    child: _InfoItem(
+                      label: 'Expiration',
+                      value: DateFormat('MMM d, yyyy')
+                          .format(document.expirationDate!),
+                      valueColor: AuroraColors.coral,
+                    ),
+                  ),
+              ]);
+            }
+
+            return Wrap(spacing: 20, runSpacing: 14, children: items);
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoItem extends StatelessWidget {
+  const _InfoItem({
+    required this.label,
+    required this.value,
+    this.mono = false,
+    this.valueColor,
+  });
+
+  final String label;
+  final String value;
+  final bool mono;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: AuroraType.labelSm.copyWith(
+            color: AuroraColors.inkTertiary,
+            letterSpacing: 0.3,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          value,
+          style: (mono ? AuroraType.label : AuroraType.bodySm).copyWith(
+            color: valueColor ?? AuroraColors.ink,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CardEditButton extends StatelessWidget {
+  const _CardEditButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Text(
+        'Edit',
+        style: AuroraType.labelSm.copyWith(color: AuroraColors.coral),
+      ),
+    );
+  }
+}
+
+// ─── Linked To Card ───────────────────────────────────────────────────────────
+
+class _LinkedToCard extends StatefulWidget {
+  const _LinkedToCard({required this.document});
+
+  final Document document;
+
+  @override
+  State<_LinkedToCard> createState() => _LinkedToCardState();
+}
+
+class _LinkedToCardState extends State<_LinkedToCard> {
+  String? _linkedName;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLinkedName();
+  }
+
+  Future<void> _fetchLinkedName() async {
+    final systemId = widget.document.linkedSystemId;
+    final applianceId = widget.document.linkedApplianceId;
+    if (systemId == null && applianceId == null) return;
+
+    try {
+      final Map<String, dynamic>? row;
+      if (systemId != null) {
+        row = await SupabaseService.client
+            .from('systems')
+            .select('name')
+            .eq('id', systemId)
+            .maybeSingle();
+      } else {
+        row = await SupabaseService.client
+            .from('appliances')
+            .select('name')
+            .eq('id', applianceId!)
+            .maybeSingle();
+      }
+      if (mounted && row != null) {
+        setState(() => _linkedName = row!['name'] as String?);
+      }
+    } catch (_) {
+      // Name lookup is best-effort — subtitle falls back to type label.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final doc = widget.document;
+    final hasLinkedItem =
+        doc.linkedSystemId != null || doc.linkedApplianceId != null;
+
+    if (!hasLinkedItem) return const SizedBox.shrink();
+
+    final isSystem = doc.linkedSystemId != null;
+    final linkedId = (doc.linkedSystemId ?? doc.linkedApplianceId)!;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AuroraSpacing.space5),
+      child: _InfoCard(
+        icon: Icons.link_rounded,
+        label: 'LINKED TO',
+        child: _LinkedItemRow(
+          icon: isSystem ? Icons.settings_outlined : Icons.kitchen_outlined,
+          iconColor: AuroraColors.cobalt,
+          iconBg: AuroraColors.cobaltDim,
+          title:
+              _linkedName ?? (isSystem ? 'Linked System' : 'Linked Appliance'),
+          subtitle: isSystem ? 'System' : 'Appliance',
+          onTap: () {
+            final path = isSystem
+                ? AppRoutes.homeSystemDetail
+                    .replaceFirst(':systemId', linkedId)
+                : AppRoutes.homeApplianceDetail
+                    .replaceFirst(':applianceId', linkedId);
+            context.push(path);
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _LinkedItemRow extends StatelessWidget {
+  const _LinkedItemRow({
+    required this.icon,
+    required this.iconColor,
+    required this.iconBg,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final Color iconBg;
+  final String title;
+  final String subtitle;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: AuroraRadius.lg,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: AuroraRadius.md,
+              ),
+              child: Icon(icon, size: 16, color: iconColor),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AuroraType.bodySm.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: AuroraType.bodySm.copyWith(
+                      color: AuroraColors.inkTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (onTap != null)
+              const Icon(Icons.chevron_right,
+                  size: 14, color: AuroraColors.inkSecondary),
           ],
         ),
       ),
@@ -364,6 +1338,368 @@ class _DocumentPreviewState extends State<_DocumentPreview> {
   }
 }
 
+// ─── Used In Card (reverse links) ─────────────────────────────────────────────
+
+class _UsedInCard extends ConsumerWidget {
+  const _UsedInCard({required this.documentId});
+
+  final String documentId;
+
+  static IconData _iconFor(String type) => switch (type) {
+        'project' => Icons.folder_outlined,
+        'appliance' => Icons.kitchen_outlined,
+        _ => Icons.settings_outlined,
+      };
+
+  static String _typeLabel(String type) => switch (type) {
+        'project' => 'Project',
+        'appliance' => 'Appliance',
+        _ => 'System',
+      };
+
+  void _navigate(BuildContext context, DocumentLinkEntry entry) {
+    final path = switch (entry.type) {
+      'project' =>
+        AppRoutes.projectDetail.replaceFirst(':projectId', entry.id),
+      'appliance' =>
+        AppRoutes.homeApplianceDetail.replaceFirst(':applianceId', entry.id),
+      _ => AppRoutes.homeSystemDetail.replaceFirst(':systemId', entry.id),
+    };
+    context.push(path);
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final linksState = ref.watch(documentLinksProvider(documentId));
+    return linksState.maybeWhen(
+      data: (links) {
+        if (links.isEmpty) return const SizedBox.shrink();
+        return Column(
+          children: [
+            const SizedBox(height: AuroraSpacing.space5),
+            _InfoCard(
+              icon: Icons.folder_open_outlined,
+              label: 'USED IN',
+              child: Column(
+                children: [
+                  for (int i = 0; i < links.length; i++) ...[
+                    if (i > 0)
+                      const Divider(
+                        height: 1,
+                        color: AuroraColors.butter,
+                        indent: 16,
+                        endIndent: 16,
+                      ),
+                    _LinkedItemRow(
+                      icon: _iconFor(links[i].type),
+                      iconColor: AuroraColors.cobalt,
+                      iconBg: AuroraColors.cobaltDim,
+                      title: links[i].label,
+                      subtitle:
+                          links[i].subtitle ?? _typeLabel(links[i].type),
+                      onTap: () => _navigate(context, links[i]),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
+    );
+  }
+}
+
+// ─── Notes Card ───────────────────────────────────────────────────────────────
+
+class _NotesCard extends StatelessWidget {
+  const _NotesCard({required this.document});
+
+  final Document document;
+
+  bool get _hasNotes => document.notes != null && document.notes!.isNotEmpty;
+
+  @override
+  Widget build(BuildContext context) {
+    return _InfoCard(
+      icon: Icons.notes_rounded,
+      label: 'NOTES',
+      trailing: _hasNotes
+          ? _CardEditButton(
+              onTap: () => EditMetadataSheet.show(context, document),
+            )
+          : null,
+      child: _hasNotes
+          ? Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+              child: Text(
+                document.notes!,
+                style: AuroraType.bodySm.copyWith(
+                  color: AuroraColors.inkSecondary,
+                  height: 1.6,
+                ),
+              ),
+            )
+          : GestureDetector(
+              onTap: () => EditMetadataSheet.show(context, document),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                child: Row(
+                  children: [
+                    const Icon(Icons.add_rounded,
+                        size: 16, color: AuroraColors.inkSecondary),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Add a note…',
+                      style: AuroraType.bodySm.copyWith(
+                        color: AuroraColors.inkSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+    );
+  }
+}
+
+// ─── File Info Card ───────────────────────────────────────────────────────────
+
+class _FileInfoCard extends StatelessWidget {
+  const _FileInfoCard({required this.document});
+
+  final Document document;
+
+  @override
+  Widget build(BuildContext context) {
+    final ext = _extFromMime(document.mimeType);
+    final addedDate = DateFormat('MMM d, yyyy').format(document.createdAt);
+    final ocrStatus = document.ocrStatus;
+    final ocrLabel = switch (ocrStatus) {
+      'complete' => 'Complete',
+      'processing' => 'Processing',
+      'pending' => 'Pending',
+      'failed' => 'Failed',
+      _ => 'Not run',
+    };
+    final ocrColor = switch (ocrStatus) {
+      'complete' => AuroraColors.limeDeep,
+      'processing' => AuroraColors.yellow,
+      'failed' => AuroraColors.coral,
+      _ => AuroraColors.inkTertiary,
+    };
+
+    return _InfoCard(
+      icon: Icons.insert_drive_file_outlined,
+      label: 'FILE INFO',
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+        child: Wrap(
+          spacing: 16,
+          runSpacing: 10,
+          children: [
+            _FileMeta(icon: Icons.insert_drive_file_outlined, value: ext),
+            if (document.fileSizeBytes != null)
+              _FileMeta(
+                icon: Icons.download_outlined,
+                value: _formatFileSize(document.fileSizeBytes!),
+              ),
+            _FileMeta(
+              icon: Icons.calendar_today_outlined,
+              prefix: 'Added ',
+              value: addedDate,
+            ),
+            if (ocrStatus != 'pending')
+              _FileMeta(
+                icon: Icons.access_time_rounded,
+                prefix: 'OCR ',
+                value: ocrLabel,
+                valueColor: ocrColor,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FileMeta extends StatelessWidget {
+  const _FileMeta({
+    required this.icon,
+    required this.value,
+    this.prefix,
+    this.valueColor,
+  });
+
+  final IconData icon;
+  final String value;
+  final String? prefix;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: AuroraColors.inkTertiary),
+        const SizedBox(width: 6),
+        RichText(
+          text: TextSpan(
+            style: AuroraType.bodySm.copyWith(color: AuroraColors.inkTertiary),
+            children: [
+              if (prefix != null) TextSpan(text: prefix),
+              TextSpan(
+                text: value,
+                style: AuroraType.bodySm.copyWith(
+                  color: valueColor ?? AuroraColors.inkSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Bottom Action Bar ────────────────────────────────────────────────────────
+
+class _BottomActionBar extends StatelessWidget {
+  const _BottomActionBar({
+    required this.onShare,
+    required this.onDownload,
+    required this.onDelete,
+  });
+
+  final VoidCallback onShare;
+  final VoidCallback onDownload;
+  final VoidCallback? onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AuroraColors.paper,
+        border: Border(top: BorderSide(color: AuroraColors.inkBorder)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 12, 22, 12),
+          child: SizedBox(
+            height: 52,
+            child: Row(
+              children: [
+                _BarButton(
+                  icon: Icons.ios_share_rounded,
+                  style: _BarButtonStyle.secondary,
+                  onTap: onShare,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _BarButton(
+                    icon: Icons.download_outlined,
+                    label: 'Download',
+                    style: _BarButtonStyle.primary,
+                    onTap: onDownload,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                _BarButton(
+                  icon: Icons.delete_outline_rounded,
+                  style: _BarButtonStyle.danger,
+                  onTap: onDelete,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+enum _BarButtonStyle { primary, secondary, danger }
+
+class _BarButton extends StatelessWidget {
+  const _BarButton({
+    required this.icon,
+    required this.style,
+    required this.onTap,
+    this.label,
+  });
+
+  final IconData icon;
+  final _BarButtonStyle style;
+  final VoidCallback? onTap;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDisabled = onTap == null;
+    final bg = isDisabled
+        ? AuroraColors.butter
+        : switch (style) {
+            _BarButtonStyle.primary => AuroraColors.ink,
+            _BarButtonStyle.secondary => AuroraColors.paper,
+            _BarButtonStyle.danger => AuroraColors.coralDim,
+          };
+    final fg = isDisabled
+        ? AuroraColors.inkTertiary
+        : switch (style) {
+            _BarButtonStyle.primary => AuroraColors.paper,
+            _BarButtonStyle.secondary => AuroraColors.inkSecondary,
+            _BarButtonStyle.danger => AuroraColors.coral,
+          };
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: AuroraRadius.md,
+          border: style == _BarButtonStyle.secondary
+              ? Border.all(color: AuroraColors.inkBorder, width: 1.5)
+              : null,
+          boxShadow: style == _BarButtonStyle.secondary
+              ? [
+                  BoxShadow(
+                    color: AuroraColors.ink.withValues(alpha: 0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: fg),
+            if (label != null) ...[
+              const SizedBox(width: 6),
+              Text(
+                label!,
+                style: AuroraType.bodySm.copyWith(
+                  color: fg,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── PDF Preview (fullscreen) ─────────────────────────────────────────────────
+
+/// INTENTIONAL EXCEPTION: Colors.white54 used here — black fullscreen bg.
 class _PdfPreview extends StatefulWidget {
   const _PdfPreview({required this.filePath});
 
@@ -381,8 +1717,6 @@ class _PdfPreviewState extends State<_PdfPreview> {
     super.initState();
     _controller = PdfController(
       document: PdfDocument.openData(
-        // Download raw bytes via the authenticated Supabase client. This
-        // avoids a separate HTTP call and respects RLS-scoped storage policies.
         SupabaseService.client.storage
             .from('documents')
             .download(widget.filePath),
@@ -398,31 +1732,31 @@ class _PdfPreviewState extends State<_PdfPreview> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 480,
-      child: PdfView(
-        controller: _controller,
-        scrollDirection: Axis.vertical,
-        builders: PdfViewBuilders<DefaultBuilderOptions>(
-          options: const DefaultBuilderOptions(),
-          documentLoaderBuilder: (_) => const Center(
-            child: CircularProgressIndicator(color: AppColors.deepNavy),
-          ),
-          pageLoaderBuilder: (_) => const Center(
-            child: CircularProgressIndicator(color: AppColors.deepNavy),
-          ),
-          errorBuilder: (_, error) => Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.error_outline,
-                    size: AppSizes.iconLg, color: AppColors.error),
-                const SizedBox(height: AppSizes.sm),
-                Text('PDF preview unavailable',
-                    style: AppTextStyles.bodyMedium
-                        .copyWith(color: AppColors.textSecondary)),
-              ],
-            ),
+    return PdfView(
+      controller: _controller,
+      scrollDirection: Axis.vertical,
+      builders: PdfViewBuilders<DefaultBuilderOptions>(
+        options: const DefaultBuilderOptions(),
+        documentLoaderBuilder: (_) => const Center(
+          child: CircularProgressIndicator(
+              strokeWidth: 2, color: Colors.white54),
+        ),
+        pageLoaderBuilder: (_) => const Center(
+          child: CircularProgressIndicator(
+              strokeWidth: 2, color: Colors.white54),
+        ),
+        errorBuilder: (_, error) => Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline,
+                  size: 32, color: Colors.white54),
+              const SizedBox(height: AuroraSpacing.space3),
+              Text(
+                'PDF preview unavailable',
+                style: AuroraType.body.copyWith(color: Colors.white54),
+              ),
+            ],
           ),
         ),
       ),
@@ -430,6 +1764,9 @@ class _PdfPreviewState extends State<_PdfPreview> {
   }
 }
 
+// ─── Image Preview (fullscreen) ───────────────────────────────────────────────
+
+/// INTENTIONAL EXCEPTION: Colors.white used here — black fullscreen bg.
 class _ImagePreview extends StatefulWidget {
   const _ImagePreview({required this.filePath});
 
@@ -454,7 +1791,12 @@ class _ImagePreviewState extends State<_ImagePreview> {
       final url = await SupabaseService.client.storage
           .from('documents')
           .createSignedUrl(widget.filePath, 3600);
-      if (mounted) setState(() { _signedUrl = url; _loading = false; });
+      if (mounted) {
+        setState(() {
+          _signedUrl = url;
+          _loading = false;
+        });
+      }
     } catch (_) {
       if (mounted) setState(() => _loading = false);
     }
@@ -463,448 +1805,33 @@ class _ImagePreviewState extends State<_ImagePreview> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return Container(
-        width: double.infinity,
-        height: 320,
-        color: AppColors.gray200,
-        child: const Center(
-          child: CircularProgressIndicator(color: AppColors.deepNavy),
-        ),
+      return const Center(
+        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
       );
     }
-
     if (_signedUrl == null) {
-      return Container(
-        width: double.infinity,
-        height: 320,
-        color: AppColors.gray100,
-        child: Center(
-          child: Text(
-            'Preview unavailable',
-            style: AppTextStyles.bodyMedium
-                .copyWith(color: AppColors.textSecondary),
-          ),
+      return Center(
+        child: Text(
+          'Preview unavailable',
+          style: AuroraType.body.copyWith(color: Colors.white54),
         ),
       );
     }
-
-    return SizedBox(
-      height: 320,
-      child: PhotoView(
-        imageProvider: NetworkImage(_signedUrl!),
-        minScale: PhotoViewComputedScale.contained,
-        maxScale: PhotoViewComputedScale.covered * 4,
-        backgroundDecoration: const BoxDecoration(color: AppColors.gray900),
-        loadingBuilder: (_, event) => Center(
-          child: CircularProgressIndicator(
-            color: AppColors.deepNavy,
-            value: event == null
-                ? null
-                : event.cumulativeBytesLoaded /
-                    (event.expectedTotalBytes ?? 1),
-          ),
+    return PhotoView(
+      imageProvider: NetworkImage(_signedUrl!),
+      minScale: PhotoViewComputedScale.contained,
+      maxScale: PhotoViewComputedScale.covered * 4,
+      backgroundDecoration: const BoxDecoration(color: Colors.black),
+      loadingBuilder: (_, event) => Center(
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          color: Colors.white,
+          value: event == null
+              ? null
+              : event.cumulativeBytesLoaded /
+                  (event.expectedTotalBytes ?? 1),
         ),
       ),
-    );
-  }
-}
-
-// ── Action row ────────────────────────────────────────────────────────────────
-
-class _ActionRow extends StatelessWidget {
-  const _ActionRow({
-    required this.onShare,
-    required this.onDownload,
-    required this.onDelete,
-  });
-
-  final VoidCallback onShare;
-  final VoidCallback onDownload;
-  final VoidCallback? onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _ActionButton(
-          icon: Icons.share_outlined,
-          label: 'Share',
-          onTap: onShare,
-        ),
-        const SizedBox(width: AppSizes.sm),
-        _ActionButton(
-          icon: Icons.download_outlined,
-          label: 'Download',
-          onTap: onDownload,
-        ),
-        const SizedBox(width: AppSizes.sm),
-        _ActionButton(
-          icon: Icons.delete_outline,
-          label: 'Delete',
-          onTap: onDelete,
-          destructive: true,
-        ),
-      ],
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.destructive = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-  final bool destructive;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDisabled = onTap == null;
-    final color = isDisabled
-        ? AppColors.textDisabled
-        : (destructive ? AppColors.error : AppColors.deepNavy);
-    final bg = isDisabled
-        ? AppColors.gray100
-        : (destructive ? AppColors.errorLight : AppColors.surfaceVariant);
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: AppSizes.iconMd, color: color),
-              const SizedBox(height: AppSizes.xs),
-              Text(
-                label,
-                style: AppTextStyles.labelSmall.copyWith(color: color),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Metadata section ──────────────────────────────────────────────────────────
-
-class _MetadataSection extends StatelessWidget {
-  const _MetadataSection({required this.document});
-
-  final Document document;
-
-  @override
-  Widget build(BuildContext context) {
-    final uploadedDate = DateFormat('MMM d, yyyy').format(document.createdAt);
-    final updatedDate = DateFormat('MMM d, yyyy').format(document.updatedAt);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Details', style: AppTextStyles.h4),
-        const SizedBox(height: AppSizes.md),
-
-        _MetadataRow(label: 'Category', value: document.category?.name ?? '—'),
-        _MetadataRow(label: 'Type', value: document.type?.name ?? '—'),
-        _MetadataRow(label: 'Uploaded', value: uploadedDate),
-        _MetadataRow(label: 'Updated', value: updatedDate),
-        if (document.fileSizeBytes != null)
-          _MetadataRow(
-            label: 'Size',
-            value: _formatFileSize(document.fileSizeBytes!),
-          ),
-        if (document.pageCount != null)
-          _MetadataRow(label: 'Pages', value: '${document.pageCount}'),
-
-        // Expiration row with badge.
-        if (document.expirationDate != null) ...[
-          const SizedBox(height: AppSizes.xs),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Expires',
-                style: AppTextStyles.bodyMedium
-                    .copyWith(color: AppColors.textSecondary),
-              ),
-              ExpirationBadge(
-                expirationDate: document.expirationDate!,
-                large: true,
-              ),
-            ],
-          ),
-        ],
-
-        // Notes.
-        if (document.notes != null && document.notes!.isNotEmpty) ...[
-          const SizedBox(height: AppSizes.md),
-          Text(
-            'Notes',
-            style: AppTextStyles.labelMedium
-                .copyWith(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: AppSizes.xs),
-          Text(document.notes!, style: AppTextStyles.bodyMedium),
-        ],
-      ],
-    );
-  }
-
-  String _formatFileSize(int bytes) {
-    if (bytes < 1024) return '${bytes}B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)}KB';
-    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}MB';
-  }
-}
-
-class _MetadataRow extends StatelessWidget {
-  const _MetadataRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: AppTextStyles.bodyMedium
-                .copyWith(color: AppColors.textSecondary),
-          ),
-          const SizedBox(width: AppSizes.md),
-          Flexible(
-            child: Text(
-              value,
-              style: AppTextStyles.bodyMedium,
-              textAlign: TextAlign.end,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Reverse links section ─────────────────────────────────────────────────────
-
-/// Shows all entities across the app that reference this document.
-///
-/// Queries [documentLinksProvider] and hides itself when the result is empty
-/// or still loading — no skeleton or error state is surfaced here since it is
-/// supplemental content below the primary metadata.
-class _LinkedItemsSection extends ConsumerWidget {
-  const _LinkedItemsSection({required this.documentId});
-
-  final String documentId;
-
-  static IconData _iconFor(String type) {
-    return switch (type) {
-      'project' => Icons.folder_outlined,
-      'appliance' => Icons.kitchen_outlined,
-      _ => Icons.settings_outlined,
-    };
-  }
-
-  static String _typeLabel(String type) {
-    return switch (type) {
-      'project' => 'Project',
-      'appliance' => 'Appliance',
-      _ => 'System',
-    };
-  }
-
-  void _navigate(BuildContext context, DocumentLinkEntry entry) {
-    final path = switch (entry.type) {
-      'project' =>
-        AppRoutes.projectDetail.replaceFirst(':projectId', entry.id),
-      'appliance' =>
-        AppRoutes.homeApplianceDetail.replaceFirst(':applianceId', entry.id),
-      _ => AppRoutes.homeSystemDetail.replaceFirst(':systemId', entry.id),
-    };
-    context.push(path);
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final linksState = ref.watch(documentLinksProvider(documentId));
-
-    // Only render when we have at least one link — hide during loading and
-    // on empty results so the section never adds dead whitespace.
-    return linksState.maybeWhen(
-      data: (links) {
-        if (links.isEmpty) return const SizedBox.shrink();
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: AppSizes.md),
-            const Divider(height: 1, color: AppColors.divider),
-            const SizedBox(height: AppSizes.md),
-            Text('Used In', style: AppTextStyles.h4),
-            const SizedBox(height: AppSizes.sm),
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: links.length,
-              separatorBuilder: (_, _) =>
-                  const Divider(height: 1, color: AppColors.divider),
-              itemBuilder: (context, index) {
-                final entry = links[index];
-                return _LinkedItemRow(
-                  entry: entry,
-                  icon: _iconFor(entry.type),
-                  typeLabel: entry.subtitle ?? _typeLabel(entry.type),
-                  onTap: () => _navigate(context, entry),
-                );
-              },
-            ),
-          ],
-        );
-      },
-      orElse: () => const SizedBox.shrink(),
-    );
-  }
-}
-
-class _LinkedItemRow extends StatelessWidget {
-  const _LinkedItemRow({
-    required this.entry,
-    required this.icon,
-    required this.typeLabel,
-    required this.onTap,
-  });
-
-  final DocumentLinkEntry entry;
-  final IconData icon;
-  final String typeLabel;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.deepNavy.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Icon(icon, size: AppSizes.iconSm, color: AppColors.deepNavy),
-            ),
-            const SizedBox(width: AppSizes.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    entry.label,
-                    style: AppTextStyles.bodyMedium,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    typeLabel,
-                    style: AppTextStyles.caption
-                        .copyWith(color: AppColors.textSecondary),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.chevron_right,
-              size: AppSizes.iconSm,
-              color: AppColors.gray400,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Linked system / appliance chip ────────────────────────────────────────────
-
-class _LinkedChip extends StatelessWidget {
-  const _LinkedChip({required this.document});
-
-  final Document document;
-
-  @override
-  Widget build(BuildContext context) {
-    final isSystem = document.linkedSystemId != null;
-    final id = document.linkedSystemId ?? document.linkedApplianceId ?? '';
-    final label = isSystem ? 'Linked System' : 'Linked Appliance';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Linked To',
-          style: AppTextStyles.labelMedium
-              .copyWith(color: AppColors.textSecondary),
-        ),
-        const SizedBox(height: AppSizes.xs),
-        GestureDetector(
-          onTap: () {
-            final path = isSystem
-                ? AppRoutes.homeSystemDetail.replaceFirst(':systemId', id)
-                : AppRoutes.homeApplianceDetail
-                    .replaceFirst(':applianceId', id);
-            context.push(path);
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.md,
-              vertical: AppSizes.sm,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.infoLight,
-              borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-              border: Border.all(color: AppColors.info),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  isSystem ? Icons.home_outlined : Icons.kitchen_outlined,
-                  size: AppSizes.iconSm,
-                  color: AppColors.info,
-                ),
-                const SizedBox(width: AppSizes.xs),
-                Text(
-                  label,
-                  style:
-                      AppTextStyles.labelMedium.copyWith(color: AppColors.info),
-                ),
-                const SizedBox(width: AppSizes.xs),
-                const Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.info),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

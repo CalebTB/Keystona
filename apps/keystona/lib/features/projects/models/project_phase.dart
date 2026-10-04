@@ -77,3 +77,17 @@ abstract final class PhaseStatuses {
     (value: 'cancelled',   label: 'Cancelled'),
   ];
 }
+
+/// Valid next statuses for each current phase status.
+abstract final class PhaseStatusTransitions {
+  static const Map<String, List<String>> _allowed = {
+    'planning':    ['in_progress', 'cancelled'],
+    'in_progress': ['on_hold', 'completed', 'cancelled'],
+    'on_hold':     ['in_progress', 'completed', 'cancelled'],
+    'completed':   ['in_progress'],
+    'cancelled':   ['planning'],
+  };
+
+  static List<String> nextFor(String current) =>
+      _allowed[current] ?? [];
+}

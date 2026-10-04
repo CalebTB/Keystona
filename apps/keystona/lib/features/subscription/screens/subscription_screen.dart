@@ -6,9 +6,11 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/providers/service_providers.dart';
 
@@ -28,34 +30,80 @@ class SubscriptionScreen extends ConsumerWidget {
       navigationBar: const CupertinoNavigationBar(
         middle: Text('Subscription'),
       ),
-      child: SafeArea(
-        child: ListView(
-          padding: AppPadding.screen,
-          children: [
-            const SizedBox(height: AppSizes.md),
-            _TierCard(tier: tier, isPremium: isPremium),
-            const SizedBox(height: AppSizes.lg),
-            if (!isPremium) ...[
-              _ActionButton(
-                label: 'Upgrade to Pro',
-                color: AppColors.deepNavy,
-                onTap: () => context.push(AppRoutes.settingsPaywall),
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          CupertinoSliverRefreshControl(
+            onRefresh: () async => ref.invalidate(isPremiumProvider),
+          ),
+          SliverSafeArea(
+            sliver: SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(AuroraSpacing.screenPadH),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: AuroraSpacing.space7),
+
+                    // ── Current plan card ─────────────────────────────────────
+                    _TierCard(tier: tier, isPremium: isPremium),
+
+                    const SizedBox(height: AuroraSpacing.space9),
+
+                    // ── Upgrade CTA — coral PrimaryButton (purchase action) ──
+                    if (!isPremium) ...[
+                      PrimaryButton(
+                        label: 'Upgrade to Pro',
+                        onPressed: () => context.push(AppRoutes.settingsPaywall),
+                        expand: true,
+                      ),
+                      const SizedBox(height: AuroraSpacing.space5),
+                    ],
+
+                    // ── Section eyebrow ────────────────────────────────────────
+                    Row(
+                      children: [
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: const BoxDecoration(
+                            color: AuroraColors.inkBorderStrong,
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(2)),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'MANAGE',
+                          style: AuroraType.label.copyWith(
+                            color: AuroraColors.inkSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: AuroraSpacing.space5),
+
+                    // ── Action tiles ───────────────────────────────────────────
+                    _ActionTile(
+                      icon: Icons.refresh_rounded,
+                      label: 'Restore Purchases',
+                      onTap: () => _restore(context),
+                    ),
+
+                    const SizedBox(height: AuroraSpacing.space3),
+
+                    _ActionTile(
+                      icon: Icons.manage_accounts_rounded,
+                      label: 'Manage Subscription',
+                      onTap: () => RevenueCatUI.presentCustomerCenter(),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: AppSizes.sm),
-            ],
-            _ActionButton(
-              label: 'Restore Purchases',
-              color: AppColors.textSecondary,
-              onTap: () => _restore(context),
             ),
-            const SizedBox(height: AppSizes.sm),
-            _ActionButton(
-              label: 'Manage Subscription',
-              color: AppColors.textSecondary,
-              onTap: () => RevenueCatUI.presentCustomerCenter(),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -74,6 +122,11 @@ class SubscriptionScreen extends ConsumerWidget {
   }
 }
 
+// ─── Tier card ────────────────────────────────────────────────────────────────
+
+/// Current plan card:
+/// - Premium: butter bg, cobalt left border indicator.
+/// - Free: paper bg, standard inkBorder.
 class _TierCard extends StatelessWidget {
   const _TierCard({required this.tier, required this.isPremium});
 
@@ -83,88 +136,119 @@ class _TierCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSizes.md),
+      padding: const EdgeInsets.all(AuroraSpacing.space7),
       decoration: BoxDecoration(
-        color: isPremium ? AppColors.deepNavy : AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(
-          color: isPremium ? AppColors.goldAccent : AppColors.border,
+        color: isPremium ? AuroraColors.butter : AuroraColors.paper,
+        borderRadius: AuroraRadius.xl,
+        border: Border(
+          left: BorderSide(
+            color: isPremium ? AuroraColors.cobalt : AuroraColors.inkBorder,
+            width: isPremium ? 3 : 1,
+          ),
+          top: BorderSide(color: AuroraColors.inkBorder),
+          right: BorderSide(color: AuroraColors.inkBorder),
+          bottom: BorderSide(color: AuroraColors.inkBorder),
         ),
       ),
       child: Row(
         children: [
-          Icon(
-            isPremium ? Icons.star_rounded : Icons.star_border_rounded,
-            color:
-                isPremium ? AppColors.goldAccent : AppColors.textSecondary,
-            size: 28,
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: isPremium ? AuroraColors.cobaltDim : AuroraColors.butter,
+              borderRadius: AuroraRadius.sm,
+            ),
+            child: Icon(
+              isPremium ? Icons.star_rounded : Icons.star_border_rounded,
+              color: isPremium ? AuroraColors.cobalt : AuroraColors.inkSecondary,
+              size: 22,
+            ),
           ),
-          const SizedBox(width: AppSizes.md),
+          const SizedBox(width: AuroraSpacing.space7),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Keystona $tier',
-                  style: AppTextStyles.labelLarge.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color:
-                        isPremium ? AppColors.textInverse : AppColors.textPrimary,
-                  ),
+                  style: AuroraType.h3,
                 ),
+                const SizedBox(height: 2),
                 Text(
                   isPremium
                       ? 'Full access to all features'
                       : 'Limited features',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: isPremium
-                        ? AppColors.textInverse.withValues(alpha: 0.7)
-                        : AppColors.textSecondary,
+                  style: AuroraType.bodySm.copyWith(
+                    color: AuroraColors.inkSecondary,
                   ),
                 ),
               ],
             ),
           ),
+          if (isPremium)
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AuroraSpacing.space3,
+                vertical: AuroraSpacing.space1,
+              ),
+              decoration: BoxDecoration(
+                color: AuroraColors.cobaltDim,
+                borderRadius: AuroraRadius.xs,
+              ),
+              child: Text(
+                'ACTIVE',
+                style: AuroraType.labelSm.copyWith(
+                  color: AuroraColors.cobalt,
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 }
 
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({
+// ─── Action tile ──────────────────────────────────────────────────────────────
+
+class _ActionTile extends StatelessWidget {
+  const _ActionTile({
+    required this.icon,
     required this.label,
-    required this.color,
     required this.onTap,
   });
 
+  final IconData icon;
   final String label;
-  final Color color;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.symmetric(
-          vertical: AppSizes.md,
-          horizontal: AppSizes.md,
+          vertical: AuroraSpacing.space5,
+          horizontal: AuroraSpacing.space7,
         ),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: AppColors.border),
+          color: AuroraColors.paper,
+          borderRadius: AuroraRadius.lg,
+          border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(
           children: [
+            Icon(icon, size: 20, color: AuroraColors.inkSecondary),
+            const SizedBox(width: AuroraSpacing.space5),
             Expanded(
-              child: Text(
-                label,
-                style: AppTextStyles.labelLarge.copyWith(color: color),
-              ),
+              child: Text(label, style: AuroraType.body),
             ),
-            Icon(Icons.chevron_right, color: color, size: 20),
+            const Icon(
+              Icons.chevron_right,
+              size: 18,
+              color: AuroraColors.inkTertiary,
+            ),
           ],
         ),
       ),

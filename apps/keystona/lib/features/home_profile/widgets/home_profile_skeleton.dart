@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
+
+
 
 /// Pulse-shimmer skeleton that matches [HomeProfileScreen]'s card layout.
 ///
@@ -46,15 +49,15 @@ class _HomeProfileSkeletonState extends State<HomeProfileSkeleton>
       builder: (_, _) => Opacity(
         opacity: _opacity.value,
         child: Padding(
-          padding: AppPadding.screen,
+          padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
           child: Column(
             children: [
               // Property card skeleton.
               _PropertyCardSkeleton(),
-              const SizedBox(height: AppSizes.md),
+              const SizedBox(height: AuroraSpacing.space5),
               // Section rows skeleton.
               _SectionRowSkeleton(),
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
               _SectionRowSkeleton(),
             ],
           ),
@@ -69,11 +72,11 @@ class _PropertyCardSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.border),
+        color: AuroraColors.paper,
+        borderRadius: AuroraRadius.lg,
+        border: Border.all(color: AuroraColors.inkBorder),
       ),
-      padding: const EdgeInsets.all(AppSizes.md),
+      padding: const EdgeInsets.all(AuroraSpacing.space5),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -82,20 +85,20 @@ class _PropertyCardSkeleton extends StatelessWidget {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: AppColors.gray200,
-              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+              color: AuroraColors.inkBorder,
+              borderRadius: AuroraRadius.sm,
             ),
           ),
-          const SizedBox(width: AppSizes.md),
+          const SizedBox(width: AuroraSpacing.space5),
           // Text lines.
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _Bar(widthFactor: 0.7),
-                const SizedBox(height: AppSizes.xs),
+                const SizedBox(height: AuroraSpacing.space1),
                 _Bar(widthFactor: 0.5),
-                const SizedBox(height: AppSizes.xs),
+                const SizedBox(height: AuroraSpacing.space1),
                 _Bar(widthFactor: 0.4),
               ],
             ),
@@ -112,13 +115,13 @@ class _SectionRowSkeleton extends StatelessWidget {
     return Container(
       height: 60,
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.border),
+        color: AuroraColors.paper,
+        borderRadius: AuroraRadius.lg,
+        border: Border.all(color: AuroraColors.inkBorder),
       ),
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
+        horizontal: AuroraSpacing.space5,
+        vertical: AuroraSpacing.space3,
       ),
       child: Row(
         children: [
@@ -126,17 +129,17 @@ class _SectionRowSkeleton extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppColors.gray200,
-              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+              color: AuroraColors.inkBorder,
+              borderRadius: AuroraRadius.sm,
             ),
           ),
-          const SizedBox(width: AppSizes.md),
+          const SizedBox(width: AuroraSpacing.space5),
           Expanded(child: _Bar(widthFactor: 0.45)),
           Container(
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: AppColors.gray200,
+              color: AuroraColors.inkBorder,
               shape: BoxShape.circle,
             ),
           ),
@@ -158,8 +161,8 @@ class _Bar extends StatelessWidget {
       child: Container(
         height: 10,
         decoration: BoxDecoration(
-          color: AppColors.gray200,
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          color: AuroraColors.inkBorder,
+          borderRadius: AuroraRadius.sm,
         ),
       ),
     );

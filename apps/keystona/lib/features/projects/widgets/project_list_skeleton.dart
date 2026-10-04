@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
 
 /// Pulse-shimmer skeleton matching [ProjectCard] layout.
 ///
-/// Shows 3 placeholder cards: cover photo thumb + name + status chip +
-/// budget row + date row.
+/// Shows 3 placeholder cards: 80px dark hero + phase dots + budget bar +
+/// footer row.
 class ProjectListSkeleton extends StatefulWidget {
   const ProjectListSkeleton({super.key});
 
@@ -45,12 +46,12 @@ class _ProjectListSkeletonState extends State<ProjectListSkeleton>
       builder: (_, _) => Opacity(
         opacity: _opacity.value,
         child: ListView(
-          padding: AppPadding.screen,
+          padding: EdgeInsets.all(AuroraSpacing.screenPadH),
           children: const [
             _SkeletonCard(),
-            SizedBox(height: AppSizes.sm),
+            SizedBox(height: AuroraSpacing.space3),
             _SkeletonCard(),
-            SizedBox(height: AppSizes.sm),
+            SizedBox(height: AuroraSpacing.space3),
             _SkeletonCard(),
           ],
         ),
@@ -66,66 +67,101 @@ class _SkeletonCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        color: AuroraColors.paper,
+        borderRadius: AuroraRadius.lg,
+        border: Border.all(color: const Color(0xFFEEEDF2), width: 3),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Cover photo placeholder.
-          Container(
-            height: 120,
-            decoration: BoxDecoration(
-              color: AppColors.gray200,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(AppSizes.radiusMd),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(11),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Hero block
+            Container(
+              height: 80,
+              color: const Color(0xFFE0DFEA),
+            ),
+            // Card body
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Phase dots row — 5 dots with connecting lines
+                  Row(
+                    children: [
+                      for (int i = 0; i < 5; i++) ...[
+                        if (i > 0)
+                          Expanded(
+                            child: Container(height: 2, color: const Color(0xFFEEEDF2)),
+                          ),
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: const Color(0xFFE0DFEA),
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Budget row — text stub + progress bar
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 100,
+                        height: 11,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEEDF2),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Container(
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEEEDF2),
+                            borderRadius: AuroraRadius.full,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  // Footer row — work-type pill + date
+                  Row(
+                    children: [
+                      Container(
+                        width: 72,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEEDF2),
+                          borderRadius: AuroraRadius.xs,
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        width: 70,
+                        height: 11,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEEDF2),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(AppSizes.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Name + status chip row.
-                Row(
-                  children: [
-                    Expanded(
-                      child: FractionallySizedBox(
-                        widthFactor: 0.55,
-                        alignment: Alignment.centerLeft,
-                        child: Container(height: 16, color: AppColors.gray200),
-                      ),
-                    ),
-                    Container(
-                      width: 80,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        color: AppColors.gray200,
-                        borderRadius:
-                            BorderRadius.circular(AppSizes.radiusFull),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSizes.sm),
-                // Budget row.
-                FractionallySizedBox(
-                  widthFactor: 0.45,
-                  alignment: Alignment.centerLeft,
-                  child: Container(height: 12, color: AppColors.gray200),
-                ),
-                const SizedBox(height: AppSizes.xs),
-                // Date row.
-                FractionallySizedBox(
-                  widthFactor: 0.35,
-                  alignment: Alignment.centerLeft,
-                  child: Container(height: 12, color: AppColors.gray200),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

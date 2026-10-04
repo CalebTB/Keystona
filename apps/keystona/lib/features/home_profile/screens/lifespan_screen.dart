@@ -1,10 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+
+
+
 import '../models/system_lifespan_entry.dart';
 import '../providers/lifespan_provider.dart';
 import '../widgets/lifespan_card.dart';
@@ -80,15 +84,15 @@ class _LifespanList extends StatelessWidget {
 
         // ── System cards ────────────────────────────────────────────────
         SliverPadding(
-          padding: AppPadding.screen.copyWith(top: AppSizes.sm),
+          padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH).copyWith(top: AuroraSpacing.space3),
           sliver: SliverList.separated(
             itemCount: entries.length,
-            separatorBuilder: (_, _) => const SizedBox(height: AppSizes.sm),
+            separatorBuilder: (_, _) => const SizedBox(height: AuroraSpacing.space3),
             itemBuilder: (_, i) => LifespanCard(entry: entries[i]),
           ),
         ),
 
-        const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
+        const SliverToBoxAdapter(child: SizedBox(height: AuroraSpacing.space8)),
       ],
     );
   }
@@ -109,29 +113,29 @@ class _ReplacementCostBanner extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.fromLTRB(
-        AppSizes.md,
-        AppSizes.md,
-        AppSizes.md,
+        AuroraSpacing.space5,
+        AuroraSpacing.space5,
+        AuroraSpacing.space5,
         0,
       ),
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
+        horizontal: AuroraSpacing.space5,
+        vertical: AuroraSpacing.space3,
       ),
       decoration: BoxDecoration(
-        color: AppColors.warningLight,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+        color: AuroraColors.yellowDim,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AuroraColors.yellow.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          Icon(Icons.savings_outlined, color: AppColors.warning, size: AppSizes.iconMd),
-          const SizedBox(width: AppSizes.sm),
+          Icon(Icons.savings_outlined, color: AuroraColors.yellow, size: AuroraSpacing.space5),
+          const SizedBox(width: AuroraSpacing.space3),
           Expanded(
             child: Text(
               'Est. upcoming replacement costs: $formatted',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.warning,
+              style: AuroraType.body.copyWith(
+                color: AuroraColors.yellow,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -153,36 +157,33 @@ class _ErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.error_outline,
-              size: AppSizes.xxl,
-              color: AppColors.error,
+              size: AuroraSpacing.space9,
+              color: AuroraColors.coral,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space5),
             Text(
               'Couldn\'t load lifespan data',
-              style: AppTextStyles.h3,
+              style: AuroraType.h3,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             Text(
               'Check your connection and try again.',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+              style: AuroraType.body.copyWith(
+                color: AuroraColors.inkSecondary,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.lg),
-            FilledButton(
+            const SizedBox(height: AuroraSpacing.space7),
+            PrimaryButton(
+              label: 'Retry',
               onPressed: onRetry,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.deepNavy,
-              ),
-              child: const Text('Retry'),
             ),
           ],
         ),

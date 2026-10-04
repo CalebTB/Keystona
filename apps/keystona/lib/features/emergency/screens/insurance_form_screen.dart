@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 import '../../../core/widgets/confirm_dialog.dart';
 import '../models/insurance_policy.dart';
 import '../providers/emergency_hub_provider.dart';
@@ -24,15 +26,14 @@ abstract final class PolicyTypes {
   ];
 
   static String labelFor(String value) =>
-      all.firstWhere((p) => p.value == value, orElse: () => (value: value, label: value)).label;
+      all
+          .firstWhere((p) => p.value == value,
+              orElse: () => (value: value, label: value))
+          .label;
 }
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 
-/// Create or edit an insurance policy record.
-///
-/// - Create mode: [existingPolicy] is null.
-/// - Edit mode: [existingPolicy] is populated; a delete action is available.
 class InsuranceFormScreen extends ConsumerStatefulWidget {
   const InsuranceFormScreen({super.key, this.existingPolicy});
 
@@ -46,7 +47,6 @@ class InsuranceFormScreen extends ConsumerStatefulWidget {
 class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // ── Controllers ─────────────────────────────────────────────────────────────
   late final TextEditingController _carrierController;
   late final TextEditingController _policyNumberController;
   late final TextEditingController _coverageController;
@@ -57,7 +57,6 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
   late final TextEditingController _agentEmailController;
   late final TextEditingController _claimsPhoneController;
 
-  // ── Local state ──────────────────────────────────────────────────────────────
   late String _policyType;
   DateTime? _effectiveDate;
   DateTime? _expirationDate;
@@ -110,8 +109,6 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
     super.dispose();
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
-
   String _formatAmount(double amount) => amount.toInt().toString();
 
   double? _parseCurrency(String raw) {
@@ -122,7 +119,7 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
 
   String _toDateColumn(DateTime dt) => dt.toIso8601String().split('T')[0];
 
-  // ── Policy type picker ───────────────────────────────────────────────────────
+  // ── Policy type picker ────────────────────────────────────────────────────
 
   Future<void> _pickPolicyType(BuildContext context) async {
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
@@ -157,15 +154,15 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
-                padding: const EdgeInsets.all(AppSizes.md),
-                child: Text('Policy Type', style: AppTextStyles.h3),
+                padding: const EdgeInsets.all(AuroraSpacing.space7),
+                child: Text('Policy Type', style: AuroraType.h3),
               ),
               const Divider(height: 1),
               ...PolicyTypes.all.map(
                 (opt) => ListTile(
                   title: Text(opt.label),
                   trailing: _policyType == opt.value
-                      ? const Icon(Icons.check, color: AppColors.deepNavy)
+                      ? Icon(Icons.check, color: AuroraColors.cobalt)
                       : null,
                   onTap: () {
                     setState(() => _policyType = opt.value);
@@ -180,15 +177,13 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
     }
   }
 
-  // ── Date pickers ─────────────────────────────────────────────────────────────
+  // ── Date pickers ──────────────────────────────────────────────────────────
 
-  Future<void> _pickDate(
-    BuildContext context, {
-    required bool isEffective,
-  }) async {
+  Future<void> _pickDate(BuildContext context,
+      {required bool isEffective}) async {
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    final initial = (isEffective ? _effectiveDate : _expirationDate) ??
-        DateTime.now();
+    final initial =
+        (isEffective ? _effectiveDate : _expirationDate) ?? DateTime.now();
 
     if (isIOS) {
       DateTime picked = initial;
@@ -198,7 +193,7 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
           type: MaterialType.transparency,
           child: Container(
             height: 300,
-            color: AppColors.surface,
+            color: AuroraColors.paper,
             child: Column(
               children: [
                 Row(
@@ -256,7 +251,7 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
     }
   }
 
-  // ── Document link picker ──────────────────────────────────────────────────────
+  // ── Document link picker ──────────────────────────────────────────────────
 
   Future<void> _pickDocument(BuildContext context) async {
     final result = await showDocumentLinkPicker(context);
@@ -269,7 +264,7 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
     }
   }
 
-  // ── Save ──────────────────────────────────────────────────────────────────────
+  // ── Save ──────────────────────────────────────────────────────────────────
 
   Future<void> _save(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
@@ -298,14 +293,13 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
         'effective_date': _toDateColumn(_effectiveDate!),
       if (_expirationDate != null)
         'expiration_date': _toDateColumn(_expirationDate!),
-      if (_linkedDocumentId != null)
-        'linked_document_id': _linkedDocumentId,
+      if (_linkedDocumentId != null) 'linked_document_id': _linkedDocumentId,
     };
 
-    // Capture context-dependent references before async gap.
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
     final successMsg = _isEditing ? 'Policy updated.' : 'Policy added.';
+
     try {
       final notifier = ref.read(emergencyHubProvider.notifier);
       if (_isEditing) {
@@ -319,7 +313,7 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
         ..showSnackBar(
           SnackBar(
             content: Text(successMsg),
-            backgroundColor: AppColors.success,
+            backgroundColor: AuroraColors.limeDeep,
             duration: const Duration(seconds: 2),
             behavior: SnackBarBehavior.floating,
           ),
@@ -332,7 +326,7 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
         ..showSnackBar(
           const SnackBar(
             content: Text("Couldn't save the policy. Please try again."),
-            backgroundColor: AppColors.error,
+            backgroundColor: AuroraColors.coral,
             duration: Duration(seconds: 3),
             behavior: SnackBarBehavior.floating,
           ),
@@ -342,7 +336,7 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
     }
   }
 
-  // ── Delete ────────────────────────────────────────────────────────────────────
+  // ── Delete ────────────────────────────────────────────────────────────────
 
   Future<void> _delete(BuildContext context) async {
     await ConfirmDialog.show(
@@ -357,7 +351,6 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
 
   Future<void> _confirmDelete(BuildContext context) async {
     setState(() => _deleting = true);
-    // Capture context-dependent references before async gap.
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
     try {
@@ -369,7 +362,7 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
         ..showSnackBar(
           const SnackBar(
             content: Text('Policy deleted.'),
-            backgroundColor: AppColors.success,
+            backgroundColor: AuroraColors.limeDeep,
             duration: Duration(seconds: 2),
             behavior: SnackBarBehavior.floating,
           ),
@@ -383,7 +376,7 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
         ..showSnackBar(
           const SnackBar(
             content: Text("Couldn't delete the policy. Please try again."),
-            backgroundColor: AppColors.error,
+            backgroundColor: AuroraColors.coral,
             duration: Duration(seconds: 3),
             behavior: SnackBarBehavior.floating,
           ),
@@ -393,7 +386,7 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
     }
   }
 
-  // ── Build ─────────────────────────────────────────────────────────────────────
+  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -402,15 +395,10 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
 
     if (isIOS) {
       return CupertinoPageScaffold(
+        backgroundColor: AuroraColors.paper,
         navigationBar: CupertinoNavigationBar(
+          backgroundColor: AuroraColors.paper,
           middle: Text(title),
-          trailing: _saving
-              ? const CupertinoActivityIndicator()
-              : CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  onPressed: () => _save(context),
-                  child: const Text('Save'),
-                ),
         ),
         child: SafeArea(
           child: _FormBody(
@@ -428,8 +416,7 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
             claimsPhoneController: _claimsPhoneController,
             effectiveDate: _effectiveDate,
             expirationDate: _expirationDate,
-            onPickEffectiveDate: () =>
-                _pickDate(context, isEffective: true),
+            onPickEffectiveDate: () => _pickDate(context, isEffective: true),
             onPickExpirationDate: () =>
                 _pickDate(context, isEffective: false),
             linkedDocumentName: _linkedDocumentName,
@@ -439,6 +426,8 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
               _linkedDocumentName = null;
             }),
             isEditing: _isEditing,
+            saving: _saving,
+            deleting: _deleting,
             onDelete: _deleting ? null : () => _delete(context),
             onSave: _saving ? null : () => _save(context),
           ),
@@ -446,32 +435,13 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
       );
     }
 
-    // Android
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       appBar: AppBar(
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: Text(title, style: AppTextStyles.h3),
-        actions: [
-          if (_saving)
-            const Padding(
-              padding: EdgeInsets.only(right: AppSizes.md),
-              child: SizedBox.square(
-                dimension: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            )
-          else
-            TextButton(
-              onPressed: () => _save(context),
-              child: Text(
-                'Save',
-                style: AppTextStyles.button.copyWith(color: AppColors.deepNavy),
-              ),
-            ),
-        ],
+        title: Text(title, style: AuroraType.h3),
       ),
       body: _FormBody(
         formKey: _formKey,
@@ -497,6 +467,8 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
           _linkedDocumentName = null;
         }),
         isEditing: _isEditing,
+        saving: _saving,
+        deleting: _deleting,
         onDelete: _deleting ? null : () => _delete(context),
         onSave: _saving ? null : () => _save(context),
       ),
@@ -528,6 +500,8 @@ class _FormBody extends StatelessWidget {
     required this.onPickDocument,
     required this.onClearDocument,
     required this.isEditing,
+    required this.saving,
+    required this.deleting,
     required this.onDelete,
     required this.onSave,
   });
@@ -552,286 +526,217 @@ class _FormBody extends StatelessWidget {
   final VoidCallback onPickDocument;
   final VoidCallback onClearDocument;
   final bool isEditing;
+  final bool saving;
+  final bool deleting;
   final VoidCallback? onDelete;
   final VoidCallback? onSave;
 
-  String _formatDate(DateTime dt) =>
-      DateFormat('MM/dd/yyyy').format(dt);
+  String _formatDate(DateTime dt) => DateFormat('MM/dd/yyyy').format(dt);
 
   @override
   Widget build(BuildContext context) {
     return Form(
       key: formKey,
       child: ListView(
-        padding: AppPadding.screen,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AuroraSpacing.screenPadH,
+          vertical: AuroraSpacing.screenPadTop,
+        ),
         children: [
-          // ── Policy type ──────────────────────────────────────────────────
-          _SectionLabel('Policy Type'),
-          const SizedBox(height: AppSizes.xs),
-          _TappableField(
-            label: PolicyTypes.labelFor(policyType),
-            onTap: onPickPolicyType,
-          ),
-          const SizedBox(height: AppSizes.md),
-
-          // ── Carrier (required) ───────────────────────────────────────────
-          _SectionLabel('Insurance Company *'),
-          const SizedBox(height: AppSizes.xs),
-          TextFormField(
-            controller: carrierController,
-            decoration: _inputDecoration('e.g. State Farm'),
-            textCapitalization: TextCapitalization.words,
-            validator: (v) =>
-                (v == null || v.trim().isEmpty) ? 'Carrier is required' : null,
-          ),
-          const SizedBox(height: AppSizes.md),
-
-          // ── Policy number ────────────────────────────────────────────────
-          _SectionLabel('Policy Number'),
-          const SizedBox(height: AppSizes.xs),
-          TextFormField(
-            controller: policyNumberController,
-            decoration: _inputDecoration('e.g. HO-123456789'),
-          ),
-          const SizedBox(height: AppSizes.md),
-
-          // ── Coverage / Deductible / Premium ──────────────────────────────
-          _SectionLabel('Coverage & Costs'),
-          const SizedBox(height: AppSizes.xs),
-          Row(
+          // ── Policy Info ────────────────────────────────────────────────────
+          AuroraFormSection(
+            title: 'Policy Info',
             children: [
-              Flexible(
-                child: TextFormField(
-                  controller: coverageController,
-                  decoration: _inputDecoration('Coverage (\$)'),
-                  keyboardType: TextInputType.number,
-                ),
+              AuroraSelectField(
+                label: 'Policy Type',
+                value: PolicyTypes.labelFor(policyType),
+                onTap: onPickPolicyType,
               ),
-              const SizedBox(width: AppSizes.sm),
-              Flexible(
-                child: TextFormField(
-                  controller: deductibleController,
-                  decoration: _inputDecoration('Deductible (\$)'),
-                  keyboardType: TextInputType.number,
-                ),
+              AuroraTextField(
+                label: 'Insurance Company',
+                required: true,
+                controller: carrierController,
+                hintText: 'e.g. State Farm',
+                keyboardType: TextInputType.text,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty)
+                        ? 'Carrier is required'
+                        : null,
+              ),
+              AuroraTextField(
+                label: 'Policy Number',
+                controller: policyNumberController,
+                hintText: 'e.g. HO-123456789',
               ),
             ],
           ),
-          const SizedBox(height: AppSizes.sm),
-          TextFormField(
-            controller: premiumController,
-            decoration: _inputDecoration('Annual Premium (\$)'),
-            keyboardType: TextInputType.number,
-          ),
-          const SizedBox(height: AppSizes.md),
 
-          // ── Dates ────────────────────────────────────────────────────────
-          _SectionLabel('Policy Dates'),
-          const SizedBox(height: AppSizes.xs),
-          Row(
+          // ── Coverage & Costs ───────────────────────────────────────────────
+          AuroraFormSection(
+            title: 'Coverage & Costs',
+            isOptional: true,
             children: [
-              Flexible(
-                child: _TappableField(
-                  label: effectiveDate != null
-                      ? _formatDate(effectiveDate!)
-                      : 'Effective date',
-                  placeholder: effectiveDate == null,
-                  onTap: onPickEffectiveDate,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: AuroraTextField(
+                      label: 'Coverage (\$)',
+                      controller: coverageController,
+                      hintText: '300000',
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: AuroraSpacing.space3),
+                  Expanded(
+                    child: AuroraTextField(
+                      label: 'Deductible (\$)',
+                      controller: deductibleController,
+                      hintText: '1000',
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: AppSizes.sm),
-              Flexible(
-                child: _TappableField(
-                  label: expirationDate != null
-                      ? _formatDate(expirationDate!)
-                      : 'Expiration date',
-                  placeholder: expirationDate == null,
-                  onTap: onPickExpirationDate,
-                ),
+              AuroraTextField(
+                label: 'Annual Premium (\$)',
+                controller: premiumController,
+                hintText: '2400',
+                keyboardType: TextInputType.number,
               ),
             ],
           ),
-          const SizedBox(height: AppSizes.md),
 
-          // ── Claims phone ─────────────────────────────────────────────────
-          _SectionLabel('Claims Phone'),
-          const SizedBox(height: AppSizes.xs),
-          TextFormField(
-            controller: claimsPhoneController,
-            decoration: _inputDecoration('e.g. 1-800-555-0100'),
-            keyboardType: TextInputType.phone,
-          ),
-          const SizedBox(height: AppSizes.md),
-
-          // ── Agent ────────────────────────────────────────────────────────
-          _SectionLabel('Agent'),
-          const SizedBox(height: AppSizes.xs),
-          TextFormField(
-            controller: agentNameController,
-            decoration: _inputDecoration('Agent name'),
-            textCapitalization: TextCapitalization.words,
-          ),
-          const SizedBox(height: AppSizes.sm),
-          Row(
+          // ── Policy Dates ───────────────────────────────────────────────────
+          AuroraFormSection(
+            title: 'Policy Dates',
+            isOptional: true,
             children: [
-              Flexible(
-                child: TextFormField(
-                  controller: agentPhoneController,
-                  decoration: _inputDecoration('Agent phone'),
-                  keyboardType: TextInputType.phone,
-                ),
-              ),
-              const SizedBox(width: AppSizes.sm),
-              Flexible(
-                child: TextFormField(
-                  controller: agentEmailController,
-                  decoration: _inputDecoration('Agent email'),
-                  keyboardType: TextInputType.emailAddress,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: AuroraSelectField(
+                      label: 'Effective Date',
+                      value: effectiveDate != null
+                          ? _formatDate(effectiveDate!)
+                          : null,
+                      placeholder: 'Select date',
+                      onTap: onPickEffectiveDate,
+                    ),
+                  ),
+                  const SizedBox(width: AuroraSpacing.space3),
+                  Expanded(
+                    child: AuroraSelectField(
+                      label: 'Expiration Date',
+                      value: expirationDate != null
+                          ? _formatDate(expirationDate!)
+                          : null,
+                      placeholder: 'Select date',
+                      onTap: onPickExpirationDate,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: AppSizes.md),
 
-          // ── Linked document ──────────────────────────────────────────────
-          _SectionLabel('Policy Document'),
-          const SizedBox(height: AppSizes.xs),
-          if (linkedDocumentName != null)
-            _LinkedDocumentRow(
-              name: linkedDocumentName!,
-              onClear: onClearDocument,
-            )
-          else
-            _TappableField(
-              label: 'Link PDF from Document Vault',
-              onTap: onPickDocument,
-              icon: Icons.attach_file_outlined,
-            ),
-          const SizedBox(height: AppSizes.xl),
+          // ── Claims Contact ─────────────────────────────────────────────────
+          AuroraFormSection(
+            title: 'Claims Contact',
+            isOptional: true,
+            children: [
+              AuroraTextField(
+                label: 'Claims Phone',
+                controller: claimsPhoneController,
+                hintText: 'e.g. 1-800-555-0100',
+                keyboardType: TextInputType.phone,
+              ),
+            ],
+          ),
 
-          // ── Delete (edit mode only) ───────────────────────────────────────
+          // ── Agent ──────────────────────────────────────────────────────────
+          AuroraFormSection(
+            title: 'Agent',
+            isOptional: true,
+            children: [
+              AuroraTextField(
+                label: 'Agent Name',
+                controller: agentNameController,
+                hintText: 'Agent name',
+                keyboardType: TextInputType.name,
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: AuroraTextField(
+                      label: 'Agent Phone',
+                      controller: agentPhoneController,
+                      hintText: 'Phone',
+                      keyboardType: TextInputType.phone,
+                    ),
+                  ),
+                  const SizedBox(width: AuroraSpacing.space3),
+                  Expanded(
+                    child: AuroraTextField(
+                      label: 'Agent Email',
+                      controller: agentEmailController,
+                      hintText: 'Email',
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // ── Policy Document ────────────────────────────────────────────────
+          AuroraFormSection(
+            title: 'Policy Document',
+            isOptional: true,
+            children: [
+              if (linkedDocumentName != null)
+                _LinkedDocumentRow(
+                    name: linkedDocumentName!, onClear: onClearDocument)
+              else
+                AuroraSelectField(
+                  label: 'Linked Document',
+                  placeholder: 'Link PDF from Document Vault',
+                  value: null,
+                  onTap: onPickDocument,
+                  suffix: const Icon(
+                    Icons.attach_file_outlined,
+                    size: 18,
+                    color: AuroraColors.inkTertiary,
+                  ),
+                ),
+            ],
+          ),
+
+          const SizedBox(height: AuroraSpacing.space10),
+
+          // ── Save CTA ───────────────────────────────────────────────────────
+          SaveButton(
+            label: isEditing ? 'Save Changes' : 'Add Policy',
+            onPressed: onSave,
+            loading: saving,
+            expand: true,
+          ),
+
           if (isEditing) ...[
-            OutlinedButton(
+            const SizedBox(height: AuroraSpacing.space3),
+            GhostButton(
+              label: deleting ? 'Deleting…' : 'Delete Policy',
               onPressed: onDelete,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.error,
-                side: const BorderSide(color: AppColors.error),
-                minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-                ),
-              ),
-              child: Text(
-                'Delete Policy',
-                style: AppTextStyles.button.copyWith(color: AppColors.error),
-              ),
             ),
-            const SizedBox(height: AppSizes.xl),
           ],
+
+          const SizedBox(height: AuroraSpacing.space10),
         ],
       ),
     );
   }
-
-  InputDecoration _inputDecoration(String hint) => InputDecoration(
-        hintText: hint,
-        hintStyle: AppTextStyles.bodyMedium.copyWith(
-          color: AppColors.textSecondary,
-        ),
-        filled: true,
-        fillColor: AppColors.surface,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm + 4,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: const BorderSide(color: AppColors.border),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: const BorderSide(color: AppColors.border),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: const BorderSide(color: AppColors.deepNavy, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: const BorderSide(color: AppColors.error),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
-        ),
-      );
 }
 
-// ── Private helpers ────────────────────────────────────────────────────────────
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Text(
-        text,
-        style: AppTextStyles.labelLarge,
-      );
-}
-
-class _TappableField extends StatelessWidget {
-  const _TappableField({
-    required this.label,
-    required this.onTap,
-    this.placeholder = false,
-    this.icon,
-  });
-
-  final String label;
-  final VoidCallback onTap;
-  final bool placeholder;
-  final IconData? icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: AppSizes.inputHeight,
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: AppSizes.iconMd, color: AppColors.textSecondary),
-              const SizedBox(width: AppSizes.sm),
-            ],
-            Expanded(
-              child: Text(
-                label,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color:
-                      placeholder ? AppColors.textSecondary : AppColors.textPrimary,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            Icon(
-              Icons.chevron_right,
-              size: AppSizes.iconMd,
-              color: AppColors.textSecondary,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+// ── Linked document row ───────────────────────────────────────────────────────
 
 class _LinkedDocumentRow extends StatelessWidget {
   const _LinkedDocumentRow({required this.name, required this.onClear});
@@ -842,25 +747,25 @@ class _LinkedDocumentRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: AppSizes.inputHeight,
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: AuroraSpacing.space7),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-        border: Border.all(color: AppColors.border),
+        color: AuroraColors.paper,
+        borderRadius: AuroraRadius.md,
+        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
       ),
       child: Row(
         children: [
           const Icon(
             Icons.picture_as_pdf_outlined,
-            size: AppSizes.iconMd,
-            color: AppColors.deepNavy,
+            size: 20,
+            color: AuroraColors.cobalt,
           ),
-          const SizedBox(width: AppSizes.sm),
+          const SizedBox(width: AuroraSpacing.space3),
           Expanded(
             child: Text(
               name,
-              style: AppTextStyles.bodyMedium,
+              style: AuroraType.body,
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -868,8 +773,8 @@ class _LinkedDocumentRow extends StatelessWidget {
             onTap: onClear,
             child: const Icon(
               Icons.close,
-              size: AppSizes.iconMd,
-              color: AppColors.textSecondary,
+              size: 20,
+              color: AuroraColors.inkSecondary,
             ),
           ),
         ],

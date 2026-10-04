@@ -16,9 +16,6 @@ part 'task_detail_provider.g.dart';
 /// Keyed by [taskId] and auto-disposed when the detail screen is popped.
 /// Fetches the task with nested system, appliance, completions, and template
 /// data in a single Supabase query (no N+1).
-///
-/// Extension points for downstream issues:
-/// - [completeTaskDetailed] — stub, implemented by issue #33
 @riverpod
 class TaskDetailNotifier extends _$TaskDetailNotifier {
   @override
@@ -26,27 +23,56 @@ class TaskDetailNotifier extends _$TaskDetailNotifier {
 
   // ── Public interface ───────────────────────────────────────────────────────
 
-  /// One-tap completion with today's date and auto-timestamps.
+  /// One-tap completion. For recurring tasks the due_date is rolled forward
+  /// on the same row (no new task created) — all history stays centralised.
   ///
-  /// Returns the created [TaskCompletion.id] so the caller can pass it to
-  /// [undoQuickComplete] if the user taps "Undo" within the snackbar window.
-  Future<String> quickCompleteTask() async {
+  /// Returns the completion ID and the original due_date so the caller can
+  /// wire an undo snackbar that fully reverts both writes.
+  Future<({String completionId, DateTime? originalDueDate})>
+      quickCompleteTask() async {
     final detail = state.value;
     if (detail == null) throw StateError('Task not loaded');
 
     final user = SupabaseService.client.auth.currentUser;
     if (user == null) throw StateError('Not authenticated');
 
-    final today = DateTime.now().toIso8601String().split('T')[0];
+    final now = DateTime.now();
+    final todayStr = _dateStr(now);
+    final isRecurring = detail.task.recurrence != RecurrenceType.none;
+    final nextDate = isRecurring ? _nextDate(detail.task, base: now) : null;
 
-    // Insert the completion record and capture its id for potential undo.
+    // Optimistic update — prepend the new completion and update the task.
+    // Recurring: roll due_date forward, status = scheduled (task stays active).
+    // One-off: status = completed.
+    state = AsyncData(TaskDetail(
+      task: isRecurring && nextDate != null
+          ? detail.task.copyWith(
+              status: TaskStatus.scheduled,
+              dueDate: nextDate,
+            )
+          : detail.task.copyWith(status: TaskStatus.completed),
+      completions: [
+        TaskCompletion(
+          id: 'optimistic_${now.millisecondsSinceEpoch}',
+          taskId: detail.task.id,
+          userId: user.id,
+          propertyId: detail.task.propertyId,
+          completedDate: now,
+          completedBy: 'diy',
+          createdAt: now,
+        ),
+        ...detail.completions,
+      ],
+    ));
+
+    // 1. Insert completion record.
     final row = await SupabaseService.client
         .from('task_completions')
         .insert({
           'task_id': detail.task.id,
           'user_id': user.id,
           'property_id': detail.task.propertyId,
-          'completed_date': today,
+          'completed_date': todayStr,
           'completed_by': 'diy',
         })
         .select('id')
@@ -54,34 +80,35 @@ class TaskDetailNotifier extends _$TaskDetailNotifier {
 
     final completionId = row['id'] as String;
 
-    // Update task status to completed.
-    await SupabaseService.client
-        .from('maintenance_tasks')
-        .update({'status': 'completed'})
-        .eq('id', detail.task.id);
-
-    // If recurring, ask the Edge Function to schedule the next occurrence.
-    if (detail.task.recurrence != RecurrenceType.none) {
-      await SupabaseService.client.functions.invoke(
-        'schedule-next-task',
-        body: {'task_id': detail.task.id},
-      );
+    // 2. Update the task row.
+    if (isRecurring && nextDate != null) {
+      await SupabaseService.client.from('maintenance_tasks').update({
+        'due_date': _dateStr(nextDate),
+        'status': 'scheduled',
+      }).eq('id', detail.task.id);
+    } else {
+      await SupabaseService.client
+          .from('maintenance_tasks')
+          .update({'status': 'completed'})
+          .eq('id', detail.task.id);
     }
 
-    // Sync the list screen, score, and re-fetch detail.
     ref.invalidate(maintenanceTasksProvider);
     ref.invalidate(homeHealthScoreProvider);
-    ref.invalidateSelf();
-    await future;
+    state = await AsyncValue.guard(() => _fetchDetail(taskId));
 
-    return completionId;
+    return (
+      completionId: completionId,
+      originalDueDate: isRecurring ? detail.task.dueDate : null,
+    );
   }
 
-  /// Reverts a quick completion within the 5-second undo window.
-  ///
-  /// Deletes the [completionId] row and restores the task status based on
-  /// whether the due date is past (overdue) or future (scheduled).
-  Future<void> undoQuickComplete(String completionId) async {
+  /// Reverts a quick completion. Deletes the completion record and restores
+  /// the task's original due_date (recurring) or status (one-off).
+  Future<void> undoQuickComplete(
+    String completionId, {
+    DateTime? originalDueDate,
+  }) async {
     final detail = state.value;
     if (detail == null) return;
 
@@ -91,42 +118,30 @@ class TaskDetailNotifier extends _$TaskDetailNotifier {
         .eq('id', completionId);
 
     final now = DateTime.now().toLocal();
-    final todayMidnight = DateTime(now.year, now.month, now.day);
-    final restoredStatus =
-        detail.task.dueDate.toLocal().isBefore(todayMidnight)
-            ? 'overdue'
-            : 'scheduled';
+    final today = DateTime(now.year, now.month, now.day);
 
-    await SupabaseService.client
-        .from('maintenance_tasks')
-        .update({'status': restoredStatus})
-        .eq('id', detail.task.id);
-
-    ref.invalidate(maintenanceTasksProvider);
-    ref.invalidate(homeHealthScoreProvider);
-    ref.invalidateSelf();
-    await future;
-  }
-
-  /// Marks the task as skipped and records the user's [reason].
-  Future<void> skipTask(String reason) async {
-    final detail = state.value;
-    if (detail == null) return;
-
-    await SupabaseService.client
-        .from('maintenance_tasks')
-        .update({
-          'status': 'skipped',
-          if (reason.isNotEmpty) 'skip_reason': reason,
-        })
-        .eq('id', detail.task.id);
-
-    // If recurring, schedule the next occurrence.
-    if (detail.task.recurrence != RecurrenceType.none) {
-      await SupabaseService.client.functions.invoke(
-        'schedule-next-task',
-        body: {'task_id': detail.task.id},
-      );
+    if (originalDueDate != null) {
+      // Recurring: restore original due_date and derive status from it.
+      final restoredStatus =
+          originalDueDate.toLocal().isBefore(today) ? 'overdue' : 'scheduled';
+      await SupabaseService.client.from('maintenance_tasks').update({
+        'status': restoredStatus,
+        'due_date': _dateStr(originalDueDate),
+      }).eq('id', detail.task.id);
+    } else {
+      // One-off: restore status (only if no other completions remain).
+      final remaining =
+          detail.completions.where((c) => c.id != completionId);
+      if (remaining.isEmpty) {
+        final restoredStatus =
+            detail.task.dueDate.toLocal().isBefore(today)
+                ? 'overdue'
+                : 'scheduled';
+        await SupabaseService.client
+            .from('maintenance_tasks')
+            .update({'status': restoredStatus})
+            .eq('id', detail.task.id);
+      }
     }
 
     ref.invalidate(maintenanceTasksProvider);
@@ -135,15 +150,34 @@ class TaskDetailNotifier extends _$TaskDetailNotifier {
     await future;
   }
 
-  /// Inserts a detailed [TaskCompletion] with optional photos and receipt links.
-  ///
-  /// [formData] must contain `completed_date`, `completed_by`, and any optional
-  /// contractor / cost / time / notes / linked_document_ids fields.
-  ///
-  /// [photos] are uploaded to `completion-photos/{userId}/{propertyId}/{id}/`
-  /// before inserting [completion_photos] rows.
-  ///
-  /// Returns the created completion ID so the caller can wire an undo snackbar.
+  /// Skips this occurrence. For recurring tasks, rolls the due_date forward
+  /// from the original due date (preserves the established schedule).
+  Future<void> skipTask(String reason) async {
+    final detail = state.value;
+    if (detail == null) return;
+    final isRecurring = detail.task.recurrence != RecurrenceType.none;
+
+    if (isRecurring) {
+      final nextDate = _nextDate(detail.task);
+      await SupabaseService.client.from('maintenance_tasks').update({
+        'status': 'scheduled',
+        'due_date': _dateStr(nextDate),
+        if (reason.isNotEmpty) 'skip_reason': reason,
+      }).eq('id', detail.task.id);
+    } else {
+      await SupabaseService.client.from('maintenance_tasks').update({
+        'status': 'skipped',
+        if (reason.isNotEmpty) 'skip_reason': reason,
+      }).eq('id', detail.task.id);
+    }
+
+    ref.invalidate(maintenanceTasksProvider);
+    ref.invalidate(homeHealthScoreProvider);
+    ref.invalidateSelf();
+    await future;
+  }
+
+  /// Detailed completion with optional photos and receipt links.
   Future<String> completeTaskDetailed(
     Map<String, dynamic> formData,
     List<XFile> photos,
@@ -168,7 +202,7 @@ class TaskDetailNotifier extends _$TaskDetailNotifier {
 
     final completionId = row['id'] as String;
 
-    // 2. Upload photos and insert completion_photos rows.
+    // 2. Upload photos.
     if (photos.isNotEmpty) {
       final photoRows = <Map<String, dynamic>>[];
       for (final photo in photos) {
@@ -198,31 +232,51 @@ class TaskDetailNotifier extends _$TaskDetailNotifier {
           .insert(photoRows);
     }
 
-    // 3. Update task status to completed.
-    await SupabaseService.client
-        .from('maintenance_tasks')
-        .update({'status': 'completed'})
-        .eq('id', detail.task.id);
-
-    // 4. Schedule next occurrence if recurring. Non-fatal if it fails.
-    if (detail.task.recurrence != RecurrenceType.none) {
-      try {
-        await SupabaseService.client.functions.invoke(
-          'schedule-next-task',
-          body: {'task_id': detail.task.id},
-        );
-      } catch (_) {
-        // Task is marked complete even if scheduling fails.
-      }
+    // 3. Update task row — roll forward if recurring, complete if one-off.
+    final isRecurring = detail.task.recurrence != RecurrenceType.none;
+    if (isRecurring) {
+      final base = formData['completed_date'] is String
+          ? DateTime.tryParse(formData['completed_date'] as String) ??
+              DateTime.now()
+          : DateTime.now();
+      final nextDate = _nextDate(detail.task, base: base);
+      await SupabaseService.client.from('maintenance_tasks').update({
+        'due_date': _dateStr(nextDate),
+        'status': 'scheduled',
+      }).eq('id', detail.task.id);
+    } else {
+      await SupabaseService.client
+          .from('maintenance_tasks')
+          .update({'status': 'completed'})
+          .eq('id', detail.task.id);
     }
 
-    // 5. Sync the list screen, score, and re-fetch detail.
     ref.invalidate(maintenanceTasksProvider);
     ref.invalidate(homeHealthScoreProvider);
     ref.invalidateSelf();
     await future;
 
     return completionId;
+  }
+
+  // ── Private helpers ────────────────────────────────────────────────────────
+
+  static DateTime _nextDate(MaintenanceTask task, {DateTime? base}) {
+    final b = (base ?? task.dueDate).toLocal();
+    return switch (task.recurrence) {
+      RecurrenceType.none => b,
+      RecurrenceType.weekly => b.add(const Duration(days: 7)),
+      RecurrenceType.biweekly => b.add(const Duration(days: 14)),
+      RecurrenceType.monthly => DateTime(b.year, b.month + 1, b.day),
+      RecurrenceType.quarterly => DateTime(b.year, b.month + 3, b.day),
+      RecurrenceType.biannual => DateTime(b.year, b.month + 6, b.day),
+      RecurrenceType.annual => DateTime(b.year + 1, b.month, b.day),
+    };
+  }
+
+  static String _dateStr(DateTime dt) {
+    final d = dt.toLocal();
+    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
   }
 
   static String _mimeType(String ext) {
@@ -271,7 +325,6 @@ class TaskDetailNotifier extends _$TaskDetailNotifier {
     final completionRows = (row['completions'] as List<dynamic>?) ?? [];
     final templateRow = row['template'] as Map<String, dynamic>?;
 
-    // Strip nested objects so fromJson only sees flat columns.
     final cleaned = Map<String, dynamic>.from(row)
       ..remove('system')
       ..remove('appliance')
@@ -283,7 +336,6 @@ class TaskDetailNotifier extends _$TaskDetailNotifier {
       linkedApplianceName: applianceRow?['name'] as String?,
     );
 
-    // Merge template values when the task itself has no data.
     if (templateRow != null) {
       if (task.instructions == null || task.instructions!.isEmpty) {
         task = task.copyWith(
@@ -305,7 +357,6 @@ class TaskDetailNotifier extends _$TaskDetailNotifier {
       }
     }
 
-    // Parse completions and sort chronologically descending.
     final completions = completionRows
         .map(
           (c) => TaskCompletion.fromJson(

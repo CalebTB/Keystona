@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/supabase_service.dart';
 import '../models/project_journal_note.dart';
@@ -157,11 +158,11 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
                   },
                   child: Text(
                     o.name,
-                    style: AppTextStyles.bodyLarge.copyWith(
+                    style: AuroraType.bodyLg.copyWith(
                       color: (_selectedPhaseId == o.id ||
                               (o.id.isEmpty && _selectedPhaseId == null))
-                          ? AppColors.goldAccent
-                          : AppColors.textPrimary,
+                          ? AuroraColors.yellow
+                          : AuroraColors.ink,
                       fontWeight:
                           (_selectedPhaseId == o.id ||
                                   (o.id.isEmpty && _selectedPhaseId == null))
@@ -239,7 +240,7 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
                   style: TextStyle(
                     color: _saving
                         ? CupertinoColors.inactiveGray
-                        : CupertinoColors.activeBlue,
+                        : AuroraColors.cobalt,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -275,7 +276,7 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
         actions: [
           if (_saving)
             const Padding(
-              padding: EdgeInsets.all(AppSizes.sm),
+              padding: EdgeInsets.all(AuroraSpacing.space3),
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           else
@@ -330,13 +331,22 @@ class _FormBody extends StatelessWidget {
 
   InputDecoration _decoration(String hint) => InputDecoration(
         hintText: hint,
-        hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.gray400),
+        hintStyle: AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.cobalt, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
+          horizontal: AuroraSpacing.space7,
+          vertical: AuroraSpacing.space3,
         ),
       );
 
@@ -354,7 +364,7 @@ class _FormBody extends StatelessWidget {
     return Form(
       key: formKey,
       child: ListView(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         children: [
           _Label('Title (optional)'),
           TextFormField(
@@ -363,9 +373,9 @@ class _FormBody extends StatelessWidget {
             maxLength: 150,
             decoration: _decoration('e.g. Contractor meeting notes'),
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
 
-          _Label('Note'),
+          _Label('Note', required: true),
           TextFormField(
             controller: contentController,
             maxLines: null,
@@ -378,7 +388,7 @@ class _FormBody extends StatelessWidget {
                 ? 'Note content is required'
                 : null,
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
 
           _Label('Date'),
           _TapRow(
@@ -386,7 +396,7 @@ class _FormBody extends StatelessWidget {
             value: _dateFmt.format(noteDate),
             onTap: onPickDate,
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
 
           if (phases.isNotEmpty) ...[
             _Label('Phase (optional)'),
@@ -407,10 +417,10 @@ class _FormBody extends StatelessWidget {
                       DropdownMenuItem(value: p.id, child: Text(p.name))),
                 ],
               ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
           ],
 
-          const SizedBox(height: AppSizes.xl),
+          const SizedBox(height: AuroraSpacing.space10),
         ],
       ),
     );
@@ -418,16 +428,25 @@ class _FormBody extends StatelessWidget {
 }
 
 class _Label extends StatelessWidget {
-  const _Label(this.text);
+  const _Label(this.text, {this.required = false});
   final String text;
+  final bool required;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.xs),
-      child: Text(
-        text,
-        style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+      padding: const EdgeInsets.only(bottom: AuroraSpacing.space1),
+      child: Row(
+        children: [
+          Text(
+            text.toUpperCase(),
+            style: AuroraType.label,
+          ),
+          if (required) ...[
+            const SizedBox(width: 2),
+            Text('*', style: AuroraType.label.copyWith(color: AuroraColors.coral)),
+          ],
+        ],
       ),
     );
   }
@@ -450,12 +469,12 @@ class _TapRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm + 2,
+          horizontal: AuroraSpacing.space7,
+          vertical: AuroraSpacing.space3 + 2,
         ),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.border),
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          border: Border.all(color: AuroraColors.inkBorder),
+          borderRadius: BorderRadius.circular(8.0),
         ),
         child: Row(
           children: [
@@ -464,15 +483,15 @@ class _TapRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(label,
-                      style: AppTextStyles.bodySmall
-                          .copyWith(color: AppColors.textSecondary)),
+                      style: AuroraType.bodySm
+                          .copyWith(color: AuroraColors.inkSecondary)),
                   const SizedBox(height: 2),
-                  Text(value, style: AppTextStyles.bodyLarge),
+                  Text(value, style: AuroraType.bodyLg),
                 ],
               ),
             ),
             const Icon(Icons.chevron_right,
-                color: AppColors.gray400, size: 20),
+                color: AuroraColors.inkTertiary, size: 20),
           ],
         ),
       ),

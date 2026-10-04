@@ -31,20 +31,33 @@ class MaintenanceTasksNotifier extends _$MaintenanceTasksNotifier {
     state = await AsyncValue.guard(_fetchTasks);
   }
 
-  /// [#32] Marks a task as completed and inserts a quick [TaskCompletion] row.
+  /// Marks a task as completed with a quick completion record.
   ///
-  /// Used by the Task Detail screen for one-tap quick complete. The detailed
-  /// completion flow (photos, notes, cost) is handled by issue #33.
+  /// Recurring tasks are rolled forward (same row, new due_date + status reset)
+  /// so history stays centralised and the system dropdown stays clean.
+  /// One-off tasks are marked completed.
   Future<void> completeTask(String taskId) async {
     final user = SupabaseService.client.auth.currentUser;
     if (user == null) return;
 
     final tasks = state.value ?? [];
-    final matching = tasks.where((t) => t.id == taskId);
-    if (matching.isEmpty) return;
-    final task = matching.first;
+    final task = tasks.where((t) => t.id == taskId).firstOrNull;
+    if (task == null) return;
 
-    final today = DateTime.now().toIso8601String().split('T')[0];
+    final now = DateTime.now();
+    final today = _dateStr(now);
+    final isRecurring = task.recurrence != RecurrenceType.none;
+    final nextDate = isRecurring ? _nextDate(task, base: now) : null;
+
+    // Optimistic update — recurring tasks roll forward in local state so the
+    // agenda (which filters by due_date) reflects the new schedule instantly.
+    state = AsyncData(tasks.map((t) {
+      if (t.id != taskId) return t;
+      if (isRecurring && nextDate != null) {
+        return t.copyWith(status: TaskStatus.scheduled, dueDate: nextDate);
+      }
+      return t.copyWith(status: TaskStatus.completed);
+    }).toList());
 
     await SupabaseService.client.from('task_completions').insert({
       'task_id': taskId,
@@ -54,46 +67,66 @@ class MaintenanceTasksNotifier extends _$MaintenanceTasksNotifier {
       'completed_by': 'diy',
     });
 
-    await SupabaseService.client
-        .from('maintenance_tasks')
-        .update({'status': 'completed'})
-        .eq('id', taskId);
-
-    if (task.recurrence != RecurrenceType.none) {
-      await SupabaseService.client.functions.invoke(
-        'schedule-next-task',
-        body: {'task_id': taskId},
-      );
+    if (isRecurring && nextDate != null) {
+      await SupabaseService.client.from('maintenance_tasks').update({
+        'due_date': _dateStr(nextDate),
+        'status': 'scheduled',
+      }).eq('id', taskId);
+    } else {
+      await SupabaseService.client
+          .from('maintenance_tasks')
+          .update({'status': 'completed'})
+          .eq('id', taskId);
     }
-
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchTasks);
   }
 
-  /// [#32] Skips a task with an optional [reason].
+  /// Skips a task. Recurring tasks roll forward; one-off tasks are marked skipped.
   Future<void> skipTask(String taskId, {String? reason}) async {
     final tasks = state.value ?? [];
-    final matching = tasks.where((t) => t.id == taskId);
-    if (matching.isEmpty) return;
-    final task = matching.first;
+    final task = tasks.where((t) => t.id == taskId).firstOrNull;
+    if (task == null) return;
 
-    await SupabaseService.client
-        .from('maintenance_tasks')
-        .update({
-          'status': 'skipped',
-          if (reason != null && reason.isNotEmpty) 'skip_reason': reason,
-        })
-        .eq('id', taskId);
+    final isRecurring = task.recurrence != RecurrenceType.none;
+    final nextDate = isRecurring ? _nextDate(task) : null;
 
-    if (task.recurrence != RecurrenceType.none) {
-      await SupabaseService.client.functions.invoke(
-        'schedule-next-task',
-        body: {'task_id': taskId},
-      );
+    state = AsyncData(tasks.map((t) {
+      if (t.id != taskId) return t;
+      if (isRecurring && nextDate != null) {
+        return t.copyWith(status: TaskStatus.scheduled, dueDate: nextDate);
+      }
+      return t.copyWith(status: TaskStatus.skipped);
+    }).toList());
+
+    if (isRecurring && nextDate != null) {
+      await SupabaseService.client.from('maintenance_tasks').update({
+        'due_date': _dateStr(nextDate),
+        'status': 'scheduled',
+        if (reason != null && reason.isNotEmpty) 'skip_reason': reason,
+      }).eq('id', taskId);
+    } else {
+      await SupabaseService.client.from('maintenance_tasks').update({
+        'status': 'skipped',
+        if (reason != null && reason.isNotEmpty) 'skip_reason': reason,
+      }).eq('id', taskId);
     }
+  }
 
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchTasks);
+  static DateTime _nextDate(MaintenanceTask task, {DateTime? base}) {
+    final b = (base ?? task.dueDate).toLocal();
+    return switch (task.recurrence) {
+      RecurrenceType.none => b,
+      RecurrenceType.weekly => b.add(const Duration(days: 7)),
+      RecurrenceType.biweekly => b.add(const Duration(days: 14)),
+      RecurrenceType.monthly => DateTime(b.year, b.month + 1, b.day),
+      RecurrenceType.quarterly => DateTime(b.year, b.month + 3, b.day),
+      RecurrenceType.biannual => DateTime(b.year, b.month + 6, b.day),
+      RecurrenceType.annual => DateTime(b.year + 1, b.month, b.day),
+    };
+  }
+
+  static String _dateStr(DateTime dt) {
+    final d = dt.toLocal();
+    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
   }
 
   /// Creates a new custom task for the user's property.
@@ -273,6 +306,7 @@ class MaintenanceTasksNotifier extends _$MaintenanceTasksNotifier {
           'climate_adjusted, status, difficulty, diy_or_pro, priority, '
           'estimated_minutes, tools_needed, supplies_needed, '
           'linked_system_id, linked_appliance_id, '
+          'notifications_enabled, skip_reason, '
           'created_at, updated_at, '
           'systems(id, name)',
         )
@@ -309,7 +343,10 @@ List<MaintenanceTask> filteredTasks(Ref ref) {
   final tasksAsync = ref.watch(maintenanceTasksProvider);
   final filter = ref.watch(taskFilterProvider);
 
-  final tasks = tasksAsync.value ?? [];
+  // Exclude tasks explicitly disabled from the main Tasks tab.
+  final tasks = (tasksAsync.value ?? [])
+      .where((t) => t.notificationsEnabled)
+      .toList();
 
   final now = DateTime.now().toLocal();
   final todayMidnight = DateTime(now.year, now.month, now.day);

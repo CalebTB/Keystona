@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
 
 /// Pulse-shimmer skeleton matching [PhaseCard] layout.
 ///
@@ -45,12 +46,12 @@ class _PhaseListSkeletonState extends State<PhaseListSkeleton>
       builder: (_, _) => Opacity(
         opacity: _opacity.value,
         child: ListView(
-          padding: AppPadding.screen,
+          padding: EdgeInsets.all(AuroraSpacing.screenPadH),
           children: const [
             _SkeletonPhaseCard(),
-            SizedBox(height: AppSizes.sm),
+            SizedBox(height: AuroraSpacing.space3),
             _SkeletonPhaseCard(),
-            SizedBox(height: AppSizes.sm),
+            SizedBox(height: AuroraSpacing.space3),
             _SkeletonPhaseCard(),
           ],
         ),
@@ -65,12 +66,12 @@ class _SkeletonPhaseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minHeight: AppSizes.cardMinHeight),
-      padding: const EdgeInsets.all(AppSizes.md),
+      constraints: const BoxConstraints(minHeight: 72.0),
+      padding: const EdgeInsets.all(AuroraSpacing.space7),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.gray200),
+        color: AuroraColors.paper,
+        borderRadius: AuroraRadius.md,
+        border: Border.all(color: const Color(0xFFEEEDF2)),
       ),
       child: Row(
         children: [
@@ -78,12 +79,12 @@ class _SkeletonPhaseCard extends StatelessWidget {
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(width: 14, height: 14, color: AppColors.gray200),
+              Container(width: 14, height: 14, color: const Color(0xFFEEEDF2)),
               const SizedBox(height: 4),
-              Container(width: 14, height: 14, color: AppColors.gray200),
+              Container(width: 14, height: 14, color: const Color(0xFFEEEDF2)),
             ],
           ),
-          const SizedBox(width: AppSizes.md),
+          const SizedBox(width: AuroraSpacing.space7),
           // Name + description column.
           Expanded(
             child: Column(
@@ -92,25 +93,25 @@ class _SkeletonPhaseCard extends StatelessWidget {
                 FractionallySizedBox(
                   widthFactor: 0.55,
                   alignment: Alignment.centerLeft,
-                  child: Container(height: 16, color: AppColors.gray200),
+                  child: Container(height: 16, color: const Color(0xFFEEEDF2)),
                 ),
-                const SizedBox(height: AppSizes.xs),
+                const SizedBox(height: AuroraSpacing.space1),
                 FractionallySizedBox(
                   widthFactor: 0.8,
                   alignment: Alignment.centerLeft,
-                  child: Container(height: 12, color: AppColors.gray200),
+                  child: Container(height: 12, color: const Color(0xFFEEEDF2)),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: AppSizes.sm),
+          const SizedBox(width: AuroraSpacing.space3),
           // Status badge placeholder.
           Container(
             width: 72,
             height: 24,
             decoration: BoxDecoration(
-              color: AppColors.gray200,
-              borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+              color: const Color(0xFFEEEDF2),
+              borderRadius: AuroraRadius.full,
             ),
           ),
         ],

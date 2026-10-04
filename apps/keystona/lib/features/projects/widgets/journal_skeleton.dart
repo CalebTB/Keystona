@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
 
 /// Pulse-shimmer skeleton matching [JournalNoteCard] layout.
 ///
@@ -45,12 +46,12 @@ class _JournalSkeletonState extends State<JournalSkeleton>
       builder: (_, _) => Opacity(
         opacity: _opacity.value,
         child: ListView(
-          padding: AppPadding.screen,
+          padding: EdgeInsets.all(AuroraSpacing.screenPadH),
           children: const [
             _SkeletonNoteCard(),
-            SizedBox(height: AppSizes.sm),
+            SizedBox(height: AuroraSpacing.space3),
             _SkeletonNoteCard(),
-            SizedBox(height: AppSizes.sm),
+            SizedBox(height: AuroraSpacing.space3),
             _SkeletonNoteCard(),
           ],
         ),
@@ -65,11 +66,11 @@ class _SkeletonNoteCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSizes.md),
+      padding: const EdgeInsets.all(AuroraSpacing.space7),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.gray200),
+        color: AuroraColors.paper,
+        borderRadius: AuroraRadius.md,
+        border: Border.all(color: const Color(0xFFEEEDF2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,31 +79,31 @@ class _SkeletonNoteCard extends StatelessWidget {
           FractionallySizedBox(
             widthFactor: 0.3,
             alignment: Alignment.centerLeft,
-            child: Container(height: 11, color: AppColors.gray200),
+            child: Container(height: 11, color: const Color(0xFFEEEDF2)),
           ),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
           // Title bar.
           FractionallySizedBox(
             widthFactor: 0.55,
             alignment: Alignment.centerLeft,
-            child: Container(height: 15, color: AppColors.gray200),
+            child: Container(height: 15, color: const Color(0xFFEEEDF2)),
           ),
-          const SizedBox(height: AppSizes.xs),
+          const SizedBox(height: AuroraSpacing.space1),
           // Content line 1.
-          Container(height: 12, color: AppColors.gray200),
+          Container(height: 12, color: const Color(0xFFEEEDF2)),
           const SizedBox(height: 4),
           // Content line 2.
           FractionallySizedBox(
             widthFactor: 0.8,
             alignment: Alignment.centerLeft,
-            child: Container(height: 12, color: AppColors.gray200),
+            child: Container(height: 12, color: const Color(0xFFEEEDF2)),
           ),
           const SizedBox(height: 4),
           // Content line 3.
           FractionallySizedBox(
             widthFactor: 0.6,
             alignment: Alignment.centerLeft,
-            child: Container(height: 12, color: AppColors.gray200),
+            child: Container(height: 12, color: const Color(0xFFEEEDF2)),
           ),
         ],
       ),

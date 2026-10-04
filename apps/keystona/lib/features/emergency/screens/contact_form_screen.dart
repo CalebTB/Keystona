@@ -3,23 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../models/emergency_contact.dart';
 import '../providers/contacts_list_provider.dart';
 
-/// Create or edit an [EmergencyContact].
-///
-/// - Create mode: pass [existingContact] = null.
-/// - Edit mode:   pass [existingContact]. All fields are pre-populated.
-///
-/// Uses [ConsumerStatefulWidget] for Riverpod ref access + local form state.
 class ContactFormScreen extends ConsumerStatefulWidget {
   const ContactFormScreen({super.key, this.existingContact});
 
-  /// The contact to edit, or null when creating a new contact.
   final EmergencyContact? existingContact;
 
   @override
@@ -29,8 +23,6 @@ class ContactFormScreen extends ConsumerStatefulWidget {
 class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // ── Controllers ───────────────────────────────────────────────────────────
-
   late final TextEditingController _nameController;
   late final TextEditingController _companyController;
   late final TextEditingController _phonePrimaryController;
@@ -39,15 +31,11 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
   late final TextEditingController _availableHoursController;
   late final TextEditingController _notesController;
 
-  // ── Local state ───────────────────────────────────────────────────────────
-
   late String _category;
   late bool _is24x7;
   late bool _isFavorite;
   bool _saving = false;
   bool _deleting = false;
-
-  // ── Helpers ───────────────────────────────────────────────────────────────
 
   bool get _isEditing => widget.existingContact != null;
 
@@ -126,27 +114,22 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
   Future<void> _pickCategoryAndroid(BuildContext context) async {
     await showModalBottomSheet<void>(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSizes.radiusLg),
-        ),
+      shape: RoundedRectangleBorder(
+        borderRadius: AuroraSheet.topRadius(context),
       ),
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
-              padding: const EdgeInsets.all(AppSizes.md),
-              child: Text('Contact Category', style: AppTextStyles.h4),
+              padding: const EdgeInsets.all(AuroraSpacing.space7),
+              child: Text('Contact Category', style: AuroraType.h3),
             ),
             ...ContactCategories.all.map(
               (option) => ListTile(
                 title: Text(option.label),
                 trailing: _category == option.value
-                    ? const Icon(
-                        Icons.check,
-                        color: AppColors.deepNavy,
-                      )
+                    ? Icon(Icons.check, color: AuroraColors.cobalt)
                     : null,
                 onTap: () {
                   setState(() => _category = option.value);
@@ -154,7 +137,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                 },
               ),
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
           ],
         ),
       ),
@@ -165,7 +148,6 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _saving = true);
 
     final data = {
@@ -199,7 +181,6 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
       } else {
         await notifier.addContact(data);
       }
-
       if (!mounted) return;
       context.pop();
     } catch (_) {
@@ -213,27 +194,21 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
 
   Future<void> _delete() async {
     if (!_isEditing) return;
-
     final confirmed = await _confirmDelete();
     if (!mounted) return;
     if (confirmed != true) return;
 
     setState(() => _deleting = true);
-
     final notifier = ref.read(contactsListProvider.notifier);
 
     try {
       await notifier.deleteContact(widget.existingContact!.id);
       if (!mounted) return;
-      // Pop twice: dismiss the form, return to the contacts list.
       context.pop();
     } catch (_) {
       if (!mounted) return;
       setState(() => _deleting = false);
-      SnackbarService.showError(
-        context,
-        "Couldn't delete contact. Try again.",
-      );
+      SnackbarService.showError(context, "Couldn't delete contact. Try again.");
     }
   }
 
@@ -271,7 +246,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            style: TextButton.styleFrom(foregroundColor: AuroraColors.coral),
             child: const Text('Delete'),
           ),
         ],
@@ -287,29 +262,16 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
     return isIOS ? _buildIOS(context) : _buildAndroid(context);
   }
 
-  // ── iOS scaffold ──────────────────────────────────────────────────────────
-
   Widget _buildIOS(BuildContext context) {
     return CupertinoPageScaffold(
+      backgroundColor: AuroraColors.paper,
       navigationBar: CupertinoNavigationBar(
+        backgroundColor: AuroraColors.paper,
         middle: Text(_isEditing ? 'Edit Contact' : 'New Contact'),
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
           onPressed: () => context.pop(),
           child: const Text('Cancel'),
-        ),
-        trailing: CupertinoButton(
-          padding: EdgeInsets.zero,
-          onPressed: _saving ? null : _save,
-          child: _saving
-              ? const CupertinoActivityIndicator()
-              : Text(
-                  'Save',
-                  style: AppTextStyles.button.copyWith(
-                    color: AppColors.deepNavy,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
         ),
       ),
       child: SafeArea(
@@ -326,49 +288,32 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
           is24x7: _is24x7,
           isFavorite: _isFavorite,
           isEditing: _isEditing,
+          saving: _saving,
           deleting: _deleting,
           onPickCategory: () => _pickCategory(context),
           onToggle24x7: (v) => setState(() => _is24x7 = v),
           onToggleFavorite: (v) => setState(() => _isFavorite = v),
           onDelete: _delete,
+          onSave: _save,
         ),
       ),
     );
   }
 
-  // ── Android scaffold ──────────────────────────────────────────────────────
-
   Widget _buildAndroid(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       appBar: AppBar(
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         scrolledUnderElevation: 0,
         title: Text(
           _isEditing ? 'Edit Contact' : 'New Contact',
-          style: AppTextStyles.h3,
+          style: AuroraType.h3,
         ),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
-        actions: [
-          TextButton(
-            onPressed: _saving ? null : _save,
-            child: _saving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(
-                    'Save',
-                    style: AppTextStyles.button.copyWith(
-                      color: AppColors.deepNavy,
-                    ),
-                  ),
-          ),
-        ],
       ),
       body: _FormBody(
         formKey: _formKey,
@@ -383,11 +328,13 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
         is24x7: _is24x7,
         isFavorite: _isFavorite,
         isEditing: _isEditing,
+        saving: _saving,
         deleting: _deleting,
         onPickCategory: () => _pickCategory(context),
         onToggle24x7: (v) => setState(() => _is24x7 = v),
         onToggleFavorite: (v) => setState(() => _isFavorite = v),
         onDelete: _delete,
+        onSave: _save,
       ),
     );
   }
@@ -395,7 +342,6 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
 
 // ── Shared form body ──────────────────────────────────────────────────────────
 
-/// Platform-agnostic form content shared between the iOS and Android scaffolds.
 class _FormBody extends StatelessWidget {
   const _FormBody({
     required this.formKey,
@@ -410,11 +356,13 @@ class _FormBody extends StatelessWidget {
     required this.is24x7,
     required this.isFavorite,
     required this.isEditing,
+    required this.saving,
     required this.deleting,
     required this.onPickCategory,
     required this.onToggle24x7,
     required this.onToggleFavorite,
     required this.onDelete,
+    required this.onSave,
   });
 
   final GlobalKey<FormState> formKey;
@@ -429,317 +377,144 @@ class _FormBody extends StatelessWidget {
   final bool is24x7;
   final bool isFavorite;
   final bool isEditing;
+  final bool saving;
   final bool deleting;
   final VoidCallback onPickCategory;
   final ValueChanged<bool> onToggle24x7;
   final ValueChanged<bool> onToggleFavorite;
   final VoidCallback onDelete;
+  final VoidCallback onSave;
 
   @override
   Widget build(BuildContext context) {
     return Form(
       key: formKey,
       child: ListView(
-        padding: AppPadding.screen,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AuroraSpacing.screenPadH,
+          vertical: AuroraSpacing.screenPadTop,
+        ),
         children: [
-          // ── Name ──────────────────────────────────────────────────────────
-          _SectionLabel(label: 'Name *'),
-          _InputField(
-            controller: nameController,
-            hint: "e.g. Mike's Plumbing",
-            keyboardType: TextInputType.name,
-            validator: (v) =>
-                (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+          // ── Basic Info ─────────────────────────────────────────────────────
+          AuroraFormSection(
+            title: 'Basic Info',
+            children: [
+              AuroraTextField(
+                label: 'Name',
+                required: true,
+                controller: nameController,
+                hintText: "e.g. Mike's Plumbing",
+                keyboardType: TextInputType.name,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+              ),
+              AuroraTextField(
+                label: 'Company',
+                controller: companyController,
+                hintText: 'Business name',
+                keyboardType: TextInputType.name,
+              ),
+            ],
           ),
-          const SizedBox(height: AppSizes.md),
 
-          // ── Company ───────────────────────────────────────────────────────
-          _SectionLabel(label: 'Company'),
-          _InputField(
-            controller: companyController,
-            hint: 'Business name (optional)',
-            keyboardType: TextInputType.name,
+          // ── Category ───────────────────────────────────────────────────────
+          AuroraFormSection(
+            title: 'Category',
+            children: [
+              AuroraSelectField(
+                label: 'Category',
+                value: ContactCategories.labelFor(category),
+                onTap: onPickCategory,
+              ),
+            ],
           ),
-          const SizedBox(height: AppSizes.md),
 
-          // ── Category ──────────────────────────────────────────────────────
-          _SectionLabel(label: 'Category'),
-          _CategorySelector(
-            currentCategory: category,
-            onTap: onPickCategory,
-          ),
-          const SizedBox(height: AppSizes.md),
-
-          // ── Primary phone ─────────────────────────────────────────────────
-          _SectionLabel(label: 'Primary Phone *'),
-          _InputField(
-            controller: phonePrimaryController,
-            hint: 'e.g. (555) 867-5309',
-            keyboardType: TextInputType.phone,
-            validator: (v) =>
-                (v == null || v.trim().isEmpty)
+          // ── Contact Details ────────────────────────────────────────────────
+          AuroraFormSection(
+            title: 'Contact Details',
+            children: [
+              AuroraTextField(
+                label: 'Primary Phone',
+                required: true,
+                controller: phonePrimaryController,
+                hintText: 'e.g. (555) 867-5309',
+                keyboardType: TextInputType.phone,
+                validator: (v) => (v == null || v.trim().isEmpty)
                     ? 'Primary phone is required'
                     : null,
-          ),
-          const SizedBox(height: AppSizes.md),
-
-          // ── Secondary phone ───────────────────────────────────────────────
-          _SectionLabel(label: 'Secondary Phone'),
-          _InputField(
-            controller: phoneSecondaryController,
-            hint: 'Mobile, after-hours, etc. (optional)',
-            keyboardType: TextInputType.phone,
-          ),
-          const SizedBox(height: AppSizes.md),
-
-          // ── Email ─────────────────────────────────────────────────────────
-          _SectionLabel(label: 'Email'),
-          _InputField(
-            controller: emailController,
-            hint: 'contact@example.com (optional)',
-            keyboardType: TextInputType.emailAddress,
-          ),
-          const SizedBox(height: AppSizes.md),
-
-          // ── Available hours ───────────────────────────────────────────────
-          _SectionLabel(label: 'Available Hours'),
-          _InputField(
-            controller: availableHoursController,
-            hint: 'e.g. M–F 8am–5pm (optional)',
-          ),
-          const SizedBox(height: AppSizes.md),
-
-          // ── 24/7 toggle ───────────────────────────────────────────────────
-          _ToggleRow(
-            label: 'Available 24/7',
-            value: is24x7,
-            onChanged: onToggle24x7,
-          ),
-          const SizedBox(height: AppSizes.sm),
-
-          // ── Favorite toggle ───────────────────────────────────────────────
-          _ToggleRow(
-            label: 'Pin to favorites',
-            value: isFavorite,
-            onChanged: onToggleFavorite,
-          ),
-          const SizedBox(height: AppSizes.md),
-
-          // ── Notes ─────────────────────────────────────────────────────────
-          _SectionLabel(label: 'Notes'),
-          _InputField(
-            controller: notesController,
-            hint: 'Gate code, preferred contact method, etc. (optional)',
-            minLines: 3,
-            maxLines: 6,
+              ),
+              AuroraTextField(
+                label: 'Secondary Phone',
+                controller: phoneSecondaryController,
+                hintText: 'Mobile, after-hours, etc.',
+                keyboardType: TextInputType.phone,
+              ),
+              AuroraTextField(
+                label: 'Email',
+                controller: emailController,
+                hintText: 'contact@example.com',
+                keyboardType: TextInputType.emailAddress,
+              ),
+              AuroraTextField(
+                label: 'Available Hours',
+                controller: availableHoursController,
+                hintText: 'e.g. M–F 8am–5pm',
+              ),
+            ],
           ),
 
-          // ── Delete button (edit mode only) ────────────────────────────────
+          // ── Preferences ────────────────────────────────────────────────────
+          AuroraFormSection(
+            title: 'Preferences',
+            children: [
+              AuroraToggleRow(
+                label: 'Available 24/7',
+                value: is24x7,
+                onChanged: onToggle24x7,
+              ),
+              AuroraToggleRow(
+                label: 'Pin to favorites',
+                value: isFavorite,
+                onChanged: onToggleFavorite,
+              ),
+            ],
+          ),
+
+          // ── Notes ──────────────────────────────────────────────────────────
+          AuroraFormSection(
+            title: 'Notes',
+            isOptional: true,
+            children: [
+              AuroraTextField(
+                label: 'Notes',
+                controller: notesController,
+                hintText: 'Gate code, preferred contact method, etc.',
+                maxLines: 4,
+              ),
+            ],
+          ),
+
+          const SizedBox(height: AuroraSpacing.space10),
+
+          // ── Save CTA ───────────────────────────────────────────────────────
+          SaveButton(
+            label: isEditing ? 'Save Changes' : 'Add Contact',
+            onPressed: saving ? null : onSave,
+            loading: saving,
+            expand: true,
+          ),
+
           if (isEditing) ...[
-            const SizedBox(height: AppSizes.xl),
-            _DeleteButton(deleting: deleting, onDelete: onDelete),
-          ],
-
-          const SizedBox(height: AppSizes.xl),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.label});
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.xs),
-      child: Text(
-        label,
-        style: AppTextStyles.labelLarge.copyWith(
-          color: AppColors.textSecondary,
-        ),
-      ),
-    );
-  }
-}
-
-class _InputField extends StatelessWidget {
-  const _InputField({
-    required this.controller,
-    required this.hint,
-    this.keyboardType,
-    this.validator,
-    this.minLines,
-    this.maxLines = 1,
-  });
-
-  final TextEditingController controller;
-  final String hint;
-  final TextInputType? keyboardType;
-  final FormFieldValidator<String>? validator;
-  final int? minLines;
-  final int? maxLines;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      minLines: minLines,
-      maxLines: maxLines,
-      validator: validator,
-      style: AppTextStyles.bodyMedium,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: AppTextStyles.bodyMedium.copyWith(
-          color: AppColors.textDisabled,
-        ),
-        filled: true,
-        fillColor: AppColors.surface,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm + AppSizes.xs,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: const BorderSide(color: AppColors.border),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: const BorderSide(color: AppColors.border),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: const BorderSide(color: AppColors.deepNavy, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: const BorderSide(color: AppColors.error),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
-        ),
-      ),
-    );
-  }
-}
-
-class _CategorySelector extends StatelessWidget {
-  const _CategorySelector({
-    required this.currentCategory,
-    required this.onTap,
-  });
-
-  final String currentCategory;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: AppSizes.inputHeight,
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                ContactCategories.labelFor(currentCategory),
-                style: AppTextStyles.bodyMedium,
-              ),
-            ),
-            const Icon(
-              Icons.chevron_right,
-              color: AppColors.textSecondary,
-              size: AppSizes.iconMd,
+            const SizedBox(height: AuroraSpacing.space3),
+            GhostButton(
+              label: deleting ? 'Deleting…' : 'Delete Contact',
+              onPressed: deleting ? null : onDelete,
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
 
-class _ToggleRow extends StatelessWidget {
-  const _ToggleRow({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String label;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.xs,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(label, style: AppTextStyles.bodyMedium),
-          ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: AppColors.deepNavy,
-            activeTrackColor: AppColors.deepNavy.withValues(alpha: 0.4),
-          ),
+          const SizedBox(height: AuroraSpacing.space10),
         ],
       ),
-    );
-  }
-}
-
-class _DeleteButton extends StatelessWidget {
-  const _DeleteButton({required this.deleting, required this.onDelete});
-  final bool deleting;
-  final VoidCallback onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: deleting ? null : onDelete,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.error,
-        side: const BorderSide(color: AppColors.error),
-        minimumSize: const Size(double.infinity, AppSizes.buttonHeight),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-        ),
-      ),
-      child: deleting
-          ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppColors.error,
-              ),
-            )
-          : Text(
-              'Delete Contact',
-              style: AppTextStyles.button.copyWith(color: AppColors.error),
-            ),
     );
   }
 }

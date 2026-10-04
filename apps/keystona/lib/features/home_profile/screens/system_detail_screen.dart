@@ -1,16 +1,25 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_shadows.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+
+
+
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/snackbar_service.dart';
+import '../../maintenance/models/maintenance_task.dart';
+import '../../maintenance/providers/maintenance_tasks_provider.dart';
 import '../models/system.dart';
 import '../models/system_detail.dart';
 import '../providers/system_detail_provider.dart';
@@ -92,13 +101,13 @@ class _AndroidLayout extends ConsumerWidget {
     final detailAsync = ref.watch(systemDetailProvider(systemId));
 
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       appBar: AppBar(
         title: detailAsync.maybeWhen(
-          data: (d) => Text(d.system.name, style: AppTextStyles.h3),
-          orElse: () => Text('System', style: AppTextStyles.h3),
+          data: (d) => Text(d.system.name, style: AuroraType.h3),
+          orElse: () => Text('System', style: AuroraType.h3),
         ),
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         elevation: 0,
         scrolledUnderElevation: 0,
         actions: [
@@ -183,17 +192,17 @@ class _DetailSkeletonState extends State<_DetailSkeleton>
       builder: (_, _) => Opacity(
         opacity: _opacity.value,
         child: Padding(
-          padding: AppPadding.screen,
+          padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: AppSizes.md),
+              const SizedBox(height: AuroraSpacing.space5),
               _SkeletonBar(widthFactor: 0.6, height: 16),
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
               _SkeletonBar(widthFactor: 0.4, height: 12),
-              const SizedBox(height: AppSizes.lg),
+              const SizedBox(height: AuroraSpacing.space7),
               _SkeletonBar(widthFactor: 1.0, height: 80),
-              const SizedBox(height: AppSizes.md),
+              const SizedBox(height: AuroraSpacing.space5),
               _SkeletonBar(widthFactor: 1.0, height: 80),
             ],
           ),
@@ -217,8 +226,8 @@ class _SkeletonBar extends StatelessWidget {
       child: Container(
         height: height,
         decoration: BoxDecoration(
-          color: AppColors.gray200,
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          color: AuroraColors.inkBorder,
+          borderRadius: AuroraRadius.sm,
         ),
       ),
     );
@@ -245,132 +254,273 @@ class _DetailContentState extends ConsumerState<_DetailContent> {
     final system = widget.detail.system;
     final photos = widget.detail.photos;
 
+    final tasksAsync = ref.watch(maintenanceTasksProvider);
+    final allTasks = tasksAsync.value ?? <MaintenanceTask>[];
+    final linkedTasks = allTasks
+        .where((t) =>
+            t.linkedSystemId == system.id &&
+            t.status != TaskStatus.completed &&
+            t.status != TaskStatus.skipped)
+        .toList();
+    final taskCount = linkedTasks.length;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dueCount = linkedTasks
+        .where((t) =>
+            !t.dueDate.isAfter(today) ||
+            t.status == TaskStatus.overdue ||
+            t.status == TaskStatus.due)
+        .length;
+
+    final photoCount = photos.length;
+
+    // Parse notes into spec rows.
+    final specRows = _parseSpecRows(system.notes);
+
+    final icon = _systemIcon(system.category);
+    final categoryColor = _systemCategoryColor(system.category);
+
+    // Stats: Installed year / Lifespan % / Years left
+    final installedVal = system.installationDate != null
+        ? _yearFromDate(system.installationDate!)
+        : '—';
+    final effectiveLifespan = system.lifespanOverride ??
+        (system.expectedLifespanMin != null && system.expectedLifespanMax != null
+            ? ((system.expectedLifespanMin! + system.expectedLifespanMax!) / 2)
+                .round()
+            : null);
+    final pctVal = _sysLifespanPct(system.installationDate, effectiveLifespan);
+    final pctStr = pctVal != null ? '${pctVal.round()}%' : '—';
+    final yearsLeft =
+        _sysYearsLeft(system.installationDate, effectiveLifespan);
+    final untilEndStr = yearsLeft != null
+        ? '${yearsLeft.toStringAsFixed(0)} yr'
+        : '—';
+
+    // Hero health
+    final (healthLabel, healthColor, ageLabel) =
+        _computeSystemHealth(system.installationDate, effectiveLifespan);
+    final eyebrow =
+        '${healthLabel.toUpperCase()} · $ageLabel'.toUpperCase();
+
+    final subtitle = [
+      if (system.brand != null) system.brand!,
+      if (system.modelNumber != null) system.modelNumber!,
+    ].join(' · ');
+
     return Column(
       children: [
         Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: AppSizes.sm),
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── 1. Hero Card (white + category accent) ────────────
+                    Container(
+                      margin: const EdgeInsets.fromLTRB(
+                          AuroraSpacing.screenPadH, 0,
+                          AuroraSpacing.screenPadH, 12),
+                      decoration: BoxDecoration(
+                        color: AuroraColors.paper,
+                        borderRadius: AuroraRadius.xl,
+                        border: Border.all(
+                            color: AuroraColors.inkBorder, width: 1.5),
+                        boxShadow: AuroraShadows.card,
+                      ),
+                      child: ClipRRect(
+                        borderRadius: AuroraRadius.xl,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Colored top accent strip
+                            Container(height: 3, color: categoryColor),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 46,
+                                  height: 46,
+                                  decoration: BoxDecoration(
+                                    color: categoryColor.withAlpha(28),
+                                    borderRadius: AuroraRadius.md,
+                                  ),
+                                  child: Icon(icon, color: categoryColor, size: 24),
+                                ),
+                                const SizedBox(width: AuroraSpacing.space4),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        eyebrow,
+                                        style: AuroraType.label.copyWith(
+                                          letterSpacing: 1.2,
+                                          color: healthColor,
+                                        ),
+                                      ),
+                                      const SizedBox(height: AuroraSpacing.space1),
+                                      Text(
+                                        system.name,
+                                        style: AuroraType.h1
+                                            .copyWith(
+                                          color: AuroraColors.ink,
+                                          fontSize: 21,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      if (subtitle.isNotEmpty) ...[
+                                        const SizedBox(height: AuroraSpacing.space1),
+                                        Text(
+                                          subtitle,
+                                          style: AuroraType.bodySm.copyWith(
+                                            color: AuroraColors.inkSecondary,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Stats row — butter AuroraTile grid
+                          Container(
+                            decoration: const BoxDecoration(
+                              color: AuroraColors.butter,
+                              borderRadius: BorderRadius.vertical(
+                                bottom: Radius.circular(16),
+                              ),
+                              border: Border(
+                                top: BorderSide(
+                                  color: AuroraColors.inkBorder,
+                                  width: 0.5,
+                                ),
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: IntrinsicHeight(
+                              child: Row(
+                                children: [
+                                  if (system.installationDate != null) ...[
+                                    Expanded(
+                                      child: _StatCell2(
+                                          label: 'INSTALLED',
+                                          value: installedVal),
+                                    ),
+                                    const VerticalDivider(
+                                      color: AuroraColors.inkBorder,
+                                      width: 1,
+                                      thickness: 0.5,
+                                    ),
+                                  ],
+                                  Expanded(
+                                    child: _StatCell2(
+                                        label: 'LIFESPAN',
+                                        value: pctStr),
+                                  ),
+                                  const VerticalDivider(
+                                    color: AuroraColors.inkBorder,
+                                    width: 1,
+                                    thickness: 0.5,
+                                  ),
+                                  Expanded(
+                                    child: _StatCell2(
+                                        label: 'UNTIL END',
+                                        value: untilEndStr),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          ],
+                        ),
+                      ),
+                    ),
 
-                // ── Status badge ─────────────────────────────────────────────
-                Padding(
-                  padding: AppPadding.screenHorizontal,
-                  child: _StatusBadge(status: system.status),
+                    // ── 2. Warranty Callout Card ───────────────────────────
+                    if (system.warrantyExpiration != null ||
+                        system.warrantyProvider != null)
+                      Padding(
+                        padding:
+                            const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                        child: _WarrantyCalloutCard2(
+                          warrantyExpiration: system.warrantyExpiration,
+                          warrantyProvider: system.warrantyProvider,
+                        ),
+                      ),
+
+                    // ── 3. Quick-Action Row ────────────────────────────────
+                    Padding(
+                      padding:
+                          const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                      child: _QuickActionRow2(
+                        taskCount: taskCount,
+                        dueCount: dueCount,
+                        photoCount: photoCount,
+                        onAddPhoto: _pickPhoto,
+                        systemId: system.id,
+                        systemName: system.name,
+                      ),
+                    ),
+
+                    // ── 4 + 5. Identification Card ─────────────────────────
+                    _SectionLabel2('IDENTIFICATION'),
+                    Padding(
+                      padding:
+                          const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                      child: _InfoCard2(rows: [
+                        if (system.brand != null)
+                          _InfoRow2Data('Brand', system.brand!),
+                        if (system.modelNumber != null)
+                          _InfoRow2Data('Model', system.modelNumber!,
+                              copyable: true),
+                        if (system.serialNumber != null)
+                          _InfoRow2Data('Serial', system.serialNumber!,
+                              copyable: true),
+                        if (system.location != null)
+                          _InfoRow2Data('Location', system.location!),
+                        if (system.installer != null)
+                          _InfoRow2Data(
+                              'Installer', system.installer!),
+                      ]),
+                    ),
+
+                    // ── 6. Specifications Card (parsed notes) ──────────────
+                    if (specRows.isNotEmpty) ...[
+                      _SectionLabel2('SPECIFICATIONS'),
+                      Padding(
+                        padding:
+                            const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                        child: _InfoCard2(
+                          rows: specRows
+                              .map((r) => _InfoRow2Data(r.$1, r.$2))
+                              .toList(),
+                        ),
+                      ),
+                    ],
+
+                    // ── 7. Photos section ──────────────────────────────────
+                    _SectionLabel2('PHOTOS'),
+                    SystemPhotoStrip(
+                      photos: photos,
+                      onAddPhoto: _pickPhoto,
+                      photoUrlBuilder: (path) =>
+                          widget.detail.photoUrls[path] ?? path,
+                    ),
+                    const SizedBox(height: AuroraSpacing.space8),
+                  ],
                 ),
-                const SizedBox(height: AppSizes.lg),
-
-                // ── Classification section ───────────────────────────────────
-                _SectionHeader(title: 'System Info'),
-                _InfoRow(
-                  label: 'Category',
-                  value: system.category.label,
-                ),
-                _InfoRow(label: 'Type', value: system.systemType),
-                if (system.brand != null)
-                  _InfoRow(label: 'Brand', value: system.brand!),
-                if (system.modelNumber != null)
-                  _InfoRow(label: 'Model', value: system.modelNumber!),
-                if (system.serialNumber != null)
-                  _InfoRow(label: 'Serial #', value: system.serialNumber!),
-                if (system.location != null)
-                  _InfoRow(label: 'Location', value: system.location!),
-
-                const _SectionDivider(),
-
-                // ── Installation section ─────────────────────────────────────
-                _SectionHeader(title: 'Installation'),
-                if (system.installationDate != null)
-                  _InfoRow(
-                    label: 'Installed',
-                    value: _formatDate(system.installationDate!),
-                  ),
-                if (system.installer != null)
-                  _InfoRow(label: 'Installer', value: system.installer!),
-                if (system.purchasePrice != null)
-                  _InfoRow(
-                    label: 'Purchase Price',
-                    value:
-                        '\$${NumberFormat('#,##0.00').format(system.purchasePrice!)}',
-                  ),
-
-                if (system.installationDate != null ||
-                    system.installer != null ||
-                    system.purchasePrice != null)
-                  const _SectionDivider(),
-
-                // ── Lifespan section ─────────────────────────────────────────
-                if (system.expectedLifespanMin != null ||
-                    system.expectedLifespanMax != null ||
-                    system.lifespanOverride != null) ...[
-                  _SectionHeader(title: 'Lifespan'),
-                  if (system.lifespanOverride != null)
-                    _InfoRow(
-                      label: 'Expected',
-                      value: '${system.lifespanOverride} years (custom)',
-                    )
-                  else if (system.expectedLifespanMin != null &&
-                      system.expectedLifespanMax != null)
-                    _InfoRow(
-                      label: 'Expected',
-                      value:
-                          '${system.expectedLifespanMin}–${system.expectedLifespanMax} years',
-                    ),
-                  if (system.estimatedReplacementCost != null)
-                    _InfoRow(
-                      label: 'Replacement Cost',
-                      value:
-                          '\$${NumberFormat('#,##0').format(system.estimatedReplacementCost!)}',
-                    ),
-                  const _SectionDivider(),
-                ],
-
-                // ── Warranty section ─────────────────────────────────────────
-                if (system.warrantyExpiration != null ||
-                    system.warrantyProvider != null) ...[
-                  _SectionHeader(title: 'Warranty'),
-                  if (system.warrantyExpiration != null)
-                    _InfoRow(
-                      label: 'Expires',
-                      value: _formatDate(system.warrantyExpiration!),
-                    ),
-                  if (system.warrantyProvider != null)
-                    _InfoRow(
-                      label: 'Provider',
-                      value: system.warrantyProvider!,
-                    ),
-                  const _SectionDivider(),
-                ],
-
-                // ── Notes ────────────────────────────────────────────────────
-                if (system.notes != null && system.notes!.isNotEmpty) ...[
-                  _SectionHeader(title: 'Notes'),
-                  Padding(
-                    padding: AppPadding.screenHorizontal,
-                    child: Text(
-                      system.notes!,
-                      style: AppTextStyles.bodyMedium,
-                    ),
-                  ),
-                  const SizedBox(height: AppSizes.lg),
-                  const _SectionDivider(),
-                ],
-
-                // ── Photos ────────────────────────────────────────────────────
-                _SectionHeader(title: 'Photos'),
-                const SizedBox(height: AppSizes.sm),
-                SystemPhotoStrip(
-                  photos: photos,
-                  onAddPhoto: _pickPhoto,
-                ),
-                const SizedBox(height: AppSizes.xl),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
 
-        // ── Delete button ──────────────────────────────────────────────────
+        // ── Delete bar ──────────────────────────────────────────────────────
         _DeleteBar(
           isDeleting: _deleting,
           onDelete: _confirmDelete,
@@ -379,7 +529,7 @@ class _DetailContentState extends ConsumerState<_DetailContent> {
     );
   }
 
-  // ── Actions ─────────────────────────────────────────────────────────────────
+  // ── Actions ──────────────────────────────────────────────────────────────────
 
   Future<void> _pickPhoto() async {
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
@@ -429,119 +579,6 @@ class _DetailContentState extends ConsumerState<_DetailContent> {
       setState(() => _deleting = false);
     }
   }
-
-  String _formatDate(String dateStr) {
-    try {
-      final dt = DateTime.parse(dateStr);
-      return DateFormat('MMMM d, y').format(dt);
-    } catch (_) {
-      return dateStr;
-    }
-  }
-}
-
-// ── Section helpers ────────────────────────────────────────────────────────────
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSizes.screenPadding,
-        AppSizes.md,
-        AppSizes.screenPadding,
-        AppSizes.xs,
-      ),
-      child: Text(
-        title.toUpperCase(),
-        style: AppTextStyles.labelSmall.copyWith(
-          color: AppColors.textSecondary,
-          letterSpacing: 0.8,
-        ),
-      ),
-    );
-  }
-}
-
-class _SectionDivider extends StatelessWidget {
-  const _SectionDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Divider(
-      height: 1,
-      thickness: 1,
-      color: AppColors.divider,
-      indent: AppSizes.screenPadding,
-      endIndent: AppSizes.screenPadding,
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.screenPadding,
-        vertical: 6,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(value, style: AppTextStyles.bodySmall),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.status});
-
-  final ItemStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    final (label, color) = switch (status) {
-      ItemStatus.active => ('Active', AppColors.success),
-      ItemStatus.needsRepair => ('Needs Repair', AppColors.warning),
-      ItemStatus.replaced => ('Replaced', AppColors.textSecondary),
-      ItemStatus.removed => ('Removed', AppColors.textDisabled),
-    };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withAlpha(20),
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-        border: Border.all(color: color.withAlpha(70)),
-      ),
-      child: Text(
-        label,
-        style: AppTextStyles.labelSmall.copyWith(color: color),
-      ),
-    );
-  }
 }
 
 // ── Delete bar ─────────────────────────────────────────────────────────────────
@@ -554,47 +591,30 @@ class _DeleteBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-
     return Container(
       padding: EdgeInsets.fromLTRB(
-        AppSizes.screenPadding,
-        AppSizes.md,
-        AppSizes.screenPadding,
-        AppSizes.screenPadding + MediaQuery.of(context).padding.bottom,
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.space5,
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.screenPadH + MediaQuery.of(context).padding.bottom,
       ),
       decoration: BoxDecoration(
-        color: isIOS ? CupertinoColors.systemBackground : AppColors.surface,
-        border: const Border(top: BorderSide(color: AppColors.border, width: 0.5)),
+        color: AuroraColors.paper,
+        border: const Border(top: BorderSide(color: AuroraColors.inkBorder, width: 0.5)),
       ),
       child: SizedBox(
+        width: double.infinity,
         height: 44,
-        child: OutlinedButton.icon(
-          onPressed: isDeleting ? null : onDelete,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.error,
-            side: const BorderSide(color: AppColors.error),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            ),
-          ),
-          icon: isDeleting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.error,
-                  ),
-                )
-              : const Icon(Icons.delete_outline, size: 18),
-          label: Text(
-            isDeleting ? 'Removing…' : 'Remove System',
-            style: AppTextStyles.bodyMediumSemibold.copyWith(
-              color: isDeleting ? AppColors.textDisabled : AppColors.error,
-            ),
-          ),
-        ),
+        child: isDeleting
+            ? const Center(
+                child: CupertinoActivityIndicator(
+                  color: AuroraColors.coral,
+                ),
+              )
+            : GhostButton(
+                label: 'Remove System',
+                onPressed: onDelete,
+              ),
       ),
     );
   }
@@ -638,15 +658,13 @@ class _PhotoSourceSheet {
 
     return showModalBottomSheet<ImageSource>(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSizes.radiusLg),
-        ),
+      shape: RoundedRectangleBorder(
+        borderRadius: AuroraSheet.topRadius(context),
       ),
       builder: (_) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AuroraSpacing.space3),
           ListTile(
             leading: const Icon(Icons.camera_alt_outlined),
             title: const Text('Take Photo'),
@@ -657,7 +675,7 @@ class _PhotoSourceSheet {
             title: const Text('Choose from Library'),
             onTap: () => context.pop(ImageSource.gallery),
           ),
-          SizedBox(height: MediaQuery.of(context).padding.bottom + AppSizes.sm),
+          SizedBox(height: MediaQuery.of(context).padding.bottom + AuroraSpacing.space3),
         ],
       ),
     );
@@ -712,12 +730,485 @@ class _DeleteConfirmSheet {
             child: const Text('Cancel'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            style: TextButton.styleFrom(foregroundColor: AuroraColors.coral),
             onPressed: () => ctx.pop(true),
             child: const Text('Remove'),
           ),
         ],
       ),
     );
+  }
+}
+
+// ── New dashboard widgets (system-specific) ────────────────────────────────────
+
+class _StatCell2 extends StatelessWidget {
+  const _StatCell2({required this.label, required this.value});
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: AuroraType.labelSm.copyWith(
+              letterSpacing: 0.8,
+              color: AuroraColors.inkTertiary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AuroraSpacing.space1),
+          Text(
+            value,
+            style: AuroraType.body.copyWith(fontWeight: FontWeight.w600).copyWith(
+              color: AuroraColors.ink,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WarrantyCalloutCard2 extends StatelessWidget {
+  const _WarrantyCalloutCard2({
+    this.warrantyExpiration,
+    this.warrantyProvider,
+  });
+  final String? warrantyExpiration;
+  final String? warrantyProvider;
+
+  @override
+  Widget build(BuildContext context) {
+    final (statusLabel, expiryCaption) =
+        _warrantyStatus2(warrantyExpiration);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AuroraColors.limeDim,
+        borderRadius: AuroraRadius.lg,
+        border: Border.all(
+          color: AuroraColors.lime.withAlpha(51),
+        ),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: AuroraColors.lime.withAlpha(38),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.shield_outlined,
+              color: AuroraColors.lime,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: AuroraSpacing.space2),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'MANUFACTURER WARRANTY',
+                  style: AuroraType.labelSm.copyWith(
+                    letterSpacing: 0.8,
+                    color: AuroraColors.inkTertiary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  statusLabel,
+                  style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
+                ),
+                if (expiryCaption.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    expiryCaption,
+                    style: AuroraType.bodySm,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickActionRow2 extends StatelessWidget {
+  const _QuickActionRow2({
+    required this.taskCount,
+    required this.dueCount,
+    required this.photoCount,
+    required this.onAddPhoto,
+    required this.systemId,
+    required this.systemName,
+  });
+  final int taskCount;
+  final int dueCount;
+  final int photoCount;
+  final VoidCallback onAddPhoto;
+  final String systemId;
+  final String systemName;
+
+  @override
+  Widget build(BuildContext context) {
+    final taskSub =
+        dueCount > 0 ? '$taskCount · $dueCount due' : '$taskCount';
+    const docSub = 'None';
+    final photoSub = photoCount > 0 ? '$photoCount photo${photoCount == 1 ? '' : 's'}' : '+ Add';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AuroraColors.paper,
+        borderRadius: AuroraRadius.xl,
+        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            Expanded(
+              child: _QuickActionCell2(
+                icon: Icons.task_alt_outlined,
+                label: 'Tasks',
+                subtitle: taskSub,
+                onTap: () => context.push(
+                  '/home/systems/$systemId/tasks',
+                  extra: systemName,
+                ),
+              ),
+            ),
+            VerticalDivider(
+              color: AuroraColors.inkBorder,
+              width: 1,
+              thickness: 1,
+            ),
+            Expanded(
+              child: _QuickActionCell2(
+                icon: Icons.description_outlined,
+                label: 'Docs',
+                subtitle: docSub,
+                onTap: null,
+              ),
+            ),
+            VerticalDivider(
+              color: AuroraColors.inkBorder,
+              width: 1,
+              thickness: 1,
+            ),
+            Expanded(
+              child: _QuickActionCell2(
+                icon: Icons.photo_camera_outlined,
+                label: 'Photos',
+                subtitle: photoSub,
+                onTap: onAddPhoto,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickActionCell2 extends StatelessWidget {
+  const _QuickActionCell2({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    this.onTap,
+  });
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AuroraSpacing.space4),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 24, color: AuroraColors.ink),
+            const SizedBox(height: AuroraSpacing.space2),
+            Text(label.toUpperCase(), style: AuroraType.labelSm),
+            const SizedBox(height: AuroraSpacing.space1),
+            Text(
+              subtitle,
+              style: AuroraType.bodySm.copyWith(
+                color: AuroraColors.inkTertiary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionLabel2 extends StatelessWidget {
+  const _SectionLabel2(this.title);
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      child: Row(
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(
+              color: AuroraColors.inkSecondary,
+              borderRadius: AuroraRadius.xs,
+            ),
+          ),
+          const SizedBox(width: AuroraSpacing.space2),
+          Text(
+            title,
+            style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoRow2Data {
+  const _InfoRow2Data(this.label, this.value, {this.copyable = false});
+  final String label;
+  final String value;
+  final bool copyable;
+}
+
+class _InfoCard2 extends StatefulWidget {
+  const _InfoCard2({required this.rows});
+  final List<_InfoRow2Data> rows;
+
+  @override
+  State<_InfoCard2> createState() => _InfoCard2State();
+}
+
+class _InfoCard2State extends State<_InfoCard2> {
+  int? _copiedIndex;
+
+  void _handleCopy(int i) {
+    Clipboard.setData(ClipboardData(text: widget.rows[i].value));
+    setState(() => _copiedIndex = i);
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted) setState(() => _copiedIndex = null);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.rows.isEmpty) return const SizedBox.shrink();
+    return Container(
+      decoration: BoxDecoration(
+        color: AuroraColors.paper,
+        borderRadius: AuroraRadius.xl,
+        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < widget.rows.length; i++) ...[
+            if (i > 0)
+              const Divider(height: 1, thickness: 0.5, indent: 0),
+            GestureDetector(
+              onTap: widget.rows[i].copyable ? () => _handleCopy(i) : null,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 11),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 110,
+                      child: Text(
+                        widget.rows[i].label,
+                        style: AuroraType.bodySm.copyWith(
+                          color: AuroraColors.inkSecondary,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        widget.rows[i].value,
+                        style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    if (widget.rows[i].copyable)
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: _copiedIndex == i
+                            ? const Icon(
+                                Icons.check_circle,
+                                key: ValueKey('check'),
+                                size: 14,
+                                color: AuroraColors.lime,
+                              )
+                            : const Icon(
+                                Icons.copy_outlined,
+                                key: ValueKey('copy'),
+                                size: 14,
+                                color: AuroraColors.inkTertiary,
+                              ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ── Pure helper functions ──────────────────────────────────────────────────────
+
+IconData _systemIcon(SystemCategory cat) => switch (cat) {
+      SystemCategory.hvac => Icons.hvac_outlined,
+      SystemCategory.plumbing => Icons.plumbing_outlined,
+      SystemCategory.electrical => Icons.electrical_services_outlined,
+      SystemCategory.roofing => Icons.roofing_outlined,
+      SystemCategory.foundation => Icons.foundation_outlined,
+      SystemCategory.siding => Icons.home_outlined,
+      SystemCategory.windowsDoors => Icons.window_outlined,
+      SystemCategory.insulation => Icons.layers_outlined,
+      SystemCategory.garage => Icons.garage_outlined,
+      SystemCategory.other => Icons.handyman_outlined,
+    };
+
+Color _systemCategoryColor(SystemCategory cat) => switch (cat) {
+      SystemCategory.hvac => AuroraColors.yellowDeep,
+      SystemCategory.plumbing => AuroraColors.cobalt,
+      SystemCategory.electrical => AuroraColors.yellow,
+      SystemCategory.roofing => AuroraColors.cobalt,
+      SystemCategory.foundation => AuroraColors.inkTertiary,
+      SystemCategory.siding => AuroraColors.yellow,
+      SystemCategory.windowsDoors => AuroraColors.lime,
+      SystemCategory.insulation => AuroraColors.cobalt,
+      SystemCategory.garage => AuroraColors.inkTertiary,
+      SystemCategory.other => AuroraColors.inkTertiary,
+    };
+
+List<(String, String)> _parseSpecRows(String? notes) {
+  if (notes == null || notes.isEmpty) return const [];
+  final rows = <(String, String)>[];
+  for (final line in notes.split('\n')) {
+    final idx = line.indexOf(':');
+    if (idx <= 0) continue;
+    final label = line.substring(0, idx).trim();
+    final value = line.substring(idx + 1).trim();
+    if (label.isNotEmpty && value.isNotEmpty) {
+      rows.add((label, value));
+    }
+  }
+  return rows;
+}
+
+(String, Color, String) _computeSystemHealth(
+    String? installDateStr, int? lifespanYears) {
+  if (installDateStr == null) {
+    return ('Good', AuroraColors.inkSecondary, '—');
+  }
+  final DateTime install;
+  try {
+    install = DateTime.parse(installDateStr);
+  } catch (_) {
+    return ('Good', AuroraColors.inkSecondary, '—');
+  }
+  final ageYears = DateTime.now().difference(install).inDays / 365.25;
+  final ageLabel = '${ageYears.toStringAsFixed(1)} yr old';
+
+  if (lifespanYears == null || lifespanYears <= 0) {
+    return ('Good', AuroraColors.inkTertiary, ageLabel);
+  }
+  final pct = ageYears / lifespanYears * 100;
+  if (pct < 50) {
+    return ('Healthy', AuroraColors.lime, ageLabel);
+  } else if (pct <= 75) {
+    return ('Aging', AuroraColors.yellowDeep, ageLabel);
+  } else {
+    return ('Near End', AuroraColors.coral, ageLabel);
+  }
+}
+
+String _yearFromDate(String dateStr) {
+  try {
+    return DateTime.parse(dateStr).year.toString();
+  } catch (_) {
+    return dateStr;
+  }
+}
+
+double? _sysLifespanPct(String? installDateStr, int? lifespanYears) {
+  if (installDateStr == null || lifespanYears == null || lifespanYears <= 0) {
+    return null;
+  }
+  try {
+    final install = DateTime.parse(installDateStr);
+    final ageYears = DateTime.now().difference(install).inDays / 365.25;
+    return (ageYears / lifespanYears * 100).clamp(0, 999);
+  } catch (_) {
+    return null;
+  }
+}
+
+double? _sysYearsLeft(String? installDateStr, int? lifespanYears) {
+  if (installDateStr == null || lifespanYears == null || lifespanYears <= 0) {
+    return null;
+  }
+  try {
+    final install = DateTime.parse(installDateStr);
+    final ageYears = DateTime.now().difference(install).inDays / 365.25;
+    final left = lifespanYears - ageYears;
+    return left < 0 ? 0 : left;
+  } catch (_) {
+    return null;
+  }
+}
+
+(String, String) _warrantyStatus2(String? warrantyExpirationStr) {
+  if (warrantyExpirationStr == null) {
+    return ('Warranty on file', '');
+  }
+  final DateTime expiry;
+  try {
+    expiry = DateTime.parse(warrantyExpirationStr);
+  } catch (_) {
+    return ('Warranty on file', warrantyExpirationStr);
+  }
+  final now = DateTime.now();
+  final diff = expiry.difference(now);
+  final fmt = DateFormat('MMM d, yyyy').format(expiry);
+  if (diff.isNegative) {
+    final yearsAgo = (diff.inDays.abs() / 365.25).round();
+    final label = yearsAgo == 1 ? '1 yr ago' : '$yearsAgo yrs ago';
+    return ('Expired · $label', 'Expired $fmt');
+  } else {
+    final yearsLeft = diff.inDays / 365.25;
+    final label = yearsLeft < 1
+        ? '< 1 yr remaining'
+        : '${yearsLeft.round()} yrs remaining';
+    return ('Active · $label', 'Expires $fmt');
   }
 }

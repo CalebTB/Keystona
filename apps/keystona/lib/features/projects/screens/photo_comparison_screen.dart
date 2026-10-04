@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../models/project_photo.dart';
 
 /// Before/after comparison screen with a draggable divider.
@@ -38,7 +38,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen> {
         return Stack(
           children: [
             // After photo — base layer.
-            widget.afterPhoto.signedUrl != null
+            (widget.afterPhoto.signedUrl?.isNotEmpty == true)
                 ? PhotoView(
                     imageProvider:
                         NetworkImage(widget.afterPhoto.signedUrl!),
@@ -54,7 +54,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen> {
                 widthFactor: _divider,
                 child: SizedBox(
                   width: w,
-                  child: widget.beforePhoto.signedUrl != null
+                  child: (widget.beforePhoto.signedUrl?.isNotEmpty == true)
                       ? PhotoView(
                           imageProvider: NetworkImage(
                               widget.beforePhoto.signedUrl!),
@@ -71,7 +71,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen> {
               left: _divider * w - 1.5,
               top: 0,
               bottom: 0,
-              child: Container(width: 3, color: Colors.white),
+              child: Container(width: 3, color: AuroraColors.paper),
             ),
 
             // Drag hit area around the divider.
@@ -94,7 +94,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen> {
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AuroraColors.lime,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
@@ -104,7 +104,7 @@ class _PhotoComparisonScreenState extends State<PhotoComparisonScreen> {
                         ],
                       ),
                       child: const Icon(Icons.compare_arrows,
-                          color: AppColors.deepNavy, size: 18),
+                          color: AuroraColors.ink, size: 18),
                     ),
                   ),
                 ),
@@ -156,7 +156,7 @@ class _Label extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: AppTextStyles.labelSmall
+        style: AuroraType.label
             .copyWith(color: Colors.white, fontSize: 10),
       ),
     );

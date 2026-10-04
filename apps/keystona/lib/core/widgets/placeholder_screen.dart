@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_text_styles.dart';
+import '../theme/aurora_typography.dart';
 import 'app_scaffold.dart';
 
 /// Temporary stand-in widget used for routes that have not been implemented.
@@ -20,7 +20,7 @@ class PlaceholderScreen extends StatelessWidget {
     return AppScaffold(
       title: name,
       body: Center(
-        child: Text(name, style: AppTextStyles.h2),
+        child: Text(name, style: AuroraType.h2),
       ),
     );
   }

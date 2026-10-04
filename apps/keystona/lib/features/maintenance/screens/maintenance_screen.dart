@@ -1,502 +1,660 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:shimmer/shimmer.dart';
 
-import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_shadows.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/error_view.dart';
 import '../models/maintenance_task.dart';
 import '../providers/maintenance_tasks_provider.dart';
-import '../providers/task_filter_provider.dart';
-import '../widgets/health_score_widget.dart';
-import '../widgets/task_card.dart';
-import '../widgets/task_empty_state.dart';
-import '../widgets/task_list_skeleton.dart';
+import '../widgets/agenda_task_card.dart';
+import '../widgets/by_system_view.dart';
+import '../widgets/overdue_banner.dart';
+import '../widgets/plan_view.dart';
+import '../widgets/seasonal_view.dart';
 
-/// The Maintenance Calendar screen — Tab 2 of the main shell.
+import '../widgets/upcoming_peek.dart';
+import '../widgets/week_strip.dart';
+
+// ── View tab enum ──────────────────────────────────────────────────────────────
+
+enum _TaskViewTab { today, plan, systems, seasonal }
+
+// ── Date helpers ───────────────────────────────────────────────────────────────
+
+DateTime _mondayOf(DateTime date) {
+  final d = DateTime(date.year, date.month, date.day);
+  return d.subtract(Duration(days: d.weekday - 1));
+}
+
+bool _sameDay(DateTime a, DateTime b) =>
+    a.year == b.year && a.month == b.month && a.day == b.day;
+
+// ── Root screen widget ─────────────────────────────────────────────────────────
+
+/// Calendar-agenda view for the Maintenance/Tasks tab.
 ///
-/// Adaptive layout:
-/// - iOS: CupertinoPageScaffold with CupertinoSliverNavigationBar large title.
-/// - Android: Scaffold with SliverAppBar.
-///
-/// Both layouts share a filter chip row (All / Overdue / Due Soon / Upcoming /
-/// Completed) and a grouped task list with section headers.
-class MaintenanceScreen extends ConsumerWidget {
+/// State: [_selectedDate] (day shown in agenda) and [_weekStart] (Monday of
+/// displayed week). Both are purely local — no provider needed.
+class MaintenanceScreen extends ConsumerStatefulWidget {
   const MaintenanceScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    return isIOS
-        ? const _IOSMaintenanceLayout()
-        : const _AndroidMaintenanceLayout();
-  }
+  ConsumerState<MaintenanceScreen> createState() => _MaintenanceScreenState();
 }
 
-// ── iOS layout ────────────────────────────────────────────────────────────────
-
-class _IOSMaintenanceLayout extends ConsumerWidget {
-  const _IOSMaintenanceLayout();
+class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
+  late DateTime _selectedDate;
+  late DateTime _weekStart;
+  _TaskViewTab _tab = _TaskViewTab.today;
+  int _tabIndex = 0;
+  int _slideDirection = 1;
+  final _scrollController = ScrollController();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void initState() {
+    super.initState();
+    final today = DateTime.now();
+    _selectedDate = DateTime(today.year, today.month, today.day);
+    _weekStart = _mondayOf(_selectedDate);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _prevWeek() {
+    setState(() {
+      _weekStart = _weekStart.subtract(const Duration(days: 7));
+    });
+  }
+
+  void _nextWeek() {
+    setState(() {
+      _weekStart = _weekStart.add(const Duration(days: 7));
+    });
+  }
+
+  void _selectDay(DateTime day) {
+    setState(() => _selectedDate = day);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    return isIOS ? _buildIOS(context) : _buildAndroid(context);
+  }
+
+  // ── iOS layout ─────────────────────────────────────────────────────────────
+
+  Widget _buildIOS(BuildContext context) {
     return CupertinoPageScaffold(
-      child: Stack(
-        children: [
-          CustomScrollView(
-            slivers: [
-              CupertinoSliverNavigationBar(
-                largeTitle: const Text('Tasks'),
-                trailing: _SortButton(
-                  isIOS: true,
-                  onSortSelected: (order) =>
-                      ref.read(taskFilterProvider.notifier).setSortOrder(order),
-                  onGenerateTasks: () => _generateTasks(ref),
+      backgroundColor: AuroraColors.paper,
+      child: CustomScrollView(
+        controller: _scrollController,
+        slivers: [
+          SliverToBoxAdapter(
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Row(
+                  children: [
+                    Text('Tasks', style: AuroraType.h2),
+                    const Spacer(),
+                    _HeaderButtons(),
+                  ],
                 ),
               ),
-              CupertinoSliverRefreshControl(
-                onRefresh: () =>
-                    ref.read(maintenanceTasksProvider.notifier).refresh(),
-              ),
-              // Health score card.
-              const SliverToBoxAdapter(child: HealthScoreWidget()),
-              // Filter chip row.
-              const SliverToBoxAdapter(child: _FilterRow()),
-              // Task list body.
-              const _TaskListSliver(),
-              // Bottom padding so FAB doesn't overlap last card.
-              const SliverToBoxAdapter(child: SizedBox(height: 88)),
-            ],
+            ),
           ),
-          const Positioned(
-            right: AppSizes.lg,
-            bottom: AppSizes.xl,
-            child: _AddTaskFAB(),
-          ),
+          _buildToggleSliver(),
+          _buildAnimatedTabSliver(),
+          const SliverToBoxAdapter(child: SizedBox(height: 110)),
         ],
       ),
     );
   }
-}
 
-// ── Android layout ────────────────────────────────────────────────────────────
+  // ── Android layout ──────────────────────────────────────────────────────────
 
-class _AndroidMaintenanceLayout extends ConsumerWidget {
-  const _AndroidMaintenanceLayout();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget _buildAndroid(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
-      floatingActionButton: const _AddTaskFAB(),
+      backgroundColor: AuroraColors.paper,
       body: RefreshIndicator(
-        color: AppColors.deepNavy,
+        color: AuroraColors.coral,
         onRefresh: () =>
             ref.read(maintenanceTasksProvider.notifier).refresh(),
         child: CustomScrollView(
+          controller: _scrollController,
           slivers: [
             SliverAppBar(
-              title: Text('Tasks', style: AppTextStyles.h3),
+              title: Text('Tasks', style: AuroraType.h3),
               floating: true,
-              backgroundColor: AppColors.warmOffWhite,
+              backgroundColor: AuroraColors.paper,
               scrolledUnderElevation: 0,
               elevation: 0,
-              actions: [
-                _SortButton(
-                  isIOS: false,
-                  onSortSelected: (order) => ref
-                      .read(taskFilterProvider.notifier)
-                      .setSortOrder(order),
-                  onGenerateTasks: () => _generateTasks(ref),
-                ),
-              ],
+              actions: [_HeaderButtons()],
             ),
-            // Health score card.
-            const SliverToBoxAdapter(child: HealthScoreWidget()),
-            const SliverToBoxAdapter(child: _FilterRow()),
-            const _TaskListSliver(),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
+            _buildToggleSliver(),
+            _buildAnimatedTabSliver(),
+            const SliverToBoxAdapter(child: SizedBox(height: 110)),
           ],
         ),
       ),
     );
   }
-}
 
-// ── Task list sliver ──────────────────────────────────────────────────────────
+  // ── Tab strip sliver ─────────────────────────────────────────────────────────
 
-/// Builds the main content sliver — skeleton / error / empty / grouped list.
-class _TaskListSliver extends ConsumerWidget {
-  const _TaskListSliver();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final tasksAsync = ref.watch(maintenanceTasksProvider);
-    return tasksAsync.when(
-      loading: () => const SliverFillRemaining(child: TaskListSkeleton()),
-      error: (e, _) => SliverFillRemaining(
-        child: ErrorView(
-          message: "Couldn't load tasks.",
-          onRetry: () => ref.read(maintenanceTasksProvider.notifier).refresh(),
-        ),
-      ),
-      data: (_) {
-        final filtered = ref.watch(filteredTasksProvider);
-        final filter = ref.watch(taskFilterProvider);
-        final allTasks = ref.watch(maintenanceTasksProvider).value ?? [];
-
-        // No tasks at all → motivational empty state.
-        if (allTasks.isEmpty) {
-          return SliverFillRemaining(
-            child: TaskEmptyState(
-              onAddSystem: () => context.push(AppRoutes.homeSystemsAdd),
-            ),
-          );
-        }
-
-        // Tasks exist but active filter returns nothing.
-        if (filtered.isEmpty) {
-          // All-tab with tasks but nothing due → celebration state.
-          if (filter.statusFilter == null) {
-            return const SliverFillRemaining(child: TaskCaughtUpState());
+  Widget _buildToggleSliver() {
+    return SliverToBoxAdapter(
+      child: _TabStrip(
+        current: _tab,
+        onChanged: (t) {
+          HapticFeedback.selectionClick();
+          if (_scrollController.hasClients) {
+            _scrollController.jumpTo(0);
           }
-          return const SliverFillRemaining(child: TaskFilterEmptyState());
-        }
-
-        // Build grouped list with section headers baked into a single SliverList.
-        final items = _buildSectionedItems(filtered, filter);
-
-        return SliverPadding(
-          padding: AppPadding.screen,
-          sliver: SliverList.builder(
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final item = items[index];
-              if (item is _SectionHeader) {
-                return Padding(
-                  padding: const EdgeInsets.only(
-                    top: AppSizes.md,
-                    bottom: AppSizes.xs,
-                  ),
-                  child: Text(
-                    item.title,
-                    style: AppTextStyles.labelLarge.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                );
-              }
-              if (item is _TaskItem) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: AppSizes.sm),
-                  child: TaskCard(task: item.task),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-        );
-      },
+          final newIndex = _TaskViewTab.values.indexOf(t);
+          setState(() {
+            _slideDirection = newIndex > _tabIndex ? 1 : -1;
+            _tabIndex = newIndex;
+            _tab = t;
+          });
+        },
+      ),
     );
   }
 
-  /// Interleaves [_SectionHeader] and [_TaskItem] records into a flat list.
-  ///
-  /// When a status filter is active, no section headers are shown — the filter
-  /// chip itself communicates the grouping. Headers are only shown in "All".
-  List<Object> _buildSectionedItems(
-    List<MaintenanceTask> tasks,
-    TaskFilter filter,
-  ) {
-    if (filter.statusFilter != null) {
-      // Filtered view — flat list, no headers.
-      return tasks.map((t) => _TaskItem(t)).toList();
-    }
+  // ── Animated tab content ──────────────────────────────────────────────────────
 
-    // "All" view — group by urgency.
-    final now = DateTime.now().toLocal();
-    final todayMidnight = DateTime(now.year, now.month, now.day);
-    final tomorrowMidnight = todayMidnight.add(const Duration(days: 1));
-    final weekEnd = todayMidnight.add(const Duration(days: 7));
-
-    final overdue = <MaintenanceTask>[];
-    final dueToday = <MaintenanceTask>[];
-    final thisWeek = <MaintenanceTask>[];
-    final upcoming = <MaintenanceTask>[];
-    final completed = <MaintenanceTask>[];
-
-    for (final task in tasks) {
-      final due = task.dueDate.toLocal();
-      if (task.status == TaskStatus.completed ||
-          task.status == TaskStatus.skipped) {
-        completed.add(task);
-      } else if (task.status == TaskStatus.overdue ||
-          due.isBefore(todayMidnight)) {
-        overdue.add(task);
-      } else if (!due.isBefore(todayMidnight) &&
-          due.isBefore(tomorrowMidnight)) {
-        dueToday.add(task);
-      } else if (due.isBefore(weekEnd)) {
-        thisWeek.add(task);
-      } else {
-        upcoming.add(task);
-      }
-    }
-
-    final result = <Object>[];
-
-    void addSection(String title, List<MaintenanceTask> section) {
-      if (section.isEmpty) return;
-      result.add(_SectionHeader(title));
-      result.addAll(section.map(_TaskItem.new));
-    }
-
-    addSection('Overdue', overdue);
-    addSection('Due Today', dueToday);
-    addSection(_thisWeekLabel(todayMidnight, weekEnd), thisWeek);
-    addSection('Upcoming', upcoming);
-    addSection('Completed', completed);
-
-    return result;
+  Widget _buildTabContent() {
+    return switch (_tab) {
+      _TaskViewTab.today => _buildDailyContent(),
+      _TaskViewTab.plan => const PlanView(),
+      _TaskViewTab.systems => const BySystemView(),
+      _TaskViewTab.seasonal => const SeasonalView(),
+    };
   }
 
-  String _thisWeekLabel(DateTime todayMidnight, DateTime weekEnd) {
-    final fmt = DateFormat('MMM d');
-    return 'This Week (${fmt.format(todayMidnight)} – ${fmt.format(weekEnd)})';
+  Widget _buildDailyContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildCalendarHeader(),
+        _buildDayHeader(),
+        _buildOverdueBanner(),
+        _AgendaWidget(
+          selectedDate: _selectedDate,
+          onQuickComplete: (taskId) =>
+              ref.read(maintenanceTasksProvider.notifier).completeTask(taskId),
+        ),
+        _buildUpcoming(),
+      ],
+    );
   }
-}
 
-// ── Section list item types ───────────────────────────────────────────────────
+  SliverToBoxAdapter _buildAnimatedTabSliver() {
+    return SliverToBoxAdapter(
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 280),
+        // Top-align children so the incoming tab never appears vertically
+        // centered inside a taller outgoing tab's layout box.
+        layoutBuilder: (currentChild, previousChildren) => Stack(
+          alignment: Alignment.topCenter,
+          children: [
+            ...previousChildren,
+            ?currentChild,
+          ],
+        ),
+        transitionBuilder: (child, animation) {
+          final isIncoming =
+              (child.key as ValueKey?)?.value == _tabIndex;
+          if (isIncoming) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: Offset(0.06 * _slideDirection, 0),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                  parent: animation, curve: Curves.easeOut)),
+              child: FadeTransition(opacity: animation, child: child),
+            );
+          }
+          return FadeTransition(opacity: animation, child: child);
+        },
+        child: KeyedSubtree(
+          key: ValueKey(_tabIndex),
+          child: _buildTabContent(),
+        ),
+      ),
+    );
+  }
 
-class _SectionHeader {
-  const _SectionHeader(this.title);
-  final String title;
-}
+  // ── Daily tab content helpers ──────────────────────────────────────────────
 
-class _TaskItem {
-  const _TaskItem(this.task);
-  final MaintenanceTask task;
-}
+  Widget _buildCalendarHeader() {
+    final tasksAsync = ref.watch(maintenanceTasksProvider);
+    final tasks = tasksAsync.value ?? const <MaintenanceTask>[];
+    final monthLabel = DateFormat('MMMM yyyy').format(_weekStart);
 
-// ── Filter chips row ──────────────────────────────────────────────────────────
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Row(
+              children: [
+                Text(
+                  monthLabel,
+                  style: AuroraType.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    color: AuroraColors.ink,
+                  ),
+                ),
+                const Spacer(),
+                _NavButton(icon: Icons.chevron_left, onTap: _prevWeek),
+                const SizedBox(width: AuroraSpacing.space3),
+                _NavButton(icon: Icons.chevron_right, onTap: _nextWeek),
+              ],
+            ),
+          ),
+          const SizedBox(height: AuroraSpacing.space3),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: WeekStrip(
+              tasks: tasks,
+              weekStart: _weekStart,
+              selectedDate: _selectedDate,
+              onDaySelected: _selectDay,
+            ),
+          ),
+          const SizedBox(height: AuroraSpacing.space7),
+          Divider(color: AuroraColors.inkBorder, thickness: 1, height: 1),
+        ],
+      );
+  }
 
-class _FilterRow extends ConsumerWidget {
-  const _FilterRow();
+  Widget _buildDayHeader() {
+    final tasksAsync = ref.watch(maintenanceTasksProvider);
+    final tasks = tasksAsync.value ?? const <MaintenanceTask>[];
+    final today = DateTime.now();
+    final todayMidnight = DateTime(today.year, today.month, today.day);
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final filter = ref.watch(taskFilterProvider);
-    final notifier = ref.read(taskFilterProvider.notifier);
+    final isToday = _sameDay(_selectedDate, todayMidnight);
+    final dayLabel = isToday
+        ? 'Today, ${DateFormat('MMM d').format(_selectedDate)}'
+        : DateFormat('EEE, MMM d').format(_selectedDate);
 
-    return SizedBox(
-      height: 48,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: AppPadding.screenHorizontal,
+    // Count overdue and due-today tasks for the selected date.
+    final overdue = tasks.where((t) {
+      if (t.status == TaskStatus.completed ||
+          t.status == TaskStatus.skipped) { return false; }
+      final due = t.dueDate.toLocal();
+      final dueMidnight = DateTime(due.year, due.month, due.day);
+      return t.status == TaskStatus.overdue ||
+          dueMidnight.isBefore(todayMidnight);
+    }).length;
+
+    final dueSel = tasks.where((t) {
+      if (t.status == TaskStatus.completed ||
+          t.status == TaskStatus.skipped) { return false; }
+      return _sameDay(t.dueDate.toLocal(), _selectedDate);
+    }).length;
+
+    final subParts = <String>[];
+    if (overdue > 0) { subParts.add('$overdue overdue'); }
+    if (dueSel > 0) { subParts.add('$dueSel due'); }
+    final sub = subParts.join(' · ');
+
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: 16,
+        left: 16,
+        right: 16,
+        bottom: 8,
+      ),
+      child: Row(
         children: [
-          _FilterChip(
-            label: 'All',
-            isSelected: filter.statusFilter == null,
-            onTap: () => notifier.setStatusFilter(null),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: AppSizes.sm),
-            child: _FilterChip(
-              label: 'Overdue',
-              isSelected: filter.statusFilter == TaskStatusFilter.overdue,
-              onTap: () => notifier.setStatusFilter(TaskStatusFilter.overdue),
+          Text(dayLabel, style: AuroraType.h2),
+          if (sub.isNotEmpty) ...[
+            const SizedBox(width: AuroraSpacing.space3),
+            Text(
+              sub,
+              style: AuroraType.label.copyWith(
+                color: AuroraColors.inkTertiary,
+                fontSize: 11,
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: AppSizes.sm),
-            child: _FilterChip(
-              label: 'Due Soon',
-              isSelected: filter.statusFilter == TaskStatusFilter.dueSoon,
-              onTap: () => notifier.setStatusFilter(TaskStatusFilter.dueSoon),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: AppSizes.sm),
-            child: _FilterChip(
-              label: 'Upcoming',
-              isSelected: filter.statusFilter == TaskStatusFilter.upcoming,
-              onTap: () => notifier.setStatusFilter(TaskStatusFilter.upcoming),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: AppSizes.sm),
-            child: _FilterChip(
-              label: 'Completed',
-              isSelected: filter.statusFilter == TaskStatusFilter.completed,
-              onTap: () => notifier.setStatusFilter(TaskStatusFilter.completed),
-            ),
-          ),
+          ],
         ],
       ),
     );
   }
+
+  Widget _buildOverdueBanner() {
+    final tasksAsync = ref.watch(maintenanceTasksProvider);
+    final tasks = tasksAsync.value ?? const <MaintenanceTask>[];
+    final today = DateTime.now();
+    final todayMidnight = DateTime(today.year, today.month, today.day);
+
+    final overdueTasks = tasks.where((t) {
+      if (t.status == TaskStatus.completed ||
+          t.status == TaskStatus.skipped) { return false; }
+      final due = t.dueDate.toLocal();
+      final dueMidnight = DateTime(due.year, due.month, due.day);
+      return t.status == TaskStatus.overdue ||
+          dueMidnight.isBefore(todayMidnight);
+    }).toList();
+
+    if (overdueTasks.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: OverdueBanner(overdueTasks: overdueTasks),
+    );
+  }
+
+  Widget _buildUpcoming() {
+    final tasksAsync = ref.watch(maintenanceTasksProvider);
+    final tasks = tasksAsync.value ?? const <MaintenanceTask>[];
+    final today = DateTime.now();
+    final todayMidnight = DateTime(today.year, today.month, today.day);
+    final weekEnd = todayMidnight.add(const Duration(days: 8));
+
+    final upcoming = tasks.where((t) {
+      if (t.status == TaskStatus.completed ||
+          t.status == TaskStatus.skipped) { return false; }
+      final due = t.dueDate.toLocal();
+      final dueMidnight = DateTime(due.year, due.month, due.day);
+      return dueMidnight.isAfter(todayMidnight) &&
+          dueMidnight.isBefore(weekEnd);
+    }).toList()
+      ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+
+    if (upcoming.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: 20,
+        left: 16,
+        right: 16,
+      ),
+      child: UpcomingPeek(tasks: upcoming),
+    );
+  }
 }
 
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
+// ── Header buttons ─────────────────────────────────────────────────────────────
 
-  final String label;
-  final bool isSelected;
+class _HeaderButtons extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _CircleIconButton(
+          icon: Icons.tune_outlined,
+          onTap: () {}, // filter sheet — future implementation
+        ),
+        const SizedBox(width: AuroraSpacing.space3),
+        _CircleIconButton(
+          icon: Icons.search,
+          onTap: () {}, // search — future implementation
+        ),
+      ],
+    );
+  }
+}
+
+class _CircleIconButton extends StatelessWidget {
+  const _CircleIconButton({required this.icon, required this.onTap});
+
+  final IconData icon;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
-        ),
+      child: Container(
+        width: 38,
+        height: 38,
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.deepNavy : AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-          border: Border.all(
-            color: isSelected ? AppColors.deepNavy : AppColors.border,
-          ),
+          color: AuroraColors.paper,
+          shape: BoxShape.circle,
+          border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
+          boxShadow: AuroraShadows.card,
         ),
-        child: Text(
-          label,
-          style: AppTextStyles.labelMedium.copyWith(
-            color: isSelected ? AppColors.textInverse : AppColors.textPrimary,
-          ),
-        ),
+        child: Icon(icon, size: 18, color: AuroraColors.ink),
       ),
     );
   }
 }
 
-// ── Generate tasks helper ─────────────────────────────────────────────────────
+// ── Nav button ─────────────────────────────────────────────────────────────────
 
-/// Generates tasks from templates via the provider (client-side, no Edge
-/// Function JWT required — mirrors the generate-maintenance-tasks function).
-Future<void> _generateTasks(WidgetRef ref) async {
-  await ref.read(maintenanceTasksProvider.notifier).generateFromTemplates();
+class _NavButton extends StatelessWidget {
+  const _NavButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          color: AuroraColors.paper,
+          shape: BoxShape.circle,
+          border: Border.all(color: AuroraColors.inkBorder, width: 1),
+        ),
+        child: Icon(icon, size: 16, color: AuroraColors.ink),
+      ),
+    );
+  }
 }
 
-// ── Sort button ───────────────────────────────────────────────────────────────
+// ── Agenda widget ──────────────────────────────────────────────────────────────
 
-class _SortButton extends StatelessWidget {
-  const _SortButton({
-    required this.isIOS,
-    required this.onSortSelected,
-    required this.onGenerateTasks,
+class _AgendaWidget extends ConsumerWidget {
+  const _AgendaWidget({
+    required this.selectedDate,
+    required this.onQuickComplete,
   });
 
-  final bool isIOS;
-  final void Function(TaskSortOrder order) onSortSelected;
-  final VoidCallback onGenerateTasks;
+  final DateTime selectedDate;
+  final void Function(String taskId) onQuickComplete;
 
-  static const _options = [
-    (label: 'Due Date', order: TaskSortOrder.dueDateAsc),
-    (label: 'Priority', order: TaskSortOrder.priorityDesc),
-    (label: 'Name', order: TaskSortOrder.nameAsc),
-  ];
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tasksAsync = ref.watch(maintenanceTasksProvider);
+
+    return tasksAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: _AgendaSkeleton(),
+      ),
+      error: (e, _) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: ErrorView(
+          message: "Couldn't load tasks.",
+          onRetry: () =>
+              ref.read(maintenanceTasksProvider.notifier).refresh(),
+        ),
+      ),
+      data: (tasks) {
+        final todayTasks = tasks.where((t) {
+          if (!t.notificationsEnabled) return false;
+          if (t.status == TaskStatus.completed ||
+              t.status == TaskStatus.skipped) {
+            return false;
+          }
+          return _sameDay(t.dueDate.toLocal(), selectedDate);
+        }).toList();
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (todayTasks.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Text(
+                    'Nothing scheduled for this day',
+                    style: AuroraType.bodySm.copyWith(
+                      color: AuroraColors.inkTertiary,
+                    ),
+                  ),
+                )
+              else
+                ...todayTasks.map(
+                  (task) => AgendaTaskCard(
+                    key: ValueKey(task.id),
+                    task: task,
+                    onQuickComplete: () => onQuickComplete(task.id),
+                    showDate: !_sameDay(selectedDate, DateTime.now()),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ── Agenda skeleton ────────────────────────────────────────────────────────────
+
+/// Column-based shimmer skeleton for the agenda loading state.
+/// Uses Column (not ListView) so it works inside SliverToBoxAdapter.
+class _AgendaSkeleton extends StatelessWidget {
+  const _AgendaSkeleton();
 
   @override
   Widget build(BuildContext context) {
-    if (isIOS) {
-      return CupertinoButton(
-        padding: EdgeInsets.zero,
-        onPressed: () => _showIOSSortSheet(context),
-        child: const Icon(CupertinoIcons.sort_down),
-      );
-    }
-
-    return PopupMenuButton<Object>(
-      icon: const Icon(Icons.sort),
-      color: AppColors.surface,
-      onSelected: (value) {
-        if (value is TaskSortOrder) {
-          onSortSelected(value);
-        } else if (value == 'generate') {
-          onGenerateTasks();
-        }
-      },
-      itemBuilder: (_) => [
-        ..._options.map(
-          (opt) => PopupMenuItem<Object>(
-            value: opt.order,
-            child: Text(opt.label, style: AppTextStyles.bodyMedium),
-          ),
-        ),
-        const PopupMenuDivider(),
-        PopupMenuItem<Object>(
-          value: 'generate',
-          child: Row(
-            children: [
-              const Icon(Icons.auto_awesome_outlined, size: 18),
-              const SizedBox(width: AppSizes.sm),
-              Text('Generate Tasks', style: AppTextStyles.bodyMedium),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _showIOSSortSheet(BuildContext context) async {
-    await showCupertinoModalPopup<void>(
-      context: context,
-      builder: (_) => CupertinoActionSheet(
-        title: const Text('Sort By'),
-        actions: [
-          ..._options.map(
-            (opt) => CupertinoActionSheetAction(
-              onPressed: () {
-                Navigator.of(context, rootNavigator: true).pop();
-                onSortSelected(opt.order);
-              },
-              child: Text(opt.label),
-            ),
-          ),
-          CupertinoActionSheetAction(
-            onPressed: () {
-              Navigator.of(context, rootNavigator: true).pop();
-              onGenerateTasks();
-            },
-            child: const Text('Generate Tasks'),
-          ),
+    return Shimmer.fromColors(
+      baseColor: AuroraColors.butter,
+      highlightColor: AuroraColors.paper,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(height: 10, width: 110, color: AuroraColors.butter),
+          const SizedBox(height: AuroraSpacing.space3),
+          _SkeletonAgendaCard(),
+          const SizedBox(height: AuroraSpacing.space3),
+          _SkeletonAgendaCard(),
+          const SizedBox(height: AuroraSpacing.space3),
+          _SkeletonAgendaCard(),
         ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-          child: const Text('Cancel'),
-        ),
       ),
     );
   }
 }
 
-// ── Add Task FAB ──────────────────────────────────────────────────────────────
-
-/// Floating action button that opens the task creation form.
-///
-/// Rendered on both iOS (inside Stack overlay) and Android (Scaffold FAB).
-class _AddTaskFAB extends StatelessWidget {
-  const _AddTaskFAB();
+class _SkeletonAgendaCard extends StatelessWidget {
+  const _SkeletonAgendaCard();
 
   @override
   Widget build(BuildContext context) {
-    return FloatingActionButton(
-      onPressed: () => context.push(AppRoutes.maintenanceCreate),
-      backgroundColor: AppColors.deepNavy,
-      foregroundColor: AppColors.textInverse,
-      elevation: 3,
-      child: const Icon(Icons.add),
+    return Container(
+      height: 68,
+      decoration: BoxDecoration(
+        color: AuroraColors.paper,
+        borderRadius: AuroraRadius.xl,
+      ),
+      child: Row(
+        children: [
+          Container(width: 56, color: AuroraColors.butter),
+          const SizedBox(width: AuroraSpacing.space5),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(height: 13, width: double.infinity, color: AuroraColors.butter),
+                const SizedBox(height: AuroraSpacing.space3),
+                Container(height: 10, width: 140, color: AuroraColors.butter),
+              ],
+            ),
+          ),
+          const SizedBox(width: AuroraSpacing.space5),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Tab strip ──────────────────────────────────────────────────────────────────
+
+class _TabStrip extends StatelessWidget {
+  const _TabStrip({required this.current, required this.onChanged});
+
+  final _TaskViewTab current;
+  final ValueChanged<_TaskViewTab> onChanged;
+
+  static const _labels = {
+    _TaskViewTab.today: 'Today',
+    _TaskViewTab.plan: 'Plan',
+    _TaskViewTab.systems: 'Systems',
+    _TaskViewTab.seasonal: 'Seasonal',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: AuroraColors.inkBorder, width: 1)),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: _TaskViewTab.values.map((tab) {
+            final selected = tab == current;
+            return GestureDetector(
+              onTap: () => onChanged(tab),
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                margin: const EdgeInsets.only(right: 28),
+                padding: const EdgeInsets.only(top: 8, bottom: 12),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: selected ? AuroraColors.coral : Colors.transparent,
+                      width: 2,
+                    ),
+                  ),
+                ),
+                child: Text(
+                  _labels[tab]!,
+                  style: AuroraType.body.copyWith(
+                    color: selected
+                        ? AuroraColors.ink
+                        : AuroraColors.inkSecondary,
+                    fontWeight:
+                        selected ? FontWeight.w600 : FontWeight.w400,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
     );
   }
 }

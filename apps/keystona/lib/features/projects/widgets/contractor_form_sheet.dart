@@ -1,15 +1,17 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../emergency/models/emergency_contact.dart';
 import '../../emergency/providers/emergency_hub_provider.dart';
 import '../models/project_contractor.dart';
 import '../providers/project_contractors_provider.dart';
+import '../../../core/widgets/aurora/aurora_sheet.dart';
 
 /// Shows a form sheet to link an existing contact or create a new contractor.
 Future<void> showContractorFormSheet({
@@ -138,10 +140,10 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
                   },
                   child: Text(
                     ContractorRoles.labelFor(r),
-                    style: TextStyle(
+                    style: AuroraType.body.copyWith(
                       color: _role == r
-                          ? AppColors.goldAccent
-                          : AppColors.textPrimary,
+                          ? AuroraColors.yellow
+                          : AuroraColors.ink,
                       fontWeight: _role == r
                           ? FontWeight.w600
                           : FontWeight.normal,
@@ -212,13 +214,13 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
   InputDecoration _dec(String hint) => InputDecoration(
         hintText: hint,
         hintStyle:
-            AppTextStyles.bodyMedium.copyWith(color: AppColors.gray400),
+            AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          borderRadius: AuroraRadius.md,
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
+          horizontal: AuroraSpacing.space7,
+          vertical: AuroraSpacing.space3,
         ),
         isDense: true,
       );
@@ -234,11 +236,11 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
       child: SingleChildScrollView(
         padding: EdgeInsets.only(bottom: bottomPad),
         child: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          decoration: BoxDecoration(
+            color: AuroraColors.paper,
+            borderRadius: AuroraSheet.topRadius(context),
           ),
-          padding: AppPadding.screen,
+          padding: EdgeInsets.all(AuroraSpacing.screenPadH),
           child: Form(
             key: _formKey,
             child: Column(
@@ -250,20 +252,20 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
                   child: Container(
                     width: 36,
                     height: 4,
-                    margin: const EdgeInsets.only(bottom: AppSizes.md),
+                    margin: const EdgeInsets.only(bottom: AuroraSpacing.space7),
                     decoration: BoxDecoration(
-                      color: AppColors.gray300,
+                      color: const Color(0xFFE0DFEA),
                       borderRadius:
-                          BorderRadius.circular(AppSizes.radiusFull),
+                          AuroraRadius.full,
                     ),
                   ),
                 ),
 
                 Text(
                   _isEditing ? 'Edit Contractor' : 'Add Contractor',
-                  style: AppTextStyles.h3,
+                  style: AuroraType.h3,
                 ),
-                const SizedBox(height: AppSizes.md),
+                const SizedBox(height: AuroraSpacing.space7),
 
                 // Mode toggle (only when adding new).
                 if (!_isEditing) ...[
@@ -277,7 +279,7 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
                           _selectedContact = null;
                         }),
                       ),
-                      const SizedBox(width: AppSizes.sm),
+                      const SizedBox(width: AuroraSpacing.space3),
                       _ModeChip(
                         label: 'Create new',
                         selected: _isCreatingNew,
@@ -286,7 +288,7 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppSizes.md),
+                  const SizedBox(height: AuroraSpacing.space7),
                 ],
 
                 // ── Link existing flow ──────────────────────────────────────
@@ -296,31 +298,31 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
                     if (_loadingContacts)
                       const Center(
                         child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: AppSizes.lg),
-                          child: CircularProgressIndicator(),
+                          padding: EdgeInsets.symmetric(vertical: AuroraSpacing.space9),
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                       )
                     else if (_availableContacts.isEmpty)
                       Container(
-                        padding: const EdgeInsets.all(AppSizes.md),
+                        padding: const EdgeInsets.all(AuroraSpacing.space7),
                         decoration: BoxDecoration(
-                          color: AppColors.deepNavy.withValues(alpha: 0.05),
+                          color: AuroraColors.ink.withValues(alpha: 0.05),
                           borderRadius:
-                              BorderRadius.circular(AppSizes.radiusSm),
+                              AuroraRadius.sm,
                         ),
                         child: Text(
                           'No contacts yet. Go to Emergency Hub → Contacts to add some, or switch to "Create new".',
-                          style: AppTextStyles.bodySmall
-                              .copyWith(color: AppColors.textSecondary),
+                          style: AuroraType.bodySm
+                              .copyWith(color: AuroraColors.inkSecondary),
                         ),
                       )
                     else ...[
                       Text(
                         'Select a contact',
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: AppColors.textSecondary),
+                        style: AuroraType.bodySm
+                            .copyWith(color: AuroraColors.inkSecondary),
                       ),
-                      const SizedBox(height: AppSizes.sm),
+                      const SizedBox(height: AuroraSpacing.space3),
                       ListView.separated(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
@@ -332,32 +334,32 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
                           return ListTile(
                             dense: true,
                             contentPadding: const EdgeInsets.symmetric(
-                                horizontal: AppSizes.xs),
+                                horizontal: AuroraSpacing.space1),
                             leading: CircleAvatar(
                               radius: 18,
                               backgroundColor:
-                                  AppColors.deepNavy.withValues(alpha: 0.1),
+                                  AuroraColors.ink.withValues(alpha: 0.1),
                               child: Text(
                                 contact.name.isNotEmpty
                                     ? contact.name[0].toUpperCase()
                                     : '?',
-                                style: AppTextStyles.labelSmall.copyWith(
-                                    color: AppColors.deepNavy),
+                                style: AuroraType.label.copyWith(
+                                    color: AuroraColors.ink),
                               ),
                             ),
                             title: Text(contact.name,
-                                style: AppTextStyles.bodyMedium),
+                                style: AuroraType.body),
                             subtitle: Text(
                               [
                                 contact.category.categoryLabel,
                                 if (contact.phonePrimary.isNotEmpty)
                                   contact.phonePrimary,
                               ].join(' · '),
-                              style: AppTextStyles.bodySmall
-                                  .copyWith(color: AppColors.textSecondary),
+                              style: AuroraType.bodySm
+                                  .copyWith(color: AuroraColors.inkSecondary),
                             ),
                             trailing: const Icon(Icons.chevron_right,
-                                size: 18, color: AppColors.gray400),
+                                size: 18, color: AuroraColors.inkTertiary),
                             onTap: () =>
                                 setState(() => _selectedContact = contact),
                           );
@@ -370,60 +372,60 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
                       onTap: () =>
                           setState(() => _selectedContact = null),
                       child: Container(
-                        padding: const EdgeInsets.all(AppSizes.sm),
+                        padding: const EdgeInsets.all(AuroraSpacing.space3),
                         decoration: BoxDecoration(
-                          color: AppColors.deepNavy.withValues(alpha: 0.06),
+                          color: AuroraColors.ink.withValues(alpha: 0.06),
                           borderRadius:
-                              BorderRadius.circular(AppSizes.radiusSm),
+                              AuroraRadius.sm,
                           border: Border.all(
                               color:
-                                  AppColors.deepNavy.withValues(alpha: 0.2)),
+                                  AuroraColors.ink.withValues(alpha: 0.2)),
                         ),
                         child: Row(
                           children: [
                             CircleAvatar(
                               radius: 18,
                               backgroundColor:
-                                  AppColors.deepNavy.withValues(alpha: 0.15),
+                                  AuroraColors.ink.withValues(alpha: 0.15),
                               child: Text(
                                 _selectedContact!.name.isNotEmpty
                                     ? _selectedContact!.name[0]
                                         .toUpperCase()
                                     : '?',
-                                style: AppTextStyles.labelSmall.copyWith(
-                                    color: AppColors.deepNavy),
+                                style: AuroraType.label.copyWith(
+                                    color: AuroraColors.ink),
                               ),
                             ),
-                            const SizedBox(width: AppSizes.sm),
+                            const SizedBox(width: AuroraSpacing.space3),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(_selectedContact!.name,
-                                      style: AppTextStyles.bodyMedium.copyWith(
+                                      style: AuroraType.body.copyWith(
                                           fontWeight: FontWeight.w600)),
                                   Text(
                                     _selectedContact!.category.categoryLabel,
-                                    style: AppTextStyles.bodySmall.copyWith(
-                                        color: AppColors.textSecondary),
+                                    style: AuroraType.bodySm.copyWith(
+                                        color: AuroraColors.inkSecondary),
                                   ),
                                 ],
                               ),
                             ),
                             Text(
                               'Change',
-                              style: AppTextStyles.bodySmall.copyWith(
-                                  color: AppColors.deepNavy),
+                              style: AuroraType.bodySm.copyWith(
+                                  color: AuroraColors.ink),
                             ),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(height: AppSizes.md),
+                    const SizedBox(height: AuroraSpacing.space7),
                     _buildJoinFields(),
-                    const SizedBox(height: AppSizes.md),
+                    const SizedBox(height: AuroraSpacing.space7),
                     _buildSaveButton(),
-                    const SizedBox(height: AppSizes.lg),
+                    const SizedBox(height: AuroraSpacing.space9),
                   ],
                 ],
 
@@ -438,18 +440,18 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
                         ? 'Name is required'
                         : null,
                   ),
-                  const SizedBox(height: AppSizes.sm),
+                  const SizedBox(height: AuroraSpacing.space3),
                   _Label('Phone (optional)'),
                   TextFormField(
                     controller: _phoneCtrl,
                     keyboardType: TextInputType.phone,
                     decoration: _dec('Phone number'),
                   ),
-                  const SizedBox(height: AppSizes.sm),
+                  const SizedBox(height: AuroraSpacing.space3),
                   _buildJoinFields(),
-                  const SizedBox(height: AppSizes.md),
+                  const SizedBox(height: AuroraSpacing.space7),
                   _buildSaveButton(),
-                  const SizedBox(height: AppSizes.lg),
+                  const SizedBox(height: AuroraSpacing.space9),
                 ],
 
                 // ── Edit flow ───────────────────────────────────────────────
@@ -460,11 +462,11 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
                     readOnly: true,
                     decoration: _dec('Full name'),
                   ),
-                  const SizedBox(height: AppSizes.sm),
+                  const SizedBox(height: AuroraSpacing.space3),
                   _buildJoinFields(),
-                  const SizedBox(height: AppSizes.md),
+                  const SizedBox(height: AuroraSpacing.space7),
                   _buildSaveButton(),
-                  const SizedBox(height: AppSizes.lg),
+                  const SizedBox(height: AuroraSpacing.space9),
                 ],
               ],
             ),
@@ -487,12 +489,12 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
             onTap: _pickRoleIOS,
             child: Container(
               padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.md,
-                vertical: AppSizes.sm,
+                horizontal: AuroraSpacing.space7,
+                vertical: AuroraSpacing.space3,
               ),
               decoration: BoxDecoration(
-                border: Border.all(color: AppColors.border),
-                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                border: Border.all(color: AuroraColors.inkBorder),
+                borderRadius: AuroraRadius.sm,
               ),
               child: Row(
                 children: [
@@ -502,13 +504,13 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
                           ? ContractorRoles.labelFor(_role!)
                           : 'Select role',
                       style: _role != null
-                          ? AppTextStyles.bodyMedium
-                          : AppTextStyles.bodyMedium
-                              .copyWith(color: AppColors.gray400),
+                          ? AuroraType.body
+                          : AuroraType.body
+                              .copyWith(color: AuroraColors.inkTertiary),
                     ),
                   ),
                   const Icon(Icons.chevron_right,
-                      size: 20, color: AppColors.gray400),
+                      size: 20, color: AuroraColors.inkTertiary),
                 ],
               ),
             ),
@@ -524,7 +526,7 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
                   DropdownMenuItem(value: r, child: Text(ContractorRoles.labelFor(r)))),
             ],
           ),
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: AuroraSpacing.space3),
         _Label('Contract amount (optional)'),
         TextFormField(
           controller: _contractAmountCtrl,
@@ -532,7 +534,7 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
               const TextInputType.numberWithOptions(decimal: true),
           decoration: _dec('0.00'),
         ),
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: AuroraSpacing.space3),
         _Label('Amount paid (optional)'),
         TextFormField(
           controller: _amountPaidCtrl,
@@ -540,13 +542,13 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
               const TextInputType.numberWithOptions(decimal: true),
           decoration: _dec('0.00'),
         ),
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: AuroraSpacing.space3),
         _Label('Rating (optional)'),
         _StarRatingRow(
           rating: _rating,
           onChanged: (r) => setState(() => _rating = r),
         ),
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: AuroraSpacing.space3),
         _Label('Review notes (optional)'),
         TextFormField(
           controller: _reviewCtrl,
@@ -563,15 +565,15 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
         child: FilledButton(
           onPressed: _saving ? null : _save,
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.deepNavy,
-            padding: AppPadding.button,
+            backgroundColor: AuroraColors.coral,
+            padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
           ),
           child: _saving
               ? const SizedBox(
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white),
+                      strokeWidth: 2, color: AuroraColors.paper),
                 )
               : Text(_isEditing ? 'Save Changes' : 'Add'),
         ),
@@ -586,10 +588,10 @@ class _Label extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: AppSizes.xs),
+        padding: const EdgeInsets.only(bottom: AuroraSpacing.space1),
         child: Text(text,
-            style: AppTextStyles.bodySmall
-                .copyWith(color: AppColors.textSecondary)),
+            style: AuroraType.bodySm
+                .copyWith(color: AuroraColors.inkSecondary)),
       );
 }
 
@@ -610,19 +612,19 @@ class _ModeChip extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.sm + 4, vertical: AppSizes.xs + 2),
+            horizontal: AuroraSpacing.space3 + 4, vertical: AuroraSpacing.space1 + 2),
         decoration: BoxDecoration(
-          color: selected ? AppColors.deepNavy : AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+          color: selected ? AuroraColors.ink : AuroraColors.paper,
+          borderRadius: AuroraRadius.full,
           border: Border.all(
-            color: selected ? AppColors.deepNavy : AppColors.border,
+            color: selected ? AuroraColors.ink : AuroraColors.inkBorder,
           ),
         ),
         child: Text(
           label,
-          style: AppTextStyles.labelSmall.copyWith(
+          style: AuroraType.label.copyWith(
             color:
-                selected ? AppColors.textInverse : AppColors.textPrimary,
+                selected ? AuroraColors.paper : AuroraColors.ink,
             fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
@@ -651,15 +653,15 @@ class _StarRatingRow extends StatelessWidget {
                 (rating != null && i < rating!)
                     ? Icons.star
                     : Icons.star_border,
-                color: AppColors.goldAccent,
+                color: AuroraColors.yellow,
                 size: 28,
               ),
             ),
           ),
         ),
         if (rating != null) ...[
-          const SizedBox(width: AppSizes.xs),
-          Text('$rating/5', style: AppTextStyles.bodySmall),
+          const SizedBox(width: AuroraSpacing.space1),
+          Text('$rating/5', style: AuroraType.bodySm),
         ],
       ],
     );

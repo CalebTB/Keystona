@@ -53,6 +53,18 @@ abstract class Project with _$Project {
     /// [#5.5] Contractor IDs from the shared emergency_contacts pool.
     @Default([]) List<String> contractorIds,
 
+    // ── Computed phase progress (not persisted) ────────────────────────────
+
+    /// 0-based index of the active phase in the sorted phase list.
+    /// Populated by ProjectsNotifier._fetch via nested project_phases select.
+    @JsonKey(includeFromJson: false, includeToJson: false)
+    @Default(null) int? currentPhaseIndex,
+
+    /// Name of the active phase.
+    /// Populated by ProjectsNotifier._fetch via nested project_phases select.
+    @JsonKey(includeFromJson: false, includeToJson: false)
+    @Default(null) String? currentPhaseName,
+
     required DateTime createdAt,
     required DateTime updatedAt,
     DateTime? deletedAt,

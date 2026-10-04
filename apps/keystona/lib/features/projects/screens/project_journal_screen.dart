@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/supabase_service.dart';
 import '../models/project_journal_note.dart';
@@ -30,6 +35,7 @@ class ProjectJournalScreen extends ConsumerStatefulWidget {
 class _ProjectJournalScreenState
     extends ConsumerState<ProjectJournalScreen> {
   final Map<String, String> _phaseNames = {};
+  String? _selectedPhaseId;
 
   @override
   void initState() {
@@ -53,6 +59,71 @@ class _ProjectJournalScreenState
     } catch (_) {
       // Phase names are supplemental — silently ignore failures.
     }
+  }
+
+  Map<String, String> _linkedPhases(List<ProjectJournalNote> notes) {
+    final ids = notes
+        .where((n) => n.phaseId != null)
+        .map((n) => n.phaseId!)
+        .toSet();
+    return {
+      for (final id in ids)
+        if (_phaseNames.containsKey(id)) id: _phaseNames[id]!,
+    };
+  }
+
+  Future<void> _showFilterSheet(
+    BuildContext ctx,
+    Map<String, String> linked,
+  ) async {
+    const kClear = '__all__';
+    String? picked;
+
+    await showCupertinoModalPopup<void>(
+      context: ctx,
+      builder: (sheetCtx) => CupertinoActionSheet(
+        title: const Text('Filter by Phase'),
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () {
+              picked = kClear;
+              Navigator.of(sheetCtx).pop();
+            },
+            child: Row(
+              children: [
+                const Expanded(child: Text('All notes')),
+                if (_selectedPhaseId == null)
+                  const Icon(CupertinoIcons.checkmark, size: 16),
+              ],
+            ),
+          ),
+          ...linked.entries.map(
+            (e) => CupertinoActionSheetAction(
+              onPressed: () {
+                picked = e.key;
+                Navigator.of(sheetCtx).pop();
+              },
+              child: Row(
+                children: [
+                  Expanded(child: Text(e.value)),
+                  if (_selectedPhaseId == e.key)
+                    const Icon(CupertinoIcons.checkmark, size: 16),
+                ],
+              ),
+            ),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          isDefaultAction: true,
+          onPressed: () => Navigator.of(sheetCtx).pop(),
+          child: const Text('Cancel'),
+        ),
+      ),
+    );
+
+    if (picked == null || !mounted) return;
+    setState(() =>
+        _selectedPhaseId = picked == kClear ? null : picked);
   }
 
   void _onAddTap() =>
@@ -117,7 +188,7 @@ class _ProjectJournalScreenState
               onPressed: () => Navigator.of(ctx).pop(true),
               child: Text(
                 'Delete',
-                style: TextStyle(color: AppColors.error),
+                style: TextStyle(color: AuroraColors.coral),
               ),
             ),
           ],
@@ -131,6 +202,9 @@ class _ProjectJournalScreenState
   Widget build(BuildContext context) {
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
     final asyncData = ref.watch(projectJournalProvider(widget.projectId));
+    final allNotes = asyncData.value ?? [];
+    final linked = _linkedPhases(allNotes);
+    final isFiltered = _selectedPhaseId != null;
 
     final body = asyncData.when(
       loading: () => const JournalSkeleton(),
@@ -144,7 +218,7 @@ class _ProjectJournalScreenState
               phaseNames: _phaseNames,
               projectId: widget.projectId,
               onDelete: _onDeleteNote,
-              ref: ref,
+              selectedPhaseId: _selectedPhaseId,
             ),
     );
 
@@ -152,10 +226,42 @@ class _ProjectJournalScreenState
       return CupertinoPageScaffold(
         navigationBar: CupertinoNavigationBar(
           middle: const Text('Journal'),
-          trailing: CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: _onAddTap,
-            child: const Icon(CupertinoIcons.add),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (linked.isNotEmpty)
+                CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: () => _showFilterSheet(context, linked),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Icon(
+                        CupertinoIcons.slider_horizontal_3,
+                        color: isFiltered ? AuroraColors.coral : null,
+                      ),
+                      if (isFiltered)
+                        Positioned(
+                          top: -2,
+                          right: -2,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: AuroraColors.coral,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: _onAddTap,
+                child: const Icon(CupertinoIcons.add),
+              ),
+            ],
           ),
         ),
         child: SafeArea(bottom: false, child: body),
@@ -163,72 +269,325 @@ class _ProjectJournalScreenState
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Journal')),
+      appBar: AppBar(
+        title: const Text('Journal'),
+        actions: [
+          if (linked.isNotEmpty)
+            IconButton(
+              icon: Icon(
+                Icons.filter_list,
+                color: isFiltered ? AuroraColors.coral : null,
+              ),
+              onPressed: () => _showFilterSheet(context, linked),
+            ),
+        ],
+      ),
       body: body,
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: AuroraFAB(
+        icon: Icons.add,
         onPressed: _onAddTap,
-        backgroundColor: AppColors.deepNavy,
-        child: const Icon(Icons.add, color: Colors.white),
+        tooltip: 'Add note',
       ),
     );
   }
 }
 
+// ── Timeline item types ───────────────────────────────────────────────────────
+
+sealed class _ListItem { const _ListItem(); }
+
+class _HeaderItem extends _ListItem {
+  const _HeaderItem(this.label);
+  final String label;
+}
+
+class _NoteItem extends _ListItem {
+  const _NoteItem(this.note);
+  final ProjectJournalNote note;
+}
+
 // ── Note list ─────────────────────────────────────────────────────────────────
 
-class _NoteList extends StatelessWidget {
+class _NoteList extends ConsumerStatefulWidget {
   const _NoteList({
     required this.notes,
     required this.phaseNames,
     required this.projectId,
     required this.onDelete,
-    required this.ref,
+    this.selectedPhaseId,
   });
 
   final List<ProjectJournalNote> notes;
   final Map<String, String> phaseNames;
   final String projectId;
   final void Function(ProjectJournalNote) onDelete;
-  final WidgetRef ref;
+  final String? selectedPhaseId;
+
+  @override
+  ConsumerState<_NoteList> createState() => _NoteListState();
+}
+
+class _NoteListState extends ConsumerState<_NoteList> {
+  final _searchCtrl = TextEditingController();
+  Timer? _debounce;
+  String _query = '';
+
+  static final _monthFmt = DateFormat('MMMM yyyy');
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String val) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) setState(() => _query = val.toLowerCase().trim());
+    });
+  }
+
+  List<ProjectJournalNote> get _filtered {
+    var result = widget.notes;
+    if (widget.selectedPhaseId != null) {
+      result = result
+          .where((n) => n.phaseId == widget.selectedPhaseId)
+          .toList();
+    }
+    if (_query.isNotEmpty) {
+      result = result.where((n) =>
+          (n.title?.toLowerCase().contains(_query) ?? false) ||
+          n.content.toLowerCase().contains(_query)).toList();
+    }
+    return result;
+  }
+
+  List<_ListItem> _buildItems(List<ProjectJournalNote> notes) {
+    final items = <_ListItem>[];
+    String? currentMonth;
+    for (final note in notes) {
+      final month = _monthFmt.format(note.noteDate);
+      if (month != currentMonth) {
+        items.add(_HeaderItem(month));
+        currentMonth = month;
+      }
+      items.add(_NoteItem(note));
+    }
+    return items;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final filtered = _filtered;
+    final items = _buildItems(filtered);
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+
     return CustomScrollView(
       slivers: [
         CupertinoSliverRefreshControl(
-          onRefresh: () =>
-              ref.read(projectJournalProvider(projectId).notifier).refresh(),
+          onRefresh: () => ref
+              .read(projectJournalProvider(widget.projectId).notifier)
+              .refresh(),
         ),
-        SliverPadding(
-          padding: AppPadding.screen.copyWith(top: AppSizes.sm),
-          sliver: SliverList.separated(
-            itemCount: notes.length,
-            separatorBuilder: (_, _) => const SizedBox(height: AppSizes.sm),
-            itemBuilder: (ctx, i) {
-              final note = notes[i];
-              return Dismissible(
-                key: ValueKey(note.id),
-                direction: DismissDirection.endToStart,
-                background: _DeleteBackground(),
-                confirmDismiss: (_) async {
-                  onDelete(note);
-                  return false;
-                },
-                child: JournalNoteCard(
-                  note: note,
-                  phaseName:
-                      note.phaseId != null ? phaseNames[note.phaseId] : null,
-                  onTap: () => ctx.push(
-                    '/projects/$projectId/notes/${note.id}/edit',
-                    extra: note,
-                  ),
-                ),
-              );
-            },
+
+        // Search bar
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.all(AuroraSpacing.screenPadH).copyWith(bottom: 0),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
+              child: isIOS
+                  ? CupertinoSearchTextField(
+                      controller: _searchCtrl,
+                      placeholder: 'Search notes…',
+                      onChanged: _onSearchChanged,
+                    )
+                  : TextField(
+                      controller: _searchCtrl,
+                      onChanged: _onSearchChanged,
+                      decoration: InputDecoration(
+                        hintText: 'Search notes…',
+                        prefixIcon: const Icon(Icons.search, size: 20),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AuroraSpacing.space7,
+                          vertical: AuroraSpacing.space3,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: AuroraRadius.md,
+                          borderSide: BorderSide(color: AuroraColors.inkBorder),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: AuroraRadius.md,
+                          borderSide: BorderSide(color: AuroraColors.inkBorder),
+                        ),
+                      ),
+                    ),
+            ),
           ),
         ),
+
+        // Summary bar (hidden while searching or filtering)
+        if (_query.isEmpty && widget.selectedPhaseId == null)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(AuroraSpacing.screenPadH).copyWith(bottom: 0),
+              child: _SummaryBar(notes: widget.notes),
+            ),
+          ),
+
+        // Notes feed or no-results state
+        if (filtered.isEmpty && _query.isNotEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: Padding(
+                padding: EdgeInsets.all(AuroraSpacing.screenPadH),
+                child: Text(
+                  'No notes match "$_query"',
+                  style: AuroraType.body
+                      .copyWith(color: AuroraColors.inkSecondary),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          )
+        else
+          SliverPadding(
+            padding: EdgeInsets.all(AuroraSpacing.screenPadH).copyWith(top: AuroraSpacing.space3),
+            sliver: SliverList.builder(
+              itemCount: items.length,
+              itemBuilder: (ctx, i) {
+                final item = items[i];
+                return switch (item) {
+                  _HeaderItem(:final label) => Padding(
+                      padding: EdgeInsets.only(
+                        top: i == 0 ? 0 : AuroraSpacing.space7,
+                        bottom: AuroraSpacing.space3,
+                      ),
+                      child: _MonthHeader(label: label),
+                    ),
+                  _NoteItem(:final note) => Padding(
+                      padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
+                      child: Dismissible(
+                        key: ValueKey(note.id),
+                        direction: DismissDirection.endToStart,
+                        background: _DeleteBackground(),
+                        confirmDismiss: (_) async {
+                          widget.onDelete(note);
+                          return false;
+                        },
+                        child: JournalNoteCard(
+                          note: note,
+                          phaseName: note.phaseId != null
+                              ? widget.phaseNames[note.phaseId]
+                              : null,
+                          onTap: () => ctx.push(
+                            '/projects/${widget.projectId}/notes/${note.id}/edit',
+                            extra: note,
+                          ),
+                        ),
+                      ),
+                    ),
+                };
+              },
+            ),
+          ),
+
         const SliverToBoxAdapter(
-          child: SizedBox(height: AppSizes.xxl + AppSizes.xl),
+          child: SizedBox(height: 48.0 + AuroraSpacing.space10),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Summary bar ───────────────────────────────────────────────────────────────
+
+class _SummaryBar extends StatelessWidget {
+  const _SummaryBar({required this.notes});
+
+  final List<ProjectJournalNote> notes;
+
+  static final _sinceFmt = DateFormat("MMM ''yy");
+
+  @override
+  Widget build(BuildContext context) {
+    final phaseCount =
+        notes.where((n) => n.phaseId != null).map((n) => n.phaseId!).toSet().length;
+
+    // Notes are sorted newest-first; oldest is last.
+    final oldest = notes.last.noteDate;
+    final sinceLabel = _sinceFmt.format(oldest);
+
+    final parts = [
+      '${notes.length} ${notes.length == 1 ? 'note' : 'notes'}',
+      if (phaseCount > 0)
+        '$phaseCount ${phaseCount == 1 ? 'phase' : 'phases'}',
+      'since $sinceLabel',
+    ];
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AuroraSpacing.space3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AuroraSpacing.space7,
+        vertical: AuroraSpacing.space3 + 2,
+      ),
+      decoration: BoxDecoration(
+        color: AuroraColors.paper,
+        borderRadius: BorderRadius.circular(14.0),
+        border: Border.all(color: AuroraColors.inkBorder),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < parts.length; i++) ...[
+            if (i > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AuroraSpacing.space1),
+                child: Text(
+                  '·',
+                  style: AuroraType.bodySm.copyWith(
+                    color: AuroraColors.inkTertiary,
+                  ),
+                ),
+              ),
+            Text(
+              parts[i],
+              style: AuroraType.bodySm.copyWith(
+                color: i == 0
+                    ? AuroraColors.ink
+                    : AuroraColors.inkSecondary,
+                fontWeight: i == 0 ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ── Month section header ──────────────────────────────────────────────────────
+
+class _MonthHeader extends StatelessWidget {
+  const _MonthHeader({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          label,
+          style: AuroraType.label.copyWith(
+            color: AuroraColors.inkSecondary,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(width: AuroraSpacing.space3),
+        const Expanded(
+          child: Divider(thickness: 1),
         ),
       ],
     );
@@ -240,10 +599,10 @@ class _DeleteBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       alignment: Alignment.centerRight,
-      padding: const EdgeInsets.only(right: AppSizes.lg),
+      padding: const EdgeInsets.only(right: AuroraSpacing.space9),
       decoration: BoxDecoration(
-        color: AppColors.error,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        color: AuroraColors.coral,
+        borderRadius: BorderRadius.circular(12.0),
       ),
       child: const Icon(Icons.delete_outline, color: Colors.white),
     );
@@ -260,38 +619,30 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.menu_book_outlined,
-              size: AppSizes.iconXl,
-              color: AppColors.gray400,
+              size: 48.0,
+              color: AuroraColors.inkTertiary,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space7),
             Text(
               'Start your project journal',
-              style: AppTextStyles.h3,
+              style: AuroraType.h3,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AuroraSpacing.space3),
             Text(
               'Jot down contractor quotes, material choices, or decisions as you go.',
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textSecondary),
+              style: AuroraType.body
+                  .copyWith(color: AuroraColors.inkSecondary),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.xl),
-            FilledButton(
-              onPressed: onAddTap,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.goldAccent,
-                foregroundColor: Colors.white,
-                padding: AppPadding.button,
-              ),
-              child: const Text('+ Add Note'),
-            ),
+            const SizedBox(height: AuroraSpacing.space10),
+            PrimaryButton(label: '+ Add Note', onPressed: onAddTap),
           ],
         ),
       ),
@@ -309,28 +660,23 @@ class _ErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: AppPadding.screen,
+        padding: EdgeInsets.all(AuroraSpacing.screenPadH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.error_outline,
-              size: AppSizes.iconXl,
-              color: AppColors.error,
+              size: 48.0,
+              color: AuroraColors.coral,
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space7),
             Text(
               "Couldn't load journal",
-              style: AppTextStyles.h3,
+              style: AuroraType.h3,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSizes.lg),
-            FilledButton(
-              onPressed: onRetry,
-              style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.deepNavy),
-              child: const Text('Retry'),
-            ),
+            const SizedBox(height: AuroraSpacing.space9),
+            PrimaryButton(label: 'Retry', onPressed: onRetry),
           ],
         ),
       ),

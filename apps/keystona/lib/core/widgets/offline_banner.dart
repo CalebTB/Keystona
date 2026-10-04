@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../services/providers/service_providers.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_sizes.dart';
-import '../theme/app_text_styles.dart';
+import '../theme/aurora_colors.dart';
+import '../theme/aurora_spacing.dart';
+import '../theme/aurora_typography.dart';
 
-/// Amber banner displayed at the top of the screen when the device is offline.
+/// Full-width banner displayed when the device is offline.
 ///
-/// Wrap with [Consumer] internally so it rebuilds automatically when
-/// connectivity changes. Place this above the main content inside a [Column]
+/// Aurora spec: butter background, wifi-off icon in inkSecondary,
+/// body text in ink, no dismiss. Place inside a [Column] above main content
 /// so it pushes content down without overlapping it.
 class OfflineBanner extends ConsumerWidget {
   const OfflineBanner({super.key});
@@ -25,24 +25,24 @@ class OfflineBanner extends ConsumerWidget {
 
     return Container(
       width: double.infinity,
-      color: AppColors.warningLight,
+      color: AuroraColors.butter,
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
+        horizontal: AuroraSpacing.screenPadH,
+        vertical: AuroraSpacing.space3,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(
-            Icons.wifi_off,
-            size: AppSizes.iconSm,
-            color: AppColors.warning,
+            Icons.wifi_off_rounded,
+            size: 16,
+            color: AuroraColors.inkSecondary,
           ),
-          const SizedBox(width: AppSizes.xs),
+          const SizedBox(width: AuroraSpacing.space1),
           Text(
             'No internet connection',
-            style: AppTextStyles.labelMedium.copyWith(
-              color: AppColors.warning,
+            style: AuroraType.body.copyWith(
+              color: AuroraColors.ink,
             ),
           ),
         ],

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../models/project_photo.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Single photo tile in the project photos grid.
 ///
@@ -38,18 +37,18 @@ class PhotoGridItem extends StatelessWidget {
         children: [
           // Photo.
           ClipRRect(
-            borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+            borderRadius: AuroraRadius.sm,
             child: photo.signedUrl != null
                 ? Image.network(
                     photo.signedUrl!,
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) => Container(
-                      color: AppColors.gray200,
+                      color: const Color(0xFFEEEDF2),
                       child: const Icon(Icons.broken_image_outlined,
-                          color: AppColors.gray400),
+                          color: AuroraColors.inkTertiary),
                     ),
                   )
-                : Container(color: AppColors.gray200),
+                : Container(color: const Color(0xFFEEEDF2)),
           ),
 
           // Type badge.
@@ -62,11 +61,11 @@ class PhotoGridItem extends StatelessWidget {
               decoration: BoxDecoration(
                 color: colors.background,
                 borderRadius:
-                    BorderRadius.circular(AppSizes.radiusFull),
+                    AuroraRadius.full,
               ),
               child: Text(
                 PhotoTypes.labelFor(photo.photoType),
-                style: AppTextStyles.labelSmall
+                style: AuroraType.label
                     .copyWith(color: colors.foreground, fontSize: 9),
               ),
             ),
@@ -81,10 +80,10 @@ class PhotoGridItem extends StatelessWidget {
                 width: 16,
                 height: 16,
                 decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.9),
+                  color: AuroraColors.lime.withValues(alpha: 0.9),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.compare, size: 10, color: Colors.white),
+                child: const Icon(Icons.compare, size: 10, color: AuroraColors.paper),
               ),
             ),
 
@@ -99,14 +98,14 @@ class PhotoGridItem extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.deepNavy.withValues(alpha: 0.8),
+                    color: AuroraColors.ink.withValues(alpha: 0.8),
                     borderRadius: const BorderRadius.vertical(
-                        bottom: Radius.circular(AppSizes.radiusSm)),
+                        bottom: Radius.circular(8.0)),
                   ),
                   child: Text(
                     'Add after →',
-                    style: AppTextStyles.labelSmall
-                        .copyWith(color: Colors.white, fontSize: 9),
+                    style: AuroraType.label
+                        .copyWith(color: AuroraColors.paper, fontSize: 9),
                     textAlign: TextAlign.center,
                   ),
                 ),

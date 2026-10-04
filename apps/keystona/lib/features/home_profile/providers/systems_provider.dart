@@ -8,13 +8,17 @@ part 'systems_provider.g.dart';
 
 /// Manages the list of home systems for the authenticated user's property.
 ///
-/// Auto-disposed when the Systems screen is not active.
+/// Kept alive (ref.keepAlive) so fast scrolling on the Home Profile screen
+/// does not dispose and re-fetch the list.
 /// Invalidates [homeProfileProvider] after any mutation so the overview
 /// system count stays in sync.
 @riverpod
 class SystemsNotifier extends _$SystemsNotifier {
   @override
-  Future<List<HomeSystem>> build() => _fetchSystems();
+  Future<List<HomeSystem>> build() {
+    ref.keepAlive();
+    return _fetchSystems();
+  }
 
   // ── Public interface ───────────────────────────────────────────────────────
 
@@ -29,7 +33,7 @@ class SystemsNotifier extends _$SystemsNotifier {
   ///
   /// The Edge Function call is NON-FATAL: if it fails the system is still
   /// added and the list is refreshed. The user can generate tasks later.
-  Future<void> addSystem(Map<String, dynamic> data) async {
+  Future<String> addSystem(Map<String, dynamic> data) async {
     final user = SupabaseService.client.auth.currentUser;
     if (user == null) throw StateError('Not authenticated');
 
@@ -79,6 +83,8 @@ class SystemsNotifier extends _$SystemsNotifier {
     ref.invalidate(homeProfileProvider);
     state = const AsyncLoading();
     state = await AsyncValue.guard(_fetchSystems);
+
+    return systemId;
   }
 
   /// Updates an existing system row.

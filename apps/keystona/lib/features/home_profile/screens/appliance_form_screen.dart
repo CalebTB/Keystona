@@ -3,10 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+
+
+
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
+
+import '../../../core/widgets/scan_label_button.dart';
 import '../../../core/widgets/snackbar_service.dart';
+import '../../../core/widgets/task_generation_sheet.dart';
+import '../../../services/label_scanner_service.dart';
+import '../../../services/supabase_service.dart';
 import '../models/appliance.dart';
 import '../providers/appliance_detail_provider.dart';
 import '../providers/appliances_provider.dart';
@@ -45,6 +57,8 @@ class _ApplianceFormScreenState extends ConsumerState<ApplianceFormScreen> {
   String? _warrantyExpiration;
 
   bool _saving = false;
+  XFile? _labelPhoto;
+  Future<List<SuggestedTask>>? _tasksFuture;
 
   bool get _isEditing => widget.existingAppliance != null;
 
@@ -96,6 +110,48 @@ class _ApplianceFormScreenState extends ConsumerState<ApplianceFormScreen> {
     super.dispose();
   }
 
+  Future<void> _uploadLabelPhoto(String applianceId, XFile photo) async {
+    try {
+      final user = SupabaseService.client.auth.currentUser;
+      if (user == null) return;
+      final propertyId = await _fetchPropertyId();
+      if (propertyId == null) return;
+      final bytes = await photo.readAsBytes();
+      final ext = photo.name.split('.').last.toLowerCase();
+      final path =
+          '${user.id}/$propertyId/$applianceId/${DateTime.now().millisecondsSinceEpoch}_label.$ext';
+      final mime = switch (ext) {
+        'jpg' || 'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'heic' => 'image/heic',
+        _ => 'image/jpeg',
+      };
+      await SupabaseService.client.storage
+          .from('item-photos')
+          .uploadBinary(path, bytes, fileOptions: FileOptions(contentType: mime));
+      await SupabaseService.client.from('item_photos').insert({
+        'user_id': user.id,
+        'appliance_id': applianceId,
+        'file_path': path,
+        'photo_type': 'model_label',
+      });
+    } catch (_) {}
+  }
+
+  Future<String?> _fetchPropertyId() async {
+    final user = SupabaseService.client.auth.currentUser;
+    if (user == null) return null;
+    final row = await SupabaseService.client
+        .from('properties')
+        .select('id')
+        .eq('user_id', user.id)
+        .isFilter('deleted_at', null)
+        .order('created_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+    return row?['id'] as String?;
+  }
+
   Map<String, dynamic> _buildFields() {
     return {
       'category': _category.value,
@@ -136,15 +192,41 @@ class _ApplianceFormScreenState extends ConsumerState<ApplianceFormScreen> {
           applianceDetailProvider(widget.existingAppliance!.id).notifier,
         );
         await notifier.updateAppliance(fields);
+        if (!mounted) return;
+        SnackbarService.showSuccess(context, 'Appliance updated.');
+        context.pop();
       } else {
-        await ref.read(appliancesProvider.notifier).addAppliance(fields);
+        final applianceId =
+            await ref.read(appliancesProvider.notifier).addAppliance(fields);
+
+        if (_labelPhoto != null) {
+          _uploadLabelPhoto(applianceId, _labelPhoto!).ignore();
+        }
+
+        if (!mounted) return;
+
+        // Show task sheet BEFORE popping — context must still be alive.
+        if (_labelPhoto != null) {
+          final propertyId = await _fetchPropertyId();
+          if (mounted && propertyId != null) {
+            await showTaskGenerationSheet(
+              context: context,
+              ref: ref,
+              itemName: _nameCtrl.text.trim(),
+              brand: _brandCtrl.text.trim(),
+              category: _category.value,
+              formType: 'appliance',
+              linkedApplianceId: applianceId,
+              propertyId: propertyId,
+              prefetchedFuture: _tasksFuture,
+            );
+          }
+        }
+
+        if (!mounted) return;
+        SnackbarService.showSuccess(context, 'Appliance added.');
+        context.pop();
       }
-      if (!mounted) return;
-      SnackbarService.showSuccess(
-        context,
-        _isEditing ? 'Appliance updated.' : 'Appliance added.',
-      );
-      context.pop();
     } catch (_) {
       if (!mounted) return;
       SnackbarService.showError(
@@ -224,7 +306,7 @@ class _ApplianceFormScreenState extends ConsumerState<ApplianceFormScreen> {
       context: context,
       builder: (_) => Container(
         height: 260,
-        color: CupertinoColors.systemBackground.resolveFrom(context),
+        color: AuroraColors.paper,
         child: Column(
           children: [
             Row(
@@ -331,7 +413,13 @@ class _ApplianceFormScreenState extends ConsumerState<ApplianceFormScreen> {
             onPressed: _saving ? null : _save,
             child: _saving
                 ? const CupertinoActivityIndicator()
-                : const Text('Save'),
+                : Text(
+                    'Save',
+                    style: AuroraType.label.copyWith(
+                      color: AuroraColors.cobalt,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
           ),
         ),
         child: SafeArea(
@@ -364,35 +452,37 @@ class _ApplianceFormScreenState extends ConsumerState<ApplianceFormScreen> {
                   setState(() => _warrantyExpiration = null),
               onPickCategoryIOS: () => _pickCategoryIOS(context),
               onPickStatusIOS: () => _pickStatusIOS(context),
+              onPurchaseDateFromScan: (date) =>
+                  setState(() => _purchaseDate = date),
+              onPhotoReady: (photo) {
+                setState(() => _labelPhoto = photo);
+                _tasksFuture = prefetchItemTasks(
+                  itemName: _nameCtrl.text.trim(),
+                  brand: _brandCtrl.text.trim(),
+                  category: _category.value,
+                  formType: 'appliance',
+                );
+              },
             ),
           ),
         ),
       );
     }
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       appBar: AppBar(
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: Text(title, style: AppTextStyles.h3),
+        title: Text(title, style: AuroraType.h3),
         actions: [
-          TextButton(
-            onPressed: _saving ? null : _save,
-            child: _saving
-                ? const SizedBox(
-                    height: 18,
-                    width: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.deepNavy,
-                    ),
-                  )
-                : Text(
-                    'Save',
-                    style: AppTextStyles.labelLarge
-                        .copyWith(color: AppColors.deepNavy),
-                  ),
+          Padding(
+            padding: const EdgeInsets.only(right: AuroraSpacing.space3),
+            child: SaveButton(
+              label: 'Save',
+              loading: _saving,
+              onPressed: _saving ? null : _save,
+            ),
           ),
         ],
       ),
@@ -458,6 +548,8 @@ class _FormBody extends StatelessWidget {
     required this.onClearWarrantyExpiration,
     required this.onPickCategoryIOS,
     required this.onPickStatusIOS,
+    this.onPurchaseDateFromScan,
+    this.onPhotoReady,
   });
 
   final bool isIOS;
@@ -484,12 +576,94 @@ class _FormBody extends StatelessWidget {
   final VoidCallback onClearWarrantyExpiration;
   final VoidCallback onPickCategoryIOS;
   final VoidCallback onPickStatusIOS;
+  final void Function(String date)? onPurchaseDateFromScan;
+  final void Function(XFile)? onPhotoReady;
+
+  static ApplianceCategory? _applianceCategoryFromString(String raw) {
+    return switch (raw.trim().toLowerCase()) {
+      'kitchen' => ApplianceCategory.kitchen,
+      'laundry' => ApplianceCategory.laundry,
+      'climate' => ApplianceCategory.climate,
+      'cleaning' => ApplianceCategory.cleaning,
+      'outdoor' => ApplianceCategory.outdoor,
+      'bathroom' => ApplianceCategory.bathroom,
+      _ => ApplianceCategory.other,
+    };
+  }
+
+  /// Infers a category string from the product name when Claude doesn't
+  /// return one. Returns null if no match — caller falls back to default.
+  static String? _inferApplianceCategory(String? name) {
+    if (name == null) return null;
+    final n = name.toLowerCase();
+    if (n.contains('fridge') ||
+        n.contains('refrigerator') ||
+        n.contains('dishwasher') ||
+        n.contains('oven') ||
+        n.contains('microwave') ||
+        n.contains('range') ||
+        n.contains('freezer') ||
+        n.contains('cooktop')) { return 'kitchen'; }
+    if (n.contains('washer') ||
+        n.contains('dryer') ||
+        n.contains('laundry')) { return 'laundry'; }
+    if (n.contains('air conditioner') ||
+        n.contains('heater') ||
+        n.contains('air purifier') ||
+        n.contains('dehumidifier') ||
+        n.contains('humidifier')) { return 'climate'; }
+    if (n.contains('vacuum') || n.contains('steam cleaner')) { return 'cleaning'; }
+    if (n.contains('mower') ||
+        n.contains('generator') ||
+        n.contains('pressure washer')) { return 'outdoor'; }
+    if (n.contains('toilet') ||
+        n.contains('shower') ||
+        n.contains('hair dryer')) { return 'bathroom'; }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: AppPadding.screen,
+      padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
       children: [
+        // ── Label scanner ──────────────────────────────────────────────────
+        ScanLabelButton(
+          isAppliance: true,
+          onResult: (LabelScanResult r) {
+            if (r.brand != null) brandCtrl.text = r.brand!;
+            if (r.name != null && nameCtrl.text.isEmpty) {
+              nameCtrl.text = r.name!;
+            }
+            if (r.modelNumber != null) modelCtrl.text = r.modelNumber!;
+            if (r.serialNumber != null) serialCtrl.text = r.serialNumber!;
+            // Use category from Claude, or infer from product name as fallback.
+            final rawCat = r.category ?? _inferApplianceCategory(r.name);
+            if (rawCat != null) {
+              onCategoryChanged(_applianceCategoryFromString(rawCat)!);
+            }
+            if (r.estimatedLifespanYears != null) {
+              lifespanCtrl.text = r.estimatedLifespanYears.toString();
+            }
+            if (r.estimatedReplacementCostUsd != null) {
+              replacementCostCtrl.text =
+                  r.estimatedReplacementCostUsd.toString();
+            }
+            if (r.notes != null) notesCtrl.text = r.notes!;
+            if (r.manufactureDate != null) {
+              final parts = r.manufactureDate!.split('-');
+              final normalised = parts.length == 2
+                  ? '${parts[0]}-${parts[1]}-01'
+                  : '${parts[0]}-01-01';
+              onPurchaseDateFromScan?.call(normalised);
+            } else if (r.estimatedYear != null) {
+              onPurchaseDateFromScan?.call('${r.estimatedYear}-01-01');
+            }
+          },
+          onPhotoReady: onPhotoReady,
+        ),
+        const SizedBox(height: AuroraSpacing.space5),
+
         // ── Category & Identity ────────────────────────────────────────────
         const _SectionLabel(label: 'Category & Identity'),
         _PickerField(
@@ -515,7 +689,7 @@ class _FormBody extends StatelessWidget {
                   ),
                 ),
         ),
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: AuroraSpacing.space3),
         _TextField(
           controller: nameCtrl,
           label: 'Name',
@@ -523,25 +697,25 @@ class _FormBody extends StatelessWidget {
           validator: (v) =>
               (v == null || v.trim().isEmpty) ? 'Name is required' : null,
         ),
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: AuroraSpacing.space3),
         _TextField(
           controller: brandCtrl,
           label: 'Brand',
           hint: 'e.g. Samsung',
         ),
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: AuroraSpacing.space3),
         _TextField(
           controller: modelCtrl,
           label: 'Model Number',
           hint: 'e.g. RF28R7351SR',
         ),
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: AuroraSpacing.space3),
         _TextField(
           controller: serialCtrl,
           label: 'Serial Number',
           hint: 'Optional',
         ),
-        const SizedBox(height: AppSizes.md),
+        const SizedBox(height: AuroraSpacing.space5),
 
         // ── Location & Status ──────────────────────────────────────────────
         const _SectionLabel(label: 'Location & Status'),
@@ -550,13 +724,13 @@ class _FormBody extends StatelessWidget {
           label: 'Location',
           hint: 'e.g. Kitchen, Laundry Room',
         ),
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: AuroraSpacing.space3),
         _TextField(
           controller: colorCtrl,
           label: 'Color',
           hint: 'e.g. Stainless Steel',
         ),
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: AuroraSpacing.space3),
         _PickerField(
           label: 'Status',
           value: status.label,
@@ -580,7 +754,7 @@ class _FormBody extends StatelessWidget {
                   ),
                 ),
         ),
-        const SizedBox(height: AppSizes.md),
+        const SizedBox(height: AuroraSpacing.space5),
 
         // ── Purchase ───────────────────────────────────────────────────────
         const _SectionLabel(label: 'Purchase'),
@@ -590,7 +764,7 @@ class _FormBody extends StatelessWidget {
           onTap: onPickPurchaseDate,
           onClear: onClearPurchaseDate,
         ),
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: AuroraSpacing.space3),
         _TextField(
           controller: priceCtrl,
           label: 'Purchase Price',
@@ -598,7 +772,7 @@ class _FormBody extends StatelessWidget {
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           prefix: '\$',
         ),
-        const SizedBox(height: AppSizes.md),
+        const SizedBox(height: AuroraSpacing.space5),
 
         // ── Lifespan ───────────────────────────────────────────────────────
         const _SectionLabel(label: 'Lifespan'),
@@ -608,7 +782,7 @@ class _FormBody extends StatelessWidget {
           hint: 'e.g. 12',
           keyboardType: TextInputType.number,
         ),
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: AuroraSpacing.space3),
         _TextField(
           controller: replacementCostCtrl,
           label: 'Estimated Replacement Cost',
@@ -616,7 +790,7 @@ class _FormBody extends StatelessWidget {
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           prefix: '\$',
         ),
-        const SizedBox(height: AppSizes.md),
+        const SizedBox(height: AuroraSpacing.space5),
 
         // ── Warranty ───────────────────────────────────────────────────────
         const _SectionLabel(label: 'Warranty'),
@@ -626,13 +800,13 @@ class _FormBody extends StatelessWidget {
           onTap: onPickWarrantyExpiration,
           onClear: onClearWarrantyExpiration,
         ),
-        const SizedBox(height: AppSizes.sm),
+        const SizedBox(height: AuroraSpacing.space3),
         _TextField(
           controller: warrantyProviderCtrl,
           label: 'Warranty Provider',
           hint: 'e.g. Extended Warranty Co.',
         ),
-        const SizedBox(height: AppSizes.md),
+        const SizedBox(height: AuroraSpacing.space5),
 
         // ── Notes ──────────────────────────────────────────────────────────
         const _SectionLabel(label: 'Notes'),
@@ -642,7 +816,7 @@ class _FormBody extends StatelessWidget {
           hint: 'Any additional notes about this appliance...',
           maxLines: 4,
         ),
-        const SizedBox(height: AppSizes.xl),
+        const SizedBox(height: AuroraSpacing.space8),
       ],
     );
   }
@@ -657,10 +831,23 @@ class _SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.sm),
-      child: Text(
-        label,
-        style: AppTextStyles.h4,
+      padding: const EdgeInsets.only(top: AuroraSpacing.space8, bottom: AuroraSpacing.space3),
+      child: Row(
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: const BoxDecoration(
+              color: AuroraColors.cobalt,
+              borderRadius: AuroraRadius.xs,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label.toUpperCase(),
+            style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
+          ),
+        ],
       ),
     );
   }
@@ -692,36 +879,36 @@ class _TextField extends StatelessWidget {
       validator: validator,
       keyboardType: keyboardType,
       maxLines: maxLines,
-      style: AppTextStyles.bodyMedium,
+      style: AuroraType.body,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
         prefixText: prefix,
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: AuroraColors.paper,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.md,
+          horizontal: AuroraSpacing.space5,
+          vertical: AuroraSpacing.space5,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: const BorderSide(color: AppColors.deepNavy, width: 1.5),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: const BorderSide(color: AppColors.error),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.coral),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+          borderRadius: AuroraRadius.md,
+          borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
         ),
       ),
     );
@@ -749,18 +936,18 @@ class _PickerField extends StatelessWidget {
         decoration: InputDecoration(
           labelText: label,
           filled: true,
-          fillColor: AppColors.surface,
+          fillColor: AuroraColors.paper,
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.md,
-            vertical: AppSizes.xs,
+            horizontal: AuroraSpacing.space5,
+            vertical: AuroraSpacing.space1,
           ),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-            borderSide: const BorderSide(color: AppColors.border),
+            borderRadius: AuroraRadius.md,
+            borderSide: const BorderSide(color: AuroraColors.inkBorder),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-            borderSide: const BorderSide(color: AppColors.border),
+            borderRadius: AuroraRadius.md,
+            borderSide: const BorderSide(color: AuroraColors.inkBorder),
           ),
         ),
         child: trailing!,
@@ -771,13 +958,13 @@ class _PickerField extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.md,
+          horizontal: AuroraSpacing.space5,
+          vertical: AuroraSpacing.space5,
         ),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          border: Border.all(color: AppColors.border),
+          color: AuroraColors.paper,
+          borderRadius: AuroraRadius.md,
+          border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(
           children: [
@@ -787,18 +974,18 @@ class _PickerField extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: AppTextStyles.bodySmall
-                        .copyWith(color: AppColors.textSecondary),
+                    style: AuroraType.bodySm
+                        .copyWith(color: AuroraColors.inkSecondary),
                   ),
                   const SizedBox(height: 2),
-                  Text(value, style: AppTextStyles.bodyMedium),
+                  Text(value, style: AuroraType.body),
                 ],
               ),
             ),
             Icon(
               Icons.chevron_right,
               size: 18,
-              color: AppColors.textSecondary,
+              color: AuroraColors.inkSecondary,
             ),
           ],
         ),
@@ -826,13 +1013,13 @@ class _DateField extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.md,
+          horizontal: AuroraSpacing.space5,
+          vertical: AuroraSpacing.space5,
         ),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          border: Border.all(color: AppColors.border),
+          color: AuroraColors.paper,
+          borderRadius: AuroraRadius.md,
+          border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(
           children: [
@@ -842,16 +1029,16 @@ class _DateField extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: AppTextStyles.bodySmall
-                        .copyWith(color: AppColors.textSecondary),
+                    style: AuroraType.bodySm
+                        .copyWith(color: AuroraColors.inkSecondary),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     value ?? 'Select date',
-                    style: AppTextStyles.bodyMedium.copyWith(
+                    style: AuroraType.body.copyWith(
                       color: value != null
-                          ? AppColors.textPrimary
-                          : AppColors.textSecondary,
+                          ? AuroraColors.ink
+                          : AuroraColors.inkSecondary,
                     ),
                   ),
                 ],
@@ -863,14 +1050,14 @@ class _DateField extends StatelessWidget {
                 child: Icon(
                   Icons.clear,
                   size: 18,
-                  color: AppColors.textSecondary,
+                  color: AuroraColors.inkSecondary,
                 ),
               )
             else
               Icon(
                 Icons.calendar_today_outlined,
                 size: 18,
-                color: AppColors.textSecondary,
+                color: AuroraColors.inkSecondary,
               ),
           ],
         ),

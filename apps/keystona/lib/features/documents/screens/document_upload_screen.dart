@@ -2,12 +2,13 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../models/document_upload_state.dart';
 import '../providers/document_upload_provider.dart';
 import '../widgets/upload_category_step.dart';
@@ -30,8 +31,7 @@ class DocumentUploadScreen extends ConsumerStatefulWidget {
       _DocumentUploadScreenState();
 }
 
-class _DocumentUploadScreenState
-    extends ConsumerState<DocumentUploadScreen> {
+class _DocumentUploadScreenState extends ConsumerState<DocumentUploadScreen> {
   bool _sourcePickerShown = false;
 
   @override
@@ -44,8 +44,11 @@ class _DocumentUploadScreenState
 
   Future<void> _showSourcePicker() async {
     _sourcePickerShown = true;
-    bool filePicked = false;
 
+    // File already set by the calling screen — skip the source picker.
+    if (ref.read(documentUploadProvider).file != null) return;
+
+    bool filePicked = false;
     await UploadSourceSheet.show(
       context,
       ref,
@@ -60,6 +63,13 @@ class _DocumentUploadScreenState
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<DocumentUploadState>(documentUploadProvider, (prev, next) {
+      if (prev?.step != DocumentUploadStep.success &&
+          next.step == DocumentUploadStep.success) {
+        HapticFeedback.heavyImpact();
+      }
+    });
+
     final state = ref.watch(documentUploadProvider);
 
     // Nothing to show until a file is selected.
@@ -71,8 +81,6 @@ class _DocumentUploadScreenState
     final canPop = state.step == DocumentUploadStep.category ||
         state.step == DocumentUploadStep.metadata;
 
-    // Back arrow only on the metadata step (navigates back to category selection).
-    // Category step uses Cancel only — there's no prior Flutter page to return to.
     final showBack = state.step == DocumentUploadStep.metadata;
 
     return PopScope(
@@ -83,25 +91,25 @@ class _DocumentUploadScreenState
           ref.read(documentUploadProvider.notifier).goBack();
         }
       },
-      child: Platform.isIOS ? _IOSScaffold(
-        title: title,
-        step: state.step,
-        onBack: showBack ? _handleBack : null,
-        child: _stepContent(state),
-      ) : _MaterialScaffold(
-        title: title,
-        step: state.step,
-        onBack: showBack ? _handleBack : null,
-        child: _stepContent(state),
-      ),
+      child: Platform.isIOS
+          ? _IOSScaffold(
+              title: title,
+              step: state.step,
+              onBack: showBack ? _handleBack : null,
+              child: _stepContent(state),
+            )
+          : _MaterialScaffold(
+              title: title,
+              step: state.step,
+              onBack: showBack ? _handleBack : null,
+              child: _stepContent(state),
+            ),
     );
   }
 
   Widget _stepContent(DocumentUploadState state) {
     return switch (state.step) {
-      DocumentUploadStep.category => UploadCategoryStep(
-          onNext: () {},
-        ),
+      DocumentUploadStep.category => UploadCategoryStep(onNext: () {}),
       DocumentUploadStep.metadata => UploadMetadataStep(
           onNext: () {},
           onBack: _handleBack,
@@ -182,10 +190,10 @@ class _IOSScaffold extends StatelessWidget {
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
-            AppSizes.md,
-            AppSizes.md,
-            AppSizes.md,
-            AppSizes.lg,
+            AuroraSpacing.space5,
+            AuroraSpacing.space5,
+            AuroraSpacing.space5,
+            AuroraSpacing.space7,
           ),
           child: child,
         ),
@@ -216,7 +224,7 @@ class _MaterialScaffold extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(title, style: AppTextStyles.h3),
+        title: Text(title, style: AuroraType.h3),
         leading: onBack != null
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
@@ -230,8 +238,9 @@ class _MaterialScaffold extends StatelessWidget {
                   onPressed: () => context.pop(),
                   child: Text(
                     'Cancel',
-                    style: AppTextStyles.button.copyWith(
-                      color: AppColors.textSecondary,
+                    style: AuroraType.bodyLg.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AuroraColors.inkSecondary,
                     ),
                   ),
                 ),
@@ -240,10 +249,10 @@ class _MaterialScaffold extends StatelessWidget {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
-            AppSizes.md,
-            AppSizes.md,
-            AppSizes.md,
-            AppSizes.lg,
+            AuroraSpacing.space5,
+            AuroraSpacing.space5,
+            AuroraSpacing.space5,
+            AuroraSpacing.space7,
           ),
           child: child,
         ),

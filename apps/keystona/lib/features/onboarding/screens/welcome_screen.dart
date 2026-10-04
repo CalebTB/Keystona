@@ -1,90 +1,121 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../core/widgets/snackbar_service.dart';
-import '../providers/onboarding_provider.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 
 /// First onboarding screen. No app bar — full-bleed centered layout.
 ///
 /// Routes:
 ///   "Get Started" → [AppRoutes.onboardingProperty]
-///   "Skip setup"  → marks onboarding complete then → [AppRoutes.home]
-class WelcomeScreen extends ConsumerWidget {
+///   "Sign in"     → [AppRoutes.login]
+class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AuroraSpacing.screenPadH,
+          ),
           child: Column(
             children: [
               const Spacer(),
 
-              // ── App name ────────────────────────────────────────────────────
+              // ── Coral circle hero with yellow blob ────────────────────────
+              _HeroCircle(),
+
+              const SizedBox(height: AuroraSpacing.space8),
+
+              // ── App name ──────────────────────────────────────────────────
               Text(
                 'Keystona',
-                style: AppTextStyles.displayLarge,
+                style: AuroraType.h1,
                 textAlign: TextAlign.center,
               ),
 
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space2),
 
-              // ── Tagline ─────────────────────────────────────────────────────
+              // ── Tagline ───────────────────────────────────────────────────
               Text(
                 'The smart way to manage your home.',
-                style: AppTextStyles.bodyLarge.copyWith(
-                  color: AppColors.textSecondary,
+                style: AuroraType.bodyLg.copyWith(
+                  color: AuroraColors.inkSecondary,
                 ),
                 textAlign: TextAlign.center,
               ),
 
               const Spacer(),
 
-              // ── Get Started CTA ─────────────────────────────────────────────
-              ElevatedButton(
+              // ── Get Started CTA ───────────────────────────────────────────
+              PrimaryButton(
+                label: 'Get Started',
                 onPressed: () => context.go(AppRoutes.onboardingProperty),
-                child: const Text('Get Started'),
+                expand: true,
               ),
 
-              const SizedBox(height: AppSizes.sm),
+              const SizedBox(height: AuroraSpacing.space3),
 
-              // ── Skip setup ──────────────────────────────────────────────────
-              TextButton(
-                onPressed: () => _skip(context),
-                child: const Text('Skip setup'),
+              // ── Sign in ────────────────────────────────────────────────────
+              GhostButton(
+                label: 'Sign in',
+                onPressed: () => context.go(AppRoutes.login),
               ),
 
-              const SizedBox(height: AppSizes.md),
+              const SizedBox(height: AuroraSpacing.space7),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  Future<void> _skip(BuildContext context) async {
-    try {
-      await completeOnboarding();
-      if (context.mounted) {
-        context.go(AppRoutes.home);
-      }
-    } catch (_) {
-      // Onboarding completion is best-effort — navigate anyway.
-      if (context.mounted) {
-        SnackbarService.showError(
-          context,
-          'Could not save setup status. You can always set up later.',
-        );
-        context.go(AppRoutes.home);
-      }
-    }
+/// Coral circle with a yellow blob accent — one coral hero per screen.
+class _HeroCircle extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 140,
+      height: 140,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Yellow blob
+          Positioned(
+            top: 12,
+            right: 14,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AuroraColors.yellow,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          // Coral circle
+          Container(
+            width: 120,
+            height: 120,
+            decoration: const BoxDecoration(
+              color: AuroraColors.coral,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.home_work_rounded,
+              color: AuroraColors.paper,
+              size: 52,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

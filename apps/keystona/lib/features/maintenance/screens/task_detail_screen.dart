@@ -1,30 +1,29 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
+import '../../../core/widgets/aurora/aurora.dart';
 import '../../../core/widgets/error_view.dart';
 import '../models/maintenance_task.dart';
 import '../models/task_completion.dart';
 import '../models/task_detail.dart';
 import '../providers/task_detail_provider.dart';
 import '../widgets/task_detail_skeleton.dart';
+import '../../documents/models/document.dart';
+import '../../documents/providers/documents_provider.dart';
 
-/// Full Task Detail screen.
+
+/// Task Detail screen — "Ledger" layout.
 ///
 /// Route: `/maintenance/:taskId`
-///
-/// Adaptive layout:
-/// - iOS: [CupertinoPageScaffold] with [CupertinoNavigationBar]
-/// - Android: [Scaffold] with [AppBar]
-///
-/// Displays all task fields, completion history, and action buttons
-/// (Quick Complete, Detailed Complete [stub for #33], Skip).
 class TaskDetailScreen extends ConsumerWidget {
   const TaskDetailScreen({super.key, required this.taskId});
 
@@ -34,37 +33,35 @@ class TaskDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
     return isIOS
-        ? _IOSDetailLayout(taskId: taskId)
-        : _AndroidDetailLayout(taskId: taskId);
+        ? _IOSLayout(taskId: taskId)
+        : _AndroidLayout(taskId: taskId);
   }
 }
 
 // ── iOS layout ────────────────────────────────────────────────────────────────
 
-class _IOSDetailLayout extends ConsumerWidget {
-  const _IOSDetailLayout({required this.taskId});
-
+class _IOSLayout extends ConsumerWidget {
+  const _IOSLayout({required this.taskId});
   final String taskId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final detailState = ref.watch(taskDetailProvider(taskId));
-
+    final state = ref.watch(taskDetailProvider(taskId));
     return CupertinoPageScaffold(
+      backgroundColor: AuroraColors.paper,
       navigationBar: CupertinoNavigationBar(
+        backgroundColor: AuroraColors.paper,
+        border: null,
         previousPageTitle: 'Tasks',
-        middle: detailState.maybeWhen(
-          data: (d) => Text(
-            d.task.name,
-            overflow: TextOverflow.ellipsis,
-          ),
-          orElse: () => const Text('Task'),
-        ),
-        // Edit button — wired by issue #34.
-        trailing: detailState.maybeWhen(
-          data: (_) => CupertinoButton(
+        middle: const SizedBox.shrink(),
+        trailing: state.maybeWhen(
+          data: (detail) => CupertinoButton(
             padding: EdgeInsets.zero,
-            onPressed: null, // TODO(#34): navigate to edit screen
+            onPressed: () => context.push(
+              AppRoutes.maintenanceEditTask
+                  .replaceFirst(':taskId', taskId),
+              extra: detail.task,
+            ),
             child: const Text('Edit'),
           ),
           orElse: () => null,
@@ -72,7 +69,7 @@ class _IOSDetailLayout extends ConsumerWidget {
       ),
       child: SafeArea(
         bottom: false,
-        child: _DetailStateBody(taskId: taskId, detailState: detailState),
+        child: _StateBody(taskId: taskId, state: state),
       ),
     );
   }
@@ -80,439 +77,224 @@ class _IOSDetailLayout extends ConsumerWidget {
 
 // ── Android layout ────────────────────────────────────────────────────────────
 
-class _AndroidDetailLayout extends ConsumerWidget {
-  const _AndroidDetailLayout({required this.taskId});
-
+class _AndroidLayout extends ConsumerWidget {
+  const _AndroidLayout({required this.taskId});
   final String taskId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final detailState = ref.watch(taskDetailProvider(taskId));
-
+    final state = ref.watch(taskDetailProvider(taskId));
     return Scaffold(
-      backgroundColor: AppColors.warmOffWhite,
+      backgroundColor: AuroraColors.paper,
       appBar: AppBar(
-        title: detailState.maybeWhen(
-          data: (d) => Text(d.task.name, style: AppTextStyles.h3),
-          orElse: () => Text('Task', style: AppTextStyles.h3),
-        ),
-        backgroundColor: AppColors.warmOffWhite,
+        backgroundColor: AuroraColors.paper,
         elevation: 0,
         scrolledUnderElevation: 0,
+        title: const SizedBox.shrink(),
         actions: [
-          // Edit button — wired by issue #34.
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: null, // TODO(#34): navigate to edit screen
+          state.maybeWhen(
+            data: (detail) => TextButton(
+              onPressed: () => context.push(
+                AppRoutes.maintenanceEditTask
+                    .replaceFirst(':taskId', taskId),
+                extra: detail.task,
+              ),
+              child: Text(
+                'Edit',
+                style: AuroraType.body.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AuroraColors.coral,
+                ),
+              ),
+            ),
+            orElse: () => const SizedBox.shrink(),
           ),
         ],
       ),
-      body: _DetailStateBody(taskId: taskId, detailState: detailState),
+      body: _StateBody(taskId: taskId, state: state),
     );
   }
 }
 
 // ── State switcher ────────────────────────────────────────────────────────────
 
-class _DetailStateBody extends ConsumerWidget {
-  const _DetailStateBody({
-    required this.taskId,
-    required this.detailState,
-  });
-
+class _StateBody extends ConsumerWidget {
+  const _StateBody({required this.taskId, required this.state});
   final String taskId;
-  final AsyncValue<TaskDetail> detailState;
+  final AsyncValue<TaskDetail> state;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return detailState.when(
+    return state.when(
       loading: () => const TaskDetailSkeleton(),
       error: (e, _) => ErrorView(
         message: "Couldn't load task.",
         onRetry: () => ref.invalidate(taskDetailProvider(taskId)),
       ),
-      data: (detail) => _DetailContent(taskId: taskId, detail: detail),
+      data: (detail) => _LedgerBody(taskId: taskId, detail: detail),
     );
   }
 }
 
-// ── Main content ──────────────────────────────────────────────────────────────
+// ── Ledger body ───────────────────────────────────────────────────────────────
 
-class _DetailContent extends StatelessWidget {
-  const _DetailContent({required this.taskId, required this.detail});
-
+class _LedgerBody extends StatelessWidget {
+  const _LedgerBody({required this.taskId, required this.detail});
   final String taskId;
   final TaskDetail detail;
 
   @override
   Widget build(BuildContext context) {
     final task = detail.task;
+    final completions = detail.completions;
     final isDone = task.status == TaskStatus.completed ||
         task.status == TaskStatus.skipped;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final isActionable = !isDone &&
+        !task.dueDate.toLocal().isAfter(today.add(const Duration(days: 30)));
 
     return Column(
       children: [
         Expanded(
-          child: SingleChildScrollView(
-            padding: AppPadding.screen,
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(child: _LedgerHeader(task: task)),
+              SliverToBoxAdapter(
+                child: _StatStrip(task: task, completions: completions),
+              ),
+              SliverToBoxAdapter(child: _InstructionsRow(task: task)),
+              SliverToBoxAdapter(
+                child: _ServiceHistory(task: task, completions: completions),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            ],
+          ),
+        ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeInOutCubic,
+          child: isActionable
+              ? _BottomActions(taskId: taskId, isDone: isDone)
+              : const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+
+class _LedgerHeader extends StatelessWidget {
+  const _LedgerHeader({required this.task});
+  final MaintenanceTask task;
+
+  String _eyebrow() {
+    final cat = task.category.toUpperCase();
+    final system = task.linkedSystemName;
+    if (system != null && system.isNotEmpty) {
+      return '$cat · ${system.toUpperCase()}';
+    }
+    return cat;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final overdueDays = _overdueDays(task);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: AppSizes.sm),
-
-                // ── Status / Priority / Difficulty badges ───────────────────
-                _BadgeRow(task: task),
-                const SizedBox(height: AppSizes.lg),
-
-                // ── Scheduling metadata ─────────────────────────────────────
-                _MetaRow(
-                  icon: Icons.calendar_today_outlined,
-                  label: 'Due',
-                  value: DateFormat('MMMM d, y').format(task.dueDate.toLocal()),
+                Text(
+                  _eyebrow(),
+                  style: AuroraType.label.copyWith(
+                    color: AuroraColors.inkTertiary,
+                  ),
                 ),
-                if (task.recurrence != RecurrenceType.none) ...[
-                  const SizedBox(height: AppSizes.sm),
-                  _MetaRow(
-                    icon: Icons.repeat,
-                    label: 'Recurrence',
-                    value: task.recurrence.label,
+                const SizedBox(height: AuroraSpacing.space2),
+                Text(
+                  task.name.endsWith('.') ? task.name : '${task.name}.',
+                  style: AuroraType.h1.copyWith(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
+                    height: 1.1,
+                    color: AuroraColors.ink,
                   ),
-                ],
-                if (task.estimatedMinutes != null) ...[
-                  const SizedBox(height: AppSizes.sm),
-                  _MetaRow(
-                    icon: Icons.schedule_outlined,
-                    label: 'Estimated',
-                    value: _formatMinutes(task.estimatedMinutes!),
-                  ),
-                ],
-                if (task.climateAdjusted) ...[
-                  const SizedBox(height: AppSizes.sm),
-                  _MetaRow(
-                    icon: Icons.thermostat_outlined,
-                    label: 'Climate',
-                    value: 'Adjusted for your climate zone',
-                  ),
-                ],
-
-                // ── Skip reason ────────────────────────────────────────────
-                if (task.status == TaskStatus.skipped &&
-                    task.skipReason != null &&
-                    task.skipReason!.isNotEmpty) ...[
-                  const SizedBox(height: AppSizes.sm),
-                  _MetaRow(
-                    icon: Icons.skip_next_outlined,
-                    label: 'Skipped',
-                    value: task.skipReason!,
-                    valueColor: AppColors.textSecondary,
-                  ),
-                ],
-
-                const SizedBox(height: AppSizes.lg),
-                const _SectionDivider(),
-                const SizedBox(height: AppSizes.lg),
-
-                // ── DIY vs Pro chip ─────────────────────────────────────────
-                _DiyProChip(diyOrPro: task.diyOrPro),
-                const SizedBox(height: AppSizes.lg),
-
-                // ── Linked system / appliance ───────────────────────────────
-                if (task.linkedSystemId != null) ...[
-                  _LinkedEntityChip(
-                    icon: Icons.home_repair_service_outlined,
-                    label: task.linkedSystemName ?? 'Linked System',
-                    onTap: () {
-                      final path = AppRoutes.homeSystemDetail.replaceFirst(
-                        ':systemId',
-                        task.linkedSystemId!,
-                      );
-                      context.push(path);
-                    },
-                  ),
-                  const SizedBox(height: AppSizes.sm),
-                ],
-                if (task.linkedApplianceId != null) ...[
-                  _LinkedEntityChip(
-                    icon: Icons.kitchen_outlined,
-                    label: task.linkedApplianceName ?? 'Linked Appliance',
-                    onTap: () {
-                      final path = AppRoutes.homeApplianceDetail.replaceFirst(
-                        ':applianceId',
-                        task.linkedApplianceId!,
-                      );
-                      context.push(path);
-                    },
-                  ),
-                  const SizedBox(height: AppSizes.sm),
-                ],
-                if (task.linkedSystemId != null ||
-                    task.linkedApplianceId != null) ...[
-                  const SizedBox(height: AppSizes.sm),
-                  const _SectionDivider(),
-                  const SizedBox(height: AppSizes.lg),
-                ],
-
-                // ── Description ─────────────────────────────────────────────
-                if (task.description != null &&
-                    task.description!.isNotEmpty) ...[
-                  _SectionHeader(title: 'Description'),
-                  const SizedBox(height: AppSizes.sm),
-                  Text(task.description!, style: AppTextStyles.bodyMedium),
-                  const SizedBox(height: AppSizes.lg),
-                  const _SectionDivider(),
-                  const SizedBox(height: AppSizes.lg),
-                ],
-
-                // ── Instructions ─────────────────────────────────────────────
-                if (task.instructions != null &&
-                    task.instructions!.isNotEmpty) ...[
-                  _SectionHeader(
-                    title: task.taskOrigin == TaskOrigin.systemGenerated ||
-                            task.taskOrigin == TaskOrigin.climateTriggered ||
-                            task.taskOrigin == TaskOrigin.seasonal
-                        ? 'How To Do It'
-                        : 'Instructions',
-                  ),
-                  const SizedBox(height: AppSizes.sm),
-                  Text(task.instructions!, style: AppTextStyles.bodyMedium),
-                  const SizedBox(height: AppSizes.lg),
-                  const _SectionDivider(),
-                  const SizedBox(height: AppSizes.lg),
-                ],
-
-                // ── Tools needed ────────────────────────────────────────────
-                if (task.toolsNeeded.isNotEmpty) ...[
-                  _SectionHeader(title: 'Tools Needed'),
-                  const SizedBox(height: AppSizes.sm),
-                  _BulletList(items: task.toolsNeeded),
-                  const SizedBox(height: AppSizes.lg),
-                ],
-
-                // ── Supplies needed ─────────────────────────────────────────
-                if (task.suppliesNeeded.isNotEmpty) ...[
-                  _SectionHeader(title: 'Supplies Needed'),
-                  const SizedBox(height: AppSizes.sm),
-                  _BulletList(items: task.suppliesNeeded),
-                  const SizedBox(height: AppSizes.lg),
-                ],
-
-                if (task.toolsNeeded.isNotEmpty ||
-                    task.suppliesNeeded.isNotEmpty) ...[
-                  const _SectionDivider(),
-                  const SizedBox(height: AppSizes.lg),
-                ],
-
-                // ── Completion history ──────────────────────────────────────
-                _SectionHeader(title: 'Completion History'),
-                const SizedBox(height: AppSizes.md),
-                _CompletionHistorySection(
-                  completions: detail.completions,
                 ),
-                const SizedBox(height: AppSizes.xl),
               ],
             ),
           ),
-        ),
-
-        // ── Sticky action buttons ───────────────────────────────────────────
-        _BottomActions(taskId: taskId, isDone: isDone),
-      ],
+          if (overdueDays != null) ...[
+            const SizedBox(width: 12),
+            _OverdueBadge(days: overdueDays),
+          ] else if (task.status == TaskStatus.completed) ...[
+            const SizedBox(width: 12),
+            _DoneBadge(),
+          ] else if (task.status == TaskStatus.scheduled ||
+              task.status == TaskStatus.due) ...[
+            const SizedBox(width: 12),
+            _DueBadge(task: task),
+          ],
+        ],
+      ),
     );
   }
 
-  String _formatMinutes(int minutes) {
-    if (minutes < 60) return '$minutes min';
-    final hours = minutes ~/ 60;
-    final rem = minutes % 60;
-    return rem == 0 ? '${hours}h' : '${hours}h ${rem}min';
+  static int? _overdueDays(MaintenanceTask task) {
+    if (task.status == TaskStatus.completed ||
+        task.status == TaskStatus.skipped) {
+      return null;
+    }
+    final now = DateTime.now();
+    final dueLocal = task.dueDate.toLocal();
+    if (dueLocal.isBefore(DateTime(now.year, now.month, now.day))) {
+      return now.difference(dueLocal).inDays;
+    }
+    if (task.status == TaskStatus.overdue) return 0;
+    return null;
   }
 }
 
-// ── Badge row ─────────────────────────────────────────────────────────────────
-
-class _BadgeRow extends StatelessWidget {
-  const _BadgeRow({required this.task});
-
-  final MaintenanceTask task;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppSizes.sm,
-      runSpacing: AppSizes.xs,
-      children: [
-        _StatusBadge(status: task.status),
-        _PriorityBadge(priority: task.priority),
-        _DifficultyBadge(difficulty: task.difficulty),
-      ],
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.status});
-
-  final TaskStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    final (label, color) = switch (status) {
-      TaskStatus.scheduled => ('Scheduled', AppColors.statusScheduled),
-      TaskStatus.due => ('Due', AppColors.statusDueToday),
-      TaskStatus.overdue => ('Overdue', AppColors.statusOverdue),
-      TaskStatus.completed => ('Completed', AppColors.statusCompleted),
-      TaskStatus.skipped => ('Skipped', AppColors.textSecondary),
-    };
-    return _Chip(label: label, color: color);
-  }
-}
-
-class _PriorityBadge extends StatelessWidget {
-  const _PriorityBadge({required this.priority});
-
-  final TaskPriority priority;
-
-  @override
-  Widget build(BuildContext context) {
-    final (label, color) = switch (priority) {
-      TaskPriority.critical => ('Critical', AppColors.statusOverdue),
-      TaskPriority.high => ('High Priority', AppColors.statusDueToday),
-      TaskPriority.medium => ('Medium', AppColors.info),
-      TaskPriority.low => ('Low', AppColors.textSecondary),
-    };
-    return _Chip(label: label, color: color);
-  }
-}
-
-class _DifficultyBadge extends StatelessWidget {
-  const _DifficultyBadge({required this.difficulty});
-
-  final TaskDifficulty difficulty;
-
-  @override
-  Widget build(BuildContext context) {
-    final label = switch (difficulty) {
-      TaskDifficulty.easy => 'Easy',
-      TaskDifficulty.moderate => 'Moderate',
-      TaskDifficulty.involved => 'Involved',
-      TaskDifficulty.professional => 'Pro Required',
-    };
-    return _Chip(label: label, color: AppColors.deepNavy);
-  }
-}
-
-class _Chip extends StatelessWidget {
-  const _Chip({required this.label, required this.color});
-
-  final String label;
-  final Color color;
+class _OverdueBadge extends StatelessWidget {
+  const _OverdueBadge({required this.days});
+  final int days;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.sm,
-        vertical: 5,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withAlpha(20),
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-        border: Border.all(color: color.withAlpha(70)),
+        color: AuroraColors.coralDim,
+        borderRadius: AuroraRadius.md,
+        border: Border.all(color: AuroraColors.coral.withValues(alpha: 0.24)),
       ),
-      child: Text(
-        label,
-        style: AppTextStyles.labelSmall.copyWith(color: color),
-      ),
-    );
-  }
-}
-
-// ── Metadata row ──────────────────────────────────────────────────────────────
-
-class _MetaRow extends StatelessWidget {
-  const _MetaRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.valueColor,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color? valueColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 16, color: AppColors.textSecondary),
-        const SizedBox(width: AppSizes.sm),
-        Text(
-          '$label:  ',
-          style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: valueColor ?? AppColors.textPrimary,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── DIY vs Pro chip ───────────────────────────────────────────────────────────
-
-class _DiyProChip extends StatelessWidget {
-  const _DiyProChip({required this.diyOrPro});
-
-  final DiyOrPro diyOrPro;
-
-  @override
-  Widget build(BuildContext context) {
-    final (icon, label, color) = switch (diyOrPro) {
-      DiyOrPro.diy => (
-          Icons.handyman_outlined,
-          'DIY Friendly',
-          AppColors.success,
-        ),
-      DiyOrPro.either => (
-          Icons.handshake_outlined,
-          'DIY or Professional',
-          AppColors.info,
-        ),
-      DiyOrPro.professional => (
-          Icons.engineering_outlined,
-          'Hire a Professional',
-          AppColors.warning,
-        ),
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
-      ),
-      decoration: BoxDecoration(
-        color: color.withAlpha(15),
-        borderRadius: AppRadius.md,
-        border: Border.all(color: color.withAlpha(60)),
-      ),
-      child: Row(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: AppSizes.sm),
           Text(
-            label,
-            style: AppTextStyles.bodyMediumSemibold.copyWith(color: color),
+            days == 0 ? 'Due' : '${days}d',
+            style: AuroraType.number.copyWith(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: AuroraColors.coral,
+              height: 1.0,
+            ),
+          ),
+          const SizedBox(height: AuroraSpacing.space1),
+          Text(
+            'OVERDUE',
+            style: AuroraType.labelSm.copyWith(
+              letterSpacing: 1.0,
+              color: AuroraColors.coral,
+            ),
           ),
         ],
       ),
@@ -520,44 +302,159 @@ class _DiyProChip extends StatelessWidget {
   }
 }
 
-// ── Linked entity chip ────────────────────────────────────────────────────────
+class _DoneBadge extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AuroraColors.limeDim,
+        borderRadius: AuroraRadius.md,
+        border: Border.all(color: AuroraColors.lime.withValues(alpha: 0.24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.check_rounded, color: AuroraColors.limeDeep, size: 18),
+          const SizedBox(height: AuroraSpacing.space1),
+          Text(
+            'DONE',
+            style: AuroraType.labelSm.copyWith(
+              letterSpacing: 1.0,
+              color: AuroraColors.limeDeep,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-class _LinkedEntityChip extends StatelessWidget {
-  const _LinkedEntityChip({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
+class _DueBadge extends StatelessWidget {
+  const _DueBadge({required this.task});
+  final MaintenanceTask task;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
+    final daysUntil = task.dueDate
+        .toLocal()
+        .difference(DateTime.now())
+        .inDays
+        .abs();
+    final label = task.status == TaskStatus.due ? 'TODAY' : '${daysUntil}d';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AuroraColors.cobaltDim,
+        borderRadius: AuroraRadius.md,
+        border: Border.all(color: AuroraColors.cobalt.withValues(alpha: 0.24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: AuroraType.number.copyWith(
+              fontSize: task.status == TaskStatus.due ? 12 : 18,
+              fontWeight: FontWeight.w700,
+              color: AuroraColors.cobalt,
+              height: 1.0,
+            ),
+          ),
+          const SizedBox(height: AuroraSpacing.space1),
+          Text(
+            task.status == TaskStatus.due ? 'DUE' : 'DAYS',
+            style: AuroraType.labelSm.copyWith(
+              letterSpacing: 1.0,
+              color: AuroraColors.cobalt,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Stat strip ────────────────────────────────────────────────────────────────
+
+class _StatStrip extends StatelessWidget {
+  const _StatStrip({required this.task, required this.completions});
+  final MaintenanceTask task;
+  final List<TaskCompletion> completions;
+
+  String _spentLabel() {
+    final total = completions.fold<double>(
+      0,
+      (s, c) => s + (c.serviceCost ?? 0) + (c.materialsCost ?? 0),
+    );
+    if (total == 0) return '\$0';
+    if (total >= 1000) return '\$${(total / 1000).toStringAsFixed(1)}k';
+    return '\$${total.toInt()}';
+  }
+
+  String _cycleLabel() => switch (task.recurrence) {
+        RecurrenceType.none => '—',
+        RecurrenceType.weekly => '7d',
+        RecurrenceType.biweekly => '14d',
+        RecurrenceType.monthly => '30d',
+        RecurrenceType.quarterly => '90d',
+        RecurrenceType.biannual => '180d',
+        RecurrenceType.annual => '1yr',
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      child: Row(
+        children: [
+          _StatCell(value: '${completions.length}', label: 'DONE'),
+          const SizedBox(width: 8),
+          _StatCell(value: _spentLabel(), label: 'SPENT'),
+          const SizedBox(width: 8),
+          _StatCell(value: _cycleLabel(), label: 'CYCLE'),
+          const SizedBox(width: 8),
+          _StatCell(value: '${completions.length}', label: 'STREAK'),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatCell extends StatelessWidget {
+  const _StatCell({required this.value, required this.label});
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: AppRadius.md,
-          border: Border.all(color: AppColors.border),
+          color: AuroraColors.paper,
+          borderRadius: AuroraRadius.md,
+          border: Border.all(color: AuroraColors.inkBorder),
         ),
-        child: Row(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: AppColors.textSecondary),
-            const SizedBox(width: AppSizes.sm),
-            Text(label, style: AppTextStyles.bodySmall),
-            const SizedBox(width: AppSizes.xs),
-            const Icon(
-              Icons.chevron_right,
-              size: 16,
-              color: AppColors.textSecondary,
+            Text(
+              value,
+              style: AuroraType.number.copyWith(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AuroraColors.ink,
+                height: 1.0,
+              ),
+            ),
+            const SizedBox(height: AuroraSpacing.space1),
+            Text(
+              label,
+              style: AuroraType.labelSm.copyWith(
+                letterSpacing: 1.0,
+                color: AuroraColors.inkTertiary,
+              ),
             ),
           ],
         ),
@@ -566,37 +463,200 @@ class _LinkedEntityChip extends StatelessWidget {
   }
 }
 
-// ── Section helpers ───────────────────────────────────────────────────────────
+// ── Instructions row (collapsible) ────────────────────────────────────────────
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title});
+class _InstructionsRow extends StatefulWidget {
+  const _InstructionsRow({required this.task});
+  final MaintenanceTask task;
 
-  final String title;
+  @override
+  State<_InstructionsRow> createState() => _InstructionsRowState();
+}
+
+class _InstructionsRowState extends State<_InstructionsRow> {
+  bool _expanded = false;
+
+  String _summaryLine() {
+    final parts = <String>[];
+    if (widget.task.estimatedMinutes != null) {
+      final m = widget.task.estimatedMinutes!;
+      parts.add(m < 60 ? '$m min' : '${m ~/ 60}h');
+    }
+    parts.add(switch (widget.task.difficulty) {
+      TaskDifficulty.easy => 'easy',
+      TaskDifficulty.moderate => 'moderate',
+      TaskDifficulty.involved => 'involved',
+      TaskDifficulty.professional => 'pro required',
+    });
+    parts.add(switch (widget.task.diyOrPro) {
+      DiyOrPro.diy => 'DIY',
+      DiyOrPro.either => 'DIY/PRO',
+      DiyOrPro.professional => 'hire PRO',
+    });
+    return parts.join(' · ');
+  }
+
+  String _headerLine() {
+    final parts = <String>['Instructions'];
+    if (widget.task.toolsNeeded.isNotEmpty) parts.add('tools');
+    if (widget.task.suppliesNeeded.isNotEmpty) parts.add('supplies');
+    return parts.join(' · ');
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      title.toUpperCase(),
-      style: AppTextStyles.labelSmall.copyWith(
-        color: AppColors.textSecondary,
-        letterSpacing: 0.8,
+    final hasContent = (widget.task.description != null &&
+            widget.task.description!.isNotEmpty) ||
+        (widget.task.instructions != null &&
+            widget.task.instructions!.isNotEmpty) ||
+        widget.task.toolsNeeded.isNotEmpty ||
+        widget.task.suppliesNeeded.isNotEmpty;
+
+    if (!hasContent) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      child: GestureDetector(
+        onTap: () => setState(() => _expanded = !_expanded),
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AuroraColors.paper,
+            borderRadius: AuroraRadius.md,
+            border: Border.all(color: AuroraColors.inkBorder),
+          ),
+          clipBehavior: Clip.hardEdge,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: AuroraColors.coralDim,
+                        borderRadius: AuroraRadius.sm,
+                      ),
+                      child: Icon(
+                        _expanded ? Icons.remove : Icons.add,
+                        size: 16,
+                        color: AuroraColors.coral,
+                      ),
+                    ),
+                    const SizedBox(width: AuroraSpacing.space2),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _headerLine(),
+                            style: AuroraType.body.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AuroraColors.ink,
+                            ),
+                          ),
+                          const SizedBox(height: AuroraSpacing.space1),
+                          Text(
+                            _expanded
+                                ? 'Tap to collapse'
+                                : 'Tap to expand · ${_summaryLine()}',
+                            style: AuroraType.label.copyWith(
+                              color: AuroraColors.inkTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: _expanded ? 0.5 : 0.0,
+                      duration: const Duration(milliseconds: 220),
+                      child: Icon(
+                        Icons.keyboard_arrow_down,
+                        size: 18,
+                        color: AuroraColors.inkTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ClipRect(
+                child: AnimatedAlign(
+                  alignment: Alignment.topCenter,
+                  heightFactor: _expanded ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOutCubic,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Divider(height: 1, color: AuroraColors.inkBorder),
+                        const SizedBox(height: 12),
+                        if (widget.task.description != null &&
+                            widget.task.description!.isNotEmpty) ...[
+                          Text(
+                            widget.task.description!,
+                            style: AuroraType.bodySm.copyWith(
+                              color: AuroraColors.inkSecondary,
+                              height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        if (widget.task.instructions != null &&
+                            widget.task.instructions!.isNotEmpty) ...[
+                          _InstructionLabel('HOW TO DO IT'),
+                          const SizedBox(height: 6),
+                          Text(
+                            widget.task.instructions!,
+                            style: AuroraType.bodySm.copyWith(height: 1.6),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        if (widget.task.toolsNeeded.isNotEmpty) ...[
+                          _InstructionLabel('TOOLS'),
+                          const SizedBox(height: 6),
+                          _BulletList(items: widget.task.toolsNeeded),
+                          const SizedBox(height: 8),
+                        ],
+                        if (widget.task.suppliesNeeded.isNotEmpty) ...[
+                          _InstructionLabel('SUPPLIES'),
+                          const SizedBox(height: 6),
+                          _BulletList(items: widget.task.suppliesNeeded),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-class _SectionDivider extends StatelessWidget {
-  const _SectionDivider();
+class _InstructionLabel extends StatelessWidget {
+  const _InstructionLabel(this.text);
+  final String text;
 
   @override
-  Widget build(BuildContext context) {
-    return const Divider(height: 1, thickness: 1, color: AppColors.divider);
-  }
+  Widget build(BuildContext context) => Text(
+        text,
+        style: AuroraType.labelSm.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.2,
+          color: AuroraColors.inkTertiary,
+        ),
+      );
 }
 
 class _BulletList extends StatelessWidget {
   const _BulletList({required this.items});
-
   final List<String> items;
 
   @override
@@ -606,23 +666,28 @@ class _BulletList extends StatelessWidget {
       children: items
           .map(
             (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
+              padding: const EdgeInsets.only(bottom: 3),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(top: 5, right: 8),
+                    padding: const EdgeInsets.only(top: 6, right: 7),
                     child: Container(
-                      width: 5,
-                      height: 5,
+                      width: 4,
+                      height: 4,
                       decoration: const BoxDecoration(
-                        color: AppColors.textSecondary,
+                        color: AuroraColors.inkTertiary,
                         shape: BoxShape.circle,
                       ),
                     ),
                   ),
                   Expanded(
-                    child: Text(item, style: AppTextStyles.bodyMedium),
+                    child: Text(
+                      item,
+                      style: AuroraType.bodySm.copyWith(
+                        color: AuroraColors.inkSecondary,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -633,56 +698,600 @@ class _BulletList extends StatelessWidget {
   }
 }
 
-// ── Completion history ────────────────────────────────────────────────────────
+// ── Service history timeline ───────────────────────────────────────────────────
 
-class _CompletionHistorySection extends StatelessWidget {
-  const _CompletionHistorySection({required this.completions});
-
+class _ServiceHistory extends StatefulWidget {
+  const _ServiceHistory({required this.task, required this.completions});
+  final MaintenanceTask task;
   final List<TaskCompletion> completions;
 
   @override
-  Widget build(BuildContext context) {
-    if (completions.isEmpty) {
-      return _CompletionHistoryEmpty();
-    }
+  State<_ServiceHistory> createState() => _ServiceHistoryState();
+}
 
-    return Column(
-      children: completions
-          .map((c) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSizes.sm),
-                child: _CompletionRow(completion: c),
-              ))
-          .toList(),
+class _ServiceHistoryState extends State<_ServiceHistory>
+    with TickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _fade;
+  late final Animation<Offset> _slide;
+
+  late final AnimationController _nextCtrl;
+  late final Animation<double> _nextFade;
+  late final Animation<double> _nextScale;
+
+  int _prevCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _prevCount = widget.completions.length;
+
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+    );
+    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.25),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+
+    _nextCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 520),
+    );
+    _nextFade = CurvedAnimation(
+      parent: _nextCtrl,
+      curve: const Interval(0, 0.55, curve: Curves.easeOut),
+    );
+    _nextScale = Tween<double>(begin: 0.78, end: 1.0).animate(
+      CurvedAnimation(parent: _nextCtrl, curve: Curves.easeOutBack),
+    );
+
+    _ctrl.value = 1.0;
+    final waitingForFirstCompletion =
+        _isOverdueOrDue(widget.task) && widget.completions.isEmpty;
+    _nextCtrl.value = waitingForFirstCompletion ? 0.0 : 1.0;
+  }
+
+  @override
+  void didUpdateWidget(_ServiceHistory old) {
+    super.didUpdateWidget(old);
+    if (widget.completions.length > _prevCount) {
+      _ctrl.forward(from: 0.0);
+      if (widget.task.recurrence != RecurrenceType.none) {
+        Future.delayed(const Duration(milliseconds: 180), () {
+          if (mounted) _nextCtrl.forward(from: 0.0);
+        });
+      }
+    }
+    _prevCount = widget.completions.length;
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    _nextCtrl.dispose();
+    super.dispose();
+  }
+
+  static bool _isOverdueOrDue(MaintenanceTask task) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return !task.dueDate.toLocal().isAfter(today);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDone = widget.task.status == TaskStatus.completed ||
+        widget.task.status == TaskStatus.skipped;
+    final completions = widget.completions;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: isDone ? AuroraColors.lime : AuroraColors.coral,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: AuroraSpacing.space2),
+              Text(
+                'SERVICE HISTORY',
+                style: AuroraType.label.copyWith(
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.4,
+                  color: AuroraColors.inkTertiary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AuroraSpacing.space4),
+
+          if (!isDone && _isOverdueOrDue(widget.task)) ...[
+            _OverdueEntry(task: widget.task, isLast: completions.isEmpty),
+          ],
+
+          if (!isDone && !_isOverdueOrDue(widget.task))
+            FadeTransition(
+              opacity: _nextFade,
+              child: ScaleTransition(
+                scale: _nextScale,
+                alignment: Alignment.topCenter,
+                child: _ScheduledNextEntry(
+                  task: widget.task,
+                  nextDate: widget.task.dueDate,
+                  isLast: completions.isEmpty,
+                ),
+              ),
+            ),
+
+          ...List.generate(completions.length, (i) {
+            final c = completions[i];
+            final isNextShowing =
+                !isDone && !_isOverdueOrDue(widget.task);
+            final isLast = i == completions.length - 1;
+            final entry = _CompletionEntry(
+              completion: c,
+              isFirst: !isDone && i == 0,
+              isLast: isLast,
+            );
+            if (i == 0 && !isNextShowing) {
+              return FadeTransition(
+                opacity: _fade,
+                child: SlideTransition(position: _slide, child: entry),
+              );
+            }
+            return entry;
+          }),
+
+          if (isDone && completions.isEmpty) _EmptyHistory(),
+        ],
+      ),
     );
   }
 }
 
-class _CompletionHistoryEmpty extends StatelessWidget {
+// ── Scheduled next entry ──────────────────────────────────────────────────────
+
+class _ScheduledNextEntry extends StatelessWidget {
+  const _ScheduledNextEntry({
+    required this.task,
+    required this.nextDate,
+    required this.isLast,
+  });
+
+  final MaintenanceTask task;
+  final DateTime nextDate;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    final next = nextDate.toLocal();
+    final daysUntil = next.difference(DateTime.now()).inDays.clamp(0, 9999);
+    final dateStr = DateFormat('MMM d').format(next).toUpperCase();
+    final yearStr = next.year.toString();
+
+    return _TimelineRow(
+      isLast: isLast,
+      dot: _ScheduledDot(),
+      content: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AuroraColors.cobaltDim,
+          borderRadius: AuroraRadius.md,
+          border: Border.all(color: AuroraColors.cobalt.withValues(alpha: 0.20)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '$dateStr · $yearStr',
+                  style: AuroraType.label.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    color: AuroraColors.cobalt,
+                  ),
+                ),
+                Text(
+                  'in $daysUntil days',
+                  style: AuroraType.label.copyWith(
+                    color: AuroraColors.cobalt,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AuroraSpacing.space1),
+            Text(
+              task.recurrence == RecurrenceType.none
+                  ? 'Scheduled service'
+                  : 'Next service',
+              style: AuroraType.bodyLg.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AuroraColors.ink,
+              ),
+            ),
+            const SizedBox(height: AuroraSpacing.space1),
+            Text(
+              task.recurrence == RecurrenceType.none
+                  ? 'One-time task'
+                  : 'Auto-scheduled · ${task.recurrence.label}',
+              style: AuroraType.bodySm.copyWith(
+                color: AuroraColors.cobalt,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ScheduledDot extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: AuroraColors.cobaltDim,
+          shape: BoxShape.circle,
+          border: Border.all(color: AuroraColors.cobalt.withValues(alpha: 0.40)),
+        ),
+        child: const Center(
+          child: Icon(
+            Icons.event_rounded,
+            color: AuroraColors.cobalt,
+            size: 13,
+          ),
+        ),
+      );
+}
+
+// ── Overdue timeline entry ─────────────────────────────────────────────────────
+
+class _OverdueEntry extends StatelessWidget {
+  const _OverdueEntry({required this.task, required this.isLast});
+  final MaintenanceTask task;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final due = task.dueDate.toLocal();
+    final days = now.difference(due).inDays;
+    final lateLabel = days == 0 ? 'due today' : '${days}d late';
+    final today = DateFormat('MMM d').format(now).toUpperCase();
+    final scheduledLabel = 'Was scheduled ${DateFormat('MMM d').format(due)}';
+
+    return _TimelineRow(
+      isLast: isLast,
+      dot: _TerracottaDot(),
+      content: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AuroraColors.coralDim,
+          borderRadius: AuroraRadius.md,
+          border: Border.all(color: AuroraColors.coral.withValues(alpha: 0.16)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '$today · TODAY',
+                  style: AuroraType.label.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    color: AuroraColors.coral,
+                  ),
+                ),
+                Text(
+                  lateLabel,
+                  style: AuroraType.label.copyWith(
+                    color: AuroraColors.coral,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AuroraSpacing.space1),
+            Text(
+              'Due now',
+              style: AuroraType.bodyLg.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AuroraColors.ink,
+              ),
+            ),
+            const SizedBox(height: AuroraSpacing.space1),
+            Text(
+              scheduledLabel,
+              style: AuroraType.bodySm.copyWith(
+                color: AuroraColors.coral,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Completion timeline entry ──────────────────────────────────────────────────
+
+class _CompletionEntry extends ConsumerWidget {
+  const _CompletionEntry({
+    required this.completion,
+    required this.isFirst,
+    required this.isLast,
+  });
+
+  final TaskCompletion completion;
+  final bool isFirst;
+  final bool isLast;
+
+  String _completedByLabel() {
+    if (completion.completedBy == 'contractor') {
+      final name = completion.contractorName;
+      return name != null && name.isNotEmpty
+          ? 'Done by $name'
+          : 'Done by contractor';
+    }
+    return 'Done by you';
+  }
+
+  String _metaLine() {
+    final parts = <String>[];
+    parts.add(completion.completedBy == 'diy' ? 'DIY' : 'PRO');
+    if (completion.timeSpentMinutes != null) {
+      parts.add('${completion.timeSpentMinutes} min');
+    }
+    if (completion.notes != null && completion.notes!.isNotEmpty) {
+      parts.add(completion.notes!);
+    }
+    return parts.join(' · ');
+  }
+
+  double get _totalCost =>
+      (completion.serviceCost ?? 0) + (completion.materialsCost ?? 0);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dateStr =
+        DateFormat('MMM d').format(completion.completedDate.toLocal()).toUpperCase();
+    final hasCost = _totalCost > 0;
+    final meta = _metaLine();
+
+    final allDocs = ref.watch(documentsProvider).value ?? const <Document>[];
+    final linkedDocs = completion.linkedDocumentIds.isEmpty
+        ? const <Document>[]
+        : allDocs
+            .where((d) => completion.linkedDocumentIds.contains(d.id))
+            .toList();
+
+    return _TimelineRow(
+      isLast: isLast,
+      dot: _OliveDot(),
+      content: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AuroraColors.paper,
+          borderRadius: AuroraRadius.md,
+          border: Border.all(color: AuroraColors.inkBorder),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  dateStr,
+                  style: AuroraType.label.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    color: AuroraColors.inkTertiary,
+                  ),
+                ),
+                if (hasCost)
+                  Text(
+                    '\$${_totalCost.toInt()}',
+                    style: AuroraType.label.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AuroraColors.inkSecondary,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: AuroraSpacing.space1),
+            Text(
+              _completedByLabel(),
+              style: AuroraType.body.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AuroraColors.ink,
+              ),
+            ),
+            if (meta.isNotEmpty) ...[
+              const SizedBox(height: AuroraSpacing.space1),
+              Text(
+                meta,
+                style: AuroraType.label.copyWith(
+                  color: AuroraColors.inkTertiary,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+            if (completion.linkedDocumentIds.isNotEmpty) ...[
+              const SizedBox(height: AuroraSpacing.space2),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: completion.linkedDocumentIds.map((docId) {
+                  final doc = linkedDocs.where((d) => d.id == docId).firstOrNull;
+                  final label = doc?.name ?? 'Receipt';
+                  return GestureDetector(
+                    onTap: () => context.push('/documents/$docId'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AuroraColors.butter,
+                        borderRadius: AuroraRadius.xs,
+                        border: Border.all(color: AuroraColors.inkBorder),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.receipt_outlined,
+                            size: 11,
+                            color: AuroraColors.inkTertiary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            label,
+                            style: AuroraType.label.copyWith(
+                              color: AuroraColors.inkSecondary,
+                            ),
+                          ),
+                          const SizedBox(width: AuroraSpacing.space1),
+                          Icon(
+                            Icons.chevron_right,
+                            size: 11,
+                            color: AuroraColors.inkTertiary,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Timeline layout primitives ────────────────────────────────────────────────
+
+class _TimelineRow extends StatelessWidget {
+  const _TimelineRow({
+    required this.dot,
+    required this.content,
+    required this.isLast,
+  });
+
+  final Widget dot;
+  final Widget content;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 24,
+            child: Column(
+              children: [
+                dot,
+                if (!isLast)
+                  Container(
+                    width: 1.5,
+                    height: 56,
+                    color: AuroraColors.inkBorder,
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AuroraSpacing.space2),
+          Expanded(child: content),
+        ],
+      ),
+    );
+  }
+}
+
+class _TerracottaDot extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => Container(
+        width: 24,
+        height: 24,
+        decoration: const BoxDecoration(
+          color: AuroraColors.coral,
+          shape: BoxShape.circle,
+        ),
+        child: const Center(
+          child: Icon(
+            Icons.priority_high_rounded,
+            color: AuroraColors.paper,
+            size: 13,
+          ),
+        ),
+      );
+}
+
+class _OliveDot extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: AuroraColors.limeDim,
+          shape: BoxShape.circle,
+          border: Border.all(color: AuroraColors.lime.withValues(alpha: 0.40)),
+        ),
+        child: const Center(
+          child: Icon(
+            Icons.check_rounded,
+            color: AuroraColors.limeDeep,
+            size: 13,
+          ),
+        ),
+      );
+}
+
+class _EmptyHistory extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: AppSizes.xl),
+      padding: const EdgeInsets.symmetric(vertical: 28),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.checklist_outlined,
-              size: 40,
-              color: AppColors.textDisabled,
-            ),
-            const SizedBox(height: AppSizes.sm),
+            Icon(Icons.history, size: 32, color: AuroraColors.inkTertiary),
+            const SizedBox(height: 8),
             Text(
-              'No completions yet',
-              style: AppTextStyles.bodyMediumSemibold.copyWith(
-                color: AppColors.textSecondary,
+              'No history yet',
+              style: AuroraType.body.copyWith(
+                fontWeight: FontWeight.w500,
+                color: AuroraColors.inkTertiary,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AuroraSpacing.space1),
             Text(
-              'Complete this task to start tracking history.',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
+              'Complete this task to start your service log.',
+              style: AuroraType.bodySm.copyWith(
+                color: AuroraColors.inkTertiary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -693,84 +1302,10 @@ class _CompletionHistoryEmpty extends StatelessWidget {
   }
 }
 
-class _CompletionRow extends StatelessWidget {
-  const _CompletionRow({required this.completion});
-
-  final TaskCompletion completion;
-
-  @override
-  Widget build(BuildContext context) {
-    final totalCost = (completion.serviceCost ?? 0) +
-        (completion.materialsCost ?? 0);
-
-    return Container(
-      padding: AppPadding.card,
-      decoration: BoxDecoration(
-        color: AppColors.successLight,
-        borderRadius: AppRadius.md,
-        border: Border.all(color: AppColors.success.withAlpha(40)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.check_circle_outline,
-                size: 16,
-                color: AppColors.success,
-              ),
-              const SizedBox(width: AppSizes.xs),
-              Text(
-                DateFormat('MMMM d, y')
-                    .format(completion.completedDate.toLocal()),
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.success,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Spacer(),
-              if (totalCost > 0)
-                Text(
-                  '\$${totalCost.toStringAsFixed(2)}',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-            ],
-          ),
-          if (completion.completedBy == 'contractor' &&
-              completion.contractorName != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              completion.contractorName!,
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-          if (completion.notes != null && completion.notes!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              completion.notes!,
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textSecondary,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-// ── Bottom action buttons ─────────────────────────────────────────────────────
+// ── Bottom action bar ─────────────────────────────────────────────────────────
 
 class _BottomActions extends ConsumerStatefulWidget {
   const _BottomActions({required this.taskId, required this.isDone});
-
   final String taskId;
   final bool isDone;
 
@@ -784,53 +1319,60 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
 
   @override
   Widget build(BuildContext context) {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Container(
       padding: EdgeInsets.fromLTRB(
-        AppSizes.screenPadding,
-        AppSizes.md,
-        AppSizes.screenPadding,
-        AppSizes.screenPadding +
-            MediaQuery.of(context).padding.bottom,
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.space5,
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.space3 + bottomPad,
       ),
       decoration: BoxDecoration(
-        color: isIOS ? CupertinoColors.systemBackground : AppColors.surface,
-        border: const Border(
-          top: BorderSide(color: AppColors.border, width: 0.5),
-        ),
+        color: AuroraColors.paper,
+        border: Border(top: BorderSide(color: AuroraColors.inkBorder, width: 1)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Quick Complete — primary CTA.
-          _QuickCompleteButton(
-            isLoading: _isCompleting,
-            isDisabled: widget.isDone,
-            onPressed: widget.isDone ? null : _handleQuickComplete,
+          PrimaryButton(
+            label: widget.isDone ? 'Already Done' : 'Mark Complete',
+            loading: _isCompleting,
+            expand: true,
+            onPressed: (_isCompleting || widget.isDone)
+                ? null
+                : _handleMarkComplete,
           ),
-          const SizedBox(height: AppSizes.sm),
-
+          const SizedBox(height: AuroraSpacing.space2),
           Row(
             children: [
-              // Detailed Complete — opens the full completion form.
               Expanded(
-                child: _OutlinedActionButton(
-                  label: 'Detailed Complete',
-                  isDisabled: widget.isDone,
-                  onPressed: widget.isDone ? null : _handleDetailedComplete,
+                child: SecondaryButton(
+                  label: 'Add Details',
+                  expand: true,
+                  onPressed: widget.isDone ? null : _handleAddDetails,
                 ),
               ),
-              const SizedBox(width: AppSizes.sm),
-
-              // Skip.
+              const SizedBox(width: AuroraSpacing.space2),
               Expanded(
-                child: _SkipButton(
-                  isLoading: _isSkipping,
-                  isDisabled: widget.isDone,
-                  onPressed: widget.isDone ? null : _handleSkip,
-                ),
+                child: _isSkipping
+                    ? const Center(
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CupertinoActivityIndicator(
+                            color: AuroraColors.inkTertiary,
+                          ),
+                        ),
+                      )
+                    : SecondaryButton(
+                        label: 'Skip',
+                        expand: true,
+                        onPressed: (_isSkipping || widget.isDone)
+                            ? null
+                            : _handleSkip,
+                      ),
               ),
             ],
           ),
@@ -839,26 +1381,25 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
     );
   }
 
-  Future<void> _handleQuickComplete() async {
+  Future<void> _handleMarkComplete() async {
     if (_isCompleting) return;
+    HapticFeedback.mediumImpact();
     setState(() => _isCompleting = true);
 
-    String? completionId;
+    late final ({String completionId, DateTime? originalDueDate}) result;
     try {
-      completionId = await ref
+      result = await ref
           .read(taskDetailProvider(widget.taskId).notifier)
           .quickCompleteTask();
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: const Text("Couldn't complete task. Try again."),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        ..showSnackBar(SnackBar(
+          content: const Text("Couldn't complete task. Try again."),
+          backgroundColor: AuroraColors.coral,
+          behavior: SnackBarBehavior.floating,
+        ));
       setState(() => _isCompleting = false);
       return;
     }
@@ -866,65 +1407,58 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
     if (!mounted) return;
     setState(() => _isCompleting = false);
 
-    // Show undo snackbar — 5 seconds.
-    final capturedId = completionId;
+    final capturedCompletionId = result.completionId;
+    final capturedOriginalDueDate = result.originalDueDate;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: const Text('Task completed!'),
-          duration: const Duration(seconds: 5),
-          behavior: SnackBarBehavior.floating,
-          action: SnackBarAction(
-            label: 'Undo',
-            textColor: AppColors.goldAccent,
-            onPressed: () {
-              ref
-                  .read(taskDetailProvider(widget.taskId).notifier)
-                  .undoQuickComplete(capturedId);
-            },
-          ),
+      ..showSnackBar(SnackBar(
+        content: const Text('Task completed!'),
+        duration: const Duration(seconds: 4),
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'Undo',
+          textColor: AuroraColors.yellow,
+          onPressed: () {
+            ref
+                .read(taskDetailProvider(widget.taskId).notifier)
+                .undoQuickComplete(
+                  capturedCompletionId,
+                  originalDueDate: capturedOriginalDueDate,
+                );
+          },
         ),
-      );
+      ));
   }
 
-  Future<void> _handleDetailedComplete() async {
+  Future<void> _handleAddDetails() async {
     final completionId = await context.push<String>(
-      AppRoutes.maintenanceCompleteTask.replaceFirst(
-        ':taskId',
-        widget.taskId,
-      ),
+      AppRoutes.maintenanceCompleteTask
+          .replaceFirst(':taskId', widget.taskId),
     );
-
     if (completionId == null || !mounted) return;
-
+    HapticFeedback.heavyImpact();
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: const Text('Task completed!'),
-          duration: const Duration(seconds: 5),
-          behavior: SnackBarBehavior.floating,
-          action: SnackBarAction(
-            label: 'Undo',
-            textColor: AppColors.goldAccent,
-            onPressed: () {
-              ref
-                  .read(taskDetailProvider(widget.taskId).notifier)
-                  .undoQuickComplete(completionId);
-            },
-          ),
+      ..showSnackBar(SnackBar(
+        content: const Text('Task completed!'),
+        duration: const Duration(seconds: 5),
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'Undo',
+          textColor: AuroraColors.yellow,
+          onPressed: () {
+            ref
+                .read(taskDetailProvider(widget.taskId).notifier)
+                .undoQuickComplete(completionId);
+          },
         ),
-      );
+      ));
   }
 
   Future<void> _handleSkip() async {
     if (_isSkipping) return;
-
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
     final reason = await _SkipReasonSheet.show(context, isIOS: isIOS);
-
-    // null means user cancelled; empty string is a valid "no reason given".
     if (reason == null || !mounted) return;
 
     setState(() => _isSkipping = true);
@@ -936,156 +1470,19 @@ class _BottomActionsState extends ConsumerState<_BottomActions> {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: const Text("Couldn't skip task. Try again."),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        ..showSnackBar(SnackBar(
+          content: const Text("Couldn't skip task. Try again."),
+          backgroundColor: AuroraColors.coral,
+          behavior: SnackBarBehavior.floating,
+        ));
     } finally {
       if (mounted) setState(() => _isSkipping = false);
     }
   }
 }
 
-// ── Action button variants ─────────────────────────────────────────────────────
+// ── Skip reason sheet ─────────────────────────────────────────────────────────
 
-class _QuickCompleteButton extends StatelessWidget {
-  const _QuickCompleteButton({
-    required this.isLoading,
-    required this.isDisabled,
-    required this.onPressed,
-  });
-
-  final bool isLoading;
-  final bool isDisabled;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 50,
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor:
-              isDisabled ? AppColors.gray300 : AppColors.deepNavy,
-          foregroundColor: AppColors.textInverse,
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.md),
-          elevation: 0,
-        ),
-        child: isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.textInverse,
-                ),
-              )
-            : Text(
-                isDisabled ? 'Already Done' : 'Quick Complete',
-                style: AppTextStyles.bodyMediumSemibold.copyWith(
-                  color: AppColors.textInverse,
-                ),
-              ),
-      ),
-    );
-  }
-}
-
-class _OutlinedActionButton extends StatelessWidget {
-  const _OutlinedActionButton({
-    required this.label,
-    required this.isDisabled,
-    required this.onPressed,
-  });
-
-  final String label;
-  final bool isDisabled;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 44,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          foregroundColor:
-              isDisabled ? AppColors.textDisabled : AppColors.deepNavy,
-          side: BorderSide(
-            color: isDisabled ? AppColors.border : AppColors.deepNavy,
-          ),
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.md),
-        ),
-        child: Text(
-          label,
-          style: AppTextStyles.bodySmall.copyWith(
-            color: isDisabled ? AppColors.textDisabled : AppColors.deepNavy,
-          ),
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
-    );
-  }
-}
-
-class _SkipButton extends StatelessWidget {
-  const _SkipButton({
-    required this.isLoading,
-    required this.isDisabled,
-    required this.onPressed,
-  });
-
-  final bool isLoading;
-  final bool isDisabled;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 44,
-      child: TextButton(
-        onPressed: isLoading || isDisabled ? null : onPressed,
-        style: TextButton.styleFrom(
-          foregroundColor: AppColors.error,
-          shape: RoundedRectangleBorder(
-            borderRadius: AppRadius.md,
-            side: const BorderSide(color: AppColors.border),
-          ),
-        ),
-        child: isLoading
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.error,
-                ),
-              )
-            : Text(
-                'Skip',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: isDisabled ? AppColors.textDisabled : AppColors.error,
-                ),
-              ),
-      ),
-    );
-  }
-}
-
-// ── Skip reason bottom sheet ──────────────────────────────────────────────────
-
-/// Shows a bottom sheet that captures the reason for skipping a task.
-///
-/// Returns:
-/// - `null`  — user cancelled (no skip should occur)
-/// - `""`    — user confirmed with no reason
-/// - `"..."`  — user confirmed with a typed reason
 class _SkipReasonSheet extends ConsumerStatefulWidget {
   const _SkipReasonSheet();
 
@@ -1110,11 +1507,9 @@ class _SkipReasonSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSizes.radiusLg),
-        ),
+      backgroundColor: AuroraColors.paper,
+      shape: RoundedRectangleBorder(
+        borderRadius: AuroraSheet.topRadius(context),
       ),
       builder: (_) => Padding(
         padding: EdgeInsets.only(
@@ -1150,121 +1545,89 @@ class _SkipReasonSheetState extends ConsumerState<_SkipReasonSheet> {
 
     return Container(
       padding: EdgeInsets.fromLTRB(
-        AppSizes.screenPadding,
-        AppSizes.lg,
-        AppSizes.screenPadding,
-        AppSizes.screenPadding +
-            MediaQuery.of(context).padding.bottom,
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.space7,
+        AuroraSpacing.screenPadH,
+        AuroraSpacing.screenPadH + MediaQuery.of(context).padding.bottom,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSizes.radiusLg),
-        ),
+      decoration: BoxDecoration(
+        color: AuroraColors.paper,
+        borderRadius: AuroraSheet.topRadius(context),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Handle bar.
           Center(
             child: Container(
               width: 36,
               height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.gray300,
-                borderRadius: BorderRadius.circular(2),
+              decoration: const BoxDecoration(
+                color: AuroraColors.inkBorder,
+                borderRadius: AuroraRadius.xs,
               ),
             ),
           ),
-          const SizedBox(height: AppSizes.lg),
-
-          Text('Skip Task', style: AppTextStyles.h3),
-          const SizedBox(height: AppSizes.xs),
+          const SizedBox(height: AuroraSpacing.space7),
+          Text('Skip Task', style: AuroraType.h3),
+          const SizedBox(height: AuroraSpacing.space2),
           Text(
             'Reason (optional)',
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: AuroraType.bodySm.copyWith(color: AuroraColors.inkSecondary),
           ),
-          const SizedBox(height: AppSizes.md),
-
+          const SizedBox(height: AuroraSpacing.space5),
           TextField(
             controller: _controller,
             maxLines: 3,
             autofocus: true,
             decoration: InputDecoration(
               hintText: 'e.g. Already done by contractor',
-              hintStyle: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textDisabled,
-              ),
+              hintStyle: AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
               border: OutlineInputBorder(
-                borderRadius: AppRadius.md,
-                borderSide: const BorderSide(color: AppColors.border),
+                borderRadius: AuroraRadius.md,
+                borderSide: const BorderSide(color: AuroraColors.inkBorder),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: AppRadius.md,
-                borderSide: const BorderSide(color: AppColors.border),
+                borderRadius: AuroraRadius.md,
+                borderSide: const BorderSide(color: AuroraColors.inkBorder),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: AppRadius.md,
-                borderSide: const BorderSide(color: AppColors.deepNavy),
+                borderRadius: AuroraRadius.md,
+                borderSide: const BorderSide(color: AuroraColors.coral, width: 2.0),
               ),
               filled: true,
-              fillColor: AppColors.gray50,
-              contentPadding: const EdgeInsets.all(AppSizes.md),
+              fillColor: AuroraColors.butter,
+              contentPadding: const EdgeInsets.all(AuroraSpacing.space5),
             ),
           ),
-          const SizedBox(height: AppSizes.md),
-
+          const SizedBox(height: AuroraSpacing.space5),
           if (isIOS) ...[
-            CupertinoButton.filled(
+            PrimaryButton(
+              label: 'Skip Task',
+              expand: true,
               onPressed: _confirm,
-              child: const Text('Skip Task'),
             ),
-            CupertinoButton(
+            const SizedBox(height: AuroraSpacing.space2),
+            GhostButton(
+              label: 'Cancel',
               onPressed: _cancel,
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
             ),
           ] else ...[
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
+                  child: SecondaryButton(
+                    label: 'Cancel',
+                    expand: true,
                     onPressed: _cancel,
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.border),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: AppRadius.md,
-                      ),
-                    ),
-                    child: Text(
-                      'Cancel',
-                      style: AppTextStyles.bodyMediumSemibold,
-                    ),
                   ),
                 ),
-                const SizedBox(width: AppSizes.sm),
+                const SizedBox(width: AuroraSpacing.space3),
                 Expanded(
-                  child: ElevatedButton(
+                  child: PrimaryButton(
+                    label: 'Skip Task',
+                    expand: true,
                     onPressed: _confirm,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.error,
-                      foregroundColor: AppColors.textInverse,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: AppRadius.md,
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      'Skip Task',
-                      style: AppTextStyles.bodyMediumSemibold.copyWith(
-                        color: AppColors.textInverse,
-                      ),
-                    ),
                   ),
                 ),
               ],

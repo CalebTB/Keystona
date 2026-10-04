@@ -16,7 +16,7 @@ class ProjectDocumentsNotifier extends _$ProjectDocumentsNotifier {
     final rows = await SupabaseService.client
         .from('project_documents')
         .select(
-          'id, project_id, document_id, link_type, linked_by, created_at, '
+          'id, project_id, document_id, link_type, linked_by, contact_id, created_at, '
           'documents(name, document_types(name))',
         )
         .eq('project_id', projectId)
@@ -32,6 +32,7 @@ class ProjectDocumentsNotifier extends _$ProjectDocumentsNotifier {
         documentId: raw['document_id'] as String,
         linkType: raw['link_type'] as String,
         linkedBy: raw['linked_by'] as String,
+        contactId: raw['contact_id'] as String?,
         createdAt: DateTime.parse(raw['created_at'] as String),
         documentName: doc?['name'] as String? ?? 'Unknown',
         documentTypeName: docType?['name'] as String?,

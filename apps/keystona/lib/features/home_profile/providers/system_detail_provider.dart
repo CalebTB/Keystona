@@ -44,9 +44,7 @@ class SystemDetailNotifier extends _$SystemDetailNotifier {
     if (detail == null) throw StateError('System not loaded');
 
     await SupabaseService.client
-        .from('systems')
-        .update({'deleted_at': DateTime.now().toIso8601String()})
-        .eq('id', detail.system.id);
+        .rpc('soft_delete_system', params: {'p_system_id': detail.system.id});
 
     ref.invalidate(systemsProvider);
     ref.invalidate(homeProfileProvider);
@@ -138,7 +136,20 @@ class SystemDetailNotifier extends _$SystemDetailNotifier {
         )
         .toList();
 
-    return SystemDetail(system: system, photos: photos);
+    // Generate signed URLs for all photos in parallel (1-hour expiry).
+    final photoUrls = <String, String>{};
+    if (photos.isNotEmpty) {
+      await Future.wait(photos.map((p) async {
+        try {
+          final url = await SupabaseService.client.storage
+              .from('item-photos')
+              .createSignedUrl(p.filePath, 3600);
+          photoUrls[p.filePath] = url;
+        } catch (_) {}
+      }));
+    }
+
+    return SystemDetail(system: system, photos: photos, photoUrls: photoUrls);
   }
 
   static String _mimeType(String ext) => switch (ext) {

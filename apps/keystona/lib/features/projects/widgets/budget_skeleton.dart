@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_radius.dart';
 
 /// Shimmer skeleton for the budget screen while data loads.
 class BudgetSkeleton extends StatefulWidget {
@@ -39,8 +38,8 @@ class _BudgetSkeletonState extends State<BudgetSkeleton>
         width: width,
         height: height,
         decoration: BoxDecoration(
-          color: AppColors.gray200,
-          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          color: const Color(0xFFEEEDF2),
+          borderRadius: AuroraRadius.sm,
         ),
       );
 
@@ -51,40 +50,40 @@ class _BudgetSkeletonState extends State<BudgetSkeleton>
       builder: (_, _) => Opacity(
         opacity: _opacity.value,
         child: ListView(
-          padding: AppPadding.screen,
+          padding: EdgeInsets.all(AuroraSpacing.screenPadH),
           children: [
             // Summary header placeholder.
             Container(
               height: 100,
               decoration: BoxDecoration(
-                color: AppColors.gray200,
-                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                color: const Color(0xFFEEEDF2),
+                borderRadius: AuroraRadius.md,
               ),
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space7),
             // Category breakdown placeholder.
             Container(
               height: 120,
               decoration: BoxDecoration(
-                color: AppColors.gray200,
-                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                color: const Color(0xFFEEEDF2),
+                borderRadius: AuroraRadius.md,
               ),
             ),
-            const SizedBox(height: AppSizes.md),
+            const SizedBox(height: AuroraSpacing.space7),
             // 4 line item placeholders.
             ...List.generate(
               4,
               (_) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSizes.sm),
+                padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
                 child: Container(
                   height: 72,
                   decoration: BoxDecoration(
-                    color: AppColors.gray200,
-                    borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                    color: const Color(0xFFEEEDF2),
+                    borderRadius: AuroraRadius.md,
                   ),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: AppSizes.md,
-                    vertical: AppSizes.sm,
+                    horizontal: AuroraSpacing.space7,
+                    vertical: AuroraSpacing.space3,
                   ),
                   child: Row(
                     children: [

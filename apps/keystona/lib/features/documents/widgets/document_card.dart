@@ -4,9 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../services/supabase_service.dart';
 import '../models/document.dart';
 import '../models/document_category.dart';
@@ -32,32 +33,43 @@ class DocumentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        final path =
-            AppRoutes.documentDetail.replaceFirst(':documentId', document.id);
-        context.push(path);
-      },
-      child: Container(
-        padding: AppPadding.card,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: AppRadius.md,
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _DocumentThumbnail(document: document),
-            const SizedBox(width: AppSizes.md),
-            Expanded(
-              child: _DocumentInfo(document: document),
-            ),
-            if (document.expirationDate != null) ...[
-              const SizedBox(width: AppSizes.sm),
-              ExpirationBadge(expirationDate: document.expirationDate!),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: AuroraRadius.md,
+        onTap: () {
+          final path =
+              AppRoutes.documentDetail.replaceFirst(':documentId', document.id);
+          context.push(path);
+        },
+        child: Container(
+          padding: const EdgeInsets.all(AuroraSpacing.space6),
+          decoration: BoxDecoration(
+            color: AuroraColors.paper,
+            borderRadius: AuroraRadius.md,
+            border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0D071238),
+                blurRadius: 4,
+                offset: Offset(0, 1),
+              ),
             ],
-          ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _DocumentThumbnail(document: document),
+              const SizedBox(width: AuroraSpacing.space5),
+              Expanded(
+                child: _DocumentInfo(document: document),
+              ),
+              if (document.expirationDate != null) ...[
+                const SizedBox(width: AuroraSpacing.space3),
+                ExpirationBadge(expirationDate: document.expirationDate!),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -88,15 +100,12 @@ class _NetworkThumbnail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Generate a short-lived signed URL for the thumbnail so the file is
-    // never publicly accessible. The URL expires after 60 seconds — suitable
-    // for in-memory display only.
     final signedUrl = SupabaseService.client.storage
         .from('documents')
         .getPublicUrl(storagePath);
 
     return ClipRRect(
-      borderRadius: AppRadius.sm,
+      borderRadius: AuroraRadius.sm,
       child: CachedNetworkImage(
         imageUrl: signedUrl,
         width: 48,
@@ -105,9 +114,9 @@ class _NetworkThumbnail extends StatelessWidget {
         placeholder: (context, url) => Container(
           width: 48,
           height: 48,
-          color: AppColors.gray200,
+          color: AuroraColors.butter,
         ),
-        errorWidget: (context, url, error) => _CategoryIconThumbnail(
+        errorWidget: (context, url, error) => const _CategoryIconThumbnail(
           category: null,
         ),
       ),
@@ -128,24 +137,24 @@ class _CategoryIconThumbnail extends StatelessWidget {
       height: 48,
       decoration: BoxDecoration(
         color: bgColor.withAlpha(30),
-        borderRadius: AppRadius.sm,
+        borderRadius: AuroraRadius.sm,
       ),
       child: Icon(
         CategoryIcons.forKey(category?.icon ?? ''),
         color: bgColor,
-        size: AppSizes.iconMd,
+        size: 20,
       ),
     );
   }
 
-/// Parses a hex color string like '#1565C0' to a [Color].
-  /// Falls back to [AppColors.deepNavy] when parsing fails.
+  /// Parses a hex color string like '#1565C0' to a [Color].
+  /// Falls back to [AuroraColors.coral] when parsing fails.
   Color _parseCategoryColor(String? hex) {
-    if (hex == null || hex.isEmpty) return AppColors.deepNavy;
+    if (hex == null || hex.isEmpty) return AuroraColors.coral;
     final sanitised = hex.replaceAll('#', '');
-    if (sanitised.length != 6) return AppColors.deepNavy;
+    if (sanitised.length != 6) return AuroraColors.coral;
     final value = int.tryParse('FF$sanitised', radix: 16);
-    return value != null ? Color(value) : AppColors.deepNavy;
+    return value != null ? Color(value) : AuroraColors.coral;
   }
 }
 
@@ -164,18 +173,18 @@ class _DocumentInfo extends StatelessWidget {
       children: [
         Text(
           document.name,
-          style: AppTextStyles.bodyMediumSemibold,
+          style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         if (document.category != null) ...[
-          const SizedBox(height: AppSizes.xs),
+          const SizedBox(height: AuroraSpacing.space1),
           _CategoryBadge(category: document.category!),
         ],
-        const SizedBox(height: AppSizes.xs),
+        const SizedBox(height: AuroraSpacing.space1),
         Text(
           _formatDate(document.createdAt),
-          style: AppTextStyles.caption,
+          style: AuroraType.bodySm,
         ),
       ],
     );
@@ -196,16 +205,16 @@ class _CategoryBadge extends StatelessWidget {
     final color = _parseCategoryColor(category.color);
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.sm,
+        horizontal: AuroraSpacing.space3,
         vertical: 2,
       ),
       decoration: BoxDecoration(
         color: color.withAlpha(25),
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+        borderRadius: AuroraRadius.full,
       ),
       child: Text(
-        category.name,
-        style: AppTextStyles.labelSmall.copyWith(color: color),
+        category.name.toUpperCase(),
+        style: AuroraType.labelSm.copyWith(color: color),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
@@ -214,9 +223,8 @@ class _CategoryBadge extends StatelessWidget {
 
   Color _parseCategoryColor(String hex) {
     final sanitised = hex.replaceAll('#', '');
-    if (sanitised.length != 6) return AppColors.deepNavy;
+    if (sanitised.length != 6) return AuroraColors.coral;
     final value = int.tryParse('FF$sanitised', radix: 16);
-    return value != null ? Color(value) : AppColors.deepNavy;
+    return value != null ? Color(value) : AuroraColors.coral;
   }
 }
-

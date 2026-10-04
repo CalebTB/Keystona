@@ -5,9 +5,9 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_sizes.dart';
-import '../theme/app_text_styles.dart';
+import '../theme/aurora_colors.dart';
+import '../theme/aurora_typography.dart';
+import '../widgets/aurora/aurora_sheet.dart';
 
 /// Unified camera and gallery photo picker with automatic compression.
 ///
@@ -46,10 +46,8 @@ abstract final class PhotoPicker {
 
     await showModalBottomSheet<void>(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSizes.radiusLg),
-        ),
+      shape: RoundedRectangleBorder(
+        borderRadius: AuroraSheet.topRadius(context),
       ),
       builder: (sheetContext) => _PhotoPickerSheet(
         onCamera: () async {
@@ -102,37 +100,32 @@ class _PhotoPickerSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSizes.md,
-        AppSizes.lg,
-        AppSizes.md,
-        AppSizes.xl,
-      ),
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             'Select photo source',
-            style: AppTextStyles.h3,
+            style: AuroraType.h3,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: 24),
           ListTile(
             leading: const Icon(
               Icons.camera_alt_outlined,
-              color: AppColors.deepNavy,
+              color: AuroraColors.ink,
             ),
-            title: Text('Camera', style: AppTextStyles.bodyLarge),
+            title: Text('Camera', style: AuroraType.bodyLg),
             onTap: onCamera,
           ),
           const Divider(height: 1),
           ListTile(
             leading: const Icon(
               Icons.photo_library_outlined,
-              color: AppColors.deepNavy,
+              color: AuroraColors.ink,
             ),
-            title: Text('Gallery', style: AppTextStyles.bodyLarge),
+            title: Text('Gallery', style: AuroraType.bodyLg),
             onTap: onGallery,
           ),
         ],

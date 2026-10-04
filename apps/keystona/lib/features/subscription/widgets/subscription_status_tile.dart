@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_sizes.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/theme/aurora_typography.dart';
 import '../../../services/providers/service_providers.dart';
 import '../providers/subscription_provider.dart';
 
@@ -26,13 +27,13 @@ class SubscriptionStatusTile extends ConsumerWidget {
       onTap: () => context.push(AppRoutes.settingsSubscription),
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sm,
+          horizontal: AuroraSpacing.screenPadH,
+          vertical: AuroraSpacing.space3,
         ),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: AppColors.border),
+          color: AuroraColors.paper,
+          borderRadius: AuroraRadius.md,
+          border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(
           children: [
@@ -41,25 +42,25 @@ class SubscriptionStatusTile extends ConsumerWidget {
                   ? CupertinoIcons.star_fill
                   : CupertinoIcons.star,
               color: isPremium
-                  ? AppColors.goldAccent
-                  : AppColors.textSecondary,
+                  ? AuroraColors.yellow
+                  : AuroraColors.inkSecondary,
               size: 20,
             ),
-            const SizedBox(width: AppSizes.md),
+            const SizedBox(width: AuroraSpacing.screenPadH),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Subscription',
-                    style: AppTextStyles.labelMedium.copyWith(
+                    style: AuroraType.body.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
                     'Keystona $tier',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+                    style: AuroraType.bodySm.copyWith(
+                      color: AuroraColors.inkSecondary,
                     ),
                   ),
                 ],
@@ -68,7 +69,7 @@ class SubscriptionStatusTile extends ConsumerWidget {
             const Icon(
               CupertinoIcons.chevron_right,
               size: 16,
-              color: AppColors.textSecondary,
+              color: AuroraColors.inkSecondary,
             ),
           ],
         ),
