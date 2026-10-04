@@ -201,15 +201,15 @@ class _AndroidSearchBar extends StatelessWidget {
         contentPadding:
             const EdgeInsets.symmetric(vertical: AuroraSpacing.space3),
         border: OutlineInputBorder(
-          borderRadius: AuroraRadius.sm,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.sm,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.sm,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.ink),
         ),
       ),

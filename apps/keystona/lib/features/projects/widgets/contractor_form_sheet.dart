@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../../../core/theme/aurora_spacing.dart';
 
@@ -214,7 +215,7 @@ class _ContractorFormSheetState extends State<_ContractorFormSheet> {
         hintStyle:
             AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.0),
+          borderRadius: AuroraRadius.md,
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AuroraSpacing.space7,

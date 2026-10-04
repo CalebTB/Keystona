@@ -26,15 +26,17 @@ import '../models/system.dart';
 import '../providers/appliances_provider.dart';
 import '../providers/home_profile_provider.dart';
 import '../providers/systems_provider.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../widgets/home_profile_empty_state.dart';
 import '../widgets/home_profile_skeleton.dart';
 
 // ── Card decoration constant ──────────────────────────────────────────────────
 
-const BoxDecoration _kCardDecoration = BoxDecoration(
+// Not `const`: AuroraShadows.card uses .withValues() so it is a runtime getter.
+final BoxDecoration _kCardDecoration = BoxDecoration(
   color: AuroraColors.paper,
-  borderRadius: AuroraRadius.lg,
-  border: Border.fromBorderSide(
+  borderRadius: AuroraRadius.xl,
+  border: const Border.fromBorderSide(
     BorderSide(color: AuroraColors.inkBorder, width: 1.5),
   ),
   boxShadow: AuroraShadows.card,
@@ -457,7 +459,7 @@ class _PropertyCard extends StatelessWidget {
                 child: Container(
                   width: 64,
                   height: 64,
-                  color: const Color(0x1AFFFFFF),
+                  color: AuroraColors.paper.withValues(alpha: 0.10),
                   child: exteriorPhotoUrl != null
                       ? CachedNetworkImage(
                           imageUrl: exteriorPhotoUrl!,
@@ -511,8 +513,8 @@ class _PropertyCard extends StatelessWidget {
                 child: Container(
                   width: 32,
                   height: 32,
-                  decoration: const BoxDecoration(
-                    color: Color(0x1AFFFFFF),
+                  decoration: BoxDecoration(
+                    color: AuroraColors.paper.withValues(alpha: 0.10),
                     borderRadius: AuroraRadius.full,
                   ),
                   child: const Icon(
@@ -653,7 +655,7 @@ class _ForecastStrip extends ConsumerWidget {
               width: double.infinity,
               decoration: BoxDecoration(
                 color: AuroraColors.yellowDim,
-                borderRadius: AuroraRadius.lg,
+                borderRadius: AuroraRadius.xl,
                 border: Border.all(
                   color: AuroraColors.yellow.withValues(alpha: 0.2),
                   width: 1.5,
@@ -734,8 +736,11 @@ class _SystemsSection extends ConsumerWidget {
           const SizedBox(height: AuroraSpacing.space2),
           if (systems.isEmpty)
             _EmptySectionHint(
-              label: 'No systems tracked yet',
-              onTap: () => context.push(AppRoutes.homeSystemsAdd),
+              icon: Icons.home_outlined,
+              title: 'No systems tracked yet',
+              subtitle: 'Add your home systems to track lifespan and maintenance.',
+              actionLabel: 'Add system',
+              onAction: () => context.push(AppRoutes.homeSystemsAdd),
             )
           else
             ...systems.map((s) => Padding(
@@ -768,8 +773,11 @@ class _AppliancesSection extends ConsumerWidget {
           const SizedBox(height: AuroraSpacing.space2),
           if (appliances.isEmpty)
             _EmptySectionHint(
-              label: 'No appliances tracked yet',
-              onTap: () => context.push(AppRoutes.homeAppliancesAdd),
+              icon: Icons.kitchen_outlined,
+              title: 'No appliances tracked yet',
+              subtitle: 'Track your appliances to stay ahead of repairs and warranties.',
+              actionLabel: 'Add appliance',
+              onAction: () => context.push(AppRoutes.homeAppliancesAdd),
             )
           else
             ...appliances.map((a) => Padding(
@@ -994,9 +1002,8 @@ class _SystemCard extends StatelessWidget {
                       if (system.category.label.isNotEmpty)
                         Text(
                           system.category.label,
-                          style: AuroraType.bodySm.copyWith(
+                          style: AuroraType.labelSm.copyWith(
                             color: AuroraColors.inkTertiary,
-                            fontSize: 11,
                           ),
                         ),
                     ],
@@ -1227,9 +1234,8 @@ class _ApplianceCard extends StatelessWidget {
                       ),
                       Text(
                         appliance.category.label,
-                        style: AuroraType.bodySm.copyWith(
+                        style: AuroraType.labelSm.copyWith(
                           color: AuroraColors.inkTertiary,
-                          fontSize: 11,
                         ),
                       ),
                     ],
@@ -1417,42 +1423,28 @@ class _SectionLoadingPlaceholder extends StatelessWidget {
 }
 
 class _EmptySectionHint extends StatelessWidget {
-  const _EmptySectionHint({required this.label, required this.onTap});
-  final String label;
-  final VoidCallback onTap;
+  const _EmptySectionHint({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String actionLabel;
+  final VoidCallback onAction;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          color: AuroraColors.paper,
-          borderRadius: AuroraRadius.lg,
-          border: Border.fromBorderSide(
-            BorderSide(color: AuroraColors.inkBorder, width: 1.5),
-          ),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.add_circle_outline,
-              size: 16,
-              color: AuroraColors.inkTertiary,
-            ),
-            const SizedBox(width: AuroraSpacing.space2),
-            Text(
-              label,
-              style: AuroraType.bodySm.copyWith(
-                color: AuroraColors.inkTertiary,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return EmptyStateCta(
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
+      actionLabel: actionLabel,
+      onAction: onAction,
     );
   }
 }

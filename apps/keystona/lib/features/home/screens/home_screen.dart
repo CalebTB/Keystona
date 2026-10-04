@@ -178,7 +178,7 @@ class _GreetingHeader extends StatelessWidget {
           '$_greeting, ${data.firstName}',
           style: AuroraType.h1,
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AuroraSpacing.space1),
         Text(
           _subtitle,
           style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
@@ -220,7 +220,7 @@ class _ScoreHero extends StatelessWidget {
                   size: 12,
                   color: AuroraColors.inkSecondary,
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AuroraSpacing.space1),
                 Expanded(
                   child: Text(
                     data.property!.addressLine1,
@@ -352,7 +352,7 @@ class _QuickAction extends StatelessWidget {
             ),
             const SizedBox(height: AuroraSpacing.space1),
             Text(
-              label,
+              label.toUpperCase(),
               style: AuroraType.labelSm.copyWith(color: AuroraColors.ink),
               textAlign: TextAlign.center,
             ),
@@ -458,7 +458,7 @@ class _HomeStatTile extends StatelessWidget {
             const SizedBox(width: AuroraSpacing.space1),
             Expanded(
               child: Text(
-                count != null ? '$count $label' : label,
+                (count != null ? '$count $label' : label).toUpperCase(),
                 style: AuroraType.labelSm.copyWith(color: AuroraColors.ink),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -505,7 +505,7 @@ class _ComingUpSection extends StatelessWidget {
             GestureDetector(
               onTap: () => context.go(AppRoutes.maintenance),
               child: Text(
-                'View all',
+                'View all'.toUpperCase(),
                 style: AuroraType.label.copyWith(color: AuroraColors.coral),
               ),
             ),
@@ -623,7 +623,7 @@ class _DashboardSkeletonState extends State<_DashboardSkeleton>
                 children: [
                   // Greeting bars.
                   _SkeletonBar(color: shimmer, width: 200, height: 22),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: AuroraSpacing.space2),
                   _SkeletonBar(color: shimmer, width: 150, height: 14),
                   const SizedBox(height: AuroraSpacing.space7),
 
@@ -642,8 +642,8 @@ class _DashboardSkeletonState extends State<_DashboardSkeleton>
                       return Expanded(
                         child: Padding(
                           padding: EdgeInsets.only(
-                            left: i == 0 ? 0 : 3,
-                            right: i == 2 ? 0 : 3,
+                            left: i == 0 ? 0 : 4,
+                            right: i == 2 ? 0 : 4,
                           ),
                           child: _SkeletonBar(
                             color: shimmer,
@@ -665,8 +665,8 @@ class _DashboardSkeletonState extends State<_DashboardSkeleton>
                       return Expanded(
                         child: Padding(
                           padding: EdgeInsets.only(
-                            left: i == 0 ? 0 : 3,
-                            right: i == 2 ? 0 : 3,
+                            left: i == 0 ? 0 : 4,
+                            right: i == 2 ? 0 : 4,
                           ),
                           child: _SkeletonBar(
                             color: shimmer,

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../../../core/theme/aurora_spacing.dart';
 
@@ -332,15 +333,15 @@ class _FormBody extends StatelessWidget {
         hintText: hint,
         hintStyle: AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.cobalt, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(

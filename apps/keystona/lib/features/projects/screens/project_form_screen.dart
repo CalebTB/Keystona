@@ -352,10 +352,8 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
               ? const CupertinoActivityIndicator()
               : Text(
                   'Save',
-                  style: TextStyle(
-                    color: _saving
-                        ? CupertinoColors.inactiveGray
-                        : AuroraColors.cobalt,
+                  style: AuroraType.label.copyWith(
+                    color: AuroraColors.cobalt,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -622,15 +620,15 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
         hintStyle:
             AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
         border: OutlineInputBorder(
-          borderRadius: AuroraRadius.sm,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.sm,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.sm,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.coral, width: 2.0),
         ),
         contentPadding: const EdgeInsets.symmetric(

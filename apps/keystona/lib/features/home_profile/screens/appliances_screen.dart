@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
 
@@ -172,7 +173,7 @@ class _ContentSliver extends ConsumerWidget {
                         height: 7,
                         decoration: const BoxDecoration(
                           color: AuroraColors.inkSecondary,
-                          borderRadius: BorderRadius.all(Radius.circular(2)),
+                          borderRadius: AuroraRadius.xs,
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -225,7 +226,7 @@ class _LimitBanner extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: AuroraColors.yellowDim,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AuroraRadius.lg,
         border: Border.all(color: AuroraColors.yellow.withValues(alpha: 0.4)),
       ),
       child: Row(

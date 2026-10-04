@@ -174,6 +174,7 @@ class _SystemFormScreenState extends ConsumerState<SystemFormScreen> {
                     _isEditing ? 'Save' : 'Add',
                     style: AuroraType.label.copyWith(
                       color: AuroraColors.cobalt,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
           ),
@@ -824,23 +825,23 @@ class _TextField extends StatelessWidget {
         filled: true,
         fillColor: AuroraColors.paper,
         border: OutlineInputBorder(
-          borderRadius: AuroraRadius.lg,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.lg,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.lg,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.lg,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.coral),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.lg,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
@@ -866,15 +867,15 @@ class _CategoryDropdown extends StatelessWidget {
         filled: true,
         fillColor: AuroraColors.paper,
         border: OutlineInputBorder(
-          borderRadius: AuroraRadius.lg,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.lg,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.lg,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
@@ -911,15 +912,15 @@ class _StatusDropdown extends StatelessWidget {
         filled: true,
         fillColor: AuroraColors.paper,
         border: OutlineInputBorder(
-          borderRadius: AuroraRadius.lg,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.lg,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.lg,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
@@ -976,7 +977,7 @@ class _DatePickerField extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: AuroraSpacing.space5),
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: AuroraRadius.lg,
+          borderRadius: AuroraRadius.xl,
           border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(

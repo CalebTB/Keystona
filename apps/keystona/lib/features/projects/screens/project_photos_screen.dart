@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/widgets/aurora/aurora.dart';
@@ -849,15 +850,15 @@ class _PairEditFormSheetState extends State<_PairEditFormSheet> {
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.ink, width: 1.5),
         ),
         filled: true,

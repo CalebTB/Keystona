@@ -417,6 +417,7 @@ class _ApplianceFormScreenState extends ConsumerState<ApplianceFormScreen> {
                     'Save',
                     style: AuroraType.label.copyWith(
                       color: AuroraColors.cobalt,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
           ),
@@ -890,23 +891,23 @@ class _TextField extends StatelessWidget {
           vertical: AuroraSpacing.space5,
         ),
         border: OutlineInputBorder(
-          borderRadius: AuroraRadius.sm,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.sm,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.sm,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.sm,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.coral),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.sm,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
         ),
       ),
@@ -941,11 +942,11 @@ class _PickerField extends StatelessWidget {
             vertical: AuroraSpacing.space1,
           ),
           border: OutlineInputBorder(
-            borderRadius: AuroraRadius.sm,
+            borderRadius: AuroraRadius.md,
             borderSide: const BorderSide(color: AuroraColors.inkBorder),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: AuroraRadius.sm,
+            borderRadius: AuroraRadius.md,
             borderSide: const BorderSide(color: AuroraColors.inkBorder),
           ),
         ),
@@ -962,7 +963,7 @@ class _PickerField extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: AuroraRadius.sm,
+          borderRadius: AuroraRadius.md,
           border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(
@@ -1017,7 +1018,7 @@ class _DateField extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: AuroraRadius.sm,
+          borderRadius: AuroraRadius.md,
           border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(

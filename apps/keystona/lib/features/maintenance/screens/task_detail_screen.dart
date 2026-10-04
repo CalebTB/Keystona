@@ -1508,8 +1508,8 @@ class _SkipReasonSheet extends ConsumerStatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: AuroraColors.paper,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: AuroraRadius.xl.topLeft),
       ),
       builder: (_) => Padding(
         padding: EdgeInsets.only(
@@ -1550,9 +1550,9 @@ class _SkipReasonSheetState extends ConsumerState<_SkipReasonSheet> {
         AuroraSpacing.screenPadH,
         AuroraSpacing.screenPadH + MediaQuery.of(context).padding.bottom,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: AuroraRadius.xl.topLeft),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1602,17 +1602,10 @@ class _SkipReasonSheetState extends ConsumerState<_SkipReasonSheet> {
           ),
           const SizedBox(height: AuroraSpacing.space5),
           if (isIOS) ...[
-            ElevatedButton(
+            PrimaryButton(
+              label: 'Skip Task',
+              expand: true,
               onPressed: _confirm,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AuroraColors.coral,
-                foregroundColor: AuroraColors.paper,
-                elevation: 0,
-                shape: const RoundedRectangleBorder(
-                    borderRadius: AuroraRadius.full),
-                minimumSize: const Size(double.infinity, 48),
-              ),
-              child: const Text('Skip Task'),
             ),
             const SizedBox(height: AuroraSpacing.space2),
             GhostButton(

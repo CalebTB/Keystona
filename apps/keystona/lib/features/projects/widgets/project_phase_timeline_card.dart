@@ -313,7 +313,7 @@ class _InCardFooter extends StatelessWidget {
               constraints: const BoxConstraints(minHeight: 36),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: AuroraColors.ink,
+                color: AuroraColors.coral,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -322,13 +322,13 @@ class _InCardFooter extends StatelessWidget {
                   Text(
                     'Open',
                     style: AuroraType.label.copyWith(
-                      color: Colors.white,
+                      color: AuroraColors.paper,
                       fontWeight: FontWeight.w600,
                       fontSize: 11,
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const Icon(Icons.arrow_forward_ios, size: 9, color: Colors.white),
+                  const Icon(Icons.arrow_forward_ios, size: 9, color: AuroraColors.paper),
                 ],
               ),
             ),
@@ -422,7 +422,7 @@ class _PhaseRow extends StatelessWidget {
   final bool isLast;
 
   Color get _connectorColor => switch (state) {
-        _DotState.done     => AuroraColors.lime,
+        _DotState.done     => AuroraColors.limeDeep,
         _DotState.current  => AuroraColors.coral,
         _DotState.upcoming => AuroraColors.inkBorderStrong,
       };
@@ -433,7 +433,7 @@ class _PhaseRow extends StatelessWidget {
       case _DotState.done:
         final end = phase.actualEndDate ?? phase.plannedEndDate;
         final dateStr = end != null ? ' · ${DateFormat('MMM d').format(end).toUpperCase()}' : '';
-        return (label: 'DONE$dateStr', color: AuroraColors.lime);
+        return (label: 'DONE$dateStr', color: AuroraColors.ink);
 
       case _DotState.current:
         final end = phase.plannedEndDate;
@@ -453,7 +453,7 @@ class _PhaseRow extends StatelessWidget {
       case _DotState.upcoming:
         final start = phase.plannedStartDate;
         final label = start != null ? DateFormat('MMM d').format(start).toUpperCase() : '';
-        return (label: label, color: AuroraColors.inkSecondary.withValues(alpha: 0.6));
+        return (label: label, color: AuroraColors.inkTertiary);
     }
   }
 
@@ -505,7 +505,7 @@ class _PhaseRow extends StatelessWidget {
                             fontSize: 14,
                             fontWeight: isDone || isCurrent ? FontWeight.w700 : FontWeight.w500,
                             color: (!isDone && !isCurrent)
-                                ? AuroraColors.ink.withValues(alpha: 0.4)
+                                ? AuroraColors.inkTertiary
                                 : AuroraColors.ink,
                             fontStyle: FontStyle.normal,
                           ),
@@ -561,11 +561,12 @@ class _Dot extends StatelessWidget {
       _DotState.done => Container(
           width: 22,
           height: 22,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: AuroraColors.lime,
+            border: Border.all(color: AuroraColors.limeDeep.withValues(alpha: 0.35), width: 1.5),
           ),
-          child: const Icon(Icons.check, size: 13, color: Colors.white),
+          child: const Icon(Icons.check, size: 13, color: AuroraColors.limeDeep),
         ),
       _DotState.current => Container(
           width: 22,
@@ -628,7 +629,7 @@ class _NoPhasesMessage extends StatelessWidget {
         child: Text(
           'No phases added yet.\nOpen the project to set up your timeline.',
           style: AuroraType.body.copyWith(
-            color: Colors.white.withValues(alpha: 0.55),
+            color: AuroraColors.inkSecondary,
             height: 1.5,
           ),
           textAlign: TextAlign.center,
@@ -657,7 +658,7 @@ class _PhasesSkeleton extends StatelessWidget {
                   height: 22,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.12),
+                    color: AuroraColors.ink.withValues(alpha: 0.08),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -665,7 +666,7 @@ class _PhasesSkeleton extends StatelessWidget {
                   child: Container(
                     height: 14,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.10),
+                      color: AuroraColors.ink.withValues(alpha: 0.06),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),

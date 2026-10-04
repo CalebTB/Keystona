@@ -1027,7 +1027,7 @@ class _DocGridTile extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       dateStr,
                       style: AuroraType.bodySm.copyWith(
@@ -1325,7 +1325,7 @@ class _StorageTierCard extends StatelessWidget {
                     color: AuroraColors.paper,
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 4),
                 Text(
                   'Free tier · Upgrade for unlimited',
                   style: AuroraType.bodySm.copyWith(

@@ -103,7 +103,7 @@ class TrialScreen extends StatelessWidget {
 
               // ── Legal fine print ──────────────────────────────────────────
               Text(
-                r'30 days free, then $4.99/month. Cancel anytime.',
+                r'30 days free, then $9.99/month. Cancel anytime.',
                 style: AuroraType.labelSm.copyWith(
                   color: AuroraColors.inkTertiary,
                 ),

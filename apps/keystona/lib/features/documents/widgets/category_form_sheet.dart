@@ -470,11 +470,11 @@ class _FormBody extends StatelessWidget {
             hintText: 'e.g. Pool & Spa',
             errorText: nameError,
             border: OutlineInputBorder(
-              borderRadius: AuroraRadius.sm,
+              borderRadius: AuroraRadius.md,
               borderSide: const BorderSide(color: AuroraColors.inkBorder),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: AuroraRadius.sm,
+              borderRadius: AuroraRadius.md,
               borderSide: const BorderSide(color: AuroraColors.inkBorder),
             ),
             counterStyle: AuroraType.bodySm,

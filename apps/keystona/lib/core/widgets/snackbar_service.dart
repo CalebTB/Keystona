@@ -99,7 +99,7 @@ abstract final class SnackbarService {
           // Position above tab bar (tab bar ~88px + 16px gap = 104px)
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 104),
           shape: const RoundedRectangleBorder(
-            borderRadius: AuroraRadius.md,
+            borderRadius: AuroraRadius.lg,
           ),
         ),
       );

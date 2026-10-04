@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/widgets/aurora/aurora.dart';
@@ -413,13 +414,11 @@ class _NoteListState extends ConsumerState<_NoteList> {
                           vertical: AuroraSpacing.space3,
                         ),
                         border: OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(12.0),
+                          borderRadius: AuroraRadius.md,
                           borderSide: BorderSide(color: AuroraColors.inkBorder),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(12.0),
+                          borderRadius: AuroraRadius.md,
                           borderSide: BorderSide(color: AuroraColors.inkBorder),
                         ),
                       ),

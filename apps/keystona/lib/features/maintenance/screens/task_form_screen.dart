@@ -912,28 +912,28 @@ class _FormBody extends ConsumerWidget {
 
   static InputDecoration _inputDecoration(String hint) => InputDecoration(
         hintText: hint,
-        hintStyle: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
+        hintStyle: AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
         filled: true,
         fillColor: AuroraColors.paper,
         counterStyle: AuroraType.labelSm.copyWith(color: AuroraColors.inkSecondary),
         border: OutlineInputBorder(
-          borderRadius: AuroraRadius.sm,
+          borderRadius: AuroraRadius.md,
           borderSide: BorderSide(color: AuroraColors.inkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.sm,
+          borderRadius: AuroraRadius.md,
           borderSide: BorderSide(color: AuroraColors.inkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.sm,
+          borderRadius: AuroraRadius.md,
           borderSide: const BorderSide(color: AuroraColors.coral, width: 2.0),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.sm,
+          borderRadius: AuroraRadius.md,
           borderSide: BorderSide(color: AuroraColors.coral),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.sm,
+          borderRadius: AuroraRadius.md,
           borderSide: BorderSide(color: AuroraColors.coral),
         ),
         contentPadding: const EdgeInsets.symmetric(
@@ -1050,7 +1050,7 @@ class _TapRow extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: AuroraColors.paper,
-          borderRadius: AuroraRadius.sm,
+          borderRadius: AuroraRadius.md,
           border: Border.all(color: AuroraColors.inkBorder),
         ),
         child: Row(

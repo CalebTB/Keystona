@@ -952,7 +952,7 @@ class _FormField extends StatelessWidget {
       style: AuroraType.body,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: AuroraType.body.copyWith(
+        labelStyle: AuroraType.label.copyWith(
           color: AuroraColors.inkSecondary,
         ),
         prefixText: prefix,

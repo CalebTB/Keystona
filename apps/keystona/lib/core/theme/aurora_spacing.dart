@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
-/// Aurora Design System v2.0 — spacing constants (4px grid).
+/// Aurora Design System v2.0 — spacing constants.
+///
+/// NOTE: this is NOT a 4px grid. The scale steps 4, 6, 8, 10, 12, 14, 16, 20, 24, 32.
+/// Values 6, 10 and 14 are legitimate tokens (space2/space4/space6) — do not "snap" them
+/// to multiples of 4. See Keystona_Aurora_Design_System.md §4.2.
 abstract final class AuroraSpacing {
   /// 4px — icon-to-text gaps inside chips.
   static const double space1 = 4;

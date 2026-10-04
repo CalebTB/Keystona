@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'aurora_colors.dart';
+
 /// Aurora Design System v2.0 — shadow tokens.
 ///
 /// Aurora is a flat system. Default to [none] unless lift adds information.
@@ -9,10 +11,10 @@ abstract final class AuroraShadows {
   static const List<BoxShadow> none = <BoxShadow>[];
 
   /// Subtle card lift — opt-in only.
-  static const List<BoxShadow> card = <BoxShadow>[
+  static List<BoxShadow> get card => <BoxShadow>[
     BoxShadow(
-      color: Color(0x0A071238), // ink at 4%
-      offset: Offset(0, 1),
+      color: AuroraColors.ink.withValues(alpha: 0.04),
+      offset: const Offset(0, 1),
       blurRadius: 2,
     ),
   ];

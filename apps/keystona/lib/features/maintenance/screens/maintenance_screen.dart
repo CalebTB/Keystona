@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_radius.dart';
 import '../../../core/theme/aurora_shadows.dart';
 import '../../../core/theme/aurora_typography.dart';
@@ -262,12 +263,12 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
                 ),
                 const Spacer(),
                 _NavButton(icon: Icons.chevron_left, onTap: _prevWeek),
-                const SizedBox(width: 8),
+                const SizedBox(width: AuroraSpacing.space3),
                 _NavButton(icon: Icons.chevron_right, onTap: _nextWeek),
               ],
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AuroraSpacing.space3),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: WeekStrip(
@@ -277,7 +278,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
               onDaySelected: _selectDay,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AuroraSpacing.space7),
           Divider(color: AuroraColors.inkBorder, thickness: 1, height: 1),
         ],
       );
@@ -326,7 +327,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
         children: [
           Text(dayLabel, style: AuroraType.h2),
           if (sub.isNotEmpty) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: AuroraSpacing.space3),
             Text(
               sub,
               style: AuroraType.label.copyWith(
@@ -405,7 +406,7 @@ class _HeaderButtons extends StatelessWidget {
           icon: Icons.tune_outlined,
           onTap: () {}, // filter sheet — future implementation
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AuroraSpacing.space3),
         _CircleIconButton(
           icon: Icons.search,
           onTap: () {}, // search — future implementation
@@ -552,11 +553,11 @@ class _AgendaSkeleton extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(height: 10, width: 110, color: AuroraColors.butter),
-          const SizedBox(height: 8),
+          const SizedBox(height: AuroraSpacing.space3),
           _SkeletonAgendaCard(),
-          const SizedBox(height: 8),
+          const SizedBox(height: AuroraSpacing.space3),
           _SkeletonAgendaCard(),
-          const SizedBox(height: 8),
+          const SizedBox(height: AuroraSpacing.space3),
           _SkeletonAgendaCard(),
         ],
       ),
@@ -573,24 +574,24 @@ class _SkeletonAgendaCard extends StatelessWidget {
       height: 68,
       decoration: BoxDecoration(
         color: AuroraColors.paper,
-        borderRadius: AuroraRadius.lg,
+        borderRadius: AuroraRadius.xl,
       ),
       child: Row(
         children: [
           Container(width: 56, color: AuroraColors.butter),
-          const SizedBox(width: 12),
+          const SizedBox(width: AuroraSpacing.space5),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(height: 13, width: double.infinity, color: AuroraColors.butter),
-                const SizedBox(height: 8),
+                const SizedBox(height: AuroraSpacing.space3),
                 Container(height: 10, width: 140, color: AuroraColors.butter),
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AuroraSpacing.space5),
         ],
       ),
     );

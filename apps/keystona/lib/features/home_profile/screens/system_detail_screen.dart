@@ -393,7 +393,7 @@ class _DetailContentState extends ConsumerState<_DetailContent> {
                             decoration: const BoxDecoration(
                               color: AuroraColors.butter,
                               borderRadius: BorderRadius.vertical(
-                                bottom: Radius.circular(16 - 1.5),
+                                bottom: Radius.circular(16),
                               ),
                               border: Border(
                                 top: BorderSide(
@@ -658,9 +658,9 @@ class _PhotoSourceSheet {
 
     return showModalBottomSheet<ImageSource>(
       context: context,
-      shape: const RoundedRectangleBorder(
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
-          top: Radius.circular(16),
+          top: AuroraRadius.xl.topLeft,
         ),
       ),
       builder: (_) => Column(
@@ -763,7 +763,7 @@ class _StatCell2 extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AuroraSpacing.space1),
           Text(
             value,
             style: AuroraType.body.copyWith(fontWeight: FontWeight.w600).copyWith(

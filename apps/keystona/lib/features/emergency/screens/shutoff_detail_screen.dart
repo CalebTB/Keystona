@@ -794,16 +794,16 @@ class _EnumPickerField extends StatelessWidget {
               vertical: 14,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AuroraRadius.md,
               borderSide: const BorderSide(color: AuroraColors.inkBorder),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AuroraRadius.md,
               borderSide:
                   const BorderSide(color: AuroraColors.inkBorder, width: 1.5),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AuroraRadius.md,
               borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
             ),
             filled: true,

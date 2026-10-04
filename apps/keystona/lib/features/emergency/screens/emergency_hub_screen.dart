@@ -262,7 +262,7 @@ class _SectionHeader extends StatelessWidget {
             borderRadius: AuroraRadius.xs,
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: AuroraSpacing.space2),
         Text(
           label,
           style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
@@ -352,7 +352,7 @@ class _ShutoffTile extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: AuroraSpacing.space1),
             Text(
               _isComplete ? 'Set up' : 'Not set up',
               style: AuroraType.labelSm.copyWith(

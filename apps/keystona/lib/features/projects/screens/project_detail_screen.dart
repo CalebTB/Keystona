@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,60 +11,16 @@ import '../../../core/widgets/aurora/aurora.dart';
 
 import '../../../core/widgets/snackbar_service.dart';
 import '../models/project.dart';
+import '../models/project_budget_item.dart';
 import '../models/project_journal_note.dart';
 import '../models/project_phase.dart';
 import '../providers/project_budget_provider.dart';
 import '../providers/project_detail_provider.dart';
 import '../providers/project_journal_provider.dart';
 import '../providers/project_phases_provider.dart';
+import '../providers/project_photos_provider.dart';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-Color _statusColor(String s) => switch (s) {
-      'in_progress' => AuroraColors.cobalt,
-      'planning' => AuroraColors.yellow,
-      'on_hold' => AuroraColors.yellow,
-      'completed' => AuroraColors.lime,
-      'cancelled' => AuroraColors.inkTertiary,
-      _ => AuroraColors.inkTertiary,
-    };
-
-Color _statusDim(String s) => switch (s) {
-      'in_progress' => AuroraColors.cobaltDim,
-      'planning' => AuroraColors.yellowDim,
-      'on_hold' => AuroraColors.yellowDim,
-      'completed' => AuroraColors.limeDim,
-      _ => AuroraColors.butter,
-    };
-
-String _headerDateRange(DateTime? start, DateTime? end) {
-  if (start == null && end == null) return '';
-  final m = DateFormat('MMM d');
-  if (start != null && end != null) {
-    if (start.year == end.year) {
-      return '${m.format(start)} – ${m.format(end)}, ${end.year}';
-    }
-    return '${DateFormat('MMM d, y').format(start)} – ${DateFormat('MMM d, y').format(end)}';
-  }
-  if (start != null) return 'From ${DateFormat('MMM d, y').format(start)}';
-  return 'Until ${DateFormat('MMM d, y').format(end!)}';
-}
-
-String _phaseDates(ProjectPhase p) {
-  final start = p.actualStartDate ?? p.plannedStartDate;
-  final end = p.actualEndDate ?? p.plannedEndDate;
-  if (start == null) return '';
-  final m = DateFormat('MMM d');
-  if (p.status == 'in_progress' && end == null) return '${m.format(start)} – now';
-  if (end != null) {
-    if (start.year == end.year && start.month == end.month) {
-      return '${m.format(start)} – ${DateFormat('d').format(end)}';
-    }
-    if (start.year == end.year) return '${m.format(start)} – ${m.format(end)}';
-    return '${DateFormat('MMM d, y').format(start)} – ${DateFormat('MMM d, y').format(end)}';
-  }
-  return m.format(start);
-}
 
 String _noteDate(DateTime d) {
   final now = DateTime.now();
@@ -75,28 +29,95 @@ String _noteDate(DateTime d) {
       : DateFormat('MMM d, y').format(d);
 }
 
+String _phaseShortDate(ProjectPhase p) {
+  final isDone = p.status == 'completed';
+  final date = isDone
+      ? (p.actualEndDate ?? p.plannedEndDate)
+      : (p.plannedStartDate ?? p.actualStartDate);
+  if (date == null) return '';
+  return DateFormat('MMM d').format(date).toUpperCase();
+}
+
+String _compact(double v) {
+  if (v >= 1000) {
+    final k = v / 1000;
+    return '\$${k % 1 == 0 ? k.toInt() : k.toStringAsFixed(1)}k';
+  }
+  return '\$${NumberFormat('#,###').format(v.toInt())}';
+}
+
 // ── Main screen ───────────────────────────────────────────────────────────────
 
-class ProjectDetailScreen extends ConsumerWidget {
+class ProjectDetailScreen extends ConsumerStatefulWidget {
   const ProjectDetailScreen({super.key, required this.projectId});
 
   final String projectId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final asyncProject = ref.watch(projectDetailProvider(projectId));
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+  ConsumerState<ProjectDetailScreen> createState() =>
+      _ProjectDetailScreenState();
+}
 
-    return asyncProject.when(
-      loading: () => _skeleton(isIOS),
-      error: (_, _) => _errorScaffold(context, ref, isIOS),
-      data: (project) => _buildScaffold(context, ref, project, isIOS),
+class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
+    with SingleTickerProviderStateMixin {
+  int _tab = 1;
+  late final PageController _pageCtrl;
+  late final AnimationController _pulseCtrl;
+  late final Animation<double> _pulseScale;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageCtrl = PageController(initialPage: _tab);
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
+    _pulseScale = Tween<double>(begin: 1.0, end: 1.3).animate(
+      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _pulseCtrl.repeat(reverse: true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _pageCtrl.dispose();
+    _pulseCtrl.dispose();
+    super.dispose();
+  }
+
+  // Called when user taps a tab pill — animate PageView to match
+  void _handleTabChange(int index) {
+    setState(() => _tab = index);
+    _pageCtrl.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeInOut,
     );
   }
 
-  // ── Skeleton ────────────────────────────────────────────────────────────────
+  // Called when user swipes PageView — update pill without re-animating
+  void _handlePageChanged(int index) {
+    setState(() => _tab = index);
+  }
 
-  Widget _skeleton(bool isIOS) {
+  @override
+  Widget build(BuildContext context) {
+    final asyncProject = ref.watch(projectDetailProvider(widget.projectId));
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+
+    return asyncProject.when(
+      loading: () => _skeletonScaffold(isIOS),
+      error: (_, _) => _errorScaffold(context, isIOS),
+      data: (project) => _buildScaffold(context, project, isIOS),
+    );
+  }
+
+  // ── Skeleton ─────────────────────────────────────────────────────────────
+
+  Widget _skeletonScaffold(bool isIOS) {
     if (isIOS) {
       return CupertinoPageScaffold(
         backgroundColor: AuroraColors.paper,
@@ -111,16 +132,18 @@ class ProjectDetailScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AuroraColors.paper,
       appBar: AppBar(
-        title: const Text('Project'),
+        title: const SizedBox.shrink(),
         backgroundColor: AuroraColors.paper,
+        foregroundColor: AuroraColors.ink,
+        elevation: 0,
       ),
       body: const _DetailSkeleton(),
     );
   }
 
-  // ── Error ────────────────────────────────────────────────────────────────────
+  // ── Error ─────────────────────────────────────────────────────────────────
 
-  Widget _errorScaffold(BuildContext context, WidgetRef ref, bool isIOS) {
+  Widget _errorScaffold(BuildContext context, bool isIOS) {
     final body = Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -132,7 +155,8 @@ class ProjectDetailScreen extends ConsumerWidget {
           const SizedBox(height: AuroraSpacing.space9),
           PrimaryButton(
             label: 'Retry',
-            onPressed: () => ref.invalidate(projectDetailProvider(projectId)),
+            onPressed: () =>
+                ref.invalidate(projectDetailProvider(widget.projectId)),
           ),
         ],
       ),
@@ -147,7 +171,7 @@ class ProjectDetailScreen extends ConsumerWidget {
           border: const Border(),
           leading: CupertinoButton(
             padding: EdgeInsets.zero,
-            child: const Icon(CupertinoIcons.back),
+            child: const Icon(CupertinoIcons.back, color: AuroraColors.coral),
             onPressed: () => context.pop(),
           ),
         ),
@@ -157,10 +181,12 @@ class ProjectDetailScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AuroraColors.paper,
       appBar: AppBar(
-        title: const Text('Project'),
+        title: const SizedBox.shrink(),
         backgroundColor: AuroraColors.paper,
+        foregroundColor: AuroraColors.ink,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: AuroraColors.coral),
           onPressed: () => context.pop(),
         ),
       ),
@@ -172,24 +198,28 @@ class ProjectDetailScreen extends ConsumerWidget {
 
   Widget _buildScaffold(
     BuildContext context,
-    WidgetRef ref,
     Project project,
     bool isIOS,
   ) {
     Future<void> onEdit() async {
       final result = await context.push<String>(
-        '/projects/$projectId/edit',
+        '/projects/${widget.projectId}/edit',
         extra: project,
       );
       if (result != null) {
-        ref.invalidate(projectDetailProvider(projectId));
-        ref.invalidate(projectBudgetSummaryProvider(projectId));
+        ref.invalidate(projectDetailProvider(widget.projectId));
+        ref.invalidate(projectBudgetSummaryProvider(widget.projectId));
       }
     }
 
-    final body = SafeArea(
-      bottom: false,
-      child: _DetailBody(project: project, projectId: projectId),
+    final body = _DetailContent(
+      project: project,
+      projectId: widget.projectId,
+      tab: _tab,
+      onTabChange: _handleTabChange,
+      onPageChanged: _handlePageChanged,
+      pageCtrl: _pageCtrl,
+      pulseScale: _pulseScale,
     );
 
     if (isIOS) {
@@ -206,32 +236,20 @@ class ProjectDetailScreen extends ConsumerWidget {
                 const Icon(CupertinoIcons.chevron_back,
                     size: 20, color: AuroraColors.coral),
                 Text('Projects',
-                    style: AuroraType.body
-                        .copyWith(color: AuroraColors.coral)),
+                    style:
+                        AuroraType.body.copyWith(color: AuroraColors.coral)),
               ],
             ),
             onPressed: () => context.pop(),
           ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CupertinoButton(
-                padding: EdgeInsets.zero,
-                onPressed: onEdit,
-                child: const Icon(CupertinoIcons.pencil,
-                    size: 20, color: AuroraColors.inkSecondary),
-              ),
-              const SizedBox(width: 4),
-              CupertinoButton(
-                padding: EdgeInsets.zero,
-                onPressed: onEdit,
-                child: const Icon(CupertinoIcons.ellipsis,
-                    size: 20, color: AuroraColors.inkSecondary),
-              ),
-            ],
+          trailing: CupertinoButton(
+            padding: EdgeInsets.zero,
+            onPressed: onEdit,
+            child: const Icon(CupertinoIcons.ellipsis,
+                size: 20, color: AuroraColors.inkSecondary),
           ),
         ),
-        child: body,
+        child: SafeArea(bottom: false, child: body),
       );
     }
 
@@ -239,28 +257,45 @@ class ProjectDetailScreen extends ConsumerWidget {
       backgroundColor: AuroraColors.paper,
       appBar: AppBar(
         backgroundColor: AuroraColors.paper,
-        title: Text(project.name, overflow: TextOverflow.ellipsis),
+        foregroundColor: AuroraColors.ink,
+        elevation: 0,
+        title: const SizedBox.shrink(),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: AuroraColors.coral),
           onPressed: () => context.pop(),
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.edit_outlined), onPressed: onEdit),
-          IconButton(icon: const Icon(Icons.more_vert), onPressed: onEdit),
+          IconButton(
+              icon: const Icon(Icons.more_vert,
+                  color: AuroraColors.inkSecondary),
+              onPressed: onEdit),
         ],
       ),
-      body: body,
+      body: SafeArea(bottom: false, child: body),
     );
   }
 }
 
-// ── Detail body ───────────────────────────────────────────────────────────────
+// ── Detail content ────────────────────────────────────────────────────────────
 
-class _DetailBody extends ConsumerWidget {
-  const _DetailBody({required this.project, required this.projectId});
+class _DetailContent extends ConsumerWidget {
+  const _DetailContent({
+    required this.project,
+    required this.projectId,
+    required this.tab,
+    required this.onTabChange,
+    required this.onPageChanged,
+    required this.pageCtrl,
+    required this.pulseScale,
+  });
 
   final Project project;
   final String projectId;
+  final int tab;
+  final void Function(int) onTabChange;
+  final void Function(int) onPageChanged;
+  final PageController pageCtrl;
+  final Animation<double> pulseScale;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -270,442 +305,1044 @@ class _DetailBody extends ConsumerWidget {
     final phases = phasesAsync.value ?? [];
     final notes = notesAsync.value ?? [];
 
-    return RefreshIndicator(
-      color: AuroraColors.coral,
-      onRefresh: () async {
-        ref.invalidate(projectDetailProvider(projectId));
-        ref.invalidate(projectPhasesProvider(projectId));
-        ref.invalidate(projectJournalProvider(projectId));
-      },
-      child: CustomScrollView(
-        slivers: [
-          // ── Project header card ────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: _ProjectHeaderCard(project: project, phases: phases),
-            ),
-          ),
-
-          // ── Section grid ──────────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: _SectionGrid(
-              projectId: projectId,
-              project: project,
-              phases: phases,
-              notes: notes,
-            ),
-          ),
-
-          // ── Timeline ──────────────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: _TimelineSection(
-              project: project,
-              projectId: projectId,
-              phases: phases,
-              notes: notes,
-              ref: ref,
-            ),
-          ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 48)),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Project header card ───────────────────────────────────────────────────────
-
-class _ProjectHeaderCard extends StatelessWidget {
-  const _ProjectHeaderCard({required this.project, required this.phases});
-
-  final Project project;
-  final List<ProjectPhase> phases;
-
-  @override
-  Widget build(BuildContext context) {
-    final dateStr =
-        _headerDateRange(project.plannedStartDate, project.plannedEndDate);
-    final hasBudget = project.estimatedBudget != null;
-    final statusColor = _statusColor(project.status);
-    final statusDim = _statusDim(project.status);
-
-    // Compute active phase from live phases list (projectDetailProvider does
-    // not join phases, so project.currentPhaseIndex is always null here).
     final validPhases = phases
         .where((p) => p.status != 'cancelled' && p.deletedAt == null)
         .toList()
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
-    int? activePhaseIndex;
-    String? activePhaseName;
-    for (int i = 0; i < validPhases.length; i++) {
-      if (validPhases[i].status == 'in_progress') {
-        activePhaseIndex = i;
-        activePhaseName = validPhases[i].name;
-        break;
-      }
-    }
-    if (activePhaseIndex == null) {
-      for (int i = 0; i < validPhases.length; i++) {
-        if (validPhases[i].status == 'planning') {
-          activePhaseIndex = i;
-          activePhaseName = validPhases[i].name;
-          break;
-        }
-      }
-    }
+    final doneCount =
+        validPhases.where((p) => p.status == 'completed').length;
+    final activeCount =
+        validPhases.where((p) => p.status == 'in_progress').length;
+    final upcomingCount = validPhases.length - doneCount - activeCount;
+    final completionPct =
+        validPhases.isEmpty ? 0.0 : doneCount / validPhases.length;
 
-    final phaseCount =
-        validPhases.isNotEmpty ? validPhases.length : project.phaseCount;
+    return Column(
+      children: [
+        _CoralHero(
+          project: project,
+          completionPct: completionPct,
+          pulseScale: pulseScale,
+        ),
+        _ProjectTabBar(selectedIndex: tab, onTap: onTabChange),
+        Expanded(
+          child: RefreshIndicator(
+            color: AuroraColors.coral,
+            onRefresh: () async {
+              ref.invalidate(projectDetailProvider(projectId));
+              ref.invalidate(projectPhasesProvider(projectId));
+              ref.invalidate(projectJournalProvider(projectId));
+              ref.invalidate(projectBudgetProvider(projectId));
+              ref.invalidate(projectBudgetSummaryProvider(projectId));
+              ref.invalidate(projectPhotosProvider(projectId));
+            },
+            child: PageView(
+              controller: pageCtrl,
+              onPageChanged: onPageChanged,
+              children: [
+                _OverviewView(
+                  projectId: projectId,
+                  project: project,
+                  phases: phases,
+                  notes: notes,
+                ),
+                _PhasesView(
+                  project: project,
+                  projectId: projectId,
+                  phases: validPhases,
+                  notes: notes,
+                  doneCount: doneCount,
+                  activeCount: activeCount,
+                  upcomingCount: upcomingCount,
+                ),
+                _BudgetView(projectId: projectId, project: project),
+                _PhotosView(projectId: projectId),
+                _NotesView(projectId: projectId),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: MediaQuery.of(context).padding.bottom),
+      ],
+    );
+  }
+}
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AuroraColors.paper,
-        borderRadius: AuroraRadius.xl,
-        border: Border.all(color: AuroraColors.inkBorder),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.transparent,
-            blurRadius: 16,
-            offset: Offset(0, 4),
+// ── Coral hero ────────────────────────────────────────────────────────────────
+
+class _CoralHero extends StatelessWidget {
+  const _CoralHero({
+    required this.project,
+    required this.completionPct,
+    required this.pulseScale,
+  });
+
+  final Project project;
+  final double completionPct;
+  final Animation<double> pulseScale;
+
+  String get _eyebrow {
+    final started = project.actualStartDate ?? project.plannedStartDate;
+    if (started != null) {
+      return '${project.status.statusLabel.toUpperCase()} · STARTED ${DateFormat('MMM d').format(started).toUpperCase()}';
+    }
+    return project.status.statusLabel.toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          width: double.infinity,
+          color: AuroraColors.coral,
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Stack(
+            clipBehavior: Clip.hardEdge,
+            children: [
+              // Decorative yellow blob
+              Positioned(
+                right: -30,
+                top: -20,
+                child: Container(
+                  width: 180,
+                  height: 180,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AuroraColors.yellow.withValues(alpha: 0.35),
+                  ),
+                ),
+              ),
+
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Pulsing lime dot + eyebrow
+              Row(
+                children: [
+                  AnimatedBuilder(
+                    animation: pulseScale,
+                    builder: (_, _) => Transform.scale(
+                      scale: pulseScale.value,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AuroraColors.lime,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      _eyebrow,
+                      style: AuroraType.labelSm.copyWith(
+                        color: AuroraColors.paper.withValues(alpha: 0.70),
+                        letterSpacing: 1.0,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 10),
+
+              // Project name
+              Text(
+                '${project.name}.',
+                style: AuroraType.h1.copyWith(
+                  color: AuroraColors.paper,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 28,
+                  letterSpacing: -0.5,
+                  height: 1.15,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Lime progress bar
+              ClipRRect(
+                borderRadius: BorderRadius.circular(3),
+                child: LinearProgressIndicator(
+                  value: completionPct,
+                  backgroundColor:
+                      AuroraColors.paper.withValues(alpha: 0.20),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AuroraColors.lime,
+                  ),
+                  minHeight: 5,
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // Progress labels
+              Row(
+                children: [
+                  Text(
+                    '${(completionPct * 100).round()}% complete',
+                    style: AuroraType.bodySm.copyWith(
+                      color: AuroraColors.lime,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (project.estimatedBudget != null)
+                    Text(
+                      '\$${NumberFormat('#,###').format(project.actualSpent.toInt())} / ${_compact(project.estimatedBudget!)}',
+                      style: AuroraType.bodySm.copyWith(
+                        color: AuroraColors.paper.withValues(alpha: 0.80),
+                      ),
+                    ),
+                ],
+              ),
+            ],
           ),
         ],
       ),
-      padding: const EdgeInsets.all(20),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Tab bar — compact fixed row, all 5 fit without scrolling ─────────────────
+
+class _ProjectTabBar extends StatelessWidget {
+  const _ProjectTabBar({
+    required this.selectedIndex,
+    required this.onTap,
+  });
+
+  final int selectedIndex;
+  final void Function(int) onTap;
+
+  static const _tabs = ['Overview', 'Phases', 'Budget', 'Photos', 'Notes'];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AuroraColors.paper,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Status badge + work type
-          Row(
-            children: [
-              Container(
-                constraints: const BoxConstraints(minHeight: 44),
-                alignment: Alignment.centerLeft,
-                child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: statusDim,
-                  borderRadius: AuroraRadius.sm,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            child: Row(
+              children: _tabs.asMap().entries.map((e) {
+                final i = e.key;
+                final label = e.value;
+                final selected = i == selectedIndex;
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () => onTap(i),
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 7),
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: statusColor,
+                        color: selected
+                            ? AuroraColors.coral
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        label,
+                        textAlign: TextAlign.center,
+                        style: AuroraType.label.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                          color: selected
+                              ? AuroraColors.paper
+                              : AuroraColors.ink,
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      project.status.statusLabel.toUpperCase(),
-                      style: AuroraType.labelSm.copyWith(
-                        color: statusColor,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const Divider(height: 1, color: AuroraColors.inkBorder),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Overview view ─────────────────────────────────────────────────────────────
+
+class _OverviewView extends StatelessWidget {
+  const _OverviewView({
+    required this.projectId,
+    required this.project,
+    required this.phases,
+    required this.notes,
+  });
+
+  final String projectId;
+  final Project project;
+  final List<ProjectPhase> phases;
+  final List<ProjectJournalNote> notes;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        _SectionGrid(
+          projectId: projectId,
+          project: project,
+          phases: phases,
+          notes: notes,
+        ),
+        const SizedBox(height: 32),
+      ],
+    );
+  }
+}
+
+// ── Phases view ───────────────────────────────────────────────────────────────
+
+class _PhasesView extends StatelessWidget {
+  const _PhasesView({
+    required this.project,
+    required this.projectId,
+    required this.phases,
+    required this.notes,
+    required this.doneCount,
+    required this.activeCount,
+    required this.upcomingCount,
+  });
+
+  final Project project;
+  final String projectId;
+  final List<ProjectPhase> phases;
+  final List<ProjectJournalNote> notes;
+  final int doneCount;
+  final int activeCount;
+  final int upcomingCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        _PhasesHeader(
+          phaseCount: phases.length,
+          doneCount: doneCount,
+          activeCount: activeCount,
+          upcomingCount: upcomingCount,
+        ),
+        ...phases.map((p) {
+          final isDone = p.status == 'completed';
+          final isActive = p.status == 'in_progress';
+          if (isDone) return _DonePhaseRow(phase: p);
+          if (isActive) return _ActivePhaseRow(phase: p);
+          return _UpcomingPhaseRow(phase: p);
+        }),
+        _ActivitySection(
+          project: project,
+          projectId: projectId,
+          phases: phases,
+          notes: notes,
+        ),
+        const SizedBox(height: 32),
+      ],
+    );
+  }
+}
+
+// ── Budget view ───────────────────────────────────────────────────────────────
+
+class _BudgetView extends ConsumerWidget {
+  const _BudgetView({required this.projectId, required this.project});
+
+  final String projectId;
+  final Project project;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final summaryAsync = ref.watch(projectBudgetSummaryProvider(projectId));
+    final itemsAsync = ref.watch(projectBudgetProvider(projectId));
+
+    return summaryAsync.when(
+      loading: () =>
+          const Center(child: CircularProgressIndicator()),
+      error: (_, _) => Center(
+        child: Text('Could not load budget',
+            style: AuroraType.bodySm
+                .copyWith(color: AuroraColors.inkSecondary)),
+      ),
+      data: (summary) {
+        final items = itemsAsync.value ?? [];
+        final isOver = summary.remaining < 0;
+
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+          children: [
+            // Summary header card
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isOver ? AuroraColors.coral : AuroraColors.cobaltDim,
+                borderRadius: AuroraRadius.md,
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _BudgetStat(
+                        label: 'ESTIMATED',
+                        value: _compact(summary.estimatedTotal),
+                        onDark: isOver,
+                      ),
+                      _BudgetStat(
+                        label: 'SPENT',
+                        value: _compact(summary.actualTotal),
+                        onDark: isOver,
+                      ),
+                      _BudgetStat(
+                        label: isOver ? 'OVER BY' : 'REMAINING',
+                        value: _compact(summary.remaining.abs()),
+                        onDark: isOver,
+                        highlight: true,
+                      ),
+                    ],
+                  ),
+                  if (summary.estimatedTotal > 0) ...[
+                    const SizedBox(height: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: (summary.actualTotal /
+                                summary.estimatedTotal)
+                            .clamp(0.0, 1.0),
+                        backgroundColor:
+                            AuroraColors.paper.withValues(alpha: 0.30),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          isOver
+                              ? AuroraColors.paper
+                              : AuroraColors.cobalt,
+                        ),
+                        minHeight: 6,
                       ),
                     ),
                   ],
-                ),
+                ],
               ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                project.workType.workTypeLabel,
-                style: AuroraType.labelSm.copyWith(
-                  color: const Color(0xFF9D9BB0),
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 10),
-
-          // Project name
-          Text(
-            project.name,
-            style: AuroraType.h1.copyWith(
-              fontWeight: FontWeight.w900,
-              color: AuroraColors.ink,
-              letterSpacing: -0.6,
-              height: 1.15,
             ),
-          ),
 
-          // Type + description
-          const SizedBox(height: 4),
-          Text(
-            project.projectType.projectTypeLabel +
-                (project.description != null && project.description!.isNotEmpty
-                    ? ' · ${project.description!}'
-                    : ''),
-            style: AuroraType.bodySm.copyWith(color: const Color(0xFF9D9BB0)),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
+            const SizedBox(height: 20),
 
-          // Date range
-          if (dateStr.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Icon(Icons.calendar_today_outlined,
-                    size: 14, color: const Color(0xFF9D9BB0)),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    dateStr,
-                    style: AuroraType.label.copyWith(color: const Color(0xFF9D9BB0)),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+            if (items.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Text(
+                  'No budget items yet.',
+                  style: AuroraType.bodySm
+                      .copyWith(color: AuroraColors.inkSecondary),
+                  textAlign: TextAlign.center,
                 ),
+              )
+            else
+              ...items.map((item) => _BudgetItemRow(item: item)),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _BudgetStat extends StatelessWidget {
+  const _BudgetStat({
+    required this.label,
+    required this.value,
+    required this.onDark,
+    this.highlight = false,
+  });
+
+  final String label;
+  final String value;
+  final bool onDark;
+  final bool highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    final baseColor = onDark ? AuroraColors.paper : AuroraColors.ink;
+    final accentColor = onDark ? AuroraColors.paper : AuroraColors.limeDeep;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: AuroraType.labelSm.copyWith(
+            color: baseColor.withValues(alpha: 0.70),
+            letterSpacing: 0.8,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: AuroraType.h3.copyWith(
+            color: highlight ? accentColor : baseColor,
+            fontWeight: FontWeight.w800,
+            fontSize: highlight ? 20 : 16,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BudgetItemRow extends StatelessWidget {
+  const _BudgetItemRow({required this.item});
+  final ProjectBudgetItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding:
+          const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AuroraColors.paper,
+        borderRadius: AuroraRadius.md,
+        border: Border.all(color: AuroraColors.inkBorder),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.name,
+                  style: AuroraType.body
+                      .copyWith(fontWeight: FontWeight.w600),
+                ),
+                if (item.vendor != null && item.vendor!.isNotEmpty)
+                  Text(
+                    item.vendor!,
+                    style: AuroraType.label.copyWith(
+                        color: AuroraColors.inkSecondary),
+                  ),
               ],
             ),
-          ],
-
-          // Phase dot strip
-          if (phaseCount > 0) ...[
-            const SizedBox(height: 14),
-            _MiniPhaseDots(
-              phases: phases,
-              phaseCount: phaseCount,
-              activePhaseIndex: activePhaseIndex,
-              activePhaseName: activePhaseName,
-            ),
-          ],
-
-          // Budget strip
-          if (hasBudget) ...[
-            const SizedBox(height: 14),
-            const Divider(color: AuroraColors.butter, height: 1),
-            const SizedBox(height: 14),
-            _BudgetStrip(project: project),
-          ],
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                _compact(item.actualCost > 0 ? item.actualCost : item.estimatedCost),
+                style: AuroraType.body.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: item.isPaid
+                      ? AuroraColors.limeDeep
+                      : AuroraColors.ink,
+                ),
+              ),
+              if (item.isPaid)
+                Text(
+                  'PAID',
+                  style: AuroraType.labelSm.copyWith(
+                    color: AuroraColors.limeDeep,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
     );
   }
 }
 
-// ── Mini phase dots (header card) ─────────────────────────────────────────────
+// ── Photos view ───────────────────────────────────────────────────────────────
 
-class _MiniPhaseDots extends StatelessWidget {
-  const _MiniPhaseDots({
-    required this.phases,
+class _PhotosView extends ConsumerWidget {
+  const _PhotosView({required this.projectId});
+  final String projectId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final photosAsync = ref.watch(projectPhotosProvider(projectId));
+
+    return photosAsync.when(
+      loading: () =>
+          const Center(child: CircularProgressIndicator()),
+      error: (_, _) => Center(
+        child: Text('Could not load photos',
+            style: AuroraType.bodySm
+                .copyWith(color: AuroraColors.inkSecondary)),
+      ),
+      data: (photos) {
+        if (photos.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.photo_library_outlined,
+                    size: 48, color: AuroraColors.inkSecondary),
+                const SizedBox(height: 12),
+                Text(
+                  'No photos yet.',
+                  style: AuroraType.body.copyWith(
+                      color: AuroraColors.inkSecondary),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Document your progress by adding photos.',
+                  style: AuroraType.bodySm.copyWith(
+                      color: AuroraColors.inkSecondary),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
+        }
+
+        return GridView.builder(
+          padding: const EdgeInsets.all(12),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 6,
+            mainAxisSpacing: 6,
+          ),
+          itemCount: photos.length,
+          itemBuilder: (context, i) {
+            final photo = photos[i];
+            final url = photo.signedUrl;
+            return ClipRRect(
+              borderRadius: AuroraRadius.sm,
+              child: url != null && url.isNotEmpty
+                  ? Image.network(
+                      url,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => _PhotoPlaceholder(),
+                    )
+                  : _PhotoPlaceholder(),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _PhotoPlaceholder extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AuroraColors.butter,
+      child: const Icon(Icons.image_outlined,
+          color: AuroraColors.inkSecondary),
+    );
+  }
+}
+
+// ── Notes view ────────────────────────────────────────────────────────────────
+
+class _NotesView extends ConsumerWidget {
+  const _NotesView({required this.projectId});
+  final String projectId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notesAsync = ref.watch(projectJournalProvider(projectId));
+
+    return notesAsync.when(
+      loading: () =>
+          const Center(child: CircularProgressIndicator()),
+      error: (_, _) => Center(
+        child: Text('Could not load notes',
+            style: AuroraType.bodySm
+                .copyWith(color: AuroraColors.inkSecondary)),
+      ),
+      data: (notes) => ListView(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        children: [
+          if (notes.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Text(
+                'No notes yet. Start logging your project progress.',
+                style: AuroraType.bodySm
+                    .copyWith(color: AuroraColors.inkSecondary),
+                textAlign: TextAlign.center,
+              ),
+            )
+          else
+            _TimelineList(notes: notes, projectId: projectId),
+          const SizedBox(height: 8),
+          _AddEntryButton(
+            onTap: () =>
+                context.push('/projects/$projectId/notes/create'),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Phases header ─────────────────────────────────────────────────────────────
+
+class _PhasesHeader extends StatelessWidget {
+  const _PhasesHeader({
     required this.phaseCount,
-    required this.activePhaseIndex,
-    required this.activePhaseName,
+    required this.doneCount,
+    required this.activeCount,
+    required this.upcomingCount,
   });
 
-  final List<ProjectPhase> phases;
   final int phaseCount;
-  final int? activePhaseIndex;
-  final String? activePhaseName;
+  final int doneCount;
+  final int activeCount;
+  final int upcomingCount;
 
   @override
   Widget build(BuildContext context) {
-    final count = math.min(phaseCount, 8);
-    final activeIdx = activePhaseIndex;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+      child: Row(
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: AuroraColors.cobalt,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '$phaseCount PHASES',
+            style: AuroraType.labelSm.copyWith(
+              color: AuroraColors.cobalt,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.0,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '$doneCount done · $activeCount active · $upcomingCount to go',
+              style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+// ── Done phase row ────────────────────────────────────────────────────────────
+
+class _DonePhaseRow extends StatelessWidget {
+  const _DonePhaseRow({required this.phase});
+  final ProjectPhase phase;
+
+  @override
+  Widget build(BuildContext context) {
+    final dateStr = _phaseShortDate(phase);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AuroraColors.paper,
+          borderRadius: AuroraRadius.md,
+          border: Border.all(color: AuroraColors.inkBorder),
+        ),
+        child: Row(
           children: [
-            for (int i = 0; i < count; i++) ...[
-              if (i > 0)
-                Expanded(
-                  child: Container(
-                    height: 2,
-                    color: activeIdx != null && i <= activeIdx
-                        ? (i < activeIdx
-                            ? AuroraColors.lime
-                            : AuroraColors.cobalt.withValues(alpha: 0.4))
-                        : AuroraColors.inkBorder,
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AuroraColors.cobaltDim,
+              ),
+              child: Icon(
+                Icons.check,
+                size: 14,
+                color: AuroraColors.cobalt.withValues(alpha: 0.70),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    phase.name,
+                    style: AuroraType.body.copyWith(
+                      color: AuroraColors.inkTertiary,
+                      decoration: TextDecoration.lineThrough,
+                      decorationColor: AuroraColors.inkTertiary,
+                    ),
                   ),
-                ),
-              _MiniDot(
-                state: activeIdx == null
-                    ? _DS.upcoming
-                    : i < activeIdx
-                        ? _DS.completed
-                        : i == activeIdx
-                            ? _DS.active
-                            : _DS.upcoming,
+                  if (phase.description != null &&
+                      phase.description!.isNotEmpty)
+                    Text(
+                      phase.description!.toUpperCase(),
+                      style: AuroraType.labelSm.copyWith(
+                        color: AuroraColors.inkTertiary,
+                        letterSpacing: 0.5,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ),
+            ),
+            if (dateStr.isNotEmpty) ...[
+              const SizedBox(width: 8),
+              Text(
+                dateStr,
+                style:
+                    AuroraType.labelSm.copyWith(color: AuroraColors.inkTertiary),
               ),
             ],
           ],
         ),
-        if (activeIdx != null && activePhaseName != null) ...[
-          const SizedBox(height: 8),
-          Text(
-            'Phase ${activeIdx + 1} of $phaseCount · $activePhaseName',
-            style: AuroraType.bodySm.copyWith(
-              fontWeight: FontWeight.w600,
-              color: AuroraColors.cobalt,
-            ),
-          ),
-        ],
-      ],
+      ),
     );
   }
 }
 
-enum _DS { completed, active, upcoming }
+// ── Active phase row ──────────────────────────────────────────────────────────
 
-class _MiniDot extends StatelessWidget {
-  const _MiniDot({required this.state});
-  final _DS state;
-
-  @override
-  Widget build(BuildContext context) => switch (state) {
-        _DS.completed => Container(
-            width: 10,
-            height: 10,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: AuroraColors.lime,
-            ),
-          ),
-        _DS.active => Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AuroraColors.cobalt,
-              boxShadow: [
-                BoxShadow(
-                  color: AuroraColors.cobalt.withValues(alpha: 0.3),
-                  blurRadius: 0,
-                  spreadRadius: 3,
-                ),
-              ],
-            ),
-          ),
-        _DS.upcoming => Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AuroraColors.butter,
-              border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
-            ),
-          ),
-      };
-}
-
-// ── Budget strip (header card) ────────────────────────────────────────────────
-
-class _BudgetStrip extends StatelessWidget {
-  const _BudgetStrip({required this.project});
-  final Project project;
-
-  static String _compact(double v) {
-    if (v >= 1000) {
-      final k = v / 1000;
-      return '\$${k % 1 == 0 ? k.toInt() : k.toStringAsFixed(1)}k';
-    }
-    return '\$${NumberFormat('#,###').format(v.toInt())}';
-  }
+class _ActivePhaseRow extends StatelessWidget {
+  const _ActivePhaseRow({required this.phase});
+  final ProjectPhase phase;
 
   @override
   Widget build(BuildContext context) {
-    final estimated = project.estimatedBudget!;
-    final spent = project.actualSpent;
-    final pct = estimated > 0 ? (spent / estimated).clamp(0.0, 1.0) : 0.0;
-    final isOver = spent >= estimated && estimated > 0;
-    final ringColor = isOver ? AuroraColors.coral : AuroraColors.lime;
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '\$${NumberFormat('#,###').format(spent.toInt())}',
-                style: AuroraType.label.copyWith(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: isOver ? AuroraColors.coral : AuroraColors.ink,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              Text(
-                'of ${_compact(estimated)} budget',
-                style: AuroraType.bodySm
-                    .copyWith(color: const Color(0xFF9D9BB0)),
-              ),
-            ],
-          ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AuroraColors.lime,
+          borderRadius: AuroraRadius.md,
         ),
-        SizedBox(
-          width: 52,
-          height: 52,
-          child: CustomPaint(
-            painter: _BudgetRingPainter(fraction: pct, color: ringColor),
-            child: Center(
+        child: Row(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AuroraColors.limeDeep.withValues(alpha: 0.15),
+              ),
+              child: const Icon(
+                Icons.build_outlined,
+                size: 14,
+                color: AuroraColors.limeDeep,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    phase.name,
+                    style: AuroraType.body.copyWith(
+                      color: AuroraColors.limeDeep,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (phase.description != null &&
+                      phase.description!.isNotEmpty)
+                    Text(
+                      phase.description!,
+                      style: AuroraType.bodySm.copyWith(
+                        color: AuroraColors.limeDeep,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AuroraColors.limeDeep,
+                borderRadius: BorderRadius.circular(4),
+              ),
               child: Text(
-                '${(pct * 100).round()}%',
-                style: AuroraType.bodySm.copyWith(
+                'IN PROGRESS',
+                style: AuroraType.labelSm.copyWith(
+                  color: AuroraColors.lime,
                   fontWeight: FontWeight.w700,
-                  color: AuroraColors.inkSecondary,
+                  letterSpacing: 0.5,
                 ),
               ),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
 
-class _BudgetRingPainter extends CustomPainter {
-  const _BudgetRingPainter({required this.fraction, required this.color});
-  final double fraction;
-  final Color color;
+// ── Upcoming phase row ────────────────────────────────────────────────────────
+
+class _UpcomingPhaseRow extends StatelessWidget {
+  const _UpcomingPhaseRow({required this.phase});
+  final ProjectPhase phase;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = (math.min(size.width, size.height) - 6) / 2;
-    const strokeW = 5.0;
-
-    canvas.drawCircle(
-      center,
-      radius,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeW
-        ..color = AuroraColors.butter,
+  Widget build(BuildContext context) {
+    final dateStr = _phaseShortDate(phase);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AuroraColors.paper,
+          borderRadius: AuroraRadius.md,
+          border: Border.all(color: AuroraColors.inkBorder),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AuroraColors.butter,
+                border: Border.all(color: AuroraColors.inkBorderStrong),
+              ),
+              child: Center(
+                child: Text(
+                  '${phase.sortOrder + 1}',
+                  style: AuroraType.labelSm.copyWith(
+                    color: AuroraColors.inkTertiary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    phase.name,
+                    style: AuroraType.body.copyWith(color: AuroraColors.ink),
+                  ),
+                  if (phase.description != null &&
+                      phase.description!.isNotEmpty)
+                    Text(
+                      phase.description!.toUpperCase(),
+                      style: AuroraType.labelSm.copyWith(
+                        color: AuroraColors.inkSecondary,
+                        letterSpacing: 0.5,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ),
+            ),
+            if (dateStr.isNotEmpty) ...[
+              const SizedBox(width: 8),
+              Text(
+                dateStr,
+                style: AuroraType.labelSm
+                    .copyWith(color: AuroraColors.inkSecondary),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
-
-    if (fraction > 0) {
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        -math.pi / 2,
-        2 * math.pi * fraction,
-        false,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeW
-          ..strokeCap = StrokeCap.round
-          ..color = color,
-      );
-    }
   }
+}
+
+// ── Activity section ──────────────────────────────────────────────────────────
+
+class _ActivitySection extends StatelessWidget {
+  const _ActivitySection({
+    required this.project,
+    required this.projectId,
+    required this.phases,
+    required this.notes,
+  });
+
+  final Project project;
+  final String projectId;
+  final List<ProjectPhase> phases;
+  final List<ProjectJournalNote> notes;
 
   @override
-  bool shouldRepaint(_BudgetRingPainter old) =>
-      old.fraction != fraction || old.color != color;
+  Widget build(BuildContext context) {
+    final unlinkedNotes =
+        notes.where((n) => n.phaseId == null).toList();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'ACTIVITY',
+            style: AuroraType.labelSm.copyWith(
+              color: AuroraColors.inkTertiary,
+              letterSpacing: 1.2,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          if (unlinkedNotes.isNotEmpty)
+            _TimelineList(notes: unlinkedNotes, projectId: projectId)
+          else
+            _EmptyTimeline(phases: phases, project: project),
+
+          const SizedBox(height: 16),
+
+          _AddEntryButton(
+            onTap: () => context.push('/projects/$projectId/notes/create'),
+          ),
+
+          if (phases.isEmpty) ...[
+            const SizedBox(height: 16),
+            _TemplatePrompt(
+              project: project,
+              projectId: projectId,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 // ── Section grid (3 × 2 compact cards) ───────────────────────────────────────
@@ -731,14 +1368,6 @@ class _SectionGrid extends StatelessWidget {
   final List<ProjectPhase> phases;
   final List<ProjectJournalNote> notes;
 
-  static String _compact(double v) {
-    if (v >= 1000) {
-      final k = v / 1000;
-      return '\$${k % 1 == 0 ? k.toInt() : k.toStringAsFixed(1)}k';
-    }
-    return '\$${NumberFormat('#,###').format(v.toInt())}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final hasBudget = project.estimatedBudget != null;
@@ -758,8 +1387,9 @@ class _SectionGrid extends StatelessWidget {
       (
         icon: Icons.account_balance_wallet_outlined,
         label: 'Budget',
-        metric: hasBudget ? _compact(project.estimatedBudget!) : 'Not set',
-        color: isOverBudget ? AuroraColors.coral : AuroraColors.lime,
+        metric:
+            hasBudget ? _compact(project.estimatedBudget!) : 'Not set',
+        color: isOverBudget ? AuroraColors.coral : AuroraColors.limeDeep,
         route: '/projects/$projectId/budget',
       ),
       (
@@ -844,7 +1474,6 @@ class _SectionCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Icon bubble
             Container(
               width: 30,
               height: 30,
@@ -855,7 +1484,6 @@ class _SectionCard extends StatelessWidget {
               child: Icon(section.icon, size: 15, color: color),
             ),
             const SizedBox(height: 8),
-            // Label
             Text(
               section.label,
               style: AuroraType.bodySm.copyWith(
@@ -866,11 +1494,10 @@ class _SectionCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 2),
-            // Metric
             Text(
               section.metric,
               style: AuroraType.label.copyWith(
-                color: const Color(0xFF9D9BB0),
+                color: AuroraColors.inkTertiary,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -882,119 +1509,12 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
-// ── Timeline section ──────────────────────────────────────────────────────────
-
-class _TimelineSection extends StatelessWidget {
-  const _TimelineSection({
-    required this.project,
-    required this.projectId,
-    required this.phases,
-    required this.notes,
-    required this.ref,
-  });
-
-  final Project project;
-  final String projectId;
-  final List<ProjectPhase> phases;
-  final List<ProjectJournalNote> notes;
-  final WidgetRef ref;
-
-  @override
-  Widget build(BuildContext context) {
-    // Sort phases newest-first (highest sortOrder at top).
-    final sortedPhases = [...phases]
-      ..sort((a, b) => b.sortOrder.compareTo(a.sortOrder));
-
-    // Group notes by phaseId.
-    final Map<String, List<ProjectJournalNote>> byPhase = {};
-    final List<ProjectJournalNote> unlinked = [];
-    for (final n in notes) {
-      if (n.phaseId != null) {
-        byPhase.putIfAbsent(n.phaseId!, () => []).add(n);
-      } else {
-        unlinked.add(n);
-      }
-    }
-
-    // Build timeline rows: unlinked notes, then phases with their notes.
-    final List<_TLRow> rows = [];
-    for (final n in unlinked) {
-      rows.add(_TLRow.note(n));
-    }
-    for (final p in sortedPhases) {
-      rows.add(_TLRow.phase(p));
-      final pNotes = byPhase[p.id] ?? [];
-      for (final n in pNotes) {
-        rows.add(_TLRow.note(n));
-      }
-    }
-
-    final hasContent = rows.isNotEmpty;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(22, 20, 22, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Timeline label
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Text(
-              'ACTIVITY',
-              style: AuroraType.labelSm.copyWith(
-                color: const Color(0xFF9D9BB0),
-                letterSpacing: 1.2,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-
-          if (hasContent)
-            _TimelineList(rows: rows, projectId: projectId)
-          else
-            _EmptyTimeline(phases: phases, project: project, ref: ref),
-
-          const SizedBox(height: 20),
-
-          // Add entry dashed button
-          _AddEntryButton(
-            onTap: () =>
-                context.push('/projects/$projectId/notes/create'),
-          ),
-
-          if (phases.isEmpty) ...[
-            const SizedBox(height: 16),
-            _TemplatePrompt(
-              project: project,
-              projectId: projectId,
-              ref: ref,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-// ── Timeline list (with vertical line) ───────────────────────────────────────
-
-class _TLRow {
-  final bool isPhase;
-  final ProjectPhase? phase;
-  final ProjectJournalNote? note;
-
-  const _TLRow._({required this.isPhase, this.phase, this.note});
-
-  factory _TLRow.phase(ProjectPhase p) =>
-      _TLRow._(isPhase: true, phase: p);
-  factory _TLRow.note(ProjectJournalNote n) =>
-      _TLRow._(isPhase: false, note: n);
-}
+// ── Timeline list (notes only) ────────────────────────────────────────────────
 
 class _TimelineList extends StatelessWidget {
-  const _TimelineList({required this.rows, required this.projectId});
+  const _TimelineList({required this.notes, required this.projectId});
 
-  final List<_TLRow> rows;
+  final List<ProjectJournalNote> notes;
   final String projectId;
 
   static const double _dotColW = 26;
@@ -1003,7 +1523,6 @@ class _TimelineList extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Vertical line — runs from center of first dot downward.
         const Positioned(
           left: _dotColW / 2 - 1,
           top: 13,
@@ -1013,85 +1532,13 @@ class _TimelineList extends StatelessWidget {
             child: ColoredBox(color: AuroraColors.inkBorder),
           ),
         ),
-
-        // Timeline rows.
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: rows.map((r) {
-            if (r.isPhase) {
-              return _PhaseMarkerRow(phase: r.phase!);
-            }
-            return _NoteTimelineCard(note: r.note!, projectId: projectId);
-          }).toList(),
+          children: notes
+              .map((n) => _NoteTimelineCard(note: n, projectId: projectId))
+              .toList(),
         ),
       ],
-    );
-  }
-}
-
-// ── Phase marker row ──────────────────────────────────────────────────────────
-
-class _PhaseMarkerRow extends StatelessWidget {
-  const _PhaseMarkerRow({required this.phase});
-  final ProjectPhase phase;
-
-  @override
-  Widget build(BuildContext context) {
-    final isActive = phase.status == 'in_progress';
-    final isDone = phase.status == 'completed';
-    final dotColor = isActive
-        ? AuroraColors.cobalt
-        : isDone
-            ? AuroraColors.lime
-            : const Color(0xFFE0DFEA);
-    final dateStr = _phaseDates(phase);
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Large phase dot (26px)
-          Container(
-            width: 26,
-            height: 26,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: dotColor,
-            ),
-            child: Icon(
-              isDone
-                  ? Icons.check
-                  : isActive
-                      ? Icons.build_outlined
-                      : Icons.schedule_outlined,
-              size: 12,
-              color: (isActive || isDone) ? AuroraColors.paper : const Color(0xFF9D9BB0),
-            ),
-          ),
-          const SizedBox(width: 10),
-
-          // Phase name
-          Expanded(
-            child: Text(
-              phase.name,
-              style: AuroraType.h3.copyWith(
-                fontWeight: FontWeight.w700,
-                color: AuroraColors.ink,
-              ),
-            ),
-          ),
-
-          // Dates
-          if (dateStr.isNotEmpty)
-            Text(
-              dateStr,
-              style: AuroraType.label.copyWith(
-                color: const Color(0xFF9D9BB0),
-              ),
-            ),
-        ],
-      ),
     );
   }
 }
@@ -1111,7 +1558,6 @@ class _NoteTimelineCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Small dot (8px) centered in 26px column
           SizedBox(
             width: 26,
             child: Padding(
@@ -1130,21 +1576,12 @@ class _NoteTimelineCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-
-          // Note card
           Expanded(
             child: Container(
               decoration: BoxDecoration(
                 color: AuroraColors.paper,
                 borderRadius: AuroraRadius.md,
                 border: Border.all(color: AuroraColors.inkBorder),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.transparent,
-                    blurRadius: 4,
-                    offset: Offset(0, 1),
-                  ),
-                ],
               ),
               child: Padding(
                 padding: const EdgeInsets.all(12),
@@ -1156,7 +1593,7 @@ class _NoteTimelineCard extends StatelessWidget {
                         Text(
                           _noteDate(note.noteDate),
                           style: AuroraType.label.copyWith(
-                            color: const Color(0xFF9D9BB0),
+                            color: AuroraColors.inkTertiary,
                           ),
                         ),
                         const Spacer(),
@@ -1180,10 +1617,7 @@ class _NoteTimelineCard extends StatelessWidget {
                     ),
                     if (note.title != null && note.title!.isNotEmpty) ...[
                       const SizedBox(height: 8),
-                      Text(
-                        note.title!,
-                        style: AuroraType.body,
-                      ),
+                      Text(note.title!, style: AuroraType.body),
                     ],
                     const SizedBox(height: 4),
                     Text(
@@ -1210,12 +1644,10 @@ class _EmptyTimeline extends StatelessWidget {
   const _EmptyTimeline({
     required this.phases,
     required this.project,
-    required this.ref,
   });
 
   final List<ProjectPhase> phases;
   final Project project;
-  final WidgetRef ref;
 
   @override
   Widget build(BuildContext context) {
@@ -1225,7 +1657,7 @@ class _EmptyTimeline extends StatelessWidget {
         phases.isEmpty
             ? 'Add phases and notes to track this project\'s progress.'
             : 'No notes yet. Tap "Add note" below to start the project log.',
-        style: AuroraType.bodySm.copyWith(color: const Color(0xFF9D9BB0)),
+        style: AuroraType.bodySm.copyWith(color: AuroraColors.inkTertiary),
       ),
     );
   }
@@ -1259,7 +1691,7 @@ class _AddEntryButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.add, size: 18, color: AuroraColors.coral),
+              const Icon(Icons.add, size: 18, color: AuroraColors.coral),
               const SizedBox(width: 8),
               Text(
                 'Add note, photo, or document',
@@ -1330,12 +1762,10 @@ class _TemplatePrompt extends ConsumerStatefulWidget {
   const _TemplatePrompt({
     required this.project,
     required this.projectId,
-    required this.ref,
   });
 
   final Project project;
   final String projectId;
-  final WidgetRef ref;
 
   @override
   ConsumerState<_TemplatePrompt> createState() => _TemplatePromptState();
@@ -1373,16 +1803,13 @@ class _TemplatePromptState extends ConsumerState<_TemplatePrompt> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Start with a template',
-            style: AuroraType.h3,
-          ),
+          Text('Start with a template', style: AuroraType.h3),
           const SizedBox(height: AuroraSpacing.space1),
           Text(
             'Load starter phases for a '
             '${widget.project.projectType.projectTypeLabel} project.',
-            style: AuroraType.bodySm
-                .copyWith(color: AuroraColors.inkSecondary),
+            style:
+                AuroraType.bodySm.copyWith(color: AuroraColors.inkSecondary),
           ),
           const SizedBox(height: AuroraSpacing.space3),
           Row(
@@ -1398,8 +1825,8 @@ class _TemplatePromptState extends ConsumerState<_TemplatePrompt> {
               const SizedBox(width: AuroraSpacing.space3),
               GhostButton(
                 label: 'Add Manually',
-                onPressed: () => context.push(
-                    '/projects/${widget.projectId}/phases/create'),
+                onPressed: () => context
+                    .push('/projects/${widget.projectId}/phases/create'),
               ),
             ],
           ),
@@ -1448,72 +1875,63 @@ class _DetailSkeletonState extends State<_DetailSkeleton>
       animation: _opacity,
       builder: (_, _) => Opacity(
         opacity: _opacity.value,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header card placeholder
-              Container(
-                height: 220,
-                decoration: BoxDecoration(
-                  color: AuroraColors.butter,
-                  borderRadius: AuroraRadius.xl,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Hero placeholder
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  height: 140,
+                  color: AuroraColors.coral.withValues(alpha: 0.6),
                 ),
               ),
-              const SizedBox(height: 16),
-              // Quick-access chips
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: List.generate(
-                    4,
-                    (_) => Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: Container(
-                        width: 88,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: AuroraColors.butter,
-                          borderRadius: AuroraRadius.sm,
-                        ),
+            ),
+
+            // Tab bar placeholder
+            Container(
+              height: 52,
+              color: AuroraColors.paper,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              child: Row(
+                children: List.generate(
+                  5,
+                  (i) => Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      decoration: BoxDecoration(
+                        color: AuroraColors.butter,
+                        borderRadius: BorderRadius.circular(20),
                       ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-              // Timeline items
-              ...List.generate(
-                3,
-                (_) => Padding(
-                  padding: const EdgeInsets.only(bottom: 14),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 26,
-                        height: 26,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(0xFFE0DFEA),
-                        ),
+            ),
+            const Divider(height: 1, color: AuroraColors.inkBorder),
+
+            // Phase rows placeholder
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+              child: Column(
+                children: List.generate(
+                  4,
+                  (_) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Container(
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: AuroraColors.butter,
+                        borderRadius: AuroraRadius.md,
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Container(
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: AuroraColors.butter,
-                            borderRadius: AuroraRadius.md,
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

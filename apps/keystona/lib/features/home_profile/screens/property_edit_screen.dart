@@ -1162,7 +1162,7 @@ class _ClimateZoneCard extends StatelessWidget {
                   Text('CLIMATE ZONE',
                       style: AuroraType.label
                           .copyWith(color: AuroraColors.lime)),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text('$zoneLabel · $zoneSub',
                       style: AuroraType.body.copyWith(fontWeight: FontWeight.w600)
                           .copyWith(color: AuroraColors.lime)),
@@ -1236,7 +1236,7 @@ class _CompletionBar extends StatelessWidget {
           isComplete
               ? 'Profile complete'
               : '$filled of $total optional fields filled',
-          style: AuroraType.bodySm.copyWith(
+          style: AuroraType.labelSm.copyWith(
             color: isComplete ? AuroraColors.lime : AuroraColors.inkTertiary,
             fontWeight: isComplete ? FontWeight.w600 : FontWeight.w400,
           ),

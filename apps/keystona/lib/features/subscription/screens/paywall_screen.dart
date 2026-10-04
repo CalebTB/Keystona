@@ -11,17 +11,19 @@ import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/aurora/aurora.dart';
 import '../../../core/widgets/snackbar_service.dart';
 
-// Colors.white is used intentionally throughout this screen — the dark gradient background
-// requires high-contrast white text. Do not replace with AuroraColors.paper.
+// Colors.white is used intentionally in two places: the white icon on the coral
+// hero circle, the white check icon on the coral radio dot, and the "BEST VALUE"
+// badge text on coral. All other surfaces use Aurora ink tokens.
 
 /// Keystona Pro paywall — custom-built UI that fetches offerings directly
 /// from RevenueCat without using RevenueCatUI.
 ///
-/// Layout: gradient bg → hero → feature list → package selector → CTA → restore → legal.
+/// Layout: paper bg → header bar (RESTORE left, × right) → hero → top CTA →
+///         feature list → legal → package selector → bottom "Get started" CTA.
 /// Default selection: Yearly (index 1).
 ///
-/// Design: ink→cobalt→paper gradient background, white text on dark,
-/// coral border on selected plan pill, PrimaryButton CTA for purchase action.
+/// Design: clean white paper background, coral PrimaryButton for top CTA,
+/// cobalt SaveButton for bottom CTA, ink text throughout.
 class PaywallScreen extends ConsumerStatefulWidget {
   const PaywallScreen({super.key});
 
@@ -134,80 +136,59 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AuroraColors.paper,
-      body: Stack(
-        children: [
-          const _GradientBackground(),
-          SafeArea(
-            child: Column(
-              children: [
-                _CloseButton(onClose: () => context.pop()),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AuroraSpacing.screenPadH,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SizedBox(height: AuroraSpacing.space9),
-                        const _HeroSection(),
-                        const SizedBox(height: AuroraSpacing.space10),
-                        const _FeatureList(),
-                        const SizedBox(height: AuroraSpacing.space10),
-                        _PackageSection(
-                          isLoading: _isLoadingOfferings,
-                          error: _offeringsError,
-                          packages: _packages,
-                          selectedIndex: _selectedIndex,
-                          onRetry: _loadOfferings,
-                          onSelected: (i) => setState(() => _selectedIndex = i),
-                        ),
-                        const SizedBox(height: AuroraSpacing.space9),
-                        _CtaButton(
-                          packages: _packages,
-                          selectedIndex: _selectedIndex,
-                          isLoading: _isLoading,
-                          isLoadingOfferings: _isLoadingOfferings,
-                          onPressed: _purchase,
-                        ),
-                        const SizedBox(height: AuroraSpacing.space7),
-                        _RestoreButton(
-                          isLoading: _isLoading,
-                          onPressed: _restorePurchases,
-                        ),
-                        const SizedBox(height: AuroraSpacing.space7),
-                        const _LegalFooter(),
-                        const SizedBox(height: AuroraSpacing.space10),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            _HeaderBar(
+              onClose: () => context.pop(),
+              onRestore: _restorePurchases,
+              isLoading: _isLoading,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Gradient background ──────────────────────────────────────────────────────
-
-class _GradientBackground extends StatelessWidget {
-  const _GradientBackground();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          stops: [0.0, 0.45, 1.0],
-          colors: [
-            AuroraColors.ink,
-            AuroraColors.cobalt,
-            AuroraColors.paper,
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AuroraSpacing.screenPadH,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: AuroraSpacing.space8),
+                    const _HeroSection(),
+                    const SizedBox(height: AuroraSpacing.space7),
+                    _CtaButton(
+                      packages: _packages,
+                      selectedIndex: _selectedIndex,
+                      isLoading: _isLoading,
+                      isLoadingOfferings: _isLoadingOfferings,
+                      onPressed: _purchase,
+                    ),
+                    const SizedBox(height: AuroraSpacing.space10),
+                    const _FeatureList(),
+                    const SizedBox(height: AuroraSpacing.space7),
+                    const _LegalFooter(),
+                    const SizedBox(height: AuroraSpacing.space9),
+                    _PackageSection(
+                      isLoading: _isLoadingOfferings,
+                      error: _offeringsError,
+                      packages: _packages,
+                      selectedIndex: _selectedIndex,
+                      onRetry: _loadOfferings,
+                      onSelected: (i) => setState(() => _selectedIndex = i),
+                    ),
+                    const SizedBox(height: AuroraSpacing.space7),
+                    SaveButton(
+                      label: 'Get started',
+                      onPressed: (_isLoading || _isLoadingOfferings || _packages.isEmpty)
+                          ? null
+                          : _purchase,
+                      loading: _isLoading,
+                      expand: true,
+                    ),
+                    const SizedBox(height: AuroraSpacing.space10),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -215,38 +196,55 @@ class _GradientBackground extends StatelessWidget {
   }
 }
 
-// ─── Close button ─────────────────────────────────────────────────────────────
+// ─── Header bar (Restore left · Close right) ─────────────────────────────────
 
-class _CloseButton extends StatelessWidget {
-  const _CloseButton({required this.onClose});
+class _HeaderBar extends StatelessWidget {
+  const _HeaderBar({
+    required this.onClose,
+    required this.onRestore,
+    required this.isLoading,
+  });
 
   final VoidCallback onClose;
+  final VoidCallback onRestore;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Padding(
-        padding: const EdgeInsets.only(
-          top: AuroraSpacing.space3,
-          right: AuroraSpacing.space7,
-        ),
-        child: GestureDetector(
-          onTap: onClose,
-          child: Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 30 / 255.0), // intentional: white on dark gradient paywall surface
-              borderRadius: AuroraRadius.full,
-            ),
-            child: const Icon(
-              Icons.close,
-              color: Colors.white, // intentional: white on dark gradient paywall surface
-              size: 20,
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AuroraSpacing.screenPadH,
+        vertical: AuroraSpacing.space3,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          GestureDetector(
+            onTap: isLoading ? null : onRestore,
+            child: Text(
+              'RESTORE',
+              style: AuroraType.label.copyWith(
+                color: AuroraColors.inkSecondary,
+              ),
             ),
           ),
-        ),
+          GestureDetector(
+            onTap: onClose,
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: const BoxDecoration(
+                color: AuroraColors.butter,
+                borderRadius: AuroraRadius.full,
+              ),
+              child: const Icon(
+                Icons.close,
+                color: AuroraColors.ink,
+                size: 20,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -268,7 +266,7 @@ class _HeroSection extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              // Yellow blob
+              // Yellow blob accent
               Positioned(
                 top: 6,
                 right: 6,
@@ -290,7 +288,7 @@ class _HeroSection extends StatelessWidget {
                 ),
                 child: const Icon(
                   Icons.home_work_rounded,
-                  color: Colors.white, // intentional: white on dark gradient paywall surface
+                  color: Colors.white, // intentional: white icon on coral surface
                   size: 38,
                 ),
               ),
@@ -301,14 +299,14 @@ class _HeroSection extends StatelessWidget {
         Text(
           'Keystona Pro',
           textAlign: TextAlign.center,
-          style: AuroraType.h1.copyWith(color: Colors.white), // intentional: white on dark gradient paywall surface
+          style: AuroraType.h1.copyWith(color: AuroraColors.ink),
         ),
         const SizedBox(height: AuroraSpacing.space3),
         Text(
           'The smart way to manage your home,\nunlocked in full.',
           textAlign: TextAlign.center,
           style: AuroraType.bodyLg.copyWith(
-            color: Colors.white.withValues(alpha: 0.80), // intentional: white on dark gradient paywall surface
+            color: AuroraColors.inkSecondary,
             height: 1.5,
           ),
         ),
@@ -319,38 +317,53 @@ class _HeroSection extends StatelessWidget {
 
 // ─── Feature list ─────────────────────────────────────────────────────────────
 
+/// Copy-driven feature list — no icons, two-line rows separated by Dividers.
+/// Small coral check circle is the only visual element per row.
 class _FeatureList extends StatelessWidget {
   const _FeatureList();
 
-  static const List<({IconData icon, String label})> _features = [
-    (icon: Icons.folder_open_rounded, label: 'Unlimited document storage'),
+  static const List<({String headline, String description})> _features = [
     (
-      icon: Icons.document_scanner_rounded,
-      label: 'AI-powered document scanning',
+      headline: 'Unlimited document storage',
+      description: 'Warranties, manuals, receipts — all in one place',
     ),
     (
-      icon: Icons.event_repeat_rounded,
-      label: 'Advanced maintenance scheduling',
+      headline: 'AI document scanning',
+      description: 'Snap a photo and we extract the details automatically',
     ),
-    (icon: Icons.favorite_rounded, label: 'Home health score tracking'),
-    (icon: Icons.emergency_rounded, label: 'Emergency hub & utility shutoffs'),
-    (icon: Icons.support_agent_rounded, label: 'Priority support'),
+    (
+      headline: 'Smart maintenance scheduling',
+      description: 'Never miss a service reminder for your home again',
+    ),
+    (
+      headline: 'Home health score',
+      description: "Track your property's condition over time",
+    ),
+    (
+      headline: 'Emergency hub',
+      description:
+          'Utility shutoffs and emergency contacts always at your fingertips',
+    ),
+    (
+      headline: 'Priority support',
+      description: 'Get help from our team when you need it most',
+    ),
   ];
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AuroraSpacing.space7),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 18 / 255.0), // intentional: white on dark gradient paywall surface
-        borderRadius: AuroraRadius.xl,
-        border: Border.all(color: Colors.white.withValues(alpha: 30 / 255.0)), // intentional: white on dark gradient paywall surface
-      ),
-      child: Column(
-        children: _features.map((f) => _FeatureRow(feature: f)).toList(
-              growable: false,
+    return Column(
+      children: [
+        for (int i = 0; i < _features.length; i++) ...[
+          _FeatureRow(feature: _features[i]),
+          if (i < _features.length - 1)
+            const Divider(
+              height: 1,
+              thickness: 1,
+              color: AuroraColors.inkBorder,
             ),
-      ),
+        ],
+      ],
     );
   }
 }
@@ -358,32 +371,52 @@ class _FeatureList extends StatelessWidget {
 class _FeatureRow extends StatelessWidget {
   const _FeatureRow({required this.feature});
 
-  final ({IconData icon, String label}) feature;
+  final ({String headline, String description}) feature;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: AuroraSpacing.space5),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: AuroraColors.yellow.withAlpha(40),
-              borderRadius: AuroraRadius.full,
-            ),
-            child: const Icon(
-              Icons.check_rounded,
-              color: AuroraColors.yellow,
-              size: 16,
+          // Small coral check circle — 14px, top-aligned with headline.
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Container(
+              width: 14,
+              height: 14,
+              decoration: const BoxDecoration(
+                color: AuroraColors.coral,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check_rounded,
+                color: Colors.white, // intentional: white icon on coral surface
+                size: 10,
+              ),
             ),
           ),
           const SizedBox(width: AuroraSpacing.space5),
           Expanded(
-            child: Text(
-              feature.label,
-              style: AuroraType.body.copyWith(color: Colors.white), // intentional: white on dark gradient paywall surface
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  feature.headline,
+                  style: AuroraType.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AuroraColors.ink,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  feature.description,
+                  style: AuroraType.bodySm.copyWith(
+                    color: AuroraColors.inkSecondary,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -414,10 +447,10 @@ class _PackageSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return Center(
+      return const Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: AuroraSpacing.space9),
-          child: CupertinoActivityIndicator(color: AuroraColors.yellow),
+          padding: EdgeInsets.symmetric(vertical: AuroraSpacing.space9),
+          child: CupertinoActivityIndicator(color: AuroraColors.coral),
         ),
       );
     }
@@ -461,16 +494,16 @@ class _PackageError extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AuroraSpacing.space7),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 18 / 255.0), // intentional: white on dark gradient paywall surface
+        color: AuroraColors.butter,
         borderRadius: AuroraRadius.xl,
-        border: Border.all(color: AuroraColors.coral.withAlpha(80)),
+        border: Border.all(color: AuroraColors.inkBorder),
       ),
       child: Column(
         children: [
           Text(
             message,
             textAlign: TextAlign.center,
-            style: AuroraType.body.copyWith(color: Colors.white), // intentional: white on dark gradient paywall surface
+            style: AuroraType.body.copyWith(color: AuroraColors.ink),
           ),
           const SizedBox(height: AuroraSpacing.space7),
           GhostButton(
@@ -486,7 +519,7 @@ class _PackageError extends StatelessWidget {
 /// Plan picker pill.
 ///
 /// Selected: paper bg + coral 2px border.
-/// Unselected: white 10% bg + white 15% border.
+/// Unselected: butter bg + inkBorder 1px border.
 class _PackageCard extends StatelessWidget {
   const _PackageCard({
     required this.package,
@@ -524,18 +557,10 @@ class _PackageCard extends StatelessWidget {
         curve: Curves.easeOut,
         padding: const EdgeInsets.all(AuroraSpacing.space7),
         decoration: BoxDecoration(
-          // Selected: paper (white) bg — pops on dark gradient.
-          // Unselected: semi-transparent white.
-          color: isSelected
-              ? AuroraColors.paper
-              : Colors.white.withValues(alpha: 18 / 255.0), // intentional: white on dark gradient paywall surface
+          color: isSelected ? AuroraColors.paper : AuroraColors.butter,
           borderRadius: AuroraRadius.xl,
           border: Border.all(
-            // Selected: coral 2px — canonical Aurora spec for plan pills.
-            // Unselected: paper+inkBorder (on paper bg) / white 15% (on dark).
-            color: isSelected
-                ? AuroraColors.coral
-                : Colors.white.withValues(alpha: 38 / 255.0), // intentional: white on dark gradient paywall surface
+            color: isSelected ? AuroraColors.coral : AuroraColors.inkBorder,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -556,14 +581,14 @@ class _PackageCard extends StatelessWidget {
                     border: Border.all(
                       color: isSelected
                           ? AuroraColors.coral
-                          : Colors.white.withValues(alpha: 100 / 255.0), // intentional: white on dark gradient paywall surface
+                          : AuroraColors.inkBorderStrong,
                       width: 2,
                     ),
                   ),
                   child: isSelected
                       ? const Icon(
                           Icons.check_rounded,
-                          color: Colors.white, // intentional: white on dark gradient paywall surface
+                          color: Colors.white, // intentional: white check on coral radio
                           size: 14,
                         )
                       : null,
@@ -576,9 +601,7 @@ class _PackageCard extends StatelessWidget {
                       Text(
                         _periodLabel,
                         style: AuroraType.h3.copyWith(
-                          color: isSelected
-                              ? AuroraColors.ink
-                              : Colors.white, // intentional: white on dark gradient paywall surface
+                          color: AuroraColors.ink,
                         ),
                       ),
                       if (_savingsNote != null) ...[
@@ -587,9 +610,7 @@ class _PackageCard extends StatelessWidget {
                           _savingsNote!,
                           style: AuroraType.bodySm.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: isSelected
-                                ? AuroraColors.cobalt
-                                : AuroraColors.yellow,
+                            color: AuroraColors.cobalt,
                           ),
                         ),
                       ],
@@ -599,7 +620,7 @@ class _PackageCard extends StatelessWidget {
                 Text(
                   package.storeProduct.priceString,
                   style: AuroraType.number.copyWith(
-                    color: isSelected ? AuroraColors.ink : Colors.white, // intentional: white on dark gradient paywall surface
+                    color: AuroraColors.ink,
                   ),
                 ),
               ],
@@ -614,14 +635,14 @@ class _PackageCard extends StatelessWidget {
                     horizontal: AuroraSpacing.space3,
                     vertical: AuroraSpacing.space1,
                   ),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: AuroraColors.coral,
                     borderRadius: AuroraRadius.full,
                   ),
                   child: Text(
                     'BEST VALUE',
                     style: AuroraType.labelSm.copyWith(
-                      color: Colors.white, // intentional: white on dark gradient paywall surface
+                      color: Colors.white, // intentional: white text on coral badge
                     ),
                   ),
                 ),
@@ -635,7 +656,7 @@ class _PackageCard extends StatelessWidget {
 
 // ─── CTA button ───────────────────────────────────────────────────────────────
 
-/// "Start Premium" / "Get Pro" — coral PrimaryButton.
+/// "Start Free Trial" / "Get Pro" — coral PrimaryButton.
 /// Purchase is a brand action, not a form save → PrimaryButton is correct.
 class _CtaButton extends StatelessWidget {
   const _CtaButton({
@@ -670,28 +691,6 @@ class _CtaButton extends StatelessWidget {
       onPressed: enabled ? onPressed : null,
       loading: isLoading,
       expand: true,
-    );
-  }
-}
-
-// ─── Restore button ───────────────────────────────────────────────────────────
-
-class _RestoreButton extends StatelessWidget {
-  const _RestoreButton({
-    required this.isLoading,
-    required this.onPressed,
-  });
-
-  final bool isLoading;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: GhostButton(
-        label: 'Restore Purchases',
-        onPressed: isLoading ? null : onPressed,
-      ),
     );
   }
 }
