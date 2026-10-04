@@ -111,17 +111,11 @@ CREATE POLICY "Users can update own completions"
     )
   );
 
--- Missing DELETE policy — this is a live functional bug, not just hardening.
---
--- Migration 006 gave task_completions SELECT/INSERT/UPDATE policies and no
--- DELETE policy, while RLS is enabled. The undo-completion flow in
--- task_detail_provider.dart calls .delete().eq('id', completionId), which
--- RLS silently reduces to zero rows affected — PostgREST reports success, so
--- "undo" appears to work and the completion row survives.
-
-CREATE POLICY "Users can delete own completions"
-  ON public.task_completions FOR DELETE
-  USING (user_id = auth.uid());
+-- The missing DELETE policy on task_completions was split out and APPLIED
+-- separately as 20261004172307_add_task_completions_delete_policy.sql, since
+-- it fixed a live functional bug (undo-completion silently doing nothing) and
+-- was safe to ship on its own. It is intentionally not repeated here — this
+-- file is still unapplied, and re-creating the policy would error.
 
 
 -- ── 4. systems / appliances / maintenance_tasks: UPDATE could re-parent ─────
