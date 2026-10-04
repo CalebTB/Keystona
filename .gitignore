@@ -40,3 +40,7 @@ Thumbs.db
 # ─── Misc ─────────────────────────────────────
 node_modules/
 hometrack-dashboard-C-home-intelligence.html
+
+# ─── Local dev notes (never commit) ───────────
+DEV_CREDENTIALS.txt
+*.local.txt
