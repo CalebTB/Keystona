@@ -191,17 +191,29 @@ class _DateInfo extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          dateText,
-          style: AuroraType.bodySm.copyWith(color: dateColor),
+        // Both children must be able to shrink: on a narrow card the date
+        // text alone can exceed the row's width budget.
+        Flexible(
+          child: Text(
+            dateText,
+            style: AuroraType.bodySm.copyWith(color: dateColor),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
         if (healthLabel != null) ...[
           const SizedBox(width: AuroraSpacing.space1),
-          Text(
-            '· $healthLabel',
-            style: AuroraType.bodySm.copyWith(
-              color: labelColor,
-              fontWeight: FontWeight.w600,
+          // Flexible + ellipsis: date text plus a long label ("3 days
+          // overdue") exceeds the card's width budget otherwise.
+          Flexible(
+            child: Text(
+              '· $healthLabel',
+              style: AuroraType.bodySm.copyWith(
+                color: labelColor,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

@@ -101,6 +101,12 @@ class _AuroraTextFieldState extends State<AuroraTextField> {
 
   bool get _isTextarea => widget.maxLines > 1;
 
+  /// A textarea opens at 4 lines, but never more than [maxLines] —
+  /// TextFormField asserts if minLines > maxLines.
+  int get _minLines => _isTextarea
+      ? (widget.maxLines < 4 ? widget.maxLines : 4)
+      : 1;
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -110,9 +116,9 @@ class _AuroraTextFieldState extends State<AuroraTextField> {
         _FieldLabel(label: widget.label, isRequired: widget.required),
         const SizedBox(height: AuroraSpacing.space1),
         Container(
-          constraints: _isTextarea
-              ? const BoxConstraints(minHeight: 120)
-              : const BoxConstraints(minHeight: 48),
+          constraints: BoxConstraints(
+            minHeight: _isTextarea ? 48 + (_minLines - 1) * 24 : 48,
+          ),
           decoration: _containerDecoration,
           padding: const EdgeInsets.symmetric(
             horizontal: AuroraSpacing.space7,
@@ -124,7 +130,7 @@ class _AuroraTextFieldState extends State<AuroraTextField> {
             keyboardType: widget.keyboardType,
             maxLength: widget.maxLength,
             maxLines: widget.maxLines,
-            minLines: _isTextarea ? 4 : 1,
+            minLines: _minLines,
             readOnly: widget.readOnly,
             onTap: widget.onTap,
             onChanged: widget.onChanged,
