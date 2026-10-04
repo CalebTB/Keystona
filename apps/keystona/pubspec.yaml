@@ -71,6 +71,7 @@ dev_dependencies:
   freezed: ^3.2.3
   json_serializable: ^6.8.0
   mockito: ^5.4.0
+  sentry_dart_plugin: ^3.4.0
 
 dependency_overrides:
   # Workaround: path_provider_foundation 2.6.0 uses objective_c FFI which
@@ -81,3 +82,42 @@ dependency_overrides:
 
 flutter:
   uses-material-design: true
+
+# ─── Sentry debug symbol upload (sentry_dart_plugin 3.4.0) ───────────────────
+# Run `dart run sentry_dart_plugin` AFTER a release build — the build writes the
+# symbols, the plugin uploads them. The Makefile release targets do this.
+#
+# Key names verified against the installed plugin's configuration_values.dart.
+# `upload_native_symbols` / `include_native_sources` are the deprecated spellings;
+# a misspelled key is silently ignored rather than reported.
+#
+# auth_token is deliberately ABSENT. This file is committed, so the token comes
+# from the SENTRY_AUTH_TOKEN environment variable instead.
+sentry:
+  org: caleb-byers
+  project: keystona
+
+  # Native debug files: iOS dSYM and Android symbols. Needed for native crashes
+  # whether or not Dart code is obfuscated, since the Dart obfuscation map does
+  # not symbolicate a native frame.
+  upload_debug_symbols: true
+
+  # Uploads source files so Sentry can show the offending line inline.
+  # This sends application source to Sentry — fine for a private project, and
+  # it is the difference between a line number and seeing the actual code.
+  upload_sources: true
+
+  # Web-only; this app targets iOS and Android.
+  upload_source_maps: false
+
+  # Commit integration is OFF. `set-commits --auto` needs a Sentry<->GitHub
+  # integration installed at the ORG level with this repo linked; without one
+  # the call returns 403 and fails the build *after* symbols have already
+  # uploaded successfully — all the work done, exit code 1. Turn this back on
+  # (delete the line) once the GitHub integration is connected in Sentry, which
+  # buys suspect-commit attribution on new issues.
+  commits: false
+
+
+  # Fail the upload step loudly rather than silently skipping absent artifacts.
+  ignore_missing: false

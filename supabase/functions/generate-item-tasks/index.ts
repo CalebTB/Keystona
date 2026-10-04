@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { captureError } from "../_shared/sentry.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -99,6 +100,7 @@ Pick the most important recurring maintenance tasks. Only include genuinely usef
     });
   } catch (err) {
     console.error("generate-item-tasks error:", err);
+    await captureError(err, { fn: "generate-item-tasks" });
     return new Response(
       JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

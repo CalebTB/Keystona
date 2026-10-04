@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
@@ -197,6 +198,11 @@ final routerProvider = Provider<GoRouter>((ref) {
   final isAuthenticated = ref.watch(isAuthenticatedProvider);
 
   return GoRouter(
+    // Feeds navigation breadcrumbs and screen-load transactions to Sentry.
+    // It reads route.settings.name, which go_router fills from GoRoute.name
+    // and otherwise falls back to the path segment — hence the explicit names
+    // on routes whose segment ('create', 'add', 'tasks', 'edit') repeats.
+    observers: [SentryNavigatorObserver()],
     initialLocation: AppRoutes.home,
     debugLogDiagnostics: false,
 
@@ -271,6 +277,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                     routes: [
                       GoRoute(
                         path: 'add',
+                        name: 'system-add',
                         pageBuilder: (_, state) => _buildPage(
                           state,
                           SystemFormScreen(
@@ -290,6 +297,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                         routes: [
                           GoRoute(
                             path: 'tasks',
+                            name: 'system-tasks',
                             pageBuilder: (_, state) => _buildPage(
                               state,
                               ItemTasksScreen(
@@ -309,6 +317,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                     routes: [
                       GoRoute(
                         path: 'add',
+                        name: 'appliance-add',
                         pageBuilder: (_, state) => _buildPage(
                           state,
                           ApplianceFormScreen(
@@ -329,6 +338,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                         routes: [
                           GoRoute(
                             path: 'tasks',
+                            name: 'appliance-tasks',
                             pageBuilder: (_, state) => _buildPage(
                               state,
                               ItemTasksScreen(
@@ -345,6 +355,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'edit',
+                    name: 'property-edit',
                     pageBuilder: (_, state) => _buildPage(
                       state,
                       const PropertyEditScreen(),
@@ -379,6 +390,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                     routes: [
                       GoRoute(
                         path: 'add',
+                        name: 'contact-add',
                         pageBuilder: (_, state) => _buildPage(
                           state,
                           ContactFormScreen(
@@ -397,6 +409,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                     routes: [
                       GoRoute(
                         path: 'add',
+                        name: 'insurance-add',
                         pageBuilder: (_, state) => _buildPage(
                           state,
                           const InsuranceFormScreen(),
@@ -479,6 +492,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   // Static segments must come before parameterised ':taskId'.
                   GoRoute(
                     path: 'create',
+                    name: 'task-create',
                     pageBuilder: (_, state) => _buildPage(
                       state,
                       const TaskFormScreen(),
@@ -527,6 +541,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   // Static 'create' must come before parameterised ':projectId'.
                   GoRoute(
                     path: 'create',
+                    name: 'project-create',
                     pageBuilder: (_, state) => _buildPage(
                       state,
                       const ProjectFormScreen(),
@@ -545,6 +560,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                       // Static 'edit' before downstream param routes.
                       GoRoute(
                         path: 'edit',
+                        name: 'project-edit',
                         pageBuilder: (_, state) => _buildPage(
                           state,
                           ProjectFormScreen(
@@ -566,6 +582,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                           // Static 'create' before parameterised ':phaseId'.
                           GoRoute(
                             path: 'create',
+                            name: 'phase-create',
                             pageBuilder: (_, state) => _buildPage(
                               state,
                               PhaseFormScreen(
@@ -598,6 +615,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                         routes: [
                           GoRoute(
                             path: 'create',
+                            name: 'budget-item-create',
                             pageBuilder: (_, state) => _buildPage(
                               state,
                               BudgetItemFormScreen(
@@ -639,6 +657,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                         routes: [
                           GoRoute(
                             path: 'create',
+                            name: 'note-create',
                             pageBuilder: (_, state) => _buildPage(
                               state,
                               NoteFormScreen(

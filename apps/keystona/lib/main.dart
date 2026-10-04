@@ -2,28 +2,49 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'core/config.dart';
+import 'core/observability/sentry_init.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // Everything else starts inside SentryInit.run's appRunner. Sentry only
+  // observes errors thrown within that callback, and Supabase/RevenueCat
+  // initialization is exactly where startup crashes happen — so they have to
+  // be inside it, not before it.
+  //
+  // No-ops safely when there is no DSN or the build is development, so this
+  // is identical to the previous behaviour until a DSN is configured.
+  await SentryInit.run(() async {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  await Supabase.initialize(
-    url: AppConfig.supabaseUrl,
-    anonKey: AppConfig.supabaseAnonKey,
-  );
+    await Supabase.initialize(
+      url: AppConfig.supabaseUrl,
+      anonKey: AppConfig.supabaseAnonKey,
+    );
 
-  await Purchases.setLogLevel(LogLevel.debug);
-  final purchasesConfig = PurchasesConfiguration(AppConfig.revenuecatAppleKey);
-  await Purchases.configure(purchasesConfig);
+    // Verbose only outside production — the RevenueCat SDK logs purchase
+    // payloads at debug level.
+    await Purchases.setLogLevel(
+      AppConfig.isProduction ? LogLevel.error : LogLevel.debug,
+    );
+    await Purchases.configure(
+      PurchasesConfiguration(AppConfig.revenuecatAppleKey),
+    );
 
-  runApp(
-    const ProviderScope(
-      child: KeystonaApp(),
-    ),
-  );
+    // SentryWidget is required for user-interaction tracing. It is inside
+    // ProviderScope so Riverpod remains the outermost scope.
+    runApp(
+      // Not const: SentryWidget has no const constructor.
+      ProviderScope(
+        child: SentryWidget(
+          child: const KeystonaApp(),
+        ),
+      ),
+    );
+  });
 }
 
 /// Root application widget.
