@@ -1,4 +1,4 @@
-/// Form field validators for use with [flutter_form_builder].
+/// Form field validators for Aurora form fields.
 ///
 /// All validators return `null` when the value is valid and a user-friendly
 /// error string when invalid. They conform to the `FormFieldValidator<String>`

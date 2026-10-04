@@ -138,7 +138,7 @@ class HomeProfileNotifier extends _$HomeProfileNotifier {
 
 /// Sentinel exception thrown when the user has no property row yet.
 ///
-/// Caught in [HomeProfileScreen] to render [HomeProfileEmptyState] instead
+/// Caught by the Home Profile surfaces to render an empty state instead
 /// of the generic error view.
 class _NoPropertyException implements Exception {
   const _NoPropertyException();
