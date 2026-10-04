@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { captureError } from "../_shared/sentry.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -216,6 +217,7 @@ Deno.serve(async (req: Request) => {
     );
   } catch (error) {
     console.error("Task generation error:", (error as Error).message);
+    await captureError(error, { fn: "generate-maintenance-tasks" });
     return new Response(
       JSON.stringify({ error: "Internal server error" }),
       {
