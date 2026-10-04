@@ -1,4 +1,4 @@
-.PHONY: setup db-start db-stop db-reset db-push app-run app-run-staging app-test app-build-apk app-build-ios app-analyze app-clean codegen codegen-watch functions-serve functions-deploy check-release-env
+.PHONY: setup db-start db-stop db-reset db-push app-run app-run-staging app-test app-build-apk app-build-ios app-analyze app-clean codegen codegen-watch functions-serve functions-deploy check-release-env check-symbol-env symbols-upload
 
 APP := apps/keystona
 DEFINES := dart-defines.json
@@ -42,6 +42,16 @@ sys.exit('ERROR: SENTRY_DSN looks like a placeholder (%s).\n       Get the real 
 		|| exit 1
 	@echo "release env OK — SENTRY_DSN present, APP_ENV forced to production below"
 
+# Symbol upload needs a token the app itself never sees. Missing it makes
+# sentry_dart_plugin fail rather than silently ship unsymbolicated builds.
+check-symbol-env:
+	@test -n "$$SENTRY_AUTH_TOKEN" || { \
+		echo "ERROR: SENTRY_AUTH_TOKEN is not set."; \
+		echo "       Create one at Sentry > Settings > Auth Tokens with project:releases scope,"; \
+		echo "       then: export SENTRY_AUTH_TOKEN=... (or set it in CI secrets)."; \
+		echo "       It is build-time only and must never be embedded in the app."; \
+		exit 1; }
+
 # ─── Flutter App ─────────────────────────────
 # Dev run. APP_ENV stays whatever dart-defines.json says (development), which
 # keeps Sentry disabled so hot reloads don't spend quota or bury real issues.
@@ -59,15 +69,23 @@ app-test:
 # Release builds force APP_ENV=production so SentryInit.isEnabled passes.
 # Without this they inherit APP_ENV=development from the file and ship with
 # crash reporting off — the bug this target previously had.
-app-build-apk: check-release-env
+app-build-apk: check-release-env check-symbol-env
 	cd $(APP) && flutter build apk --release \
 		--dart-define-from-file=$(DEFINES) \
 		--dart-define=APP_ENV=production
+	$(MAKE) symbols-upload
 
-app-build-ios: check-release-env
+app-build-ios: check-release-env check-symbol-env
 	cd $(APP) && flutter build ios --release \
 		--dart-define-from-file=$(DEFINES) \
 		--dart-define=APP_ENV=production
+	$(MAKE) symbols-upload
+
+# Uploads whatever debug files the preceding build produced. Must run AFTER the
+# build and from the SAME build that ships — a local upload paired with a
+# CI-built binary leaves artifacts that do not match the running code.
+symbols-upload: check-symbol-env
+	cd $(APP) && dart run sentry_dart_plugin
 
 app-analyze:
 	cd $(APP) && flutter analyze
