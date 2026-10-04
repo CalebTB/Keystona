@@ -7,6 +7,7 @@ import '../../../models/project_document_link.dart';
 import '../shared/document_link_type.dart';
 import '../shared/file_type_icon_block.dart';
 import '../shared/link_type_palette.dart';
+import '../../../../../core/theme/aurora_typography.dart';
 
 /// Groups linked project documents by their link type (Permits, Contracts, etc.).
 ///
@@ -83,14 +84,7 @@ class DocumentsByTypeView extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       eyebrowLabel,
-                      style: const TextStyle(
-                        fontFamily: 'IBMPlexMono',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.2,
-                        height: 1.2,
-                        color: AuroraColors.inkSecondary,
-                      ),
+                      style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary, height: 1.2),
                     ),
                   ],
                 ),
@@ -99,13 +93,7 @@ class DocumentsByTypeView extends StatelessWidget {
                 // H1
                 Text(
                   'By purpose.',
-                  style: GoogleFonts.fraunces(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.7,
-                    height: 1.05,
-                    color: AuroraColors.ink,
-                  ),
+                  style: AuroraType.h1.copyWith(color: AuroraColors.ink, height: 1.05),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -244,12 +232,7 @@ class _SectionHeader extends StatelessWidget {
           const Spacer(),
           Text(
             docLabel,
-            style: const TextStyle(
-              fontFamily: 'IBMPlexMono',
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-              color: AuroraColors.inkSecondary,
-            ),
+            style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
           ),
         ],
       ),
@@ -325,13 +308,7 @@ class _DocumentCard extends StatelessWidget {
                         ),
                         child: Text(
                           type.displayName.toUpperCase(),
-                          style: TextStyle(
-                            fontFamily: 'IBMPlexMono',
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
-                            color: palette.foreground,
-                          ),
+                          style: AuroraType.labelSm.copyWith(color: palette.foreground),
                         ),
                       ),
                     ],
@@ -341,11 +318,7 @@ class _DocumentCard extends StatelessWidget {
                   // Row 2: linked date
                   Text(
                     formattedDate,
-                    style: const TextStyle(
-                      fontFamily: 'IBMPlexMono',
-                      fontSize: 10,
-                      color: AuroraColors.inkSecondary,
-                    ),
+                    style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
                   ),
                 ],
               ),

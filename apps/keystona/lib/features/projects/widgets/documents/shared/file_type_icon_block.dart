@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/aurora_colors.dart';
+import '../../../../../core/theme/aurora_typography.dart';
 
 
 /// 44×56 colored file-type block with folded corner effect.
@@ -78,13 +79,7 @@ class FileTypeIconBlock extends StatelessWidget {
             alignment: Alignment.center,
             child: Text(
               info.label,
-              style: TextStyle(
-                fontFamily: 'IBMPlexMono',
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: info.fg,
-                letterSpacing: 0,
-              ),
+              style: AuroraType.label.copyWith(color: info.fg),
             ),
           ),
           // Folded corner triangle — top-right 12×12 area

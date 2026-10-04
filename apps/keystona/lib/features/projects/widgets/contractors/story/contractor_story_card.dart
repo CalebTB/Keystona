@@ -6,6 +6,7 @@ import '../../../../../core/theme/aurora_colors.dart';
 
 import '../../../models/project.dart';
 import '../../../models/project_contractor.dart';
+import '../../../../../core/theme/aurora_typography.dart';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -89,13 +90,7 @@ class ContractorStoryCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     contractor.contactName,
-                    style: GoogleFonts.fraunces(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      height: 1.05,
-                      letterSpacing: -0.3,
-                    ),
+                    style: AuroraType.h1.copyWith(color: AuroraColors.paper, height: 1.05),
                   ),
                   const SizedBox(height: 4),
                   _Subtitle(contractor: contractor),
@@ -178,12 +173,7 @@ class _TopRow extends StatelessWidget {
           alignment: Alignment.center,
           child: Text(
             initials.isEmpty ? '?' : initials,
-            style: GoogleFonts.fraunces(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              height: 1,
-            ),
+            style: AuroraType.h1.copyWith(color: AuroraColors.paper, height: 1),
           ),
         ),
         const Spacer(),
@@ -194,15 +184,9 @@ class _TopRow extends StatelessWidget {
               color: AuroraColors.cobaltDim,
               borderRadius: BorderRadius.circular(5),
             ),
-            child: const Text(
+            child: Text(
               'LEAD',
-              style: TextStyle(
-                fontFamily: 'IBMPlexMono',
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.0,
-                color: AuroraColors.ink,
-              ),
+              style: AuroraType.labelSm.copyWith(color: AuroraColors.ink),
             ),
           ),
       ],
@@ -228,13 +212,7 @@ class _Subtitle extends StatelessWidget {
 
     return Text(
       parts.join(' · '),
-      style: const TextStyle(
-        fontFamily: 'IBMPlexMono',
-        fontSize: 10,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.6,
-        color: AuroraColors.inkTertiary,
-      ),
+      style: AuroraType.label.copyWith(color: AuroraColors.inkTertiary),
       overflow: TextOverflow.ellipsis,
     );
   }
@@ -286,13 +264,7 @@ class _QuoteBlock extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           attribution,
-          style: TextStyle(
-            fontFamily: 'IBMPlexMono',
-            fontSize: 9,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.5,
-            color: Colors.white.withValues(alpha: 0.55),
-          ),
+          style: AuroraType.labelSm.copyWith(color: Colors.white.withValues(alpha: 0.55)),
         ),
       ],
     );
@@ -364,23 +336,12 @@ class _StatCell extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
-              fontFamily: 'IBMPlexMono',
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.8,
-              color: AuroraColors.inkSecondary,
-            ),
+            style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
           ),
           const SizedBox(height: 5),
           Text(
             value,
-            style: const TextStyle(
-              fontFamily: 'IBMPlexMono',
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: AuroraColors.ink,
-            ),
+            style: AuroraType.number.copyWith(color: AuroraColors.ink),
           ),
         ],
       ),
@@ -407,15 +368,9 @@ class _RatingCell extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text(
+          Text(
             'RATING',
-            style: TextStyle(
-              fontFamily: 'IBMPlexMono',
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.8,
-              color: AuroraColors.inkSecondary,
-            ),
+            style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
           ),
           const SizedBox(height: 5),
           Row(
@@ -452,25 +407,14 @@ class _PhoneCell extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text(
+          Text(
             'PHONE',
-            style: TextStyle(
-              fontFamily: 'IBMPlexMono',
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.8,
-              color: AuroraColors.inkSecondary,
-            ),
+            style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
           ),
           const SizedBox(height: 5),
           Text(
             phone != null ? _fmtPhone(phone!) : '—',
-            style: const TextStyle(
-              fontFamily: 'IBMPlexMono',
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: AuroraColors.ink,
-            ),
+            style: AuroraType.number.copyWith(color: AuroraColors.ink),
             overflow: TextOverflow.ellipsis,
           ),
         ],
@@ -508,15 +452,9 @@ class _ProjectsSection extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 6),
-            const Text(
+            Text(
               'PROJECTS TOGETHER',
-              style: TextStyle(
-                fontFamily: 'IBMPlexMono',
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.0,
-                color: Color(0xFF9D9BB0),
-              ),
+              style: AuroraType.labelSm.copyWith(color: Color(0xFF9D9BB0)),
             ),
           ],
         ),
@@ -548,11 +486,7 @@ class _ProjectsSection extends StatelessWidget {
                   Text(
                     '${project.status.statusLabel} · '
                     '${project.projectType.projectTypeLabel}',
-                    style: const TextStyle(
-                      fontFamily: 'IBMPlexMono',
-                      fontSize: 10,
-                      color: Color(0xFF9D9BB0),
-                    ),
+                    style: AuroraType.label.copyWith(color: Color(0xFF9D9BB0)),
                   ),
                 ],
               ),
@@ -560,12 +494,7 @@ class _ProjectsSection extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               _fmtAmount(contractAmt),
-              style: const TextStyle(
-                fontFamily: 'IBMPlexMono',
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: AuroraColors.ink,
-              ),
+              style: AuroraType.number.copyWith(color: AuroraColors.ink),
             ),
           ],
         ),

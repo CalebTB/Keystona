@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/aurora_colors.dart';
 import '../../../../../core/theme/aurora_spacing.dart';
+import '../../../../../core/theme/aurora_typography.dart';
 
 
 /// 3-segment pill toggle: Pairs | All | Unpaired.
@@ -114,13 +115,7 @@ class _Segment extends StatelessWidget {
               const SizedBox(width: 3),
               Text(
                 '$count',
-                style: const TextStyle(
-                  fontFamily: 'IBMPlexMono',
-                  fontSize: 9,
-                  fontWeight: FontWeight.w500,
-                  color: AuroraColors.inkSecondary,
-                  height: 1.2,
-                ),
+                style: AuroraType.labelSm.copyWith(color: AuroraColors.inkSecondary, height: 1.2),
               ),
             ],
           ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/aurora_colors.dart';
+import '../../../../../core/theme/aurora_typography.dart';
 
 
 /// Shown when the documents screen is entered with an active contractor filter.
@@ -35,12 +36,7 @@ class ContractorFilterBanner extends StatelessWidget {
           Expanded(
             child: Text(
               'Showing docs for $contractorName',
-              style: const TextStyle(
-                fontFamily: 'IBMPlexMono',
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AuroraColors.ink,
-              ),
+              style: AuroraType.label.copyWith(color: AuroraColors.ink),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

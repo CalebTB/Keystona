@@ -93,14 +93,7 @@ class PhotosDiptychView extends StatelessWidget {
                     Flexible(
                       child: Text(
                         '${projectName.toUpperCase()} · THE TRANSFORMATION',
-                        style: const TextStyle(
-                          fontFamily: 'IBMPlexMono',
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.2,
-                          height: 1.2,
-                          color: AuroraColors.inkSecondary,
-                        ),
+                        style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary, height: 1.2),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -110,13 +103,7 @@ class PhotosDiptychView extends StatelessWidget {
                 // H1
                 Text(
                   'Before & after.',
-                  style: GoogleFonts.fraunces(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.7,
-                    height: 1.05,
-                    color: AuroraColors.ink,
-                  ),
+                  style: AuroraType.h1.copyWith(color: AuroraColors.ink, height: 1.05),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -300,12 +287,7 @@ class _PairCard extends StatelessWidget {
                 // Days elapsed
                 Text(
                   '${_daysElapsed()} days',
-                  style: const TextStyle(
-                    fontFamily: 'IBMPlexMono',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: AuroraColors.inkSecondary,
-                  ),
+                  style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
                 ),
                 // Slide compare CTA
                 GestureDetector(
@@ -320,15 +302,9 @@ class _PairCard extends StatelessWidget {
                         color: AuroraColors.coral,
                       ),
                       const SizedBox(width: 4),
-                      const Text(
+                      Text(
                         'SLIDE COMPARE',
-                        style: TextStyle(
-                          fontFamily: 'IBMPlexMono',
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.0,
-                          color: AuroraColors.coral,
-                        ),
+                        style: AuroraType.label.copyWith(color: AuroraColors.coral),
                       ),
                     ],
                   ),
@@ -381,12 +357,7 @@ class _PhotoTile extends StatelessWidget {
             right: 8,
             child: Text(
               date,
-              style: const TextStyle(
-                fontFamily: 'IBMPlexMono',
-                fontSize: 9,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
+              style: AuroraType.labelSm.copyWith(color: Colors.white),
             ),
           ),
         ],
@@ -395,7 +366,7 @@ class _PhotoTile extends StatelessWidget {
   }
 }
 
-/// Small IBMPlexMono chip showing the room tag label.
+/// Small mono chip showing the room tag label.
 class _RoomTagChip extends StatelessWidget {
   const _RoomTagChip({required this.label});
 
@@ -411,13 +382,7 @@ class _RoomTagChip extends StatelessWidget {
       ),
       child: Text(
         label.toUpperCase(),
-        style: const TextStyle(
-          fontFamily: 'IBMPlexMono',
-          fontSize: 9,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.5,
-          color: _kRoomTagText,
-        ),
+        style: AuroraType.labelSm.copyWith(color: _kRoomTagText),
       ),
     );
   }

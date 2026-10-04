@@ -8,6 +8,7 @@ import '../../../models/project.dart';
 import '../../../models/project_contractor.dart';
 import '../../contractor_form_sheet.dart';
 import 'contractor_story_card.dart';
+import '../../../../../core/theme/aurora_typography.dart';
 
 /// Full-screen swipeable card-stack view for project contractors.
 ///
@@ -112,14 +113,7 @@ class _ContractorsStoryViewState extends ConsumerState<ContractorsStoryView> {
                   Expanded(
                     child: Text(
                       '${widget.project.name.toUpperCase()} · THE CAST',
-                      style: const TextStyle(
-                        fontFamily: 'IBMPlexMono',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.2,
-                        color: AuroraColors.inkSecondary,
-                        height: 1.2,
-                      ),
+                      style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary, height: 1.2),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),

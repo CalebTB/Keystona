@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/theme/aurora_colors.dart';
 import '../../../../../core/theme/aurora_typography.dart';
 import '../../../../../core/theme/aurora_spacing.dart';
@@ -99,27 +98,14 @@ class _PhotosCuratedGridState extends ConsumerState<PhotosCuratedGrid> {
                         ),
                         Text(
                           '${projectName != null ? '$projectName · ' : ''}${all.length} photo${all.length == 1 ? '' : 's'}',
-                          style: const TextStyle(
-                            fontFamily: 'IBMPlexMono',
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.2,
-                            color: AuroraColors.inkSecondary,
-                            height: 1.3,
-                          ),
+                          style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary, height: 1.3),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Your journey',
-                      style: GoogleFonts.fraunces(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.7,
-                        color: AuroraColors.ink,
-                        height: 1.1,
-                      ),
+                      style: AuroraType.h1.copyWith(color: AuroraColors.ink, height: 1.1),
                     ),
                   ],
                 ),

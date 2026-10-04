@@ -198,7 +198,7 @@ class _HeroSection extends StatelessWidget {
               child: Text(emoji, style: const TextStyle(fontSize: 28)),
             ),
           ),
-          // Project name — bottom-left, Fraunces bold
+          // Project name — bottom-left, h1 bold
           Positioned(
             bottom: 12,
             left: 14,

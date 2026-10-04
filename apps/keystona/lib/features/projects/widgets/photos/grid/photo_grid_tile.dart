@@ -6,6 +6,7 @@ import '../../../../../core/theme/aurora_colors.dart';
 import '../../../models/project_photo.dart';
 import '../shared/photo_thumb.dart';
 import '../shared/photo_type_tag.dart';
+import '../../../../../core/theme/aurora_typography.dart';
 
 /// Single tile in the curated photo grid.
 ///
@@ -130,14 +131,7 @@ class PhotoGridTile extends StatelessWidget {
                 captionText,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontFamily: 'IBMPlexMono',
-                  fontSize: 9,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.3,
-                  color: Color(0xEBFFFFFF),
-                  height: 1.3,
-                ),
+                style: AuroraType.labelSm.copyWith(color: Color(0xEBFFFFFF), height: 1.3),
               ),
             ),
           ),

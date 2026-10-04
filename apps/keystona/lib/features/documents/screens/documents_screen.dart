@@ -32,7 +32,7 @@ import '../widgets/upload_source_sheet.dart';
 
 // ── Top-level helpers ─────────────────────────────────────────────────────────
 
-/// Parses a hex category color string (e.g. '#B85638') to a [Color].
+/// Parses a hex category color string (e.g. '#FF3B62') to a [Color].
 /// Falls back to [AuroraColors.coral] when parsing fails.
 Color _parseCatColor(String? hex) {
   if (hex == null || hex.isEmpty) return AuroraColors.coral;

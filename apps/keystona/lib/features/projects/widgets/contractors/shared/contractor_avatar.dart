@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../../../core/theme/aurora_typography.dart';
+import '../../../../../core/theme/aurora_colors.dart';
 
 
 /// 44px circular avatar for a contractor, using role color as background.
 ///
-/// Shows white Fraunces initials extracted from [name] (max 2 words).
+/// Shows white Inter initials extracted from [name] (max 2 words).
 class ContractorAvatar extends StatelessWidget {
   const ContractorAvatar({
     super.key,
@@ -36,12 +37,7 @@ class ContractorAvatar extends StatelessWidget {
       alignment: Alignment.center,
       child: Text(
         _initials.isEmpty ? '?' : _initials,
-        style: GoogleFonts.fraunces(
-          fontSize: size * 0.32,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-          height: 1,
-        ),
+        style: AuroraType.h1.copyWith(fontSize: size * 0.32, color: AuroraColors.paper, height: 1),
       ),
     );
   }

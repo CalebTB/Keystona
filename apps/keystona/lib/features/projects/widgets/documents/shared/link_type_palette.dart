@@ -3,46 +3,45 @@ import '../../../../../core/theme/aurora_colors.dart';
 
 import 'document_link_type.dart';
 
-// Local dim colors not yet in AuroraColors.
-// Use inline constants to avoid touching app_colors.dart (parallel agent risk).
-const Color _tealDim = Color(0x1A2C9C8E); // teal-ish at ~10% opacity
-const Color _tealFg = Color(0xFF2C9C8E); // teal foreground
-const Color _plumDim = Color(0x1A7B5EA8); // plum at ~10% opacity
-const Color _plumFg = Color(0xFF7B5EA8); // plum foreground
-const Color _slateDim = Color(0x1A5A7080); // slate at ~10% opacity
-const Color _slateFg = Color(0xFF5A7080); // slate foreground
-const Color _sandDim = Color(0x1AC49A48); // sand/amber at ~10% opacity
-const Color _sandAmberFg = Color(0xFFC49A48); // sand amber foreground
-const Color _accentDim = Color(0x1AB85638); // accent at ~10% opacity
-const Color _accentFg = Color(0xFFB85638); // accent foreground
-
 /// Single source of truth: link_type → (background, foreground) colors.
 ///
 /// All link-type badge coloring flows through this class.
+///
+/// Colors follow the v1 → Aurora remapping in
+/// `Keystona_Aurora_Design_System.md` §8. The v1 palette used nine accents
+/// (teal, plum, slate, sand, terracotta…); Aurora deliberately collapses to
+/// five, so `receipt`/`contract` now share cobalt and `permit`/`warranty`
+/// share coral. Per §8: "The collapse is intentional — Aurora deliberately
+/// uses fewer category colors to keep the system tight."
 abstract final class LinkTypePalette {
   static ({Color background, Color foreground}) forType(
     DocumentLinkType type,
   ) =>
       switch (type) {
+        // was v1 teal
         DocumentLinkType.receipt => (
-          background: _tealDim,
-          foreground: _tealFg,
+          background: AuroraColors.cobaltDim,
+          foreground: AuroraColors.cobalt,
         ),
+        // was v1 terracotta accent
         DocumentLinkType.permit => (
-          background: _accentDim,
-          foreground: _accentFg,
+          background: AuroraColors.coralDim,
+          foreground: AuroraColors.coral,
         ),
+        // was v1 slate
         DocumentLinkType.contract => (
-          background: _slateDim,
-          foreground: _slateFg,
+          background: AuroraColors.cobaltDim,
+          foreground: AuroraColors.cobalt,
         ),
+        // was v1 sand
         DocumentLinkType.invoice => (
-          background: _sandDim,
-          foreground: _sandAmberFg,
+          background: AuroraColors.yellowDim,
+          foreground: AuroraColors.yellowDeep,
         ),
+        // was v1 plum (deprecated in Aurora — no direct equivalent)
         DocumentLinkType.warranty => (
-          background: _plumDim,
-          foreground: _plumFg,
+          background: AuroraColors.coralDim,
+          foreground: AuroraColors.coral,
         ),
         DocumentLinkType.general => (
           background: AuroraColors.butter,
