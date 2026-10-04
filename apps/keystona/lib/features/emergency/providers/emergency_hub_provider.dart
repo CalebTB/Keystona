@@ -114,7 +114,7 @@ class EmergencyHubNotifier extends _$EmergencyHubNotifier {
           .eq('id', existingId);
     }
 
-    // Refresh hub overview so ShutoffCard badges update immediately.
+    // Refresh hub overview so shutoff badges update immediately.
     ref.invalidateSelf();
     await future;
   }

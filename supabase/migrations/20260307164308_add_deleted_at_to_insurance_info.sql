@@ -1,0 +1,1 @@
+ALTER TABLE insurance_info ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;

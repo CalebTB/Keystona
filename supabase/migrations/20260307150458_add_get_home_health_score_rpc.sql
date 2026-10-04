@@ -1,0 +1,11 @@
+-- Original get_home_health_score definition.
+--
+-- NOTE: superseded in full by 20260307151111_fix_health_score_overdue_count.sql,
+-- which CREATE OR REPLACEs this function with the corrected overdue predicate.
+-- The schema effect of this migration is therefore fully captured by that later
+-- migration, and the original body is intentionally not reproduced here. If the
+-- historical text is ever needed it remains in the remote project:
+--
+--   SELECT array_to_string(statements, E';\n')
+--   FROM supabase_migrations.schema_migrations
+--   WHERE version = '20260307150458';
