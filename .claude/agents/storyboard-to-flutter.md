@@ -65,6 +65,37 @@ For every screen and widget, mentally (and with tests) run it at: a small phone 
 - Accessibility: `Semantics` labels on icon-only buttons and custom controls, sufficient contrast via the palette, tap targets at or above minimum, and text that scales.
 - Prefer composition over inheritance and extract repeated visuals into shared widgets in the feature's `widgets/` (or `lib/core/widgets/` if cross-feature) rather than copy-pasting.
 
+## Code Structure: SOLID and Small Files (Non-Negotiable)
+
+The codebase already has screens of 1,000-1,900 lines. Rebuilding a screen is the moment to break it up. **No file may reach 1,000 lines**, and when you rewrite an existing large screen, split it by responsibility so it ends well under that. The limits are guidelines for good structure, not a reason to fragment code into tiny files.
+
+### Size limits
+- **Hard ceiling: 1,000 lines for any file.** Never produce or leave a file at or above it. If a file you are rewriting is already over, it must end under 1,000.
+- **Main screens** (Home, Projects, Tasks, Docs list, Settings hub, detail screens): aim for **under about 600 lines**, never more than 1,000. A big screen is acceptable when it is mostly composition of section widgets; it is not acceptable when it also holds form fields, data access, or business logic.
+- **Other screens and sheets:** aim for under about 400 lines.
+- **Widget files** (`widgets/*.dart`): aim for under about 300 lines, **one public widget per file** (plus its small private helpers). Name the file after the widget.
+- **`build()` method:** aim for under about 100 lines. When it gets long or deeply nested, extract named widget classes (not helper methods that return widgets).
+- **Provider / notifier / service / model files:** aim for under about 400 lines; split by concern (queries vs. mutations vs. mapping) before that.
+- Going over an "aim for" number is fine when the code is cohesive; say why in the report. Going over 1,000 is never fine.
+- Prefer a sensible number of cohesive files in the feature's `widgets/` folder (or a subfolder per screen, e.g. `widgets/document_detail/`) over one huge file or dozens of trivial ones. Use barrel files only where the repo already does.
+
+### SOLID, applied to Flutter
+- **Single Responsibility:** each class has one reason to change. Separate: screen (composition), section widgets (presentation of one block), providers (state/async), repositories or services (data access), models (data), mappers/formatters (pure functions), constants/copy. A widget never contains Supabase queries, parsing, or business rules.
+- **Open/Closed:** extend by composition and parameters, not by editing a widget for every new case. Use small enums/config objects and builder or slot parameters (`leading`, `trailing`, `child`) instead of growing `if/else` or boolean-flag chains. A new status, row type, or empty state should be a new small class or entry in a catalog, not another branch in a 500-line widget.
+- **Liskov Substitution:** widgets that stand in for one another (e.g. skeleton vs. content, alternative rows in a list) share the same contract and constraints; a replacement must not need extra setup, throw on missing optional data, or change layout assumptions.
+- **Interface Segregation:** widgets take only the data they use (a few primitives or a small value object), not an entire model, provider, or `WidgetRef`. Define narrow abstract interfaces (e.g. a repository interface per feature) rather than one fat service. Callbacks over passing notifiers.
+- **Dependency Inversion:** feature code depends on abstractions: screens and notifiers read a repository/service **through a Riverpod provider**, so tests override it with a fake. UI never constructs `SupabaseClient` or a concrete service directly. Business logic lives in plain Dart classes that take dependencies via constructor, so they are unit-testable without Flutter.
+
+### Concrete decomposition recipe for a screen
+1. `screens/foo_screen.dart`: scaffold, `ref.watch`, the loading/error/empty/content switch, navigation callbacks, and the layout of the section widgets.
+2. `widgets/foo/foo_header.dart`, `foo_list_item.dart`, `foo_section_x.dart`, ... : one block each.
+3. `widgets/foo/foo_skeleton.dart`, `foo_empty_state.dart`: states as their own files.
+4. `providers/foo_provider.dart` (state) plus `repositories/foo_repository.dart` (data access behind an interface) plus `models/`.
+5. `foo_copy.dart` / `foo_mapper.dart` for strings and pure transformation code.
+6. Forms: a form widget per section, a controller/state class for field state and validation (pure Dart, tested), and a thin screen that composes them.
+- Reuse before you create: search `lib/core/widgets/` and the feature's `widgets/` for an existing widget; do not copy-paste a block that appears twice, extract it. Cross-feature widgets still need the user's approval (list them in the report).
+- Don't over-engineer: no abstract class with a single caller and no foreseeable second, no generic base classes "just in case". The split is for readability and testability, not ceremony.
+
 ## Workflow
 
 ### 1. Read the storyboard completely
@@ -120,6 +151,7 @@ Follow the project CLAUDE.md and the `flutter-agent` skill. In particular:
 ### 6. Verify
 - Run `dart run build_runner build --delete-conflicting-outputs` after adding annotated files.
 - Run `flutter analyze` and fix everything you introduced, including anything left dangling by deletions.
+- **File-size check.** For every file you created or rewrote run `wc -l` and confirm no file reaches 1,000 lines, main screens are under about 600, and widgets under about 300. List any file over its "aim for" size with the reason; a file at or over 1,000 must be split before you finish. Confirm each widget file has a single public widget and that no widget file contains data-access code.
 - **Hard-coded value sweep.** Grep the files you touched for literals and eliminate them: `EdgeInsets\.(all|symmetric|only|fromLTRB)\(\s*[0-9]`, `SizedBox\((width|height):\s*[0-9]`, `BorderRadius\.circular\(\s*[0-9]`, `fontSize:\s*[0-9]`, `size:\s*[0-9]`, `Color\(0x`, `Colors\.`, `Duration\(`, `height:\s*[0-9]`, `width:\s*[0-9]`. Intentional exceptions in CLAUDE.md (full-screen media viewers) are the only allowed `Colors.black/white`.
 - **Responsive check.** Write or update widget tests (or run on simulators) at small phone, large phone, tablet, landscape, and text scale 2.0; assert no `RenderFlex overflowed` errors and no clipped/overlapping content. Fix any overflow by changing the layout, not by shrinking values.
 - Walk the storyboard inventory from step 1 and confirm every frame, state, string, and interaction is implemented or explicitly called out as deferred.
@@ -128,13 +160,15 @@ Follow the project CLAUDE.md and the `flutter-agent` skill. In particular:
 ## Output Expectations
 
 When finished, report:
-1. Files created/changed/**deleted** (list deleted files and removed classes explicitly).
+1. Files created/changed/**deleted**, each with its line count (before and after for rewritten files) (list deleted files and removed classes explicitly).
 2. Storyboard frames/states mapped to screens/widgets (a short table).
 3. Token decisions: values snapped to existing tokens, and any new tokens added.
 4. Deviations from the storyboard and why (platform conventions, catalog copy, missing data).
 5. Gaps handed off: backend, assets, or entry points still needed (every pushed route must have a reachable button on an existing tab).
 
 ## Things You Must Not Do
+- Do not write or leave any file at or over 1,000 lines, put several public widgets in one file, or put Supabase queries, parsing, or business rules inside widget code.
+- Do not make widgets depend on a whole model, provider, or `WidgetRef` when a few values or a callback would do.
 - Do not build a new screen next to an old one; update the existing screen and delete what it replaces.
 - Do not leave dead code, commented-out UI, or orphaned files from the previous design.
 - Do not use any inline numeric size, color, duration, or opacity in widget code. Not even "just this once".
