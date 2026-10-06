@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../../features/auth/providers/auth_provider.dart';
+import '../../features/auth/screens/check_email_screen.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
+import '../../features/auth/screens/splash_screen.dart';
 import '../../features/documents/screens/document_categories_screen.dart';
 import '../../features/documents/screens/document_detail_screen.dart';
 import '../../features/documents/screens/document_upload_screen.dart';
@@ -52,6 +54,10 @@ import '../../features/projects/screens/project_photos_screen.dart';
 import '../../features/projects/screens/projects_screen.dart';
 import '../../features/home_profile/screens/system_form_screen.dart';
 import '../../features/home_profile/screens/systems_screen.dart';
+import '../../features/onboarding/models/onboarding_models.dart';
+import '../../features/onboarding/providers/onboarding_provider.dart';
+import '../../features/onboarding/screens/checklist_screen.dart';
+import '../../features/onboarding/screens/persona_screen.dart';
 import '../../features/onboarding/screens/property_setup_screen.dart';
 import '../../features/onboarding/screens/trial_screen.dart';
 import '../../features/onboarding/screens/welcome_screen.dart';
@@ -77,11 +83,20 @@ abstract final class AppRoutes {
   static const login = '/login';
   static const signup = '/signup';
   static const forgotPassword = '/forgot-password';
+  static const splash = '/splash';
+  static const welcome = '/welcome';
+  static const checkEmail = '/check-email';
 
   // Onboarding
   static const onboarding = '/onboarding';
+  static const onboardingResume = '/onboarding/resume';
+  static const onboardingPersona = '/onboarding/persona';
   static const onboardingProperty = '/onboarding/property';
   static const onboardingTrial = '/onboarding/trial';
+  static const onboardingChecklist = '/onboarding/checklist';
+
+  /// Saved-homes flow for shoppers. Placeholder until Sprint 10.
+  static const shopAdd = '/shop/add';
 
   // Tab 0 — Home
   static const home = '/home';
@@ -152,9 +167,15 @@ abstract final class AppRoutes {
     login,
     signup,
     forgotPassword,
+    splash,
+    welcome,
+    checkEmail,
     onboarding,
+    onboardingResume,
+    onboardingPersona,
     onboardingProperty,
     onboardingTrial,
+    onboardingChecklist,
   };
 
   /// Auth-only routes — authenticated users are redirected away from these.
@@ -162,6 +183,9 @@ abstract final class AppRoutes {
     login,
     signup,
     forgotPassword,
+    splash,
+    welcome,
+    checkEmail,
   };
 
   /// Returns true when [path] does not require an authenticated session.
@@ -203,7 +227,9 @@ final routerProvider = Provider<GoRouter>((ref) {
     // and otherwise falls back to the path segment — hence the explicit names
     // on routes whose segment ('create', 'add', 'tasks', 'edit') repeats.
     observers: [SentryNavigatorObserver()],
-    initialLocation: AppRoutes.home,
+    // Cold start shows the splash; signed-in users are redirected off it
+    // (it is an auth-only route) and land on Home.
+    initialLocation: AppRoutes.splash,
     debugLogDiagnostics: false,
 
     redirect: (_, state) {
@@ -243,11 +269,58 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.forgotPassword,
         pageBuilder: (_, state) => _buildPage(state, const ForgotPasswordScreen()),
       ),
+      GoRoute(
+        path: AppRoutes.splash,
+        pageBuilder: (_, state) => _buildPage(state, const SplashScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.welcome,
+        pageBuilder: (_, state) => _buildPage(state, const WelcomeScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.checkEmail,
+        pageBuilder: (_, state) => _buildPage(
+          state,
+          CheckEmailScreen(email: state.extra as String? ?? ''),
+        ),
+      ),
 
       // ── Onboarding routes (no shell) ─────────────────────────────────────
       GoRoute(
         path: AppRoutes.onboarding,
-        pageBuilder: (_, state) => _buildPage(state, const WelcomeScreen()),
+        redirect: (_, _) => AppRoutes.onboardingResume,
+      ),
+      // Entry point for onboarding: sends the user to the furthest step they
+      // reached. Back buttons go to a step directly, never through here.
+      GoRoute(
+        path: AppRoutes.onboardingResume,
+        redirect: (_, _) async {
+          final progress =
+              await ref.read(onboardingProgressProvider.future);
+          return switch (progress.stage) {
+            OnbStage.persona => AppRoutes.onboardingPersona,
+            OnbStage.property => AppRoutes.onboardingProperty,
+            OnbStage.trial => AppRoutes.onboardingTrial,
+            OnbStage.checklist => AppRoutes.onboardingChecklist,
+          };
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.onboardingPersona,
+        pageBuilder: (_, state) =>
+            _buildPage(state, const OnbPersonaScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.onboardingChecklist,
+        pageBuilder: (_, state) =>
+            _buildPage(state, const OnbChecklistScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.shopAdd,
+        pageBuilder: (_, state) => _buildPage(
+          state,
+          const PlaceholderScreen(name: 'Saved homes (coming soon)'),
+        ),
       ),
       GoRoute(
         path: AppRoutes.onboardingProperty,

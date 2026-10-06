@@ -642,16 +642,16 @@ class _SignOutButton extends ConsumerWidget {
       onTap: () async {
         final confirmed = await showCupertinoDialog<bool>(
           context: context,
-          builder: (_) => CupertinoAlertDialog(
+          builder: (dialogContext) => CupertinoAlertDialog(
             title: const Text('Sign out?'),
             actions: [
               CupertinoDialogAction(
-                onPressed: () => Navigator.of(context).pop(false),
+                onPressed: () => Navigator.of(dialogContext).pop(false),
                 child: const Text('Cancel'),
               ),
               CupertinoDialogAction(
                 isDestructiveAction: true,
-                onPressed: () => Navigator.of(context).pop(true),
+                onPressed: () => Navigator.of(dialogContext).pop(true),
                 child: const Text('Sign out'),
               ),
             ],

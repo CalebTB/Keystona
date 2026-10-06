@@ -33,10 +33,13 @@ class AuthService {
     final response = await _client.auth.signUp(
       email: email,
       password: password,
+      data: {'display_name': fullName},
     );
 
+    // With email confirmation on there is no session yet, so a profiles write
+    // would be rejected by RLS. The name travels as user metadata until then.
     final userId = response.user?.id;
-    if (userId != null) {
+    if (userId != null && response.session != null) {
       await _client.from('profiles').upsert({
         'id': userId,
         'display_name': fullName,
@@ -72,5 +75,40 @@ class AuthService {
   /// Throws [AuthException] if the email is not registered.
   Future<void> resetPassword(String email) {
     return _client.auth.resetPasswordForEmail(email);
+  }
+
+  /// Deep link Supabase returns to after a browser OAuth flow.
+  ///
+  /// The matching URL scheme must be registered natively and added to the
+  /// Supabase redirect allow-list before Apple/Google can complete.
+  static const String oauthRedirectUrl = 'io.supabase.keystona://login-callback/';
+
+  /// Starts the Sign in with Apple flow (browser based).
+  ///
+  /// The session arrives through [onAuthStateChange]; the router redirects.
+  /// Returns false when the flow could not be launched. Throws [AuthException].
+  Future<bool> signInWithApple() {
+    return _client.auth.signInWithOAuth(
+      OAuthProvider.apple,
+      redirectTo: oauthRedirectUrl,
+    );
+  }
+
+  /// Starts the Sign in with Google flow (browser based).
+  ///
+  /// The session arrives through [onAuthStateChange]; the router redirects.
+  /// Returns false when the flow could not be launched. Throws [AuthException].
+  Future<bool> signInWithGoogle() {
+    return _client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: oauthRedirectUrl,
+    );
+  }
+
+  /// Sends the signup confirmation email to [email] again.
+  ///
+  /// Throws [AuthException] on failure or rate limiting.
+  Future<void> resendSignupEmail(String email) {
+    return _client.auth.resend(type: OtpType.signup, email: email);
   }
 }

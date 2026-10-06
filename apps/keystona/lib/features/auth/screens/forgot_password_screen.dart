@@ -1,16 +1,30 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/router/app_router.dart';
+import '../../../core/theme/aurora_auth.dart';
 import '../../../core/theme/aurora_colors.dart';
-import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_scale.dart';
+import '../../../core/theme/aurora_sizes.dart';
 import '../../../core/theme/aurora_spacing.dart';
-import '../../../core/theme/aurora_typography.dart';
 import '../../../core/utils/validators.dart';
-import '../../../core/widgets/app_scaffold.dart';
-import '../../../core/widgets/aurora/aurora.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../services/providers/service_providers.dart';
+import '../auth_copy.dart';
+import '../widgets/auth_button.dart';
+import '../services/auth_error_messages.dart';
+import '../widgets/auth_field.dart';
+import '../widgets/auth_header.dart';
+import '../widgets/auth_links.dart';
+import '../widgets/auth_navigation.dart';
+import '../widgets/auth_page.dart';
+import '../widgets/auth_sent_banner.dart';
 
+/// Reset your password (kit: AuthForgot, 1.5).
+///
+/// Two states: asking for the email, and "Check your inbox" once the link has
+/// been sent. The wording never says whether the address has an account.
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -20,164 +34,129 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  bool _isLoading = false;
+  final _email = TextEditingController();
+  bool _loading = false;
+  bool _sent = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _email.dispose();
     super.dispose();
   }
 
-  Future<void> _sendResetLink() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
+  bool get _ready => Validators.email(_email.text) == null;
 
-    setState(() => _isLoading = true);
+  Future<void> _send() async {
+    if (!_ready || _loading) return;
+    final auth = ref.read(authServiceProvider);
+    setState(() => _loading = true);
     try {
-      await ref
-          .read(authServiceProvider)
-          .resetPassword(_emailController.text.trim());
-      if (mounted) {
-        SnackbarService.showSuccess(
-          context,
-          'Check your email for a reset link',
-        );
-        Navigator.of(context).pop();
-      }
+      await auth.resetPassword(_email.text.trim());
+      if (!mounted) return;
+      setState(() => _sent = true);
     } catch (e) {
-      if (mounted) {
-        SnackbarService.showError(
-          context,
-          'Failed to send reset link. Please try again.',
-        );
-      }
+      if (!mounted) return;
+      SnackbarService.showError(context, AuthErrorMessages.from(e));
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return AppScaffold(
-      title: 'Reset Password',
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AuroraSpacing.screenPadH,
+    final a = context.aurora;
+    return AuthPage(
+      top: [
+        AuthBackButton(
+          label: AuthCopy.back,
+          onPressed: () => authBack(context, AppRoutes.login),
         ),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        AuthGap(AuroraAuthSizes.sectionGap),
+        const AuthHeader(
+          title: AuthCopy.forgotTitle,
+          body: AuthCopy.forgotBody,
+        ),
+        AuthGap(AuroraAuthSizes.sectionGap),
+        if (_sent)
+          AuthSentCard(
+            title: AuthCopy.checkInbox,
+            body: TextSpan(
+              children: [
+                const TextSpan(text: AuthCopy.forgotSentLeadIn),
+                TextSpan(
+                  text: _email.text.trim(),
+                  style: AuroraAuthType.sentBody.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AuroraColors.ink,
+                  ),
+                ),
+                const TextSpan(text: AuthCopy.forgotSentLeadOut),
+              ],
+            ),
+          )
+        else
+          AuthField(
+            label: AuthCopy.emailLabel,
+            controller: _email,
+            hintText: AuthCopy.emailPlaceholder,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.done,
+            autofillHints: const [AutofillHints.email],
+            errorFor: (v) => v.isNotEmpty && Validators.email(v) != null
+                ? AuthCopy.emailInvalid
+                : null,
+            onChanged: (_) => setState(() {}),
+            onSubmitted: (_) => _send(),
+          ),
+        AuthGap(AuroraAuthSizes.sectionGap),
+        Container(
+          padding: EdgeInsets.only(top: a.of(AuroraSpacing.space6)),
+          decoration: const BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: AuroraColors.inkBorder,
+                width: AuroraBorders.hairline,
+              ),
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: AuroraSpacing.space7),
-
-              // ── Description ───────────────────────────────────────────────
-              Text(
-                "Enter your email address and we'll send you a link to reset your password.",
-                style: AuroraType.body.copyWith(
-                  color: AuroraColors.inkSecondary,
-                  height: 1.6,
+              Icon(
+                CupertinoIcons.info,
+                size: a.of(AuroraAuthSizes.hintGlyph),
+                color: AuroraColors.inkSecondary,
+              ),
+              SizedBox(width: a.of(AuroraSpacing.space4)),
+              Expanded(
+                child: Text(
+                  AuthCopy.forgotHint,
+                  style: AuroraAuthType.sentBody,
                 ),
               ),
-
-              const SizedBox(height: AuroraSpacing.space8),
-
-              // ── Email field ───────────────────────────────────────────────
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      text: 'EMAIL',
-                      style: AuroraType.label
-                          .copyWith(color: AuroraColors.inkSecondary),
-                      children: const [
-                        TextSpan(
-                          text: ' *',
-                          style: TextStyle(color: AuroraColors.coral),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AuroraSpacing.space1),
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.done,
-                    autocorrect: false,
-                    onFieldSubmitted: (_) => _sendResetLink(),
-                    style: AuroraType.body,
-                    cursorColor: AuroraColors.coral,
-                    decoration: InputDecoration(
-                      isDense: true,
-                      filled: true,
-                      fillColor: AuroraColors.paper,
-                      hintText: 'your@email.com',
-                      hintStyle: AuroraType.body.copyWith(
-                        color: AuroraColors.inkTertiary,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AuroraSpacing.space7,
-                        vertical: AuroraSpacing.space5,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: AuroraRadius.md,
-                        borderSide: const BorderSide(
-                          color: AuroraColors.inkBorder,
-                          width: 1.5,
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: AuroraRadius.md,
-                        borderSide: const BorderSide(
-                          color: AuroraColors.inkBorder,
-                          width: 1.5,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: AuroraRadius.md,
-                        borderSide: const BorderSide(
-                          color: AuroraColors.coral,
-                          width: 2,
-                        ),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: AuroraRadius.md,
-                        borderSide: const BorderSide(
-                          color: AuroraColors.coral,
-                          width: 1.5,
-                        ),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderRadius: AuroraRadius.md,
-                        borderSide: const BorderSide(
-                          color: AuroraColors.coral,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                    validator: Validators.email,
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: AuroraSpacing.space9),
-
-              // ── Send CTA — coral PrimaryButton (navigation, not form save) ─
-              PrimaryButton(
-                label: 'Send Reset Link',
-                onPressed: _sendResetLink,
-                loading: _isLoading,
-                expand: true,
-              ),
-
-              const SizedBox(height: AuroraSpacing.space7),
             ],
           ),
         ),
-      ),
+      ],
+      bottom: [
+        AuthGap(AuroraAuthSizes.sectionGap),
+        if (_sent) ...[
+          AuthButton(
+            label: AuthCopy.backToLogIn,
+            onPressed: () => context.go(AppRoutes.login),
+          ),
+          AuthTextLink(
+            label: AuthCopy.differentEmail,
+            style: AuroraAuthType.quiet,
+            onPressed: () => setState(() => _sent = false),
+          ),
+        ] else
+          AuthButton(
+            label: AuthCopy.sendResetLink,
+            loading: _loading,
+            onPressed: _ready ? _send : null,
+          ),
+      ],
     );
   }
 }

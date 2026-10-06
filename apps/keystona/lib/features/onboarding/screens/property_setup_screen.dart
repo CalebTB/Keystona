@@ -1,49 +1,37 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/aurora_colors.dart';
-import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_motion.dart';
+import '../../../core/theme/aurora_onboarding.dart';
+import '../../../core/theme/aurora_scale.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
-import '../../../core/utils/validators.dart';
-import '../../../core/widgets/app_scaffold.dart';
-import '../../../core/widgets/aurora/aurora.dart';
+import '../../../core/widgets/aurora/aurora_text_field.dart';
+import '../../../core/widgets/loading_skeleton_card.dart';
 import '../../../core/widgets/snackbar_service.dart';
+import '../models/onboarding_models.dart';
 import '../providers/onboarding_provider.dart';
+import '../widgets/onb_climate_sheet.dart';
+import '../widgets/onb_parts.dart';
+import '../widgets/onb_property_widgets.dart';
+import '../widgets/onb_scaffold.dart';
 
-/// Property type options for the dropdown.
-const List<({String label, String value})> _kPropertyTypes = [
-  (label: 'Single Family', value: 'single_family'),
-  (label: 'Condo', value: 'condo'),
-  (label: 'Townhouse', value: 'townhouse'),
-  (label: 'Multi-Family', value: 'multi_family'),
-  (label: 'Mobile Home', value: 'mobile_home'),
-  (label: 'Other', value: 'other'),
-];
-
-/// Climate zone options — 1-8 plus an unknown entry (null value).
-const List<({String label, int? value})> _kClimateZones = [
-  (label: 'Climate Zone 1', value: 1),
-  (label: 'Climate Zone 2', value: 2),
-  (label: 'Climate Zone 3', value: 3),
-  (label: 'Climate Zone 4', value: 4),
-  (label: 'Climate Zone 5', value: 5),
-  (label: 'Climate Zone 6', value: 6),
-  (label: 'Climate Zone 7', value: 7),
-  (label: 'Climate Zone 8', value: 8),
-  (label: "I don't know", value: null),
-];
-
-/// Screen 2 of onboarding — collects property details.
-///
-/// All fields are optional except address, city, state, ZIP, and year built.
-/// On success navigates to [AppRoutes.onboardingTrial].
-/// The "Skip" app bar action bypasses the form entirely.
+/// OnbProperty (1.7): address, kind of home, year built and size. Continue
+/// opens the climate sheet (OnbClimate); "Looks right" saves the property and
+/// moves on to the free month.
 class PropertySetupScreen extends ConsumerStatefulWidget {
   const PropertySetupScreen({super.key});
+
+  /// Oldest year built accepted (exclusive).
+  static const int oldestYear = 1700;
+
+  /// Digits in a year.
+  static const int yearDigits = 4;
 
   @override
   ConsumerState<PropertySetupScreen> createState() =>
@@ -51,477 +39,282 @@ class PropertySetupScreen extends ConsumerStatefulWidget {
 }
 
 class _PropertySetupScreenState extends ConsumerState<PropertySetupScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final _address = TextEditingController();
+  final _year = TextEditingController();
+  final _sqft = TextEditingController();
+  final _thousands = NumberFormat.decimalPattern('en_US');
 
-  // ── Controllers ───────────────────────────────────────────────────────────────
-  final _addressController = TextEditingController();
-  final _cityController = TextEditingController();
-  final _stateController = TextEditingController();
-  final _zipController = TextEditingController();
-  final _yearBuiltController = TextEditingController();
-  final _bedroomsController = TextEditingController();
-  final _bathroomsController = TextEditingController();
-  final _purchasePriceController = TextEditingController();
-
-  // ── Selected values ────────────────────────────────────────────────────────────
-  String? _selectedPropertyType;
-  int? _selectedClimateZone;
-  String? _climateZoneDropdownValue;
-
-  bool _detectingClimateZone = false;
+  Timer? _debounce;
+  List<OnbAddress> _suggestions = const [];
+  OnbAddress? _picked;
+  HomeKind _kind = HomeKind.singleFamily;
+  bool _lookingUp = false;
+  bool _lookupFailed = false;
+  bool _prefilled = false;
   bool _saving = false;
 
   @override
   void dispose() {
-    _addressController.dispose();
-    _cityController.dispose();
-    _stateController.dispose();
-    _zipController.dispose();
-    _yearBuiltController.dispose();
-    _bedroomsController.dispose();
-    _bathroomsController.dispose();
-    _purchasePriceController.dispose();
+    _debounce?.cancel();
+    _address.dispose();
+    _year.dispose();
+    _sqft.dispose();
     super.dispose();
   }
 
-  Future<void> _detectClimateZone(String zip) async {
-    if (zip.length != 5) return;
+  // ── Address ─────────────────────────────────────────────────────────────────
 
-    setState(() => _detectingClimateZone = true);
-
-    final zone = await _lookupClimateZoneFromZip(zip);
-
-    if (!mounted) return;
+  void _onAddressChanged(String text) {
+    _debounce?.cancel();
     setState(() {
-      _detectingClimateZone = false;
-      if (zone != null) {
-        _selectedClimateZone = zone;
-        _climateZoneDropdownValue = zone.toString();
-      }
+      _picked = null;
+      _prefilled = false;
+      _lookupFailed = false;
+      _suggestions = const [];
+      _lookingUp = text.trim().isNotEmpty;
+    });
+    _debounce = Timer(AuroraDurations.searchDebounce, () => _lookUp(text));
+  }
+
+  Future<void> _lookUp(String text) async {
+    final source = ref.read(addressSourceProvider);
+    try {
+      final found = await source.suggest(text);
+      if (!mounted || text != _address.text) return;
+      setState(() {
+        _suggestions = found;
+        _lookingUp = false;
+      });
+    } catch (_) {
+      if (!mounted || text != _address.text) return;
+      setState(() {
+        _lookingUp = false;
+        _lookupFailed = true;
+      });
+    }
+  }
+
+  void _pick(OnbAddress address) {
+    _address.text = address.street;
+    if (address.yearBuilt != null) _year.text = '${address.yearBuilt}';
+    if (address.squareFeet != null) {
+      _sqft.text = _thousands.format(address.squareFeet);
+    }
+    setState(() {
+      _picked = address;
+      _suggestions = const [];
+      _prefilled = address.hasRecords;
     });
   }
 
-  /// Stub lookup — returns null until the Edge Function is wired in Phase 6.
-  Future<int?> _lookupClimateZoneFromZip(String zip) async {
-    return null;
+  // ── Fields ──────────────────────────────────────────────────────────────────
+
+  int get _maxYear => ref.read(onboardingClockProvider)().year;
+
+  bool get _yearOk {
+    final text = _year.text.trim();
+    if (text.isEmpty) return true;
+    final value = int.tryParse(text);
+    return RegExp('^\\d{${PropertySetupScreen.yearDigits}}\$').hasMatch(text) &&
+        value != null &&
+        value > PropertySetupScreen.oldestYear &&
+        value <= _maxYear;
   }
 
-  Future<void> _save() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
+  bool get _ready => _picked != null && _yearOk;
+
+  int? get _yearValue => int.tryParse(_year.text.trim());
+
+  int? get _sqftValue =>
+      int.tryParse(_sqft.text.replaceAll(RegExp(r'[^0-9]'), ''));
+
+  String get _fillNote {
+    if (!_yearOk) return 'That year looks off — 4 digits, like 1998';
+    if (_prefilled) return 'Pre-filled · change it if it’s wrong';
+    return 'Not sure? A guess is fine — you can change it later';
+  }
+
+  // ── Actions ─────────────────────────────────────────────────────────────────
+
+  void _back() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(AppRoutes.onboardingPersona);
+    }
+  }
+
+  Future<void> _continue() async {
+    final address = _picked;
+    if (address == null || !_ready) return;
+    var draft = OnbPropertyDraft(
+      address: address,
+      kind: _kind,
+      yearBuilt: _yearValue,
+      squareFeet: _sqftValue,
+    );
+    final repository = ref.read(onboardingRepositoryProvider);
+    final draftNotifier = ref.read(onbPropertyDraftProvider.notifier);
+    final progress = ref.read(onboardingProgressProvider.notifier);
+
+    final climate = await OnbClimateSheet.show(context, address: address);
+    if (climate == null || !mounted) return;
+    draft = draft.withClimate(climate);
 
     setState(() => _saving = true);
-
-    final data = <String, dynamic>{
-      'address': _addressController.text.trim(),
-      'city': _cityController.text.trim(),
-      'state': _stateController.text.trim().toUpperCase(),
-      'zip_code': _zipController.text.trim(),
-      if (_selectedPropertyType != null) 'property_type': _selectedPropertyType,
-      if (_yearBuiltController.text.trim().isNotEmpty)
-        'year_built': int.parse(_yearBuiltController.text.trim()),
-      if (_bedroomsController.text.trim().isNotEmpty)
-        'bedrooms': num.parse(_bedroomsController.text.trim()),
-      if (_bathroomsController.text.trim().isNotEmpty)
-        'bathrooms': num.parse(_bathroomsController.text.trim()),
-      if (_purchasePriceController.text.trim().isNotEmpty)
-        'purchase_price': num.parse(_purchasePriceController.text.trim()),
-      if (_selectedClimateZone != null) 'climate_zone': _selectedClimateZone,
-    };
-
-    final notifier = ref.read(propertyProvider.notifier);
-    await notifier.saveProperty(data);
-
+    try {
+      await repository.saveProperty(draft);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      SnackbarService.showError(
+        context,
+        'Could not save your home. Please try again.',
+      );
+      return;
+    }
+    draftNotifier.set(draft);
+    await progress.reachStage(OnbStage.trial);
     if (!mounted) return;
-
-    final asyncState = ref.read(propertyProvider);
     setState(() => _saving = false);
-
-    asyncState.when(
-      loading: () {},
-      error: (error, _) {
-        SnackbarService.showError(
-          context,
-          'Could not save your property. Please try again.',
-        );
-      },
-      data: (_) => context.go(AppRoutes.onboardingTrial),
-    );
+    context.go(AppRoutes.onboardingTrial);
   }
 
   @override
   Widget build(BuildContext context) {
-    return AppScaffold(
-      title: 'Your Home',
-      actions: [
-        GhostButton(
-          label: 'Skip',
-          onPressed: () => context.go(AppRoutes.onboardingTrial),
+    final a = context.aurora;
+    return OnbScaffold(
+      step: 2,
+      onBack: _back,
+      content: [
+        const OnbHeader(
+          title: 'Tell us about your home.',
+          subtitle:
+              'The age and size shape your reminders — a 1998 roof needs different care than a new one.',
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: a.of(AuroraSpacing.space2),
+          children: [
+            OnbAddressField(
+              controller: _address,
+              picked: _picked != null,
+              onChanged: _onAddressChanged,
+            ),
+            if (_lookingUp)
+              LoadingSkeletonCard(height: a.of(AuroraOnbSizes.skeletonRowHeight))
+            else if (_suggestions.isNotEmpty)
+              OnbSuggestionList(suggestions: _suggestions, onPick: _pick)
+            else if (_lookupFailed)
+              Text(
+                'Could not look that up. Keep typing to try again.'
+                    .toUpperCase(),
+                style: AuroraType.helper,
+              )
+            else if (_picked != null)
+              Text(
+                [
+                  '${_picked!.city} · ${_picked!.zip}',
+                  if (_prefilled) 'We found year built and size in public records',
+                ].join(' · ').toUpperCase(),
+                style: AuroraType.helper,
+              ),
+          ],
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: a.of(AuroraSpacing.space3),
+          children: [
+            Text('KIND OF HOME', style: AuroraType.label),
+            Semantics(
+              container: true,
+              label: 'Kind of home',
+              child: _KindGrid(
+                selected: _kind,
+                onPick: (k) => setState(() => _kind = k),
+              ),
+            ),
+          ],
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: a.of(AuroraSpacing.space3),
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: a.of(AuroraSpacing.space4),
+              children: [
+                Expanded(
+                  child: AuroraTextField(
+                    label: 'Year built',
+                    controller: _year,
+                    hintText: '1998',
+                    keyboardType: TextInputType.number,
+                    maxLength: PropertySetupScreen.yearDigits,
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ),
+                Expanded(
+                  child: AuroraTextField(
+                    label: 'Square feet',
+                    controller: _sqft,
+                    hintText: '2,000',
+                    keyboardType: TextInputType.number,
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ),
+              ],
+            ),
+            Text(_fillNote.toUpperCase(), style: AuroraType.helper),
+          ],
         ),
       ],
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            AuroraSpacing.screenPadH,
-            AuroraSpacing.screenPadTop,
-            AuroraSpacing.screenPadH,
-            AuroraSpacing.space10,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // ── Address ──────────────────────────────────────────────────
-              AuroraFormSection(
-                title: 'Address',
-                children: [
-                  _buildField(
-                    label: 'Street Address',
-                    isRequired: true,
-                    child: TextFormField(
-                      controller: _addressController,
-                      textCapitalization: TextCapitalization.words,
-                      maxLength: 500,
-                      style: AuroraType.body,
-                      cursorColor: AuroraColors.coral,
-                      decoration: _inputDecoration('123 Main St'),
-                      validator: Validators.required,
-                    ),
-                  ),
-                  _buildField(
-                    label: 'City',
-                    isRequired: true,
-                    child: TextFormField(
-                      controller: _cityController,
-                      textCapitalization: TextCapitalization.words,
-                      style: AuroraType.body,
-                      cursorColor: AuroraColors.coral,
-                      decoration: _inputDecoration('San Francisco'),
-                      validator: Validators.required,
-                    ),
-                  ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Flexible(
-                        flex: 2,
-                        child: _buildField(
-                          label: 'State',
-                          isRequired: true,
-                          child: TextFormField(
-                            controller: _stateController,
-                            maxLength: 2,
-                            textCapitalization: TextCapitalization.characters,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp('[a-zA-Z]'),
-                              ),
-                            ],
-                            style: AuroraType.body,
-                            cursorColor: AuroraColors.coral,
-                            decoration: _inputDecoration('CA'),
-                            validator: Validators.required,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AuroraSpacing.space3),
-                      Flexible(
-                        flex: 3,
-                        child: _buildField(
-                          label: 'ZIP Code',
-                          isRequired: true,
-                          child: TextFormField(
-                            controller: _zipController,
-                            maxLength: 5,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            onEditingComplete: () =>
-                                _detectClimateZone(_zipController.text),
-                            style: AuroraType.body,
-                            cursorColor: AuroraColors.coral,
-                            decoration: _inputDecoration('94105'),
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return 'Required';
-                              }
-                              if (!RegExp(r'^\d{5}$').hasMatch(value.trim())) {
-                                return 'Enter a 5-digit ZIP';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-
-              // ── Property details ──────────────────────────────────────────
-              AuroraFormSection(
-                title: 'Property Details',
-                isOptional: true,
-                children: [
-                  // Property type — native DropdownButtonFormField styled to Aurora
-                  _buildField(
-                    label: 'Property Type',
-                    child: DropdownButtonFormField<String>(
-                      initialValue: _selectedPropertyType,
-                      decoration: _inputDecoration('Select type'),
-                      icon: const Icon(
-                        Icons.chevron_right,
-                        size: 14,
-                        color: AuroraColors.inkTertiary,
-                      ),
-                      style: AuroraType.body,
-                      dropdownColor: AuroraColors.paper,
-                      items: _kPropertyTypes
-                          .map(
-                            (t) => DropdownMenuItem<String>(
-                              value: t.value,
-                              child: Text(t.label),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) =>
-                          setState(() => _selectedPropertyType = value),
-                    ),
-                  ),
-                  _buildField(
-                    label: 'Year Built',
-                    child: TextFormField(
-                      controller: _yearBuiltController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
-                      style: AuroraType.body,
-                      cursorColor: AuroraColors.coral,
-                      decoration: _inputDecoration('1985'),
-                      validator: Validators.year,
-                    ),
-                  ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Flexible(
-                        child: _buildField(
-                          label: 'Bedrooms',
-                          child: TextFormField(
-                            controller: _bedroomsController,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            style: AuroraType.body,
-                            cursorColor: AuroraColors.coral,
-                            decoration: _inputDecoration('3'),
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return null;
-                              }
-                              return Validators.positiveNumber(value);
-                            },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AuroraSpacing.space3),
-                      Flexible(
-                        child: _buildField(
-                          label: 'Bathrooms',
-                          child: TextFormField(
-                            controller: _bathroomsController,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'^\d*\.?\d*'),
-                              ),
-                            ],
-                            style: AuroraType.body,
-                            cursorColor: AuroraColors.coral,
-                            decoration: _inputDecoration('2'),
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return null;
-                              }
-                              return Validators.positiveNumber(value);
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-
-              // ── Purchase & climate ────────────────────────────────────────
-              AuroraFormSection(
-                title: 'Financial & Climate',
-                isOptional: true,
-                children: [
-                  _buildField(
-                    label: 'Purchase Price',
-                    child: TextFormField(
-                      controller: _purchasePriceController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                          RegExp(r'^\d*\.?\d*'),
-                        ),
-                      ],
-                      style: AuroraType.body,
-                      cursorColor: AuroraColors.coral,
-                      decoration: _inputDecoration(r'$450,000').copyWith(
-                        prefixText: r'$ ',
-                        prefixStyle: AuroraType.body,
-                      ),
-                    ),
-                  ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: _buildField(
-                          label: 'Climate Zone',
-                          child: DropdownButtonFormField<String>(
-                            key: ValueKey(_climateZoneDropdownValue),
-                            initialValue: _climateZoneDropdownValue,
-                            decoration: _inputDecoration('Select zone'),
-                            icon: const Icon(
-                              Icons.chevron_right,
-                              size: 14,
-                              color: AuroraColors.inkTertiary,
-                            ),
-                            style: AuroraType.body,
-                            dropdownColor: AuroraColors.paper,
-                            items: _kClimateZones
-                                .map(
-                                  (z) => DropdownMenuItem<String>(
-                                    value: z.value?.toString() ?? 'unknown',
-                                    child: Text(z.label),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (rawValue) {
-                              setState(() {
-                                if (rawValue == null ||
-                                    rawValue == 'unknown') {
-                                  _selectedClimateZone = null;
-                                  _climateZoneDropdownValue = 'unknown';
-                                } else {
-                                  _selectedClimateZone =
-                                      int.tryParse(rawValue);
-                                  _climateZoneDropdownValue = rawValue;
-                                }
-                              });
-                            },
-                          ),
-                        ),
-                      ),
-                      if (_detectingClimateZone) ...[
-                        const SizedBox(width: AuroraSpacing.space3),
-                        const Padding(
-                          padding: EdgeInsets.only(top: 28),
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AuroraColors.cobalt,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: AuroraSpacing.space10),
-
-              // ── Save & Continue — cobalt SaveButton (form save) ───────────
-              SaveButton(
-                label: 'Save & Continue',
-                onPressed: _save,
-                loading: _saving,
-                expand: true,
-              ),
-            ],
-          ),
+      footer: [
+        OnbCta(
+          label: 'Continue',
+          onPressed: _ready && !_saving ? _continue : null,
+          loading: _saving,
         ),
-      ),
+      ],
     );
   }
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+/// The 2x2 grid of kinds.
+class _KindGrid extends StatelessWidget {
+  const _KindGrid({required this.selected, required this.onPick});
 
-InputDecoration _inputDecoration(String hint) => InputDecoration(
-      isDense: true,
-      filled: true,
-      fillColor: AuroraColors.paper,
-      hintText: hint,
-      hintStyle: AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
-      counterText: '',
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: AuroraSpacing.space7,
-        vertical: AuroraSpacing.space5,
-      ),
-      border: OutlineInputBorder(
-        borderRadius: AuroraRadius.md,
-        borderSide: const BorderSide(color: AuroraColors.inkBorder, width: 1.5),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: AuroraRadius.md,
-        borderSide: const BorderSide(color: AuroraColors.inkBorder, width: 1.5),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: AuroraRadius.md,
-        borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: AuroraRadius.md,
-        borderSide: const BorderSide(color: AuroraColors.coral, width: 1.5),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: AuroraRadius.md,
-        borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
-      ),
-    );
+  final HomeKind selected;
+  final ValueChanged<HomeKind> onPick;
 
-/// Aurora-styled label above a raw TextFormField / DropdownButtonFormField.
-Widget _buildField({
-  required String label,
-  required Widget child,
-  bool isRequired = false,
-}) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      if (isRequired)
-        RichText(
-          text: TextSpan(
-            text: label.toUpperCase(),
-            style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
-            children: const [
-              TextSpan(
-                text: ' *',
-                style: TextStyle(color: AuroraColors.coral),
-              ),
-            ],
+  /// Tiles per row.
+  static const int columns = 2;
+
+  @override
+  Widget build(BuildContext context) {
+    final a = context.aurora;
+    final kinds = HomeKind.values;
+    return Column(
+      spacing: a.of(AuroraSpacing.space3),
+      children: [
+        for (var i = 0; i < kinds.length; i += columns)
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: a.of(AuroraSpacing.space3),
+              children: [
+                for (final k in kinds.skip(i).take(columns))
+                  Expanded(
+                    child: OnbTypeTile(
+                      label: k.label,
+                      selected: k == selected,
+                      onTap: () => onPick(k),
+                    ),
+                  ),
+              ],
+            ),
           ),
-        )
-      else
-        Text(
-          label.toUpperCase(),
-          style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
-        ),
-      const SizedBox(height: AuroraSpacing.space1),
-      child,
-    ],
-  );
+      ],
+    );
+  }
 }

@@ -1,45 +1,115 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../services/supabase_service.dart';
+import '../../../services/providers/service_providers.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../models/onboarding_models.dart';
+import '../services/onboarding_services.dart';
 
-// ─── Step tracker ─────────────────────────────────────────────────────────────
-// Steps: welcome(0), property(1), trial(2), complete(3)
-final onboardingStepProvider = StateProvider<int>((ref) => 0);
+part 'onboarding_provider.g.dart';
 
-// ─── Property notifier ────────────────────────────────────────────────────────
+// ─── Dependencies (overridden in tests) ──────────────────────────────────────
 
-class PropertyNotifier extends AsyncNotifier<void> {
+@Riverpod(keepAlive: true)
+OnboardingProgressStore onboardingProgressStore(Ref ref) =>
+    const PrefsOnboardingProgressStore();
+
+@Riverpod(keepAlive: true)
+OnboardingRepository onboardingRepository(Ref ref) =>
+    const SupabaseOnboardingRepository();
+
+@Riverpod(keepAlive: true)
+AddressSource addressSource(Ref ref) => const ParsedAddressSource();
+
+@Riverpod(keepAlive: true)
+ClimateSource climateSource(Ref ref) => const LocalClimateSource();
+
+@Riverpod(keepAlive: true)
+TrialStarter trialStarter(Ref ref) => const MockTrialStarter();
+
+/// Current time. Overridden in tests so dates are stable.
+@Riverpod(keepAlive: true)
+DateTime Function() onboardingClock(Ref ref) => DateTime.now;
+
+/// Signed-in user id. Scopes the stored progress.
+@Riverpod(keepAlive: true)
+String onboardingUserId(Ref ref) {
+  // Re-evaluates on sign-in and sign-out so progress never leaks across users.
+  ref.watch(isAuthenticatedProvider);
+  return ref.read(authServiceProvider).currentUser?.id ?? '';
+}
+
+/// First name for "WELCOME, CALEB", or null when the account has no name.
+@Riverpod(keepAlive: true)
+String? onboardingFirstName(Ref ref) {
+  final full =
+      ref.watch(authServiceProvider).currentUser?.userMetadata?['full_name'];
+  if (full is! String || full.trim().isEmpty) return null;
+  return full.trim().split(RegExp(r'\s+')).first;
+}
+
+// ─── Progress (persona, stage, trial, checklist) ─────────────────────────────
+
+/// Persisted progress. Updates state first, then writes to the device.
+@Riverpod(keepAlive: true)
+class OnboardingProgressNotifier extends _$OnboardingProgressNotifier {
   @override
-  Future<void> build() async {}
+  Future<OnboardingProgress> build() {
+    final userId = ref.watch(onboardingUserIdProvider);
+    return ref.read(onboardingProgressStoreProvider).load(userId);
+  }
 
-  /// Inserts a new property row for the currently authenticated user.
-  ///
-  /// [data] must match the `properties` table columns. The `user_id` is
-  /// injected here — callers must not include it in [data].
-  Future<void> saveProperty(Map<String, dynamic> data) async {
-    state = const AsyncLoading();
+  Future<void> setPersona(OnboardingPersona persona) =>
+      _update((p) => p.copyWith(persona: persona));
 
-    final uid = SupabaseService.client.auth.currentUser!.id;
-    final payload = Map<String, dynamic>.from(data)..['user_id'] = uid;
+  /// Records the furthest step reached. Never moves backwards.
+  Future<void> reachStage(OnbStage stage) => _update(
+        (p) => stage.index > p.stage.index ? p.copyWith(stage: stage) : p,
+      );
 
-    state = await AsyncValue.guard(() async {
-      await SupabaseService.client.from('properties').insert(payload);
-    });
+  Future<void> setTrialStarted() => _update((p) => p.copyWith(trialStarted: true));
+
+  Future<void> markStepDone(ChecklistStep step) =>
+      _update((p) => p.copyWith(doneSteps: {...p.doneSteps, step}));
+
+  Future<void> _update(OnboardingProgress Function(OnboardingProgress) f) async {
+    final current = state.value ?? await future;
+    final next = f(current);
+    state = AsyncData(next);
+    try {
+      await ref
+          .read(onboardingProgressStoreProvider)
+          .save(ref.read(onboardingUserIdProvider), next);
+    } catch (_) {
+      // Progress is a convenience: the in-memory value stays correct and the
+      // flow keeps working if the device write fails.
+    }
   }
 }
 
-final propertyProvider =
-    AsyncNotifierProvider<PropertyNotifier, void>(PropertyNotifier.new);
+// ─── Property draft ──────────────────────────────────────────────────────────
 
-// ─── Complete onboarding helper ───────────────────────────────────────────────
+/// What OnbProperty collected, kept for the rest of the flow.
+@Riverpod(keepAlive: true)
+class OnbPropertyDraftNotifier extends _$OnbPropertyDraftNotifier {
+  @override
+  OnbPropertyDraft? build() => null;
 
-/// Marks onboarding as done in `users_metadata`.
-///
-/// Call this before navigating to the dashboard from any onboarding screen.
-Future<void> completeOnboarding() async {
-  final uid = SupabaseService.client.auth.currentUser!.id;
-  await SupabaseService.client
-      .from('profiles')
-      .update({'onboarding_completed': true}).eq('id', uid);
+  void set(OnbPropertyDraft draft) => state = draft;
+}
+
+/// The home card on the checklist: the draft when present, else the saved row.
+@riverpod
+Future<OnbHomeSummary?> onbHomeSummary(Ref ref) async {
+  final draft = ref.watch(onbPropertyDraftProvider);
+  if (draft != null) {
+    return OnbHomeSummary(
+      street: draft.address.street,
+      kind: draft.kind,
+      yearBuilt: draft.yearBuilt,
+      squareFeet: draft.squareFeet,
+      climateZone: draft.climate?.zone,
+      climateMoisture: draft.climate?.moisture,
+    );
+  }
+  return ref.read(onboardingRepositoryProvider).loadHomeSummary();
 }
