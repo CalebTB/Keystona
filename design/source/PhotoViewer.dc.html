@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona PhotoViewer</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}select:focus{outline:none}
+input[type=time]::-webkit-calendar-picker-indicator{opacity:0.5}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+@keyframes kspin{to{transform:rotate(360deg)}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #000000; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #FFFFFF; position: relative; overflow: hidden">
+<button type="button" onClick="{{toggleChrome}}" aria-label="Show or hide controls" style="position: absolute; left: 0; right: 0; top: 150px; height: 470px; display: block; background-image: linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px); background-size: 26px 26px; background-position: -1px -1px; background-color: #1A1F36;"><span class="m" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.3); font-size: 10px; font-weight: 700; letter-spacing: 1px; color: rgba(255,255,255,0.7)">{{tag}}</span></button>
+<sc-if value="{{chrome}}" hint-placeholder-val="{{ true }}">
+<div style="position: absolute; left: 0; right: 0; top: 0; padding: 54px 12px 12px; display: flex; align-items: center; justify-content: space-between; background: linear-gradient(rgba(0,0,0,0.7), transparent)">
+<a href="ItemPhotos.dc.html" aria-label="Close" style="width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.14); display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6l-12 12"></path><path d="M6 6l12 12"></path></svg></a>
+<span class="m" style="font-size: 12px; font-weight: 700; letter-spacing: 0.8px">{{pos}}</span>
+<button type="button" aria-label="Share" style="width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.14); display: flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.7 10.7l6.6-3.4"></path><path d="M8.7 13.3l6.6 3.4"></path><path d="M6 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0"></path><path d="M18 6m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0"></path><path d="M18 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0"></path></svg></button>
+</div>
+<div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 16px 34px; display: flex; flex-direction: column; gap: 14px; background: linear-gradient(transparent, rgba(0,0,0,0.85) 30%)">
+<div style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 18px; font-weight: 700">{{cap}}</span><span class="m" style="font-size: 10px; font-weight: 600; letter-spacing: 0.4px; color: rgba(255,255,255,0.65)">{{meta}}</span></div>
+<div role="listbox" aria-label="Photos" style="display: flex; gap: 8px"><sc-for list="{{thumbs}}" as="t" hint-placeholder-count="4"><button type="button" role="option" aria-selected="{{t.on}}" aria-label="{{t.cap}}" onClick="{{t.pick}}" style="{{t.style}}"></button></sc-for></div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 0.5px solid rgba(255,255,255,0.2); padding-top: 8px">
+<button type="button" onClick="{{setCover}}" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 52px; justify-content: center; font-size: 12px; font-weight: 600; color: #FFFFFF"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-12a3 3 0 0 1-3-3v-12z"></path><path d="M3 16l5-5c.928-.893 2.072-.893 3 0l5 5"></path><path d="M14 14l1-1c.928-.893 2.072-.893 3 0l3 3"></path></svg>{{coverLabel}}</button>
+<a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 52px; justify-content: center; font-size: 12px; font-weight: 600; color: #FFFFFF"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3m0 2a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-10a2 2 0 0 1-2-2z"></path><path d="M9 7l6 0"></path><path d="M9 11l6 0"></path><path d="M9 15l4 0"></path></svg>Edit caption</a>
+<a href="ConfirmDelete.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 52px; justify-content: center; font-size: 12px; font-weight: 600; color: #FF8AA1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7l16 0"></path><path d="M10 11l0 6"></path><path d="M14 11l0 6"></path><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12"></path><path d="M9 7v-3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"></path></svg>Delete</a>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{noChrome}}" hint-placeholder-val="{{ false }}"><span class="m" style="position: absolute; left: 0; right: 0; bottom: 40px; text-align: center; font-size: 10px; font-weight: 600; letter-spacing: 0.8px; color: rgba(255,255,255,0.5)">TAP TO SHOW CONTROLS · SWIPE DOWN TO CLOSE</span></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const P = [["LABEL", "Rating label", "FURNACE \u00b7 SEP 28, 2026 \u00b7 SCANNED"], ["UNIT", "The unit", "FURNACE \u00b7 MAR 2021 \u00b7 FROM THE PREVIOUS OWNER"], ["FILTER", "Filter slot", "FURNACE \u00b7 SEP 28 \u00b7 16\u00d725\u00d71 MERV 8"], ["REPAIR", "New igniter", "FURNACE \u00b7 FEB 2025 \u00b7 SUMMIT HEATING & AIR"]];
+    const i = st.i !== undefined ? st.i : 0;
+    const chrome = st.chrome !== undefined ? st.chrome : true;
+    const cover = st.cover !== undefined ? st.cover : 1;
+    return {
+      tag: P[i][0], cap: P[i][1], meta: P[i][2], pos: (i + 1) + ' OF ' + P.length, chrome, noChrome: !chrome, toggleChrome: () => this.setState({ chrome: !chrome }),
+      coverLabel: cover === i ? 'Cover photo ✓' : 'Set as cover', setCover: () => this.setState({ cover: i }),
+      thumbs: P.map((p, j) => ({ cap: p[1], on: i === j, pick: () => this.setState({ i: j }),
+        style: 'width: 56px; height: 56px; border-radius: 10px; box-sizing: border-box; background-image: linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px); background-size: 26px 26px; background-position: -1px -1px; background-color: #1A1F36; ' + (i === j ? 'box-shadow: inset 0 0 0 2.5px #FFFFFF;' : 'opacity: 0.55;') }))
+    };
+  }
+}
+</script>
+</body>
+</html>

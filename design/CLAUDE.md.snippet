@@ -1,0 +1,10 @@
+## Design source of truth
+
+- Screens: `design/screens/` (PNG, 390 pt wide) and `design/source/*.dc.html` (exact copy, sizes, states, links).
+- Build order: `design/BUILD_ORDER.md`. Work one commit at a time and use its commit messages.
+- Behaviour rules: `design/Keystona_Implementation_Notes.md` (long-press menus, Undo snackbars, offline, reminders).
+- Treat the HTML as a spec, never transpile it. Build every screen from `lib/core` widgets and `AppColors` / `AppText` / `AppSpacing` tokens. No hex values in feature code.
+- New shared widgets, router changes and migrations need Caleb's OK first.
+- Every screen ships with: fake-repository fixture (1428 Elm Hollow Ln demo home), a golden test compared against its PNG, loading/empty/error states, and 44 pt minimum touch targets.
+- Font: platform system font (SF Pro on iOS, Roboto on Android). Never bundle SF Pro.
+- Aurora rules: one coral surface per screen; cobalt for actions and save; lime only for wins; no tinted fills.

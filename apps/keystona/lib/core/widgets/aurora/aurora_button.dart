@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../theme/aurora_colors.dart';
 import '../../theme/aurora_radius.dart';
@@ -31,7 +30,7 @@ class PrimaryButton extends StatelessWidget {
         disabledBackgroundColor: AuroraColors.coralDim,
         disabledForegroundColor: AuroraColors.coral,
         elevation: 0,
-        textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+        textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.full),
         minimumSize: expand ? const Size(double.infinity, 48) : const Size(0, 48),
@@ -71,7 +70,7 @@ class SecondaryButton extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         foregroundColor: AuroraColors.ink,
         side: const BorderSide(color: AuroraColors.inkBorderStrong, width: 1.5),
-        textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+        textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 11.5),
         shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.full),
         minimumSize: expand ? const Size(double.infinity, 48) : const Size(0, 48),
@@ -106,7 +105,7 @@ class SaveButton extends StatelessWidget {
         disabledBackgroundColor: AuroraColors.cobaltDim,
         disabledForegroundColor: AuroraColors.cobalt,
         elevation: 0,
-        textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+        textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.full),
         minimumSize: expand ? const Size(double.infinity, 48) : const Size(0, 48),
@@ -142,7 +141,7 @@ class GhostButton extends StatelessWidget {
       onPressed: onPressed,
       style: TextButton.styleFrom(
         foregroundColor: AuroraColors.coral,
-        textStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+        textStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.md),
       ),

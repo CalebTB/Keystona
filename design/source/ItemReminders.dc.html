@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona ItemReminders</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}select:focus{outline:none}
+input[type=time]::-webkit-calendar-picker-indicator{opacity:0.5}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}select:focus{outline:none}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1150px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; display: flex; flex-direction: column">
+<main style="padding: 12px 16px 28px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<a href="ItemTasks.dc.html" style="display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -6px; font-size: 15px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"></path></svg>Furnace tasks</a><a href="ItemTasks.dc.html" style="display: flex; align-items: center; height: 36px; padding: 0 16px; border-radius: 999px; background: #2540D8; color: #FFFFFF; font-size: 14px; font-weight: 600">Done</a>
+</div>
+<header style="display: flex; flex-direction: column; gap: 6px; margin-top: -8px">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">FURNACE · NORTHLINE NF95-080B</span>
+<h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.9px; line-height: 1.1">Furnace reminders</h1>
+</header><p style="margin: -8px 0 0; font-size: 14px; line-height: 1.5; color: rgba(7,18,56,0.65)">Turn off anything that doesn&rsquo;t fit your furnace, or change how often it comes up. Turned-off reminders don&rsquo;t count toward Home Health.</p>
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">ON · {{nOn}}</h2><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">SHOWS IN YOUR TASKS</span></div><ul style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden"><sc-for list="{{onList}}" as="r" hint-placeholder-count="3"><li style="{{r.sep}}"><div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 64px; box-sizing: border-box">
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<span style="{{r.nameStyle}}">{{r.name}}</span>
+<sc-if value="{{r.on}}" hint-placeholder-val="{{ true }}"><span style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap"><label style="position: relative; display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 8px; border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(7,18,56,0.18)"><select aria-label="How often" value="{{r.freq}}" onChange="{{r.setFreq}}" style="font-size: 12.5px; font-weight: 600; padding-right: 14px"><sc-for list="{{r.opts}}" as="o" hint-placeholder-count="6"><option value="{{o.v}}">{{o.v}}</option></sc-for></select><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.5)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="position: absolute; right: 7px; pointer-events: none"><path d="M6 9l6 6l6-6"></path></svg></label><sc-if value="{{r.hasTag}}" hint-placeholder-val="{{ false }}"><span class="m" style="{{r.tagStyle}}">{{r.tag}}</span></sc-if></span></sc-if>
+<sc-if value="{{r.off}}" hint-placeholder-val="{{ false }}"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; color: rgba(7,18,56,0.5)">{{r.why}}</span></sc-if>
+</span>
+<button type="button" role="switch" aria-checked="{{r.on}}" aria-label="{{r.label}}" onClick="{{r.flip}}" style="{{r.track}}"><span style="{{r.knob}}"></span></button>
+</div></li></sc-for></ul></section>
+<sc-if value="{{anyOff}}" hint-placeholder-val="{{ true }}"><section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">TURNED OFF · {{nOff}}</h2><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">HIDDEN EVERYWHERE</span></div><ul style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden"><sc-for list="{{offList}}" as="r" hint-placeholder-count="3"><li style="{{r.sep}}"><div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 64px; box-sizing: border-box">
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<span style="{{r.nameStyle}}">{{r.name}}</span>
+<sc-if value="{{r.on}}" hint-placeholder-val="{{ true }}"><span style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap"><label style="position: relative; display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 8px; border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(7,18,56,0.18)"><select aria-label="How often" value="{{r.freq}}" onChange="{{r.setFreq}}" style="font-size: 12.5px; font-weight: 600; padding-right: 14px"><sc-for list="{{r.opts}}" as="o" hint-placeholder-count="6"><option value="{{o.v}}">{{o.v}}</option></sc-for></select><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.5)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="position: absolute; right: 7px; pointer-events: none"><path d="M6 9l6 6l6-6"></path></svg></label><sc-if value="{{r.hasTag}}" hint-placeholder-val="{{ false }}"><span class="m" style="{{r.tagStyle}}">{{r.tag}}</span></sc-if></span></sc-if>
+<sc-if value="{{r.off}}" hint-placeholder-val="{{ false }}"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; color: rgba(7,18,56,0.5)">{{r.why}}</span></sc-if>
+</span>
+<button type="button" role="switch" aria-checked="{{r.on}}" aria-label="{{r.label}}" onClick="{{r.flip}}" style="{{r.track}}"><span style="{{r.knob}}"></span></button>
+</div></li></sc-for></ul></section></sc-if>
+<a href="AddTask.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px; border: 1.5px dashed rgba(7,18,56,0.22); border-radius: 14px; font-size: 15px; font-weight: 600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5l0 14"></path><path d="M5 12l14 0"></path></svg>Add your own furnace task</a>
+<span class="m" style="text-align: center; font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">SUGGESTIONS COME FROM THE FURNACE TYPE, ITS AGE AND YOUR CLIMATE</span>
+</main>
+<div style="margin-top: auto; position: sticky; bottom: 0">
+<nav aria-label="Main tabs" style="height: 84px; box-sizing: border-box; border-top: 0.5px solid rgba(7,18,56,0.12); background: #FFFFFF; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 8px 0 22px; flex-shrink: 0">
+<a href="Tabbed.dc.html" aria-current="page" style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #FF3B62">
+<span style="position: absolute; top: -8px; left: 50%; margin-left: -10px; width: 20px; height: 3px; border-radius: 0 0 3px 3px; background: #FF3B62"></span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l-2 0l9-9l9 9l-2 0"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"></path></svg>
+<span style="font-size: 10px; font-weight: 700">Home</span>
+</a>
+<a href="DocsSearchLed.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Docs</span>
+</a>
+<a href="Tasks.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12l5 5l10-10"></path><path d="M2 12l5 5m5-5l5-5"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Tasks</span>
+</a>
+<a href="ProjectsMany.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h6v8h-6z"></path><path d="M14 4h6v4h-6z"></path><path d="M4 16h6v4h-6z"></path><path d="M14 12h6v8h-6z"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Projects</span>
+</a>
+<a href="SettingsHub.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37c1 .608 2.296.07 2.572-1.065z"></path><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Settings</span>
+</a>
+</nav>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1150}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const sw = (on) => 'width: 51px; height: 31px; border-radius: 999px; position: relative; flex-shrink: 0; transition: background .15s; background: ' + (on ? '#2540D8' : 'rgba(7,18,56,0.16)') + ';';
+    const kn = (on) => 'position: absolute; top: 2px; left: ' + (on ? 22 : 2) + 'px; width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 4px rgba(7,18,56,0.25); transition: left .15s;';
+    const FREQ = ['Every month', 'Every 3 months', 'Twice a year', 'Every year', 'Every spring', 'Every fall', 'Every November'];
+
+    const mk = (d, i, st, key) => {
+      const on = (st.on || {})[d.id] !== undefined ? st.on[d.id] : d.on;
+      const freq = (st.fq || {})[d.id] || d.freq;
+      return { id: d.id, name: d.name, on, off: !on, freq, why: d.why || 'YOU TURNED THIS OFF', tag: d.tag || '', hasTag: !!d.tag,
+        tagStyle: 'padding: 2px 7px; border-radius: 999px; font-size: 9px; font-weight: 700; letter-spacing: 0.6px; ' + (d.tag === 'PRO' ? 'background: #071238; color: #FFFFFF;' : 'border: 1px solid rgba(7,18,56,0.18); color: rgba(7,18,56,0.6);'),
+        opts: FREQ.concat(FREQ.indexOf(freq) < 0 ? [freq] : []).map((v) => ({ v })),
+        setFreq: (e) => this.setState({ fq: Object.assign({}, st.fq || {}, { [d.id]: e.target.value }) }),
+        flip: () => this.setState({ on: Object.assign({}, st.on || {}, { [d.id]: !on }) }),
+        label: (on ? 'Turn off: ' : 'Turn on: ') + d.name, track: sw(on), knob: kn(on),
+        nameStyle: 'font-size: 15px; font-weight: 600; line-height: 1.3; ' + (on ? '' : 'color: rgba(7,18,56,0.45);'),
+        sep: i ? 'border-top: 0.5px solid rgba(7,18,56,0.12);' : '' };
+    };
+
+    const D = [{"id": "filter", "name": "Replace HVAC air filter", "freq": "Every 3 months", "on": true}, {"id": "service", "name": "Service the furnace", "freq": "Every fall", "on": true, "tag": "PRO"}, {"id": "co", "name": "Test the CO detector by the furnace", "freq": "Every month", "on": true}, {"id": "vents", "name": "Vacuum return vents", "freq": "Twice a year", "on": true}, {"id": "cond", "name": "Flush the condensate line", "freq": "Every spring", "on": true}, {"id": "hum", "name": "Replace the humidifier pad", "freq": "Every fall", "on": false, "why": "OFF SINCE SEP 12 \u00b7 NO WHOLE-HOUSE HUMIDIFIER"}, {"id": "flue", "name": "Check the flue pipe for rust", "freq": "Every year", "on": false, "why": "OFF SINCE SEP 12 \u00b7 SUMMIT CHECKS IT AT THE TUNE-UP"}];
+    const rows = D.map((d) => mk(d, 0, st));
+    const on = rows.filter((r) => r.on), off = rows.filter((r) => !r.on);
+    const sep = (l) => l.map((r, i) => Object.assign(r, { sep: i ? 'border-top: 0.5px solid rgba(7,18,56,0.12);' : '' }));
+    return { onList: sep(on), offList: sep(off), nOn: on.length, nOff: off.length, anyOff: off.length > 0 };
+  }
+}
+</script>
+</body>
+</html>

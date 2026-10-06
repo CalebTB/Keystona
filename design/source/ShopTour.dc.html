@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona ShopTour</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}select:focus{outline:none}
+input[type=time]::-webkit-calendar-picker-indicator{opacity:0.5}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1200px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; display: flex; flex-direction: column">
+<main style="padding: 12px 16px 24px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<a href="ShopHomes.dc.html" style="display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -6px; font-size: 15px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"></path></svg>Homes</a><a href="#" style="display: flex; align-items: center; gap: 6px; min-height: 44px; font-size: 15px; font-weight: 600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.7 10.7l6.6-3.4"></path><path d="M8.7 13.3l6.6 3.4"></path><path d="M6 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0"></path><path d="M18 6m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0"></path><path d="M18 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0"></path></svg>Export PDF</a>
+</div>
+<header style="display: flex; flex-direction: column; gap: 6px; margin-top: -8px">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">TOUR CHECKLIST · TOURED MON, SEP 28</span>
+<h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.9px; line-height: 1.1">612 Birch Run Dr</h1>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">$389,000 · 3 BD · 2 BA · 1,960 SQ FT · 1987</span>
+</header>
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 16px; border: 1px solid rgba(7,18,56,0.12)">
+<div style="display: flex; align-items: baseline; justify-content: space-between"><span style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 24px; font-weight: 800; letter-spacing: -0.6px; font-variant-numeric: tabular-nums">{{checked}}</span><span style="font-size: 14px; font-weight: 600; color: rgba(7,18,56,0.55)">of 32 checked</span></span><span class="m" style="{{flagStyle}}">{{flagText}}</span></div>
+<div role="img" aria-label="Checklist results" style="display: flex; gap: 2px; height: 8px"><span style="{{barGood}}"></span><span style="{{barUnsure}}"></span><span style="{{barBad}}"></span><span style="{{barLeft}}"></span></div>
+<div style="display: flex; gap: 12px"><span class="m" style="display: flex; align-items: center; gap: 5px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.6px; color: #4A6604"><span style="width: 8px; height: 8px; border-radius: 2px; background: #ECF87F; box-shadow: inset 0 0 0 1px #4A6604"></span>{{nGood}} FINE</span><span class="m" style="display: flex; align-items: center; gap: 5px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.6px; color: #6B4F00"><span style="width: 8px; height: 8px; border-radius: 2px; background: #E0B400"></span>{{nUnsure}} NOT SURE</span><span class="m" style="display: flex; align-items: center; gap: 5px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.6px; color: #B12347"><span style="width: 8px; height: 8px; border-radius: 2px; background: #FF3B62"></span>{{nBad}} PROBLEM</span></div>
+</div>
+<div role="tablist" aria-label="Checklist section" style="display: flex; gap: 6px; overflow-x: auto; margin: 0 -16px; padding: 0 16px"><sc-for list="{{secs}}" as="s" hint-placeholder-count="4"><button type="button" role="tab" aria-selected="{{s.on}}" onClick="{{s.pick}}" style="{{s.style}}">{{s.l}}</button></sc-for></div>
+<sc-if value="{{isFlags}}" hint-placeholder-val="{{ false }}"><p style="margin: -6px 0 0; font-size: 13.5px; line-height: 1.45; color: rgba(7,18,56,0.65)">Everything you marked as a problem, in one place. Show this to your inspector on Thursday.</p></sc-if>
+<sc-if value="{{isSys}}" hint-placeholder-val="{{ false }}"><div style="display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(37,64,216,0.35); margin-top: -6px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2540D8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h1a2 2 0 0 0 2-2a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-14a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2"></path><path d="M9 13a3 3 0 1 0 6 0a3 3 0 0 0-6 0"></path></svg><span style="font-size: 13px; line-height: 1.45; color: rgba(7,18,56,0.75)">Snap the label on the furnace and water heater — we'll read the year it was made.</span></div></sc-if>
+<ul style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden">
+<sc-for list="{{items}}" as="it" hint-placeholder-count="5"><li style="{{it.sep}}"><div style="display: flex; flex-direction: column; gap: 10px; padding: 12px 14px">
+<div style="display: flex; align-items: flex-start; gap: 10px"><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px"><sc-if value="{{it.showSec}}" hint-placeholder-val="{{ false }}"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{it.sec}}</span></sc-if><span style="font-size: 15px; font-weight: 600; line-height: 1.35">{{it.t}}</span><sc-if value="{{it.hasNote}}" hint-placeholder-val="{{ true }}"><span style="{{it.noteStyle}}">{{it.note}}</span></sc-if></span>
+<button type="button" aria-label="{{it.camLabel}}" style="display: flex; align-items: center; gap: 4px; min-width: 44px; height: 32px; padding: 0 8px; margin: -2px -6px 0 0; border-radius: 999px; justify-content: center; color: rgba(7,18,56,0.6)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h1a2 2 0 0 0 2-2a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-14a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2"></path><path d="M9 13a3 3 0 1 0 6 0a3 3 0 0 0-6 0"></path></svg><sc-if value="{{it.hasPh}}" hint-placeholder-val="{{ true }}"><span class="m" style="font-size: 10px; font-weight: 700">{{it.ph}}</span></sc-if></button></div>
+<div role="radiogroup" aria-label="{{it.t}}" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px"><sc-for list="{{it.opts}}" as="o" hint-placeholder-count="3"><button type="button" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.l}}</button></sc-for></div>
+</div></li></sc-for>
+</ul>
+<a href="ShopAdd.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px; border: 1.5px dashed rgba(7,18,56,0.22); border-radius: 14px; font-size: 15px; font-weight: 600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"></path><path d="M7 9l5-5l5 5"></path><path d="M12 4l0 12"></path></svg>Add the inspection report after Thursday</a>
+</main>
+<div style="margin-top: auto; position: sticky; bottom: 0">
+<nav aria-label="Main tabs" style="height: 84px; box-sizing: border-box; border-top: 0.5px solid rgba(7,18,56,0.12); background: #FFFFFF; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 8px 0 22px; flex-shrink: 0"><a href="ShopHomes.dc.html" aria-current="page" style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #FF3B62"><span style="position: absolute; top: -8px; left: 50%; margin-left: -10px; width: 20px; height: 3px; border-radius: 0 0 3px 3px; background: #FF3B62"></span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l-2 0l9-9l9 9l-2 0"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"></path></svg><span style="font-size: 10px; font-weight: 700">Homes</span></a><a href="ShopCompare.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1z"></path><path d="M13 5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1z"></path></svg><span style="font-size: 10px; font-weight: 600">Compare</span></a><a href="SettingsHub.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37c1 .608 2.296.07 2.572-1.065z"></path><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"></path></svg><span style="font-size: 10px; font-weight: 600">Settings</span></a></nav>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const D = {ext: [['Roof: missing or curling shingles', 'good', 0, ''], ['Gutters attached, draining away', 'good', 1, ''], ['Grade slopes away from the house', 'unsure', 0, 'Hard to tell on the left side'], ['Siding and trim: rot, gaps, peeling', 'good', 2, ''], ['Driveway and walkway cracks', 'good', 0, '']],int: [['Water stains on ceilings or walls', 'bad', 2, 'Fresh paint patch on hall ceiling — why?'], ['Windows open, close and lock', 'good', 0, ''], ['Floors: soft spots or slopes', 'good', 0, ''], ['Musty smell anywhere', 'bad', 1, 'Basement, near the laundry'], ['Water pressure — run two taps', 'good', 0, '']],sys: [['Furnace label — year made', 'unsure', 1, 'Label says 2003. Ask about service.'], ['Water heater label — year made', 'good', 1, '2020 · 50 gal'], ['Electrical panel brand', 'bad', 1, 'Federal Pacific — inspector must look'], ['AC runs and blows cold', 'good', 0, ''], ['Outlets near water have test buttons', null, 0, '']]};
+    const sec = st.sec || 'sys';
+    const val = st.val || {};
+    const SECS = [['ext', 'Exterior'], ['int', 'Interior'], ['sys', 'Systems'], ['flags', 'Red flags']];
+    const NAMES = { ext: 'EXTERIOR', int: 'INTERIOR', sys: 'SYSTEMS' };
+    const all = [];
+    Object.keys(D).forEach((s) => D[s].forEach((x, i) => all.push({ s, i, key: s + i, t: x[0], v0: x[1], ph: x[2], note: x[3] })));
+    const vOf = (a) => val[a.key] !== undefined ? val[a.key] : a.v0;
+    // 32 items total; 15 shown here, the other 17 are already marked fine
+    const nGood = 17 + all.filter((a) => vOf(a) === 'good').length;
+    const nUnsure = all.filter((a) => vOf(a) === 'unsure').length;
+    const nBad = all.filter((a) => vOf(a) === 'bad').length;
+    const checked = nGood + nUnsure + nBad;
+    const seg = (n, css) => 'flex: ' + n + '; border-radius: 2px; ' + (n ? css : 'display: none;');
+    const list = sec === 'flags' ? all.filter((a) => vOf(a) === 'bad') : all.filter((a) => a.s === sec);
+    const O = [['good', 'Fine'], ['unsure', 'Not sure'], ['bad', 'Problem']];
+    const onCss = { good: 'background: #ECF87F; color: #4A6604; box-shadow: inset 0 0 0 1.5px #4A6604;', unsure: 'background: #FFFFFF; color: #6B4F00; box-shadow: inset 0 0 0 1.5px #B08A00;', bad: 'background: #FF3B62; color: #FFFFFF;' };
+    return {
+      checked, nGood, nUnsure, nBad,
+      flagText: nBad + (nBad === 1 ? ' RED FLAG' : ' RED FLAGS'),
+      flagStyle: 'font-size: 10px; font-weight: 700; letter-spacing: 0.8px; color: ' + (nBad ? '#B12347' : '#4A6604') + ';',
+      barGood: seg(nGood, 'background: #ECF87F; box-shadow: inset 0 0 0 1px #4A6604;'), barUnsure: seg(nUnsure, 'background: #E0B400;'), barBad: seg(nBad, 'background: #FF3B62;'), barLeft: seg(32 - checked, 'box-shadow: inset 0 0 0 1px rgba(7,18,56,0.2);'),
+      isFlags: sec === 'flags', isSys: sec === 'sys',
+      secs: SECS.map(([k, l]) => ({ l: k === 'flags' ? l + ' · ' + nBad : l, on: sec === k, pick: () => this.setState({ sec: k }),
+        style: 'height: 36px; padding: 0 14px; border-radius: 999px; font-size: 13.5px; font-weight: 600; white-space: nowrap; flex-shrink: 0; box-sizing: border-box; ' + (sec === k ? (k === 'flags' ? 'background: #FF3B62; color: #FFFFFF;' : 'background: #071238; color: #FFFFFF;') : (k === 'flags' ? 'border: 1px solid #FF3B62; color: #B12347;' : 'border: 1px solid rgba(7,18,56,0.18); color: rgba(7,18,56,0.75);')) })),
+      items: list.map((a, j) => { const v = vOf(a); return {
+        t: a.t, note: a.note, hasNote: !!a.note, ph: a.ph, hasPh: a.ph > 0, camLabel: a.ph ? a.ph + ' photos — add another' : 'Add a photo',
+        sec: NAMES[a.s], showSec: sec === 'flags',
+        noteStyle: 'font-size: 13px; line-height: 1.4; color: ' + (v === 'bad' ? '#B12347' : 'rgba(7,18,56,0.6)') + ';',
+        sep: j ? 'border-top: 0.5px solid rgba(7,18,56,0.12);' : '',
+        opts: O.map(([k, l]) => ({ l, on: v === k, pick: () => this.setState({ val: Object.assign({}, val, { [a.key]: v === k ? null : k }) }),
+          style: 'height: 40px; border-radius: 10px; font-size: 13.5px; font-weight: 600; box-sizing: border-box; display: flex; align-items: center; justify-content: center; ' + (v === k ? onCss[k] : 'box-shadow: inset 0 0 0 1px rgba(7,18,56,0.16); color: rgba(7,18,56,0.6);') })) }; }),
+      none: list.length === 0
+    };
+  }
+}
+</script>
+</body>
+</html>

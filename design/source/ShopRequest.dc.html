@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona ShopRequest</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}select:focus{outline:none}
+input[type=time]::-webkit-calendar-picker-indicator{opacity:0.5}
+textarea{font:inherit;color:#071238;resize:none}textarea:focus{outline:none}textarea::placeholder{color:rgba(7,18,56,0.35)}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1830px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; display: flex; flex-direction: column">
+<main style="padding: 12px 16px 24px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<a href="ShopInspection.dc.html" style="display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -6px; font-size: 15px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"></path></svg>Findings</a>
+</div>
+<header style="display: flex; flex-direction: column; gap: 6px; margin-top: -8px">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">REPAIR REQUEST · 1428 ELM HOLLOW LN</span>
+<h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.9px; line-height: 1.1">Send to your agent</h1>
+</header>
+
+<div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; border: 1px solid rgba(7,18,56,0.12); margin-top: -6px">
+<span aria-hidden="true" style="width: 44px; height: 44px; border-radius: 50%; background: #071238; color: #FFFFFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 17px; font-weight: 800">DW</span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; font-weight: 700">Dana Whitfield</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">YOUR AGENT · NORTHGATE REALTY</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">dana@northgaterealty.com</span></span>
+<a href="#" style="min-height: 44px; display: flex; align-items: center; font-size: 14px; font-weight: 600; color: #2540D8">Change</a>
+</div>
+
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">WHAT YOU’RE ASKING FOR · {{nOn}}</h2><a href="ShopInspection.dc.html" style="font-size: 13px; font-weight: 600; color: #2540D8">+ Add from report</a></div>
+<ul style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden">
+<sc-for list="{{asks}}" as="a" hint-placeholder-count="3"><li style="{{a.sep}}"><div style="display: flex; flex-direction: column; gap: 10px; padding: 12px 14px">
+<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px"><span style="display: flex; flex-direction: column; gap: 3px; min-width: 0"><span style="{{a.tStyle}}">{{a.t}}</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{a.where}} · PDF P. {{a.page}}</span></span><span style="font-size: 13.5px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; padding-top: 1px">{{a.cost}}</span></div>
+<div role="radiogroup" aria-label="{{a.t}}" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px"><sc-for list="{{a.opts}}" as="o" hint-placeholder-count="3"><button type="button" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.l}}</button></sc-for></div>
+<sc-if value="{{a.isCredit}}" hint-placeholder-val="{{ false }}"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">ASKING FOR {{a.creditAmt}} OFF AT CLOSING · THE HIGH END OF THE ESTIMATE</span></sc-if>
+</div></li></sc-for>
+</ul>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">NOTE TO DANA</h2></div>
+<textarea rows="4" value="{{note}}" onChange="{{onNote}}" aria-label="Note to your agent" style="width: 100%; padding: 12px 14px; font-size: 15px; line-height: 1.45; border: 1px solid rgba(7,18,56,0.18); border-radius: 14px; box-sizing: border-box"></textarea>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">ATTACH</h2></div>
+<div style="border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden">
+<div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; box-sizing: border-box"><span style="flex: 1; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; font-weight: 600">Full inspection report</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">PDF · 42 PAGES · 6.8 MB</span></span><button type="button" role="switch" aria-checked="{{pdf}}" aria-label="Attach the full inspection report" onClick="{{flip_pdf}}" style="{{pdfTrack}}"><span style="{{pdfKnob}}"></span></button></div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; box-sizing: border-box; border-top: 0.5px solid rgba(7,18,56,0.12)"><span style="flex: 1; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; font-weight: 600">Inspector’s photos</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">ONE PER ITEM, FROM THE REPORT</span></span><button type="button" role="switch" aria-checked="{{pics}}" aria-label="Include the inspector’s photos" onClick="{{flip_pics}}" style="{{picsTrack}}"><span style="{{picsKnob}}"></span></button></div>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">WHAT DANA GETS</h2></div>
+<div style="padding: 14px; border-radius: 18px; background: #F3F4F8">
+<article aria-label="Preview of the request" style="background: #FFFFFF; border-radius: 6px; box-shadow: 0 1px 2px rgba(7,18,56,0.08), 0 8px 24px rgba(7,18,56,0.08); padding: 18px 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: center; justify-content: space-between"><span class="m" style="font-size: 9px; font-weight: 700; letter-spacing: 1.4px; color: rgba(7,18,56,0.5)">REPAIR REQUEST</span><svg width="18" height="18" viewBox="0 0 40 40" aria-hidden="true"><path d="M9 6h22l-5 28h-12z" fill="#FF3B62"></path><path d="M16 16h8" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"></path></svg></div>
+<div style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 17px; font-weight: 800; letter-spacing: -0.3px">1428 Elm Hollow Ln</span><span class="m" style="font-size: 9px; font-weight: 500; letter-spacing: 0.3px; color: rgba(7,18,56,0.55)">FROM CALEB · OCT 5 · BASED ON RIDGELINE INSPECTION, OCT 1</span></div>
+<sc-if value="{{hasNote}}" hint-placeholder-val="{{ true }}"><p style="margin: 0; font-size: 12px; line-height: 1.5; color: rgba(7,18,56,0.75); padding: 8px 10px; border-left: 2px solid rgba(7,18,56,0.2)">{{note}}</p></sc-if>
+<ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column">
+<sc-for list="{{paper}}" as="p" hint-placeholder-count="3"><li style="{{p.sep}}"><div style="display: flex; gap: 10px; padding: 9px 0">
+<span class="m" style="font-size: 11px; font-weight: 800; width: 14px; flex-shrink: 0; padding-top: 1px">{{p.n}}</span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 12.5px; font-weight: 700; line-height: 1.3">{{p.t}}</span><span class="m" style="font-size: 8.5px; font-weight: 500; letter-spacing: 0.3px; color: rgba(7,18,56,0.55)">{{p.where}} · REPORT P. {{p.page}}</span><span class="m" style="{{p.askStyle}}">{{p.ask}}</span></span>
+<sc-if value="{{p.pic}}" hint-placeholder-val="{{ true }}"><div style="width: 44px; flex-shrink: 0"><div style="position: relative; aspect-ratio: 1; border-radius: 6px; overflow: hidden; border: 1px solid rgba(37,64,216,0.25); background-image: linear-gradient(rgba(37,64,216,0.11) 1px, transparent 1px), linear-gradient(90deg, rgba(37,64,216,0.11) 1px, transparent 1px); background-size: 8px 8px; background-position: -1px -1px"></div></div></sc-if>
+</div></li></sc-for>
+</ol>
+<div style="display: flex; justify-content: space-between; gap: 10px; padding-top: 10px; border-top: 1px solid #071238"><span class="m" style="font-size: 9px; font-weight: 700; letter-spacing: 0.8px">{{paperSum}}</span><span class="m" style="font-size: 9px; font-weight: 700; letter-spacing: 0.8px">{{paperCredit}}</span></div>
+<sc-if value="{{pdf}}" hint-placeholder-val="{{ true }}"><span class="m" style="display: flex; align-items: center; gap: 6px; font-size: 9px; font-weight: 600; letter-spacing: 0.4px; color: rgba(7,18,56,0.55)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.55)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path><path d="M9 9l1 0"></path><path d="M9 13l6 0"></path><path d="M9 17l6 0"></path></svg>ATTACHED · RIDGELINE_INSPECTION.PDF</span></sc-if>
+</article>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">SEND AS</h2></div>
+<div role="radiogroup" aria-label="Send as" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px"><sc-for list="{{vias}}" as="v" hint-placeholder-count="3"><button type="button" role="radio" aria-checked="{{v.on}}" onClick="{{v.pick}}" style="{{v.style}}"><span style="font-size: 14.5px; font-weight: 700">{{v.l}}</span><span class="m" style="{{v.subStyle}}">{{v.sub}}</span></button></sc-for></div>
+</section>
+</main>
+
+<div style="position: sticky; bottom: 0; margin-top: auto; background: #FFFFFF; border-top: 0.5px solid rgba(7,18,56,0.12); padding: 12px 16px 28px">
+<sc-if value="{{notSent}}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{send}}" style="width: 100%; height: 54px; border-radius: 999px; background: #2540D8; color: #FFFFFF; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.7 10.7l6.6-3.4"></path><path d="M8.7 13.3l6.6 3.4"></path><path d="M6 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0"></path><path d="M18 6m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0"></path><path d="M18 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0"></path></svg>{{sendLabel}}</button></sc-if>
+<sc-if value="{{sent}}" hint-placeholder-val="{{ false }}"><div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: #ECF87F">
+<span style="width: 36px; height: 36px; border-radius: 50%; background: #4A6604; color: #ECF87F; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10-10"></path></svg></span>
+<span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 700; color: #2E4003">Sent to Dana · just now</span><span style="font-size: 13px; line-height: 1.4; color: #4A6604">When the seller answers, mark each item agreed or not. Agreed fixes get checked off at the walk-through.</span></span>
+</div></sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1830}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const sw = (on) => 'width: 51px; height: 31px; border-radius: 999px; position: relative; flex-shrink: 0; transition: background .15s; background: ' + (on ? '#2540D8' : 'rgba(7,18,56,0.16)') + ';';
+    const kn = (on) => 'position: absolute; top: 2px; left: ' + (on ? 22 : 2) + 'px; width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 4px rgba(7,18,56,0.25); transition: left .15s;';
+    const tog = (out, key, def) => { const on = st[key] !== undefined ? st[key] : def; out[key] = on; out['flip_' + key] = () => this.setState({ [key]: !on }); out[key + 'Track'] = sw(on); out[key + 'Knob'] = kn(on); return on; };
+
+    const A = [['f1', 'Double-tapped breaker in main panel', 'SAFETY · ELECTRICAL · GARAGE', 150, 300, 18, 'fix'], ['f2', 'No GFCI outlet at kitchen island', 'SAFETY · KITCHEN', 120, 200, 22, 'fix'], ['f3', 'Loose flashing at the chimney', 'REPAIR · ROOF', 300, 600, 9, 'credit']];
+    const ask = st.ask || {};
+    const aOf = (a) => ask[a[0]] !== undefined ? ask[a[0]] : a[6];
+    const money = (n) => '$' + n.toLocaleString('en-US');
+    const note = st.note !== undefined ? st.note : 'Hi Dana — the inspection went well overall. These are the items we’d like the seller to handle before we move forward. Happy to talk through it.';
+    const via = st.via || 'email';
+    const out = {};
+    const pdf = tog(out, 'pdf', true); const pics = tog(out, 'pics', true);
+    const live = A.filter((a) => aOf(a) !== 'drop');
+    const fixes = live.filter((a) => aOf(a) === 'fix'), credits = live.filter((a) => aOf(a) === 'credit');
+    const credit = credits.reduce((s, a) => s + a[4], 0);
+    const O = [['fix', 'Fix it'], ['credit', 'Credit'], ['drop', 'Skip']];
+    const V = [['email', 'Email', 'WITH PDF'], ['text', 'Text', 'LINK TO VIEW'], ['link', 'Copy link', 'PASTE ANYWHERE']];
+    Object.assign(out, {
+      nOn: live.length, note, hasNote: !!note.trim(), onNote: (e) => this.setState({ note: e.target.value }),
+      asks: A.map((a, i) => { const v = aOf(a); return {
+        t: a[1], where: a[2], page: a[5], cost: money(a[3]) + '–' + a[4].toLocaleString('en-US'), isCredit: v === 'credit', creditAmt: money(a[4]),
+        sep: i ? 'border-top: 0.5px solid rgba(7,18,56,0.12);' : '',
+        tStyle: 'font-size: 15px; font-weight: 700; line-height: 1.3; ' + (v === 'drop' ? 'color: rgba(7,18,56,0.4); text-decoration: line-through;' : ''),
+        opts: O.map(([k, l]) => ({ l, on: v === k, pick: () => this.setState({ ask: Object.assign({}, ask, { [a[0]]: k }), sent: false }),
+          style: 'height: 38px; border-radius: 10px; font-size: 13.5px; font-weight: 600; box-sizing: border-box; display: flex; align-items: center; justify-content: center; ' + (v === k ? (k === 'drop' ? 'background: rgba(7,18,56,0.08); color: #071238;' : 'background: #071238; color: #FFFFFF;') : 'box-shadow: inset 0 0 0 1px rgba(7,18,56,0.16); color: rgba(7,18,56,0.6);') })) }; }),
+      paper: live.map((a, i) => ({ n: i + 1, t: a[1], where: a[2], page: a[5], pic: pics,
+        sep: i ? 'border-top: 0.5px solid rgba(7,18,56,0.12);' : '',
+        ask: aOf(a) === 'fix' ? 'REPAIR BEFORE CLOSING' : 'CREDIT AT CLOSING · ' + money(a[4]),
+        askStyle: 'align-self: flex-start; padding: 2px 6px; border-radius: 4px; font-size: 8.5px; font-weight: 700; letter-spacing: 0.5px; ' + (aOf(a) === 'fix' ? 'border: 1px solid #071238;' : 'background: #071238; color: #FFFFFF;') })),
+      paperSum: fixes.length + (fixes.length === 1 ? ' REPAIR' : ' REPAIRS') + ' · ' + credits.length + (credits.length === 1 ? ' CREDIT' : ' CREDITS'),
+      paperCredit: credit ? 'CREDITS ' + money(credit) : '',
+      vias: V.map(([k, l, sub]) => ({ l, sub, on: via === k, pick: () => this.setState({ via: k }),
+        style: 'display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 10px 12px; border-radius: 14px; box-sizing: border-box; text-align: left; ' + (via === k ? 'box-shadow: inset 0 0 0 2px #071238;' : 'box-shadow: inset 0 0 0 1px rgba(7,18,56,0.18);'),
+        subStyle: 'font-size: 8.5px; font-weight: 600; letter-spacing: 0.6px; color: rgba(7,18,56,0.5);' })),
+      sendLabel: via === 'link' ? 'Copy link for Dana' : (via === 'text' ? 'Text it to Dana' : 'Email it to Dana'),
+      sent: !!st.sent && live.length > 0, notSent: !(st.sent && live.length > 0), send: () => this.setState({ sent: true })
+    });
+    return out;
+  }
+}
+</script>
+</body>
+</html>

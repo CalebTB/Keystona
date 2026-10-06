@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona set up gas shutoff</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+</style>
+</helmet>
+<div style="width: 390px; height: 1080px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; position: relative; overflow: hidden">
+
+<!-- Emergency hub behind the sheet -->
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 390px; height: 1000px; pointer-events: none">
+<dc-import name="EmergencyHub" hint-size="390px,1000px"></dc-import>
+</div>
+<a href="EmergencyHub.dc.html" aria-label="Close" style="position: absolute; inset: 0; background: rgba(7,18,56,0.45)"></a>
+
+<section role="dialog" aria-label="Set up gas shutoff" style="position: absolute; left: 0; right: 0; top: 64px; bottom: 0; background: #FFFFFF; border-radius: 22px 22px 0 0; display: flex; flex-direction: column">
+<span aria-hidden="true" style="align-self: center; margin-top: 8px; width: 36px; height: 4px; border-radius: 3px; background: rgba(7,18,56,0.2)"></span>
+<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 6px 16px 10px; border-bottom: 0.5px solid rgba(7,18,56,0.12)">
+<a href="EmergencyHub.dc.html" style="justify-self: start; display: flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 500; color: rgba(7,18,56,0.6)">Cancel</a>
+<h1 style="margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -0.3px">Set up gas shutoff.</h1>
+<span style="justify-self: end">
+<sc-if value="{{ready}}" hint-placeholder-val="{{ false }}"><a href="ShutoffGas.dc.html" style="display: flex; align-items: center; height: 36px; padding: 0 14px; border-radius: 999px; background: #2540D8; color: #FFFFFF; font-size: 14px; font-weight: 600; white-space: nowrap">Mark as ready</a></sc-if>
+<sc-if value="{{notReady}}" hint-placeholder-val="{{ true }}"><span aria-disabled="true" style="display: flex; align-items: center; height: 36px; padding: 0 14px; border-radius: 999px; background: rgba(7,18,56,0.08); color: rgba(7,18,56,0.35); font-size: 14px; font-weight: 600; white-space: nowrap">Mark as ready</span></sc-if>
+</span>
+</div>
+
+<form onSubmit="{{noSubmit}}" style="flex: 1; padding: 18px 16px 30px; display: flex; flex-direction: column; gap: 20px">
+
+<!-- Gas only: say the safe thing first -->
+<div role="note" style="display: flex; gap: 10px; padding: 12px 14px; border: 1.5px solid #FF3B62; border-radius: 14px">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF3B62" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><path d="M12 9v4"></path><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636-2.87l-8.106-13.536a1.914 1.914 0 0 0-3.274 0z"></path><path d="M12 16h.01"></path></svg>
+<span style="font-size: 13.5px; line-height: 1.45"><span style="font-weight: 700">Smell gas?</span> Leave the house and call 911 from outside. Only turn this off if it's safe to reach.</span>
+</div>
+
+<label style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">WHERE IS IT</span><span aria-hidden="true" style="color: #FF3B62; font-weight: 700">*</span></span>
+<textarea rows="2" value="{{loc}}" onChange="{{on_loc}}" aria-required="true" placeholder="e.g. Outside, left side of the house at the gas meter" style="width: 100%; padding: 12px 14px; font-size: 16px; line-height: 1.4; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box"></textarea>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">THIS IS WHAT YOU'LL READ FIRST IN AN EMERGENCY — BE SPECIFIC</span></label>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">VALVE TYPE</span></span>
+<div role="radiogroup" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px"><button type="button" role="radio" aria-checked="{{valve_lever}}" onClick="{{pick_valve_lever}}" style="{{valve_lever_style}}">Lever</button><button type="button" role="radio" aria-checked="{{valve_ball}}" onClick="{{pick_valve_ball}}" style="{{valve_ball_style}}">Ball valve</button></div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">WHICH WAY TO TURN IT</span></span>
+<div role="radiogroup" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px"><button type="button" role="radio" aria-checked="{{turn_cw}}" onClick="{{pick_turn_cw}}" style="{{turn_cw_style}}">Clockwise</button><button type="button" role="radio" aria-checked="{{turn_ccw}}" onClick="{{pick_turn_ccw}}" style="{{turn_ccw_style}}">Counterclockwise</button></div>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">A QUARTER TURN, UNTIL THE HANDLE IS CROSSWISE TO THE PIPE</span></div>
+
+<label style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">TOOLS NEEDED</span></span>
+<input type="text" value="{{tools}}" onChange="{{on_tools}}" placeholder="e.g. 12-inch adjustable wrench" style="width: 100%; height: 50px; padding: 0 14px; font-size: 16px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">WHERE THE TOOL IS KEPT HELPS TOO</span></label>
+
+<label style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">ANYTHING ELSE</span></span>
+<textarea rows="3" value="{{notes}}" onChange="{{on_notes}}" placeholder="e.g. Don't turn it back on yourself — call the gas company to relight the pilots" style="width: 100%; padding: 12px 14px; font-size: 16px; line-height: 1.4; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box"></textarea>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">WARNINGS · TURNING IT BACK ON · WHO TO CALL</span></label>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">PHOTOS</span>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px"><button type="button" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; aspect-ratio: 4 / 3; border-radius: 14px; border: 1.5px dashed rgba(7,18,56,0.22); color: rgba(7,18,56,0.55)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h1a2 2 0 0 0 2-2a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-14a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2 M12 13m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0"></path></svg><span class="m" style="font-size: 9.5px; font-weight: 600; letter-spacing: 0.6px; text-align: center; line-height: 1.35">WIDE SHOT<br>OF THE AREA</span></button><button type="button" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; aspect-ratio: 4 / 3; border-radius: 14px; border: 1.5px dashed rgba(7,18,56,0.22); color: rgba(7,18,56,0.55)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h1a2 2 0 0 0 2-2a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-14a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2 M12 13m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0"></path></svg><span class="m" style="font-size: 9.5px; font-weight: 600; letter-spacing: 0.6px; text-align: center; line-height: 1.35">CLOSE-UP<br>OF THE VALVE</span></button></div>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">A PHOTO FINDS IT FASTER THAN WORDS IN THE DARK</span>
+</div>
+
+<div style="display: flex; align-items: center; justify-content: center; gap: 6px; padding-top: 4px">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 18h.01"></path><path d="M9.172 15.172a4 4 0 0 1 5.656 0"></path><path d="M3 3l18 18"></path></svg>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">SAVED ON THIS PHONE · WORKS WITHOUT INTERNET</span>
+</div>
+</form>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const v = (k, d) => st[k] !== undefined ? st[k] : d;
+    const set = (k) => (e) => this.setState({ [k]: e.target.value });
+    const out = { noSubmit: (e) => e.preventDefault() };
+    const segBase = 'height: 46px; border-radius: 12px; font-size: 15px; font-weight: 600; text-align: center; box-sizing: border-box;';
+    [['valve', ['lever', 'ball'], 'lever'], ['turn', ['cw', 'ccw'], 'cw']].forEach(([k, opts, d]) => {
+      const cur = v(k, d);
+      opts.forEach(o => {
+        out[k + '_' + o] = cur === o;
+        out['pick_' + k + '_' + o] = () => this.setState({ [k]: o });
+        out[k + '_' + o + '_style'] = segBase + (cur === o ? ' border: 1.5px solid #071238; background: #071238; color: #FFFFFF;' : ' border: 1px solid rgba(7,18,56,0.18); color: rgba(7,18,56,0.7);');
+      });
+    });
+    out.loc = v('loc', ''); out.on_loc = set('loc');
+    out.tools = v('tools', ''); out.on_tools = set('tools');
+    out.notes = v('notes', ''); out.on_notes = set('notes');
+    out.ready = !!out.loc.trim(); out.notReady = !out.ready;
+    return out;
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona ShopInspection</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}select:focus{outline:none}
+input[type=time]::-webkit-calendar-picker-indicator{opacity:0.5}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 2270px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; display: flex; flex-direction: column">
+<main style="padding: 12px 16px 24px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<a href="ShopHomeDetail.dc.html" style="display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -6px; font-size: 15px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"></path></svg>1428 Elm Hollow Ln</a><a href="#" style="display: flex; align-items: center; gap: 6px; min-height: 44px; font-size: 15px; font-weight: 600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path><path d="M9 9l1 0"></path><path d="M9 13l6 0"></path><path d="M9 17l6 0"></path></svg>PDF</a>
+</div>
+<header style="display: flex; flex-direction: column; gap: 6px; margin-top: -8px">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">INSPECTION · OCT 1 · RIDGELINE HOME INSPECTIONS</span>
+<h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.9px; line-height: 1.1">16 findings, sorted by what matters</h1>
+</header>
+<div style="display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(7,18,56,0.12); margin-top: -6px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.6)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path><path d="M9 9l1 0"></path><path d="M9 13l6 0"></path><path d="M9 17l6 0"></path></svg><span style="font-size: 13px; line-height: 1.45; color: rgba(7,18,56,0.7)">We read all 42 pages and pulled these out. Costs are typical ranges for your area — check anything important against the PDF.</span></div>
+
+<div role="tablist" aria-label="Filter findings" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px"><sc-for list="{{tabs}}" as="t" hint-placeholder-count="4"><button type="button" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}" style="{{t.style}}"><span style="font-size: 18px; font-weight: 800; letter-spacing: -0.4px; font-variant-numeric: tabular-nums">{{t.n}}</span><span class="m" style="{{t.lab}}">{{t.l}}</span></button></sc-for></div>
+
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{items}}" as="f" hint-placeholder-count="4"><li style="{{f.card}}">
+<div style="display: flex; gap: 12px; padding: 14px 14px 12px">
+<div style="width: 64px; flex-shrink: 0"><div style="position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; border: 1px solid rgba(37,64,216,0.25); background-image: linear-gradient(rgba(37,64,216,0.11) 1px, transparent 1px), linear-gradient(90deg, rgba(37,64,216,0.11) 1px, transparent 1px); background-size: 10px 10px; background-position: -1px -1px"></div></div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px">
+<span style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap"><span class="m" style="{{f.pill}}">{{f.sevL}}</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{f.where}}</span></span>
+<span style="font-size: 15px; font-weight: 700; line-height: 1.3">{{f.t}}</span>
+<sc-if value="{{f.hasNote}}" hint-placeholder-val="{{ true }}"><span style="font-size: 13px; line-height: 1.4; color: rgba(7,18,56,0.65)">{{f.note}}</span></sc-if>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; padding: 4px 6px 4px 14px; border-top: 0.5px solid rgba(7,18,56,0.12)">
+<span style="flex: 1; display: flex; align-items: baseline; gap: 8px"><span style="font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums">{{f.cost}}</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{f.page}}</span></span>
+<button type="button" role="switch" aria-checked="{{f.ask}}" onClick="{{f.flip}}" style="{{f.askBtn}}"><span style="{{f.askBox}}"><sc-if value="{{f.ask}}" hint-placeholder-val="{{ false }}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10-10"></path></svg></sc-if></span>Ask seller</button>
+</div>
+</li></sc-for>
+</ul>
+<sc-if value="{{showMore}}" hint-placeholder-val="{{ true }}"><span class="m" style="text-align: center; font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">+ 6 MORE MONITOR ITEMS · LOW PRIORITY</span></sc-if>
+<span class="m" style="text-align: center; font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">IF YOU BUY IT, MONITOR ITEMS BECOME REMINDERS AND OPEN REPAIRS BECOME TASKS</span>
+</main>
+<div style="position: sticky; bottom: 0; margin-top: auto; background: #FFFFFF; border-top: 0.5px solid rgba(7,18,56,0.12); padding: 12px 16px 28px; display: flex; align-items: center; gap: 12px">
+<span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span class="m" style="font-size: 10px; font-weight: 600; letter-spacing: 0.6px; color: rgba(7,18,56,0.55)">ASKING SELLER TO FIX {{askN}}</span><span style="font-size: 18px; font-weight: 800; letter-spacing: -0.4px; font-variant-numeric: tabular-nums">{{askCost}}</span></span>
+<sc-if value="{{anyAsk}}" hint-placeholder-val="{{ true }}"><a href="ShopRequest.dc.html" style="display: flex; align-items: center; gap: 6px; height: 48px; padding: 0 18px; border-radius: 999px; background: #2540D8; color: #FFFFFF; font-size: 15px; font-weight: 700"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.7 10.7l6.6-3.4"></path><path d="M8.7 13.3l6.6 3.4"></path><path d="M6 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0"></path><path d="M18 6m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0"></path><path d="M18 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0"></path></svg>Send to my agent</a></sc-if>
+<sc-if value="{{noAsk}}" hint-placeholder-val="{{ false }}"><span aria-disabled="true" style="display: flex; align-items: center; height: 48px; padding: 0 18px; border-radius: 999px; background: rgba(7,18,56,0.08); color: rgba(7,18,56,0.35); font-size: 15px; font-weight: 700">Send to my agent</span></sc-if>
+</div>
+<main style="display: none">
+</main>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":2270}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const F = [['f1', 'safety', 'Double-tapped breaker in main panel', 'ELECTRICAL · GARAGE', 150, 300, 18, 'Two wires on one breaker. An electrician can fix it in under an hour.', true], ['f2', 'safety', 'No GFCI outlet at kitchen island', 'KITCHEN', 120, 200, 22, 'Required near water. Cheap fix, but a real shock risk.', true], ['f3', 'repair', 'Loose flashing at the chimney', 'ROOF', 300, 600, 9, 'Likely source of the stain in the upstairs closet.', true], ['f4', 'repair', 'Downspouts drain against foundation', 'EXTERIOR · NORTH SIDE', 100, 250, 6, 'Add extensions so water runs 4+ ft from the house.', false], ['f5', 'repair', 'Water heater relief line missing', 'BASEMENT', 80, 150, 27, 'Safety valve has no pipe to direct hot water down.', false], ['f6', 'repair', 'Soft deck boards near the stairs', 'BACK DECK', 400, 900, 12, 'Three boards. Joists looked fine.', false], ['f7', 'repair', 'Slow drain, upstairs bath sink', 'PRIMARY BATH', 90, 180, 31, '', false], ['f8', 'monitor', 'AC condenser is 18 years old', 'HVAC · 2008', 5000, 7500, 24, 'Works today. Expect to replace it in the next few years.', false], ['f9', 'monitor', 'Water heater at the end of its expected life', 'BASEMENT · 2014', 1400, 2200, 27, '', false], ['f10', 'monitor', 'Hairline crack in basement wall', 'FOUNDATION', 0, 0, 33, 'Typical settling. Recheck once a year for widening.', false]];
+    const tab = st.tab || 'all';
+    const ask = st.ask || {};
+    const isA = (f) => ask[f[0]] !== undefined ? ask[f[0]] : f[8];
+    const money = (n) => '$' + n.toLocaleString('en-US');
+    const range = (lo, hi) => hi === 0 ? 'NO COST NOW' : (money(lo) + '–' + hi.toLocaleString('en-US'));
+    const C = { safety: ['#FF3B62', '#B12347', 'SAFETY'], repair: ['#B08A00', '#6B4F00', 'REPAIR'], monitor: ['rgba(7,18,56,0.3)', 'rgba(7,18,56,0.6)', 'MONITOR'] };
+    const counts = { all: 16, safety: 2, repair: 5, monitor: 9 };
+    const T = [['all', 'ALL'], ['safety', 'SAFETY'], ['repair', 'REPAIR'], ['monitor', 'MONITOR']];
+    const asked = F.filter(isA);
+    const lo = asked.reduce((s, f) => s + f[4], 0), hi = asked.reduce((s, f) => s + f[5], 0);
+    const vis = F.filter((f) => tab === 'all' || f[1] === tab);
+    return {
+      tabs: T.map(([k, l]) => { const on = tab === k; const col = k === 'all' ? '#071238' : C[k][1]; return { n: counts[k], l, on, pick: () => this.setState({ tab: k }),
+        style: 'display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px; border-radius: 14px; box-sizing: border-box; text-align: left; color: ' + (on ? '#FFFFFF' : col) + '; ' + (on ? 'background: ' + (k === 'all' ? '#071238' : k === 'safety' ? '#FF3B62' : k === 'repair' ? '#6B4F00' : 'rgba(7,18,56,0.7)') + ';' : 'border: 1px solid ' + (k === 'all' ? 'rgba(7,18,56,0.18)' : C[k][0]) + ';'),
+        lab: 'font-size: 8.5px; font-weight: 700; letter-spacing: 0.8px; color: ' + (on ? 'rgba(255,255,255,0.85)' : col) + ';' }; }),
+      items: vis.map((f) => { const a = isA(f); const c = C[f[1]]; return {
+        t: f[2], where: f[3], note: f[7], hasNote: !!f[7], sevL: c[2], cost: range(f[4], f[5]), page: 'PDF P. ' + f[6], ask: a,
+        flip: () => this.setState({ ask: Object.assign({}, ask, { [f[0]]: !a }) }),
+        card: 'border-radius: 16px; overflow: hidden; border: 1px solid ' + (f[1] === 'safety' ? 'rgba(255,59,98,0.5)' : 'rgba(7,18,56,0.12)') + ';',
+        pill: 'display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 999px; font-size: 9px; font-weight: 700; letter-spacing: 0.8px; border: 1px solid ' + c[0] + '; color: ' + c[1] + ';',
+        askBtn: 'display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 10px; border-radius: 10px; font-size: 14px; font-weight: 600; color: ' + (a ? '#2540D8' : 'rgba(7,18,56,0.65)') + ';',
+        askBox: 'width: 20px; height: 20px; border-radius: 6px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; ' + (a ? 'background: #2540D8; color: #FFFFFF;' : 'border: 1.5px solid rgba(7,18,56,0.3);')
+      }; }),
+      showMore: tab === 'all' || tab === 'monitor',
+      askN: asked.length, askCost: asked.length ? (money(lo) + '–' + hi.toLocaleString('en-US')) : '$0',
+      anyAsk: asked.length > 0, noAsk: asked.length === 0
+    };
+  }
+}
+</script>
+</body>
+</html>

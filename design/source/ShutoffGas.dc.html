@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona ShutoffGas</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}select:focus{outline:none}
+input[type=time]::-webkit-calendar-picker-indicator{opacity:0.5}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+textarea{font:inherit;color:#071238;resize:none}textarea:focus{outline:none}textarea::placeholder{color:rgba(7,18,56,0.35)}input::placeholder{color:rgba(7,18,56,0.35)}.sb>*{flex-shrink:0}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1780px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; display: flex; flex-direction: column">
+<main style="padding: 12px 16px 28px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<a href="EmergencyHub.dc.html" style="display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -6px; font-size: 15px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"></path></svg>Emergency</a><a href="ShutoffSetup.dc.html" style="min-height: 44px; display: flex; align-items: center; font-size: 15px; font-weight: 600">Edit</a>
+</div>
+<header style="display: flex; flex-direction: column; gap: 8px; margin-top: -8px">
+<span class="m" style="display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">GAS SHUTOFF <span class="m" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px; border: 1px solid #4A6604; color: #4A6604; font-size: 9px; font-weight: 700; letter-spacing: 0.8px"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10-10"></path></svg>READY</span></span>
+<h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.9px; line-height: 1.1">Turn off the gas</h1>
+</header>
+<div role="alert" style="display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 18px; background: #FF3B62; color: #FFFFFF; margin-top: -4px">
+<span style="display: flex; align-items: center; gap: 10px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"></path><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636-2.87l-8.106-13.536a1.914 1.914 0 0 0-3.274 0z"></path><path d="M12 16h.01"></path></svg><span style="font-size: 18px; font-weight: 800; letter-spacing: -0.3px">Smell gas? Get out first.</span></span>
+<span style="font-size: 14px; line-height: 1.5; color: rgba(255,255,255,0.92)">Don&rsquo;t flip switches, light anything or use the garage door. Once you&rsquo;re outside, call 911 or the gas company. Only shut it off if it&rsquo;s safe to reach.</span>
+<a href="#" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; border-radius: 999px; background: #FFFFFF; color: #B12347; font-size: 15px; font-weight: 700"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#B12347" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5-2.5l5 2v4a2 2 0 0 1-2 2a16 16 0 0 1-15-15a2 2 0 0 1 2-2"></path></svg>Call 911</a>
+</div>
+<section aria-label="Where it is" style="display: flex; flex-direction: column; gap: 10px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">WHERE</span><p style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; line-height: 1.25">Outside on the left side of the house, on the pipe right before the gas meter.</p><div style="position: relative; aspect-ratio: 16 / 10; border-radius: 16px; overflow: hidden; border: 1px solid rgba(37,64,216,0.25); background-image: linear-gradient(rgba(37,64,216,0.11) 1px, transparent 1px), linear-gradient(90deg, rgba(37,64,216,0.11) 1px, transparent 1px); background-size: 22px 22px; background-position: -1px -1px"><span class="m" style="position: absolute; left: 8px; bottom: 8px; padding: 2px 7px; border-radius: 999px; background: #FFFFFF; border: 1px solid rgba(7,18,56,0.12); font-size: 8.5px; font-weight: 700; letter-spacing: 0.8px; color: rgba(7,18,56,0.6)">WIDE SHOT</span></div></section>
+<section aria-label="How to turn it off" style="display: flex; flex-direction: column; gap: 14px">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">HOW</span>
+<ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px">
+<li style="display: flex; gap: 14px; align-items: flex-start"><span class="m" style="width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid #071238; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0">1</span><span style="font-size: 17px; line-height: 1.45; padding-top: 3px">Grab the 12&Prime; adjustable wrench &mdash; it hangs on the garage pegboard.</span></li>
+<li style="display: flex; gap: 14px; align-items: flex-start"><span class="m" style="width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid #071238; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0">2</span><span style="font-size: 17px; line-height: 1.45; padding-top: 3px">Find the flat tab on the pipe by the meter. Right now it lines up <strong>with</strong> the pipe.</span></li>
+<li style="display: flex; gap: 14px; align-items: flex-start"><span class="m" style="width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid #071238; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0">3</span><span style="font-size: 17px; line-height: 1.45; padding-top: 3px">Turn it <strong>a quarter turn</strong> so the tab sits crosswise to the pipe.</span></li>
+</ol>
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; border: 1px solid rgba(37,64,216,0.25); background-image: linear-gradient(rgba(37,64,216,0.11) 1px, transparent 1px), linear-gradient(90deg, rgba(37,64,216,0.11) 1px, transparent 1px); background-size: 22px 22px; background-position: -1px -1px"><span class="m" style="position: absolute; left: 8px; bottom: 8px; padding: 2px 7px; border-radius: 999px; background: #FFFFFF; border: 1px solid rgba(7,18,56,0.12); font-size: 8.5px; font-weight: 700; letter-spacing: 0.8px; color: rgba(7,18,56,0.6)">VALVE CLOSE-UP</span></div>
+</section>
+<div style="display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: 16px; border: 1.5px solid #B08A00"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B4F00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"></path><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636-2.87l-8.106-13.536a1.914 1.914 0 0 0-3.274 0z"></path><path d="M12 16h.01"></path></svg><span style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 15px; font-weight: 700">Don&rsquo;t turn it back on yourself</span><span style="font-size: 13.5px; line-height: 1.45; color: rgba(7,18,56,0.7)">The gas company checks for leaks and relights the pilots on your <a href="SystemDetail.dc.html" style="font-weight: 600; text-decoration: underline">furnace</a> and water heater.</span></span></div>
+<section aria-label="Details" style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">DETAILS</h2></div>
+<div style="border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden"><div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; "><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">VALVE</span><span style="font-size: 14px; font-weight: 600; text-align: right">Quarter-turn tab</span></div><div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-top: 0.5px solid rgba(7,18,56,0.12);"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">TURN</span><span style="font-size: 14px; font-weight: 600; text-align: right">Crosswise to the pipe</span></div><div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-top: 0.5px solid rgba(7,18,56,0.12);"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">TOOLS</span><span style="font-size: 14px; font-weight: 600; text-align: right">12″ wrench · garage pegboard</span></div><div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-top: 0.5px solid rgba(7,18,56,0.12);"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">USES GAS</span><span style="font-size: 14px; font-weight: 600; text-align: right">Furnace · water heater · range</span></div><div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-top: 0.5px solid rgba(7,18,56,0.12);"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">LAST CHECKED</span><span style="font-size: 14px; font-weight: 600; text-align: right">Oct 5, 2026</span></div></div>
+</section>
+<a href="#" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 64px; box-sizing: border-box; border-radius: 16px; border: 1.5px solid #2540D8;"><span style="width: 40px; height: 40px; border-radius: 50%; background: #2540D8; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5-2.5l5 2v4a2 2 0 0 1-2 2a16 16 0 0 1-15-15a2 2 0 0 1 2-2"></path></svg></span><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 700; color: #071238">Call Valley Natural Gas</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; color: rgba(7,18,56,0.55)">GAS COMPANY · 24/7 LEAK LINE · (256) 555-0144</span></span></a>
+<div style="display: flex; align-items: center; justify-content: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 18l.01 0"></path><path d="M9.172 15.172a4 4 0 0 1 5.656 0"></path><path d="M3 3l18 18"></path></svg><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">SAVED ON THIS PHONE · WORKS WITHOUT INTERNET</span></div>
+</main>
+<div style="margin-top: auto; position: sticky; bottom: 0">
+<nav aria-label="Main tabs" style="height: 84px; box-sizing: border-box; border-top: 0.5px solid rgba(7,18,56,0.12); background: #FFFFFF; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 8px 0 22px; flex-shrink: 0">
+<a href="Tabbed.dc.html" aria-current="page" style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #FF3B62">
+<span style="position: absolute; top: -8px; left: 50%; margin-left: -10px; width: 20px; height: 3px; border-radius: 0 0 3px 3px; background: #FF3B62"></span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l-2 0l9-9l9 9l-2 0"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"></path></svg>
+<span style="font-size: 10px; font-weight: 700">Home</span>
+</a>
+<a href="DocsSearchLed.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Docs</span>
+</a>
+<a href="Tasks.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12l5 5l10-10"></path><path d="M2 12l5 5m5-5l5-5"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Tasks</span>
+</a>
+<a href="ProjectsMany.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h6v8h-6z"></path><path d="M14 4h6v4h-6z"></path><path d="M4 16h6v4h-6z"></path><path d="M14 12h6v8h-6z"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Projects</span>
+</a>
+<a href="SettingsHub.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37c1 .608 2.296.07 2.572-1.065z"></path><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Settings</span>
+</a>
+</nav>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1780}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

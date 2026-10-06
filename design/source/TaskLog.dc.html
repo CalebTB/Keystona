@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona TaskLog</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}select:focus{outline:none}
+input[type=time]::-webkit-calendar-picker-indicator{opacity:0.5}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+textarea{font:inherit;color:#071238;resize:none}textarea:focus{outline:none}textarea::placeholder{color:rgba(7,18,56,0.35)}input::placeholder{color:rgba(7,18,56,0.35)}.sb>*{flex-shrink:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 1800px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; position: relative; overflow: hidden">
+<div aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none"><dc-import name="TaskDetail" hint-size="390px,1900px"></dc-import></div>
+<a href="TaskDetail.dc.html" aria-label="Close" style="position: absolute; inset: 0; background: rgba(7,18,56,0.45)"></a>
+<section role="dialog" aria-label="Log the details" style="position: absolute; left: 0; right: 0; top: 40px; bottom: 0; background: #FFFFFF; border-radius: 22px 22px 0 0; display: flex; flex-direction: column">
+<span aria-hidden="true" style="align-self: center; margin-top: 8px; width: 36px; height: 4px; border-radius: 3px; background: rgba(7,18,56,0.2)"></span>
+<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 6px 16px 10px; border-bottom: 0.5px solid rgba(7,18,56,0.12)">
+<a href="TaskDetail.dc.html" style="justify-self: start; display: flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 500; color: rgba(7,18,56,0.6)">Cancel</a>
+<h1 style="margin: 0; font-size: 16px; font-weight: 700">Log the details</h1>
+<span style="justify-self: end"><sc-if value="{{ready}}" hint-placeholder-val="{{ false }}"><a href="TaskHistory.dc.html" style="display: flex; align-items: center; height: 36px; padding: 0 16px; border-radius: 999px; background: #2540D8; color: #FFFFFF; font-size: 14px; font-weight: 600">Save</a></sc-if><sc-if value="{{notReady}}" hint-placeholder-val="{{ true }}"><span aria-disabled="true" style="display: flex; align-items: center; height: 36px; padding: 0 16px; border-radius: 999px; background: rgba(7,18,56,0.08); color: rgba(7,18,56,0.35); font-size: 14px; font-weight: 600">Save</span></sc-if></span>
+</div>
+<div class="sb" style="flex: 1; min-height: 0; overflow-y: auto; padding: 16px 16px 30px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(7,18,56,0.12)"><span style="width: 40px; height: 40px; border-radius: 11px; border: 1px solid rgba(7,18,56,0.14); box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 10.941c2.333-3.308.167-7.823-1-8.941c0 3.395-2.235 5.299-3.667 6.706c-1.43 1.408-2.333 3.621-2.333 5.588c0 3.704 3.134 6.706 7 6.706s7-3.002 7-6.706c0-1.712-1.232-4.403-2.333-5.588c-2.084 3.353-3.257 3.353-4.667 2.235"></path></svg></span><span style="flex: 1; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15.5px; font-weight: 700">Service the furnace</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">FURNACE · EVERY FALL · DUE OCT 28</span></span></div>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px"><div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">DONE ON</span><span aria-hidden="true" style="color: #FF3B62; font-weight: 700">*</span></span>
+<input type="text" inputmode="text" value="{{date}}" onChange="{{on_date}}" placeholder="MM / DD / YYYY"  style="width: 100%; height: 50px; padding: 0 14px; font-size: 16px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">{{dateHelp}}</span></div><div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">TIME IT TOOK</span></span>
+<input type="text" inputmode="text" value="{{time}}" onChange="{{on_time}}" placeholder="e.g. 1 hr"  style="width: 100%; height: 50px; padding: 0 14px; font-size: 16px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box">
+</div></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">WHO DID IT</span><div role="radiogroup" style="display: flex; gap: 6px; flex-wrap: wrap"><sc-for list="{{whos}}" as="c" hint-placeholder-count="6"><button type="button" role="radio" aria-checked="{{c.on}}" onClick="{{c.pick}}" style="{{c.style}}">{{c.l}}</button></sc-for></div></div>
+<sc-if value="{{isPro}}" hint-placeholder-val="{{ true }}"><a href="ContactDetail.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 14px; border: 1.5px solid #2540D8"><span class="m" style="width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(7,18,56,0.16); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; box-sizing: border-box">SH</span><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">Summit Heating &amp; Air</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">FROM WHO TO CALL · DID IT LAST YEAR TOO</span></span><span style="font-size: 13px; font-weight: 600; color: #2540D8">Change</span></a></sc-if>
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">COST</h2><span style="font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums">{{total}}</span></div>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px"><div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">LABOR</span></span>
+<input type="text" inputmode="decimal" value="{{labor}}" onChange="{{on_labor}}" placeholder="$0"  style="width: 100%; height: 50px; padding: 0 14px; font-size: 16px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box">
+</div><div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">PARTS</span></span>
+<input type="text" inputmode="decimal" value="{{parts}}" onChange="{{on_parts}}" placeholder="$0"  style="width: 100%; height: 50px; padding: 0 14px; font-size: 16px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box">
+</div></div>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">{{costHelp}}</span>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">RECEIPT</h2></div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 14px; border: 1px solid rgba(7,18,56,0.12)"><span style="width: 40px; height: 40px; border-radius: 11px; border: 1px solid #4A6604; box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#4A6604" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21v-16a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16l-3-2l-2 2l-2-2l-2 2l-2-2l-3 2"></path><path d="M9 7l6 0"></path><path d="M9 11l6 0"></path><path d="M13 15l2 0"></path></svg></span><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">Summit invoice #4471</span><span class="m" style="font-size: 10px; font-weight: 600; color: #4A6604">SCANNED · SAVED TO DOCS AS A RECEIPT</span></span><button type="button" aria-label="Remove receipt" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: rgba(7,18,56,0.45); margin-right: -10px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6l-12 12"></path><path d="M6 6l12 12"></path></svg></button></div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">PHOTOS</h2><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">BEFORE &amp; AFTER HELP AT RESALE</span></div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+<div style="position: relative"><div style="position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; border: 1px solid rgba(37,64,216,0.25); background-image: linear-gradient(rgba(37,64,216,0.11) 1px, transparent 1px), linear-gradient(90deg, rgba(37,64,216,0.11) 1px, transparent 1px); background-size: 10px 10px; background-position: -1px -1px"></div><span style="position: absolute; left: 4px; bottom: 4px"><span class="m" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 999px; font-size: 7.5px; font-weight: 700; letter-spacing: 0.7px; white-space: nowrap; box-sizing: border-box; background: #FFFFFF; border: 1px solid rgba(7,18,56,0.28); color: rgba(7,18,56,0.75)"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px currentColor; flex-shrink: 0"></span>BEFORE</span></span></div>
+<div style="position: relative"><div style="position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; border: 1px solid rgba(37,64,216,0.25); background-image: linear-gradient(rgba(37,64,216,0.11) 1px, transparent 1px), linear-gradient(90deg, rgba(37,64,216,0.11) 1px, transparent 1px); background-size: 10px 10px; background-position: -1px -1px"></div><span style="position: absolute; left: 4px; bottom: 4px"><span class="m" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 999px; font-size: 7.5px; font-weight: 700; letter-spacing: 0.7px; white-space: nowrap; box-sizing: border-box; background: #ECF87F; border: 1px solid #ECF87F; color: #4A6604"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M5 12l5 5l10-10"></path></svg>AFTER</span></span></div>
+<button type="button" aria-label="Add a photo" style="aspect-ratio: 1; border-radius: 12px; border: 1.5px dashed rgba(7,18,56,0.22); display: flex; align-items: center; justify-content: center; color: rgba(7,18,56,0.45)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5l0 14"></path><path d="M5 12l14 0"></path></svg></button>
+<button type="button" aria-label="Add a photo" style="aspect-ratio: 1; border-radius: 12px; border: 1.5px dashed rgba(7,18,56,0.22); display: flex; align-items: center; justify-content: center; color: rgba(7,18,56,0.45)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5l0 14"></path><path d="M5 12l14 0"></path></svg></button>
+</div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">WHAT THEY FOUND</h2></div>
+<div style="display: flex; gap: 6px; flex-wrap: wrap"><sc-for list="{{finds}}" as="f" hint-placeholder-count="4"><button type="button" aria-pressed="{{f.on}}" onClick="{{f.pick}}" style="{{f.style}}">{{f.l}}</button></sc-for></div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">NOTES</span></span>
+<textarea rows="3" value="{{notes}}" onChange="{{on_notes}}" placeholder="Anything to remember next time" style="width: 100%; padding: 12px 14px; font-size: 16px; line-height: 1.4; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box"></textarea>
+</div>
+</section>
+<div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(7,18,56,0.12)"><span style="flex: 1; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; font-weight: 600">Add to the furnace&rsquo;s history</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">SHOWS ON THE FURNACE PAGE AND YOUR HOME REPORT</span></span><span style="width: 51px; height: 31px; border-radius: 999px; background: #2540D8; position: relative; flex-shrink: 0"><span style="position: absolute; top: 2px; left: 22px; width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 4px rgba(7,18,56,0.25)"></span></span></div>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const chips = (key, opts, cur) => opts.map(([k, l]) => ({ l, on: cur === k, pick: () => this.setState({ [key]: k }), style: 'height: 36px; padding: 0 12px; border-radius: 999px; font-size: 13.5px; font-weight: 600; box-sizing: border-box; ' + (cur === k ? 'background: #071238; color: #FFFFFF;' : 'border: 1px solid rgba(7,18,56,0.18); color: rgba(7,18,56,0.75);') }));
+    const sw = (on) => 'width: 51px; height: 31px; border-radius: 999px; position: relative; flex-shrink: 0; transition: background .15s; background: ' + (on ? '#2540D8' : 'rgba(7,18,56,0.16)') + ';';
+    const kn = (on) => 'position: absolute; top: 2px; left: ' + (on ? 22 : 2) + 'px; width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 4px rgba(7,18,56,0.25); transition: left .15s;';
+
+    const v = (k, d) => st[k] !== undefined ? st[k] : d;
+    const out = {};
+    const D = { date: '10 / 02 / 2026', time: '1 hr 10 min', labor: '$129', parts: '$0', notes: 'Cleaned the flame sensor. Said the inducer motor sounds fine for now.' };
+    Object.keys(D).forEach((k) => { out[k] = v(k, D[k]); out['on_' + k] = (e) => this.setState({ [k]: e.target.value }); });
+    const who = v('who', 'pro');
+    out.whos = chips('who', [['me', 'Me'], ['alex', 'Alex'], ['pro', 'A pro']], who); out.isPro = who === 'pro';
+    const num = (s) => parseFloat(String(s).replace(/[^0-9.]/g, '')) || 0;
+    const tot = num(out.labor) + num(out.parts);
+    out.total = '$' + tot.toLocaleString('en-US', { minimumFractionDigits: tot % 1 ? 2 : 0 });
+    out.costHelp = tot > 0 ? 'COUNTS TOWARD THE FURNACE’S LIFETIME COST · NOW $5,318' : 'LEAVE AT $0 IF IT WAS FREE';
+    const d = out.date.replace(/\s/g, ''); out.dateHelp = /^\d{2}\/\d{2}\/\d{4}$/.test(d) ? '26 DAYS EARLY · NEXT ONE FALL 2027' : 'USE MM / DD / YYYY';
+    const fd = st.fd || { ok: true };
+    out.finds = [['ok', 'All good'], ['soon', 'Needs a part soon'], ['fix', 'Needed a repair'], ['quote', 'Gave a quote']].map(([k, l]) => ({ l, on: !!fd[k], pick: () => this.setState({ fd: Object.assign({}, fd, { [k]: !fd[k] }) }),
+      style: 'height: 36px; padding: 0 12px; border-radius: 999px; font-size: 13.5px; font-weight: 600; box-sizing: border-box; ' + (fd[k] ? (k === 'ok' ? 'background: #ECF87F; color: #4A6604; box-shadow: inset 0 0 0 1.5px #4A6604;' : 'background: #071238; color: #FFFFFF;') : 'border: 1px solid rgba(7,18,56,0.18); color: rgba(7,18,56,0.75);') }));
+    out.ready = /^\d{2}\/\d{2}\/\d{4}$/.test(d); out.notReady = !out.ready;
+    return out;
+  }
+}
+</script>
+</body>
+</html>

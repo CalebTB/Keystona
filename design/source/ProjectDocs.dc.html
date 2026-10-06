@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona project documents</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+textarea{font:inherit;color:#071238;resize:none}textarea:focus{outline:none}textarea::placeholder{color:rgba(7,18,56,0.35)}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1260px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; display: flex; flex-direction: column">
+<main style="padding: 12px 16px 24px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<a href="ProjectDetail.dc.html" style="display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -6px; font-size: 15px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"></path></svg>Bath renovation</a><a href="LinkDocs.dc.html" style="display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 999px; border: 1.5px solid #2540D8; box-sizing: border-box; color: #2540D8; font-size: 14px; font-weight: 600"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2540D8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 15l6-6"></path><path d="M11 6l.463-.536a5 5 0 0 1 7.071 7.072l-.534.464"></path><path d="M13 18l-.397.534a5.068 5.068 0 0 1-7.127 0a4.972 4.972 0 0 1 0-7.071l.524-.463"></path></svg>Link</a>
+</div>
+<header style="display: flex; flex-direction: column; gap: 6px; margin-top: -8px">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">PRIMARY BATH RENOVATION</span>
+<h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.9px; line-height: 1.1">Documents</h1>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{metaText}}</span>
+</header>
+<p role="note" style="margin: -8px 0 0; font-size: 13px; line-height: 1.45; color: rgba(7,18,56,0.6)">Only what's tied to this project. Everything still lives in your <a href="DocsSearchLed.dc.html" style="font-weight: 600; color: #2540D8">Docs</a> too.</p>
+
+<!-- What's missing comes first -->
+<section aria-label="Missing" style="display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1.5px solid #B08A00; border-radius: 16px">
+<button type="button" onClick="{{flipMiss}}" aria-expanded="{{missOpen}}" style="display: flex; align-items: center; gap: 10px; text-align: left">
+<span style="flex: 1; display: flex; flex-direction: column; gap: 3px"><span class="m" style="font-size: 10px; font-weight: 700; letter-spacing: 1.2px; color: #6B4F00">{{missEyebrow}}</span><span style="font-size: 15px; font-weight: 700">{{missTitle}}</span></span>
+<span style="{{missChev}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6l6-6"></path></svg></span>
+</button>
+<sc-if value="{{missOpen}}" hint-placeholder-val="{{ true }}">
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column">
+<sc-for list="{{missing}}" as="m" hint-placeholder-count="4">
+<li style="{{m.sep}}"><div style="display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 0">
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="{{m.nameStyle}}">{{m.n}}</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{m.meta}}</span></span>
+<button type="button" onClick="{{m.add}}" style="{{m.btn}}">{{m.btnText}}</button>
+</div></li>
+</sc-for>
+</ul>
+</sc-if>
+</section>
+
+<div role="tablist" aria-label="Type" style="display: flex; gap: 6px; flex-wrap: wrap">
+<sc-for list="{{filters}}" as="f" hint-placeholder-count="4"><button type="button" role="tab" aria-selected="{{f.on}}" onClick="{{f.pick}}" style="{{f.style}}">{{f.label}}</button></sc-for>
+</div>
+
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
+<section style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">{{g.title}}</h2><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{g.sum}}</span></div>
+<ul style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden">
+<sc-for list="{{g.docs}}" as="d" hint-placeholder-count="3">
+<li style="{{d.sep}}"><a href="{{d.href}}" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 64px; box-sizing: border-box">
+<span style="width: 34px; height: 42px; border-radius: 6px; border: 1px solid rgba(7,18,56,0.14); box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{d.icon}}"></path></svg></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{d.n}}</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{d.meta}}</span></span>
+<span style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0"><span style="font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums">{{d.amt}}</span><span style="{{d.tagStyle}}">{{d.tag}}</span></span>
+</a></li>
+</sc-for>
+</ul>
+</section>
+</sc-for>
+</main>
+<div style="margin-top: auto; position: sticky; bottom: 0">
+<nav aria-label="Main tabs" style="height: 84px; box-sizing: border-box; border-top: 0.5px solid rgba(7,18,56,0.12); background: #FFFFFF; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 8px 0 22px; flex-shrink: 0">
+<a href="Tabbed.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l-2 0l9-9l9 9l-2 0"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Home</span>
+</a>
+<a href="DocsSearchLed.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Docs</span>
+</a>
+<a href="Tasks.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12l5 5l10-10"></path><path d="M2 12l5 5m5-5l5-5"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Tasks</span>
+</a>
+<a href="ProjectsMany.dc.html" aria-current="page" style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #FF3B62">
+<span style="position: absolute; top: -8px; left: 50%; margin-left: -10px; width: 20px; height: 3px; border-radius: 0 0 3px 3px; background: #FF3B62"></span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h6v8h-6z"></path><path d="M14 4h6v4h-6z"></path><path d="M4 16h6v4h-6z"></path><path d="M14 12h6v8h-6z"></path></svg>
+<span style="font-size: 10px; font-weight: 700">Projects</span>
+</a>
+<a href="SettingsHub.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37c1 .608 2.296.07 2.572-1.065z"></path><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Settings</span>
+</a>
+</nav>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1260}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const IC = { rc: 'M5 21v-16a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16l-3-2l-2 2l-2-2l-2 2l-2-2l-3 2 M9 7h6 M9 11h6 M9 15h4', pm: 'M14 3v4a1 1 0 0 0 1 1h4 M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z M9 13l2 2l4-4' };
+    const added = st.added || {};
+    const D = [
+      { id: 'pm', t: 'permit', n: 'Bath renovation permit', meta: 'MADISON COUNTY · ISSUED AUG 28', amt: '$300', tag: 'PASSED', tone: 'ok', d: 0 },
+      { id: 'r5', t: 'receipt', n: 'Brightway Home', meta: 'OCT 1 · VANITY + TOILET · FIXTURES', amt: '$1,200', tag: 'PAID', tone: 'ok', d: 34 },
+      { id: 'r4', t: 'receipt', n: 'Stone & Tile Co.', meta: 'SEP 24 · FLOOR + WALL TILE · MATERIALS', amt: '$1,500', tag: 'PAID', tone: 'ok', d: 27 },
+      { id: 'r3', t: 'receipt', n: 'Ace Supply', meta: 'SEP 22 · BACKER BOARD · MATERIALS', amt: '$330', tag: 'PAID', tone: 'ok', d: 25 },
+      { id: 'r2', t: 'receipt', n: 'Ace Supply', meta: 'SEP 8 · PEX & FITTINGS · MATERIALS', amt: '$250', tag: 'PAID', tone: 'ok', d: 11 },
+      { id: 'r1', t: 'receipt', n: 'Ridgeline Demo', meta: 'AUG 31 · DEMO CREW · LABOR', amt: '$1,200', tag: 'PAID', tone: 'ok', d: 3 }
+    ];
+    const MISS = [
+      { id: 'm1', t: 'receipt', n: 'Tiler deposit', meta: "MIKE'S TILE & BATH · SEP 28 · $1,400", btnText: 'Add receipt' },
+      { id: 'm2', t: 'contract', n: "Contract with Mike's Tile & Bath", meta: 'BEFORE THE $1,400 BALANCE ON OCT 23', btnText: 'Add' },
+      { id: 'm3', t: 'receipt', n: 'Shower trim kit', meta: 'ACE SUPPLY · OCT 3 · NOT PAID YET', btnText: 'Add receipt' },
+      { id: 'm4', t: 'receipt', n: 'Grout & sealant', meta: 'STONE & TILE CO. · OCT 4 · NOT PAID YET', btnText: 'Add receipt' }
+    ];
+    const extra = MISS.filter(m => added[m.id]).map(m => ({ id: m.id, t: m.t, n: m.n, meta: 'ADDED JUST NOW · ' + m.meta, amt: '', tag: 'NEW', tone: 'new', d: 99 }));
+    const all = extra.concat(D);
+    const f = st.f || 'all';
+    const TYPES = [['all', 'All'], ['receipt', 'Receipts'], ['permit', 'Permits'], ['contract', 'Contracts']];
+    const count = (k) => k === 'all' ? all.length : all.filter(d => d.t === k).length;
+    const fb = 'min-height: 34px; padding: 0 10px; border-radius: 999px; font-size: 12.5px; font-weight: 600; box-sizing: border-box;';
+    const out = {};
+    out.filters = TYPES.map(([k, l]) => ({ label: l + ' ' + count(k), on: f === k, pick: () => this.setState({ f: k }), style: fb + (f === k ? ' background: #071238; color: #FFFFFF;' : ' border: 1px solid rgba(7,18,56,0.18); color: rgba(7,18,56,0.7);') }));
+    const left = MISS.filter(m => !added[m.id]);
+    out.metaText = all.length + ' LINKED · ' + count('receipt') + ' RECEIPTS · ' + count('permit') + ' PERMIT · ' + count('contract') + ' CONTRACTS';
+    const missOpen = st.missOpen !== undefined ? st.missOpen : true;
+    out.missOpen = missOpen; out.flipMiss = () => this.setState({ missOpen: !missOpen });
+    out.missChev = 'display: flex; color: #6B4F00; transition: transform .15s; transform: rotate(' + (missOpen ? 180 : 0) + 'deg);';
+    out.missEyebrow = left.length ? 'MISSING · ' + left.length : 'ALL CAUGHT UP';
+    out.missTitle = left.length ? (left.filter(m => m.t === 'receipt').length + ' purchases have no receipt' + (left.some(m => m.t === 'contract') ? ', and no contract yet' : '')) : 'Every purchase has its paperwork';
+    out.missing = MISS.map((m, i) => {
+      const done = !!added[m.id];
+      return {
+        n: m.n, meta: m.meta, sep: i === 0 ? '' : 'border-top: 0.5px solid rgba(7,18,56,0.12);',
+        nameStyle: 'font-size: 14px; font-weight: 600;' + (done ? ' text-decoration: line-through; color: rgba(7,18,56,0.45);' : ''),
+        btnText: done ? 'Added ✓' : m.btnText,
+        btn: 'height: 36px; padding: 0 12px; border-radius: 999px; font-size: 13px; font-weight: 600; white-space: nowrap; box-sizing: border-box; ' + (done ? 'background: #ECF87F; color: #4A6604;' : 'border: 1.5px solid #2540D8; color: #2540D8;'),
+        add: () => this.setState({ added: Object.assign({}, added, { [m.id]: !done }) })
+      };
+    });
+    const vis = all.filter(d => f === 'all' || d.t === f);
+    const G = [['permit', 'PERMITS & CONTRACTS', ['permit', 'contract']], ['receipt', 'RECEIPTS', ['receipt']]];
+    out.groups = G.map(([k, title, ts]) => {
+      const docs = vis.filter(d => ts.includes(d.t)).sort((a, b) => b.d - a.d);
+      return { title: title + ' · ' + docs.length, sum: k === 'receipt' ? '$4,480 OF $8,420 SPENT' : '', docs: docs.map((d, i) => ({
+        n: d.n, meta: d.meta, amt: d.amt, tag: d.tag, href: d.t === 'permit' ? '#' : '#',
+        icon: d.t === 'receipt' ? IC.rc : IC.pm,
+        sep: i === 0 ? '' : 'border-top: 0.5px solid rgba(7,18,56,0.12);',
+        tagStyle: 'font-size: 9px; font-weight: 700; letter-spacing: 0.8px; padding: 2px 7px; border-radius: 999px; ' + (d.tone === 'new' ? 'background: #ECF87F; color: #4A6604;' : 'border: 1px solid #4A6604; color: #4A6604;')
+      })) };
+    }).filter(g => g.docs.length);
+    return out;
+  }
+}
+</script>
+</body>
+</html>

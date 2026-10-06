@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona SettingsPremium</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}select:focus{outline:none}
+input[type=time]::-webkit-calendar-picker-indicator{opacity:0.5}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1070px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; display: flex; flex-direction: column; position: relative">
+<div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 0; height: 330px; background-image: linear-gradient(rgba(255,59,98,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,59,98,0.12) 1px, transparent 1px); background-size: 22px 22px; background-position: -1px -1px; -webkit-mask-image: linear-gradient(#000 50%, transparent); mask-image: linear-gradient(#000 50%, transparent)"></div>
+<main style="position: relative; padding: 12px 20px 28px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<a href="SettingsHub.dc.html" aria-label="Close" style="width: 44px; height: 44px; margin-left: -10px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6l-12 12"></path><path d="M6 6l12 12"></path></svg></a>
+<a href="#" style="font-size: 14px; font-weight: 600; color: rgba(7,18,56,0.6); min-height: 44px; display: flex; align-items: center">Restore</a>
+</div>
+<header style="display: flex; flex-direction: column; gap: 10px; padding-top: 30px">
+<span style="display: flex; align-items: center; gap: 8px"><svg width="26" height="26" viewBox="0 0 40 40" aria-hidden="true"><path d="M9 6h22l-5 28h-12z" fill="#FF3B62"></path><path d="M16 16h8" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"></path></svg><span style="font-size: 18px; font-weight: 800; letter-spacing: -0.4px">Keystona</span><span class="m" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px; font-size: 9px; font-weight: 700; letter-spacing: 0.8px; white-space: nowrap; background: #FF3B62; color: #FFFFFF;"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.75l-6.172 3.245l1.179-6.873l-5-4.867l6.9-1l3.086-6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z"></path></svg>PREMIUM</span></span>
+<h1 style="margin: 0; font-size: 34px; font-weight: 800; letter-spacing: -1.2px; line-height: 1.05">Keep the whole record.</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.5; color: rgba(7,18,56,0.65)">Everything you've added stays free. Premium removes the limits and does the busywork for you.</p>
+</header>
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px"><li style="display: flex; gap: 12px; align-items: flex-start"><span style="width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid #FF3B62; box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF3B62" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.828 9.172a4 4 0 1 0 0 5.656a10 10 0 0 0 2.172-2.828a10 10 0 0 1 2.172-2.828a4 4 0 1 1 0 5.656a10 10 0 0 1-2.172-2.828a10 10 0 0 0-2.172-2.828"></path></svg></span><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 700">Unlimited everything</span><span style="font-size: 13.5px; line-height: 1.4; color: rgba(7,18,56,0.65)">Documents, projects and contacts — no caps.</span></span></li><li style="display: flex; gap: 12px; align-items: flex-start"><span style="width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid #FF3B62; box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF3B62" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7v-1a2 2 0 0 1 2-2h2"></path><path d="M4 17v1a2 2 0 0 0 2 2h2"></path><path d="M16 4h2a2 2 0 0 1 2 2v1"></path><path d="M16 20h2a2 2 0 0 0 2-2v-1"></path><path d="M5 12h14"></path></svg></span><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 700">Smart scan</span><span style="font-size: 13.5px; line-height: 1.4; color: rgba(7,18,56,0.65)">Point at a label or receipt; we fill in the details.</span></span></li><li style="display: flex; gap: 12px; align-items: flex-start"><span style="width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid #FF3B62; box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF3B62" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5h-2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-12a2 2 0 0 0-2-2h-2"></path><path d="M9 3m0 2a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z"></path><path d="M9 12l.01 0"></path><path d="M13 12l2 0"></path><path d="M9 16l.01 0"></path><path d="M13 16l2 0"></path></svg></span><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 700">Home History Report</span><span style="font-size: 13.5px; line-height: 1.4; color: rgba(7,18,56,0.65)">Your home’s whole record as a PDF — for buyers, insurers, appraisers.</span></span></li><li style="display: flex; gap: 12px; align-items: flex-start"><span style="width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid #FF3B62; box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF3B62" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"></path><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636-2.87l-8.106-13.536a1.914 1.914 0 0 0-3.274 0z"></path><path d="M12 16h.01"></path></svg></span><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 700">Recall watch</span><span style="font-size: 13.5px; line-height: 1.4; color: rgba(7,18,56,0.65)">We check your appliances’ model numbers against recalls.</span></span></li><li style="display: flex; gap: 12px; align-items: flex-start"><span style="width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid #FF3B62; box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF3B62" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.657 18c-2.572 0-4.657-2.007-4.657-4.483c0-2.475 2.085-4.482 4.657-4.482c.393-1.762 1.794-3.2 3.675-3.773c1.88-.572 3.956-.193 5.444 1c1.488 1.19 2.162 3.007 1.77 4.769h.99c1.913 0 3.464 1.56 3.464 3.486c0 1.927-1.551 3.487-3.465 3.487h-11.878"></path></svg></span><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 700">Weather heads-ups</span><span style="font-size: 13.5px; line-height: 1.4; color: rgba(7,18,56,0.65)">Freeze, storm and heat warnings with what to do first.</span></span></li></ul>
+
+<div role="radiogroup" aria-label="Plan" style="display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{plans}}" as="p" hint-placeholder-count="2">
+<button type="button" role="radio" aria-checked="{{p.on}}" onClick="{{p.pick}}" style="{{p.box}}">
+<span style="{{p.radio}}"><span style="{{p.dot}}"></span></span>
+<span style="flex: 1; display: flex; flex-direction: column; gap: 2px; text-align: left"><span style="display: flex; align-items: center; gap: 8px"><span style="font-size: 16px; font-weight: 700">{{p.name}}</span><sc-if value="{{p.save}}" hint-placeholder-val="{{ false }}"><span class="m" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px; font-size: 9px; font-weight: 700; letter-spacing: 0.8px; white-space: nowrap; background: #ECF87F; color: #4A6604;">SAVE 33%</span></sc-if></span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{p.sub}}</span></span>
+<span style="font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums">{{p.price}}</span>
+</button>
+</sc-for>
+</div>
+
+<!-- How the trial works, honestly -->
+<ol aria-label="How the trial works" style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px">
+<li style="display: flex; flex-direction: column; gap: 6px"><span style="height: 4px; border-radius: 2px; background: #FF3B62"></span><span class="m" style="font-size: 10px; font-weight: 700; letter-spacing: 0.8px">TODAY</span><span style="font-size: 12.5px; line-height: 1.35; color: rgba(7,18,56,0.65)">Everything unlocks</span></li>
+<li style="display: flex; flex-direction: column; gap: 6px"><span style="height: 4px; border-radius: 2px; box-shadow: inset 0 0 0 1.5px #FF3B62"></span><span class="m" style="font-size: 10px; font-weight: 700; letter-spacing: 0.8px">DAY 27</span><span style="font-size: 12.5px; line-height: 1.35; color: rgba(7,18,56,0.65)">We remind you</span></li>
+<li style="display: flex; flex-direction: column; gap: 6px"><span style="height: 4px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(7,18,56,0.2)"></span><span class="m" style="font-size: 10px; font-weight: 700; letter-spacing: 0.8px">DAY 30</span><span style="font-size: 12.5px; line-height: 1.35; color: rgba(7,18,56,0.65)">{{chargeText}}</span></li>
+</ol>
+
+<a href="SettingsPlan.dc.html" style="height: 54px; border-radius: 999px; background: #FF3B62; color: #FFFFFF; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center">Start my free month</a>
+<p style="margin: -10px 0 0; text-align: center; font-size: 12.5px; line-height: 1.5; color: rgba(7,18,56,0.55)">{{fine}}<br><a href="#" style="text-decoration: underline; color: inherit">Terms</a> · <a href="#" style="text-decoration: underline; color: inherit">Privacy</a></p>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1070}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const p = st.p || 'year';
+    const P = [['year', 'Yearly', '$6.67 A MONTH · BILLED ONCE', '$79.99', true], ['month', 'Monthly', 'CANCEL ANY TIME', '$9.99', false]];
+    return {
+      plans: P.map(([k, name, sub, price, save]) => ({
+        name, sub, price, save, on: p === k, pick: () => this.setState({ p: k }),
+        box: 'width: 100%; display: flex; align-items: center; gap: 12px; min-height: 68px; padding: 12px 16px; border-radius: 16px; box-sizing: border-box; ' + (p === k ? 'box-shadow: inset 0 0 0 2px #071238;' : 'box-shadow: inset 0 0 0 1px rgba(7,18,56,0.18);'),
+        radio: 'width: 22px; height: 22px; border-radius: 50%; box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: center; ' + (p === k ? 'border: 2px solid #071238;' : 'border: 1.5px solid rgba(7,18,56,0.3);'),
+        dot: p === k ? 'width: 10px; height: 10px; border-radius: 50%; background: #071238;' : 'display: none;'
+      })),
+      chargeText: p === 'year' ? '$79.99 for the year' : '$9.99, then monthly',
+      fine: 'Free for 30 days, then ' + (p === 'year' ? '$79.99 a year' : '$9.99 a month') + '. Cancel in the App Store any time before Nov 4 and you won’t be charged.'
+    };
+  }
+}
+</script>
+</body>
+</html>

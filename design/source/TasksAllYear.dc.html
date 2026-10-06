@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona all tasks year</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+input::placeholder{color:rgba(7,18,56,0.4)}
+input[type=search]::-webkit-search-cancel-button{display:none}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1180px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; display: flex; flex-direction: column">
+
+<main style="padding: 12px 16px 28px; display: flex; flex-direction: column; gap: 18px; height: 939px; width: 355px">
+
+<a href="Tasks.dc.html" style="display: inline-flex; align-items: center; gap: 2px; align-self: flex-start; min-height: 44px; margin-left: -6px; font-size: 15px; font-weight: 500; color: #071238">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"></path></svg>
+Tasks
+</a>
+
+<header style="display: flex; flex-direction: column; gap: 6px; margin-top: -8px">
+<div class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">{{eyebrow}}</div>
+<h1 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.7px; line-height: 1.05">All tasks</h1>
+</header>
+
+<a href="#" aria-label="Search tasks" style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px; border: 1px solid rgba(7,18,56,0.12); border-radius: 12px; box-sizing: border-box">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0-14 0"></path><path d="M21 21l-6-6"></path></svg>
+<span style="flex: 1; min-width: 0; font-size: 15px; color: rgba(7,18,56,0.4)">Search or pick a system</span>
+</a>
+
+<sc-if value="{{hasLate}}" hint-placeholder-val="{{ true }}">
+<section aria-label="Overdue" style="display: flex; flex-direction: column; gap: 8px">
+<h2 class="m" style="margin: 0; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: #B12347">OVERDUE · 1</h2>
+<ul style="list-style: none; margin: 0; padding: 0; border: 1.5px solid #FF3B62; border-radius: 16px; overflow: hidden">
+<sc-for list="{{lateRows}}" as="t" hint-placeholder-count="1">
+<li style="{{t.sep}}">
+<div style="display: flex; align-items: center; gap: 6px; padding: 8px 14px 8px 4px; min-height: 64px; box-sizing: border-box">
+<button aria-label="{{t.checkLabel}}" aria-pressed="{{t.done}}" onClick="{{t.toggle}}" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<span style="{{t.circleStyle}}"><sc-if value="{{t.done}}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10-10"></path></svg></sc-if></span>
+</button>
+<a href="{{t.href}}" draggable="false" style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px">
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="{{t.titleStyle}}">{{t.name}}</span>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{t.meta}}</span>
+</span>
+<sc-if value="{{t.hasChip}}" hint-placeholder-val="{{ false }}">
+<span class="m" style="{{t.chipStyle}}">{{t.chip}}</span>
+</sc-if>
+<sc-if value="{{t.hasDate}}" hint-placeholder-val="{{ true }}">
+<span class="m" style="font-size: 10px; font-weight: 600; color: rgba(7,18,56,0.55); flex-shrink: 0; min-width: 40px; text-align: right">{{t.date}}</span>
+</sc-if>
+</a>
+</div>
+</li>
+</sc-for>
+</ul>
+</section>
+</sc-if>
+
+<section aria-label="Year at a glance" style="border: 1px solid rgba(7,18,56,0.12); border-radius: 20px; padding: 14px 10px 8px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: baseline; justify-content: space-between; padding: 0 4px">
+<h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">YOUR YEAR</h2>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; color: rgba(7,18,56,0.45)">OCT 2026 – SEP 2027</span>
+</div>
+<div role="tablist" aria-label="Months" style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); align-items: end">
+<sc-for list="{{bars}}" as="b" hint-placeholder-count="12">
+<button role="tab" aria-selected="{{b.sel}}" aria-label="{{b.aria}}" onClick="{{b.pick}}" style="height: 112px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 5px">
+<span class="m" style="{{b.countStyle}}">{{b.count}}</span>
+<span style="{{b.barStyle}}"></span>
+<span class="m" style="{{b.labelStyle}}">{{b.label}}</span>
+</button>
+</sc-for>
+</div>
+<div style="display: grid; grid-template-columns: 3fr 3fr 3fr 3fr; border-top: 0.5px solid rgba(7,18,56,0.12); padding-top: 6px" class="m" aria-hidden="true">
+<span style="text-align: center; font-size: 9px; font-weight: 500; letter-spacing: 0.8px; color: rgba(7,18,56,0.45)">FALL</span>
+<span style="text-align: center; font-size: 9px; font-weight: 500; letter-spacing: 0.8px; color: rgba(7,18,56,0.45)">WINTER</span>
+<span style="text-align: center; font-size: 9px; font-weight: 500; letter-spacing: 0.8px; color: rgba(7,18,56,0.45)">SPRING</span>
+<span style="text-align: center; font-size: 9px; font-weight: 500; letter-spacing: 0.8px; color: rgba(7,18,56,0.45)">SUMMER</span>
+</div>
+</section>
+
+<!-- Swipe left/right between months; the bars above follow along -->
+<section aria-roledescription="carousel" aria-label="Tasks by month" onPointerDown="{{onDown}}" onPointerMove="{{onMove}}" onPointerUp="{{onUp}}" onPointerCancel="{{onUp}}" onWheel="{{onWheel}}" onDragStart="{{noDrag}}" style="overflow: hidden; margin: 0 -16px; padding: 0 16px; touch-action: pan-y; user-select: none; -webkit-user-select: none">
+<div style="{{trackStyle}}">
+<sc-for list="{{pages}}" as="p" hint-placeholder-count="12">
+<div role="group" aria-roledescription="slide" aria-label="{{p.aria}}" aria-hidden="{{p.hidden}}" style="width: 358px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px">
+<h2 style="margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -0.3px">{{p.title}}</h2>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; color: rgba(7,18,56,0.55)">{{p.meta}}</span>
+</div>
+<ul style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden">
+<sc-for list="{{p.rows}}" as="t" hint-placeholder-count="4">
+<li style="{{t.sep}}">
+<div style="display: flex; align-items: center; gap: 6px; padding: 8px 14px 8px 4px; min-height: 64px; box-sizing: border-box">
+<button aria-label="{{t.checkLabel}}" aria-pressed="{{t.done}}" onClick="{{t.toggle}}" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<span style="{{t.circleStyle}}"><sc-if value="{{t.done}}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10-10"></path></svg></sc-if></span>
+</button>
+<a href="{{t.href}}" draggable="false" style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px">
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="{{t.titleStyle}}">{{t.name}}</span>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{t.meta}}</span>
+</span>
+<sc-if value="{{t.hasChip}}" hint-placeholder-val="{{ false }}">
+<span class="m" style="{{t.chipStyle}}">{{t.chip}}</span>
+</sc-if>
+<sc-if value="{{t.hasDate}}" hint-placeholder-val="{{ true }}">
+<span class="m" style="font-size: 10px; font-weight: 600; color: rgba(7,18,56,0.55); flex-shrink: 0; min-width: 40px; text-align: right">{{t.date}}</span>
+</sc-if>
+</a>
+</div>
+</li>
+</sc-for>
+</ul>
+</div>
+</sc-for>
+</div>
+</section>
+
+<div aria-hidden="true" class="m" style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: -6px; font-size: 10px; font-weight: 500; letter-spacing: 0.3px; color: rgba(7,18,56,0.4)">
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"></path></svg>
+{{swipeHint}}
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"></path></svg>
+</div>
+
+</main>
+
+<nav aria-label="Main tabs" style="margin-top: auto; position: sticky; bottom: 0; height: 84px; box-sizing: border-box; border-top: 0.5px solid rgba(7,18,56,0.12); background: #FFFFFF; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 8px 0 22px; flex-shrink: 0">
+<a href="Tabbed.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l-2 0l9-9l9 9l-2 0"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Home</span>
+</a>
+<a href="DocsSearchLed.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Docs</span>
+</a>
+<a href="Tasks.dc.html" aria-current="page" style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #FF3B62">
+<span style="position: absolute; top: -8px; left: 50%; margin-left: -10px; width: 20px; height: 3px; border-radius: 0 0 3px 3px; background: #FF3B62"></span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12l5 5l10-10"></path><path d="M2 12l5 5m5-5l5-5"></path></svg>
+<span style="font-size: 10px; font-weight: 700">Tasks</span>
+</a>
+<a href="ProjectsMany.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h6v8h-6z"></path><path d="M14 4h6v4h-6z"></path><path d="M4 16h6v4h-6z"></path><path d="M14 12h6v8h-6z"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Projects</span>
+</a>
+<a href="SettingsHub.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37c1 .608 2.296.07 2.572-1.065z"></path><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Settings</span>
+</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const flips = st.flips || {};
+    const flip = (id) => () => this.setState({ flips: Object.assign({}, flips, { [id]: !flips[id] }) });
+    const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    const MONTH = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    // y, m (0-11), d
+    const T = [
+      { id: 'gutter', name: 'Clean gutters & downspouts', meta: 'EXTERIOR · 45 MIN · DIY OR PRO', sys: 'ext', y: 2026, m: 8, d: 28, late: '6 DAYS LATE' },
+      { id: 'smoke', name: 'Test smoke & CO detectors', meta: 'SAFETY · 10 MIN · DIY', sys: 'safety', y: 2026, m: 9, d: 4 },
+      { id: 'hvac', name: 'Replace HVAC air filter', meta: 'HVAC · 15 MIN · $25', sys: 'hvac', y: 2026, m: 9, d: 7 },
+      { id: 'flush', name: 'Flush water heater sediment', meta: 'PLUMBING · 45 MIN', sys: 'plumb', y: 2026, m: 9, d: 13 },
+      { id: 'grout', name: 'Choose grout color', meta: 'BATH RENO PROJECT', sys: 'proj', y: 2026, m: 9, d: 16 },
+      { id: 'roof', name: 'Inspect roof flashing', meta: 'ROOF · 1 HR', chip: 'PRO', sys: 'roof', y: 2026, m: 9, d: 25 },
+      { id: 'furnace', name: 'Service the furnace', meta: 'HVAC · FALL PREP', chip: 'PRO', sys: 'hvac', y: 2026, m: 9, d: 28 },
+      { id: 'faucets', name: 'Shut off & drain outdoor faucets', meta: 'PLUMBING · WINTER PREP', sys: 'plumb', y: 2026, m: 10, d: 2 },
+      { id: 'dryer', name: 'Clean dryer vent', meta: 'APPLIANCES · 30 MIN', sys: 'appl', y: 2026, m: 10, d: 9 },
+      { id: 'sump', name: 'Test sump pump', meta: 'PLUMBING · 10 MIN', sys: 'plumb', y: 2026, m: 10, d: 14 },
+      { id: 'fans', name: 'Reverse ceiling fans', meta: 'HVAC · 10 MIN', sys: 'hvac', y: 2026, m: 10, d: 20 },
+      { id: 'weather', name: 'Check door weatherstripping', meta: 'EXTERIOR · 20 MIN', sys: 'ext', y: 2026, m: 10, d: 24 },
+      { id: 'hvac2', name: 'Replace HVAC air filter', meta: 'HVAC · 15 MIN · $25', sys: 'hvac', y: 2026, m: 11, d: 7 },
+      { id: 'ice', name: 'Check for ice dams', meta: 'ROOF · AFTER SNOW', sys: 'roof', y: 2026, m: 11, d: 15 },
+      { id: 'ext', name: 'Inspect fire extinguisher', meta: 'SAFETY · 5 MIN', sys: 'safety', y: 2026, m: 11, d: 20 },
+      { id: 'gfci', name: 'Test GFCI outlets', meta: 'ELECTRICAL · 15 MIN', sys: 'elec', y: 2027, m: 0, d: 10 },
+      { id: 'hood', name: 'Clean range hood filter', meta: 'APPLIANCES · 20 MIN', sys: 'appl', y: 2027, m: 0, d: 18 },
+      { id: 'hvac3', name: 'Replace HVAC air filter', meta: 'HVAC · 15 MIN · $25', sys: 'hvac', y: 2027, m: 1, d: 7 },
+      { id: 'attic', name: 'Check attic for leaks', meta: 'ROOF · 20 MIN', sys: 'roof', y: 2027, m: 1, d: 21 },
+      { id: 'roof2', name: 'Inspect roof after winter', meta: 'ROOF · 1 HR', chip: 'PRO', sys: 'roof', y: 2027, m: 2, d: 15 },
+      { id: 'screens', name: 'Clean window screens', meta: 'EXTERIOR · 1 HR', sys: 'ext', y: 2027, m: 2, d: 28 },
+      { id: 'ac', name: 'Service the AC', meta: 'HVAC · SPRING PREP', chip: 'PRO', sys: 'hvac', y: 2027, m: 3, d: 8 },
+      { id: 'gutter2', name: 'Clean gutters & downspouts', meta: 'EXTERIOR · 45 MIN', sys: 'ext', y: 2027, m: 3, d: 19 },
+      { id: 'irrig', name: 'Turn on & check irrigation', meta: 'LANDSCAPE · 30 MIN', sys: 'land', y: 2027, m: 3, d: 26 },
+      { id: 'hvac4', name: 'Replace HVAC air filter', meta: 'HVAC · 15 MIN · $25', sys: 'hvac', y: 2027, m: 4, d: 7 },
+      { id: 'deck', name: 'Seal the deck', meta: 'EXTERIOR · HALF DAY', sys: 'ext', y: 2027, m: 4, d: 16 },
+      { id: 'wash', name: 'Power-wash siding', meta: 'EXTERIOR · 2 HR', sys: 'ext', y: 2027, m: 4, d: 30 },
+      { id: 'caulk', name: 'Check bathroom caulk', meta: 'PLUMBING · 15 MIN', sys: 'plumb', y: 2027, m: 5, d: 6 },
+      { id: 'sump2', name: 'Test sump pump', meta: 'PLUMBING · 10 MIN', sys: 'plumb', y: 2027, m: 5, d: 14 },
+      { id: 'termite', name: 'Termite inspection', meta: 'STRUCTURE · YEARLY', chip: 'PRO', sys: 'struct', y: 2027, m: 6, d: 12 },
+      { id: 'hvac5', name: 'Replace HVAC air filter', meta: 'HVAC · 15 MIN · $25', sys: 'hvac', y: 2027, m: 7, d: 7 },
+      { id: 'coils', name: 'Clean refrigerator coils', meta: 'APPLIANCES · 20 MIN', sys: 'appl', y: 2027, m: 7, d: 23 },
+      { id: 'flush2', name: 'Flush water heater sediment', meta: 'PLUMBING · 45 MIN', sys: 'plumb', y: 2027, m: 8, d: 12 },
+      { id: 'chimney', name: 'Chimney sweep', meta: 'FIREPLACE · YEARLY', chip: 'PRO', sys: 'fire', y: 2027, m: 8, d: 26 }
+    ];
+    const TODAY = { y: 2026, m: 9, d: 4 };
+    const short = (t) => (t.y === TODAY.y && t.m === TODAY.m && t.d === TODAY.d) ? 'TODAY' : MON[t.m] + ' ' + t.d;
+    const chipBase = 'display: flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; font-size: 9px; font-weight: 600; letter-spacing: 0.8px; flex-shrink: 0;';
+    const row = (t, i, opt) => {
+      opt = opt || {};
+      const d = !!flips[t.id];
+      let chip = '', chipStyle = '';
+      if (t.late && !d) { chip = t.late; chipStyle = chipBase + ' background: #FF3B62; color: #FFFFFF; font-weight: 700;'; }
+      else if (t.chip && !d) { chip = t.chip; chipStyle = chipBase + ' border: 1px solid rgba(7,18,56,0.16); color: rgba(7,18,56,0.55);'; }
+      let circle = 'width: 24px; height: 24px; border-radius: 50%; box-sizing: border-box; display: flex; align-items: center; justify-content: center; ';
+      if (d) circle += 'background: #4A6604; border: 1.5px solid #4A6604; color: #ECF87F;';
+      else if (t.late) circle += 'border: 1.5px solid #FF3B62;';
+      else circle += 'border: 1.5px solid rgba(7,18,56,0.3);';
+      const date = d ? 'DONE' : (t.late || opt.noDate ? '' : short(t));
+      return {
+        name: t.name, meta: opt.meta ? opt.meta(t) : t.meta, date, hasDate: !!date,
+        hasChip: !!chip, chip, chipStyle, done: d,
+        href: t.id === 'hvac' ? 'TaskDetail.dc.html' : '#',
+        checkLabel: (d ? 'Mark not done: ' : 'Mark done: ') + t.name,
+        toggle: () => { if (this._moved) return; flip(t.id)(); }, circleStyle: circle,
+        titleStyle: 'font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; ' + (d ? 'text-decoration: line-through; color: rgba(7,18,56,0.45);' : ''),
+        sep: i === 0 ? '' : 'border-top: 0.5px solid rgba(7,18,56,0.12);'
+      };
+    };
+    const late = T.filter(t => t.late);
+    const upcoming = T.filter(t => !t.late);
+    const left = T.filter(t => !flips[t.id]).length;
+    const lateRows = late.map((t, i) => row(t, i));
+    const hasLate = true;
+
+    const MONTHS = [];
+    for (let i = 0; i < 12; i++) { const m = (9 + i) % 12; MONTHS.push({ y: m >= 9 ? 2026 : 2027, m }); }
+    const mi = st.mi || 0;
+    const counts = MONTHS.map(c => upcoming.filter(t => t.y === c.y && t.m === c.m));
+    const max = Math.max.apply(null, counts.map(c => c.length));
+    const bars = MONTHS.map((c, i) => {
+      const ts = counts[i];
+      const leftN = ts.filter(t => !flips[t.id]).length;
+      const sel = i === mi;
+      const allDone = ts.length && leftN === 0;
+      const h = Math.max(6, Math.round(64 * ts.length / max));
+      let bar = 'width: 16px; height: ' + h + 'px; border-radius: 5px; box-sizing: border-box; ';
+      if (sel) bar += 'background: #071238;';
+      else if (allDone) bar += 'background: #4A6604;';
+      else bar += 'border: 1.5px solid rgba(7,18,56,0.3);';
+      return {
+        sel, count: String(ts.length),
+        aria: MONTH[c.m] + ' ' + c.y + ', ' + ts.length + ' tasks',
+        pick: () => { if (this._moved) return; this.setState({ mi: i, dx: 0 }); },
+        barStyle: bar,
+        countStyle: 'font-size: 10px; font-weight: ' + (sel ? 700 : 500) + '; color: ' + (sel ? '#071238' : 'rgba(7,18,56,0.45)') + ';',
+        labelStyle: 'font-size: 10px; font-weight: ' + (sel ? 700 : 500) + '; color: ' + (sel ? '#071238' : 'rgba(7,18,56,0.55)') + ';',
+        label: MON[c.m].charAt(0)
+      };
+    });
+    // ---- swipe between months ----
+    const STEP = 390; // page width 358 + 32 gap
+    const go = (n) => { n = Math.max(0, Math.min(11, n)); this.setState({ mi: n, dx: 0, dragging: false }); };
+    const dx = st.dx || 0;
+    const dragging = !!st.dragging;
+    const onDown = (e) => { this._x0 = e.clientX; this._y0 = e.clientY; this._down = true; this._moved = false; };
+    const onMove = (e) => {
+      if (!this._down) return;
+      let d = e.clientX - this._x0;
+      const dy = e.clientY - this._y0;
+      if (!this._moved) {
+        if (Math.abs(d) < 8 || Math.abs(d) < Math.abs(dy)) return;
+        this._moved = true;
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+      }
+      if ((mi === 0 && d > 0) || (mi === 11 && d < 0)) d = d / 3;
+      this.setState({ dx: d, dragging: true });
+    };
+    const onUp = () => {
+      if (!this._down) return;
+      this._down = false;
+      if (this._moved) {
+        const d = (this.state && this.state.dx) || 0;
+        go(d < -50 ? mi + 1 : d > 50 ? mi - 1 : mi);
+        setTimeout(() => { this._moved = false; }, 0);
+      }
+    };
+    const onWheel = (e) => {
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+      const now = Date.now();
+      if (this._wheelLock && now < this._wheelLock) return;
+      this._wheelAcc = (this._wheelAcc || 0) + e.deltaX;
+      if (Math.abs(this._wheelAcc) > 40) { go(mi + (this._wheelAcc > 0 ? 1 : -1)); this._wheelAcc = 0; this._wheelLock = now + 450; }
+    };
+    const pages = MONTHS.map((c, i) => {
+      const ts = counts[i];
+      const pros = ts.filter(t => t.chip === 'PRO').length;
+      const doneN = ts.filter(t => flips[t.id]).length;
+      return {
+        title: MONTH[c.m] + ' ' + c.y,
+        aria: MONTH[c.m] + ' ' + c.y + ', ' + (i + 1) + ' of 12',
+        hidden: i !== mi,
+        meta: ts.length + ' TASKS · ' + (pros ? pros + (pros === 1 ? ' NEEDS A PRO' : ' NEED A PRO') : 'ALL DIY') + (doneN ? ' · ' + doneN + ' DONE' : ''),
+        rows: ts.map((t, k) => row(t, k))
+      };
+    });
+    const prevM = mi > 0 ? MONTH[MONTHS[mi - 1].m] : null;
+    const nextM = mi < 11 ? MONTH[MONTHS[mi + 1].m] : null;
+    return {
+      eyebrow: 'NEXT 12 MONTHS · ' + left + ' TASKS',
+      hasLate, lateRows, bars, pages,
+      onDown, onMove, onUp, onWheel,
+      noDrag: (e) => e.preventDefault(),
+      trackStyle: 'display: flex; align-items: flex-start; gap: 32px; will-change: transform; transform: translateX(' + (-mi * STEP + dx) + 'px); transition: ' + (dragging ? 'none' : 'transform .32s cubic-bezier(.2,.8,.2,1)') + ';',
+      swipeHint: (prevM && nextM) ? 'SWIPE FOR ' + prevM.toUpperCase() + ' OR ' + nextM.toUpperCase() : 'SWIPE FOR ' + (nextM || prevM).toUpperCase()
+    };
+  }
+}
+</script>
+</body>
+</html>

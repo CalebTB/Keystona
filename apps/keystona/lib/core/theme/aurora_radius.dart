@@ -29,4 +29,19 @@ abstract final class AuroraRadius {
 
   /// 999px — pills, filter chips, FABs, avatars.
   static const BorderRadius full = BorderRadius.all(Radius.circular(999));
+
+  /// 3px — progress bars.
+  static const BorderRadius bar = BorderRadius.all(Radius.circular(3));
+
+  /// 10px — small tiles, secondary icon tiles.
+  static const BorderRadius tile = BorderRadius.all(Radius.circular(10));
+
+  /// 20px — "Do this next" card, banners.
+  static const BorderRadius banner = BorderRadius.all(Radius.circular(20));
+
+  /// 24px — centered confirm modal and tier-limit sheet.
+  static const BorderRadius modal = BorderRadius.all(Radius.circular(24));
+
+  /// Top corners of a bottom sheet (22px).
+  static const BorderRadius sheetTop = BorderRadius.vertical(top: Radius.circular(22));
 }

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona ShopAdd</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}select:focus{outline:none}
+input[type=time]::-webkit-calendar-picker-indicator{opacity:0.5}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; position: relative; overflow: hidden">
+<div aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none"><dc-import name="ShopHomes" hint-size="390px,1430px"></dc-import></div>
+<a href="ShopHomes.dc.html" aria-label="Close" style="position: absolute; inset: 0; background: rgba(7,18,56,0.45)"></a>
+<section role="dialog" aria-label="Add a home" style="position: absolute; left: 0; right: 0; bottom: 0; height: 780px; background: #FFFFFF; border-radius: 24px 24px 0 0; display: flex; flex-direction: column">
+<div style="padding: 10px 20px 0; display: flex; flex-direction: column; gap: 8px">
+<span aria-hidden="true" style="align-self: center; width: 36px; height: 4px; border-radius: 3px; background: rgba(7,18,56,0.2)"></span>
+<div style="display: flex; align-items: center; justify-content: space-between; min-height: 44px">
+<a href="ShopHomes.dc.html" style="min-height: 44px; display: flex; align-items: center; font-size: 15px; font-weight: 500; color: rgba(7,18,56,0.7)">Cancel</a>
+<span style="font-size: 16px; font-weight: 700">Add a home</span>
+<span><sc-if value="{{ok}}" hint-placeholder-val="{{ true }}"><a href="ShopHomes.dc.html" style="display: flex; align-items: center; justify-content: center; height: 36px; padding: 0 16px; border-radius: 999px; background: #2540D8; color: #FFFFFF; font-size: 14px; font-weight: 600">Save</a></sc-if><sc-if value="{{notOk}}" hint-placeholder-val="{{ false }}"><span aria-disabled="true" style="display: flex; align-items: center; justify-content: center; height: 36px; padding: 0 16px; border-radius: 999px; background: rgba(7,18,56,0.08); color: rgba(7,18,56,0.35); font-size: 14px; font-weight: 600">Save</span></sc-if></span>
+</div>
+</div>
+<div style="flex: 1; min-height: 0; overflow-y: auto; padding: 8px 20px 24px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">ADDRESS OR LISTING LINK</span><span aria-hidden="true" style="color: #FF3B62; font-weight: 700">*</span></span>
+<span style="{{addrBox}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.45)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0-14 0"></path><path d="M21 21l-6-6"></path></svg><input type="text" value="{{addr}}" onChange="{{onAddr}}" placeholder="Paste a Zillow or Redfin link, or type an address" aria-required="true" style="flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font: inherit; font-size: 16px; color: #071238; outline: none"></span>
+<sc-if value="{{found}}" hint-placeholder-val="{{ true }}"><div style="display: flex; gap: 12px; align-items: center; padding: 10px; border-radius: 14px; border: 1px solid rgba(7,18,56,0.12)"><div style="width: 72px; flex-shrink: 0"><div style="position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; border: 1px solid rgba(37,64,216,0.25); background-image: linear-gradient(rgba(37,64,216,0.11) 1px, transparent 1px), linear-gradient(90deg, rgba(37,64,216,0.11) 1px, transparent 1px); background-size: 10px 10px; background-position: -1px -1px"></div></div><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; font-weight: 700">612 Birch Run Dr</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">$389,000 · 3 BD · 2 BA · 1,960 SQ FT · 1987</span><span class="m" style="font-size: 9.5px; font-weight: 700; letter-spacing: 0.6px; color: #4A6604">FILLED IN FROM THE LISTING</span></span></div></sc-if>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">WHERE ARE YOU WITH IT?</span>
+<div role="radiogroup" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px"><sc-for list="{{stages}}" as="s" hint-placeholder-count="4"><button type="button" role="radio" aria-checked="{{s.on}}" onClick="{{s.pick}}" style="{{s.style}}"><span style="font-size: 14.5px; font-weight: 700">{{s.l}}</span><span class="m" style="{{s.subStyle}}">{{s.sub}}</span></button></sc-for></div>
+</div>
+<sc-if value="{{askDate}}" hint-placeholder-val="{{ true }}"><div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">{{dateLabel}}</span></span>
+<input type="text" value="{{date}}" onChange="{{onDate}}" style="width: 100%; height: 50px; padding: 0 14px; font-size: 16px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">{{dateHelp}}</span></div></sc-if>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="display: flex; align-items: center; justify-content: space-between"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">INSPECTION REPORT</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">OPTIONAL</span></span>
+<sc-if value="{{noFile}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{attach}}" style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px 16px; border-radius: 16px; border: 1.5px dashed rgba(7,18,56,0.22); box-sizing: border-box; text-align: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2540D8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"></path><path d="M7 9l5-5l5 5"></path><path d="M12 4l0 12"></path></svg><span style="font-size: 15px; font-weight: 700">Add the PDF your inspector sent</span><span style="font-size: 13px; line-height: 1.4; color: rgba(7,18,56,0.6)">We'll pull out every finding, sort it by how urgent it is, and estimate the cost.</span></button></sc-if>
+<sc-if value="{{hasFile}}" hint-placeholder-val="{{ true }}"><div style="display: flex; flex-direction: column; border-radius: 16px; border: 1px solid rgba(7,18,56,0.12); overflow: hidden">
+<div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px"><span style="width: 40px; height: 48px; border-radius: 6px; border: 1px solid rgba(7,18,56,0.18); box-sizing: border-box; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 5px; flex-shrink: 0"><span class="m" style="font-size: 8px; font-weight: 800; letter-spacing: 0.6px; color: #B12347">PDF</span></span><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; font-weight: 600">Ridgeline_Inspection_612Birch.pdf</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">42 PAGES · 6.8 MB</span></span><button type="button" onClick="{{detach}}" aria-label="Remove file" style="width: 44px; height: 44px; margin-right: -10px; display: flex; align-items: center; justify-content: center; color: rgba(7,18,56,0.45)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6l-12 12"></path></svg></button></div>
+<div style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-top: 0.5px solid rgba(7,18,56,0.12)"><span style="flex: 1; height: 4px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(7,18,56,0.15); overflow: hidden"><span style="display: block; width: 100%; height: 100%; background: #2540D8"></span></span><span class="m" style="font-size: 9.5px; font-weight: 700; letter-spacing: 0.6px; color: #2540D8">READ · 16 FINDINGS</span></div>
+</div></sc-if>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">ALSO HAVE</span>
+<div style="display: flex; gap: 6px; flex-wrap: wrap"><sc-for list="{{extras}}" as="x" hint-placeholder-count="4"><button type="button" aria-pressed="{{x.on}}" onClick="{{x.pick}}" style="{{x.style}}">{{x.l}}</button></sc-for></div>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">YOU CAN ADD THESE NOW OR WHEN YOU GET THEM</span>
+</div>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const addr = st.addr !== undefined ? st.addr : 'redfin.com/AL/612-Birch-Run-Dr';
+    const found = addr.trim().length >= 6;
+    const sk = st.s || 'toured';
+    const S = [['looking', 'Just looking', 'NOT TOURED YET'], ['touring', 'Touring soon', 'PICK A DATE'], ['toured', 'Toured it', 'SEEN IN PERSON'], ['inspected', 'Inspected', 'HAVE THE REPORT']];
+    const file = st.file !== undefined ? st.file : false;
+    const ex = st.ex || { disc: true };
+    const X = [['disc', 'Seller’s disclosure'], ['sheet', 'Listing sheet'], ['pest', 'Termite report'], ['hoa', 'HOA docs']];
+    const dl = { touring: ['TOUR DATE', 'Sat, Oct 10 · 11:00 AM', 'WE’LL HAVE YOUR CHECKLIST READY'], toured: ['TOURED ON', 'Mon, Sep 28', ''], inspected: ['INSPECTED ON', 'Thu, Oct 8', ''] }[sk];
+    return {
+      addr, onAddr: (e) => this.setState({ addr: e.target.value }), found,
+      addrBox: 'display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 14px; border-radius: 14px; box-sizing: border-box; background: #FFFFFF; border: ' + (found ? '1.5px solid #071238' : '1px solid rgba(7,18,56,0.18)') + ';',
+      stages: S.map(([k, l, sub]) => ({ l, sub, on: sk === k, pick: () => this.setState({ s: k }),
+        style: 'display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 12px; border-radius: 14px; box-sizing: border-box; text-align: left; ' + (sk === k ? 'background: #071238; color: #FFFFFF;' : 'border: 1px solid rgba(7,18,56,0.18); color: #071238;'),
+        subStyle: 'font-size: 9px; font-weight: 600; letter-spacing: 0.6px; color: ' + (sk === k ? 'rgba(255,255,255,0.7)' : 'rgba(7,18,56,0.5)') + ';' })),
+      askDate: !!dl, dateLabel: dl ? dl[0] : '', date: st.date !== undefined ? st.date : (dl ? dl[1] : ''), dateHelp: dl ? dl[2] : '', onDate: (e) => this.setState({ date: e.target.value }),
+      noFile: !file, hasFile: file, attach: () => this.setState({ file: true, s: 'inspected' }), detach: () => this.setState({ file: false }),
+      extras: X.map(([k, l]) => ({ l, on: !!ex[k], pick: () => this.setState({ ex: Object.assign({}, ex, { [k]: !ex[k] }) }),
+        style: 'height: 36px; padding: 0 12px; border-radius: 999px; font-size: 13.5px; font-weight: 600; box-sizing: border-box; display: inline-flex; align-items: center; gap: 5px; ' + (ex[k] ? 'background: #071238; color: #FFFFFF;' : 'border: 1px solid rgba(7,18,56,0.18); color: rgba(7,18,56,0.75);') })),
+      ok: found, notOk: !found
+    };
+  }
+}
+</script>
+</body>
+</html>

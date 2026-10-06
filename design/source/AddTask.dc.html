@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona new task</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}
+select:focus{outline:none}
+input[type=range]{accent-color:#2540D8}
+input[type=date]::-webkit-calendar-picker-indicator{opacity:0.5}
+</style>
+</helmet>
+<div style="width: 390px; height: 1440px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; position: relative; overflow: hidden">
+
+<!-- Home behind the sheet -->
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 390px; height: 1260px; pointer-events: none">
+<dc-import name="Tabbed" hint-size="390px,1260px"></dc-import>
+</div>
+<a href="Tabbed.dc.html" aria-label="Close" style="position: absolute; inset: 0; background: rgba(7,18,56,0.45)"></a>
+
+<section role="dialog" aria-label="New task" style="position: absolute; left: 0; right: 0; top: 64px; bottom: 0; background: #FFFFFF; border-radius: 22px 22px 0 0; display: flex; flex-direction: column">
+<span aria-hidden="true" style="align-self: center; margin-top: 8px; width: 36px; height: 4px; border-radius: 3px; background: rgba(7,18,56,0.2)"></span>
+<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 6px 16px 10px; border-bottom: 0.5px solid rgba(7,18,56,0.12)">
+<a href="Tabbed.dc.html" style="justify-self: start; display: flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 500; color: rgba(7,18,56,0.6)">Cancel</a>
+<h1 style="margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -0.3px">New task.</h1>
+<span style="justify-self: end">
+<sc-if value="{{ready}}" hint-placeholder-val="{{ false }}"><a href="Tasks.dc.html" style="display: flex; align-items: center; height: 36px; padding: 0 14px; border-radius: 999px; background: #2540D8; color: #FFFFFF; font-size: 14px; font-weight: 600; white-space: nowrap">Save task</a></sc-if>
+<sc-if value="{{notReady}}" hint-placeholder-val="{{ true }}"><span aria-disabled="true" style="display: flex; align-items: center; height: 36px; padding: 0 14px; border-radius: 999px; background: rgba(7,18,56,0.08); color: rgba(7,18,56,0.35); font-size: 14px; font-weight: 600; white-space: nowrap">Save task</span></sc-if>
+</span>
+</div>
+
+<form onSubmit="{{noSubmit}}" style="flex: 1; min-height: 0; overflow-y: auto; padding: 18px 16px 30px; display: flex; flex-direction: column; gap: 26px">
+
+<section style="display: flex; flex-direction: column; gap: 16px">
+<label style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">TASK NAME</span><span aria-hidden="true" style="color: #FF3B62; font-weight: 700">*</span></span>
+<input type="text" value="{{name}}" onChange="{{on_name}}" aria-required="true" maxlength="80" placeholder="What needs doing?" style="width: 100%; height: 50px; padding: 0 14px; font-size: 16px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box">
+</label>
+
+<!-- One tap fills name + item + how often -->
+<sc-if value="{{showCommon}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 8px; margin-top: -4px">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{commonTitle}}</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{common}}" as="c" hint-placeholder-count="4">
+<button type="button" onClick="{{c.pick}}" style="display: flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(7,18,56,0.18); font-size: 13.5px; font-weight: 600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2540D8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>{{c.label}}</button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<!-- Linked item: required, feeds the home score -->
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">FOR WHICH SYSTEM OR APPLIANCE</span><span aria-hidden="true" style="color: #FF3B62; font-weight: 700">*</span></span>
+<button type="button" onClick="{{togglePicker}}" aria-expanded="{{pickerOpen}}" style="{{linkBox}}">
+<sc-if value="{{hasLink}}" hint-placeholder-val="{{ false }}">
+<span style="width: 32px; height: 32px; border-radius: 9px; border: 1px solid rgba(7,18,56,0.14); box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{linkIcon}}"></path></svg></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; text-align: left"><span style="font-size: 15px; font-weight: 600">{{linkName}}</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{linkMeta}}</span></span>
+</sc-if>
+<sc-if value="{{noLink}}" hint-placeholder-val="{{ true }}"><span style="flex: 1; text-align: left; font-size: 16px; color: rgba(7,18,56,0.35)">Choose one</span></sc-if>
+<span style="{{pickChev}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; pointer-events: none"><path d="M6 9l6 6l6-6"></path></svg></span>
+</button>
+<sc-if value="{{pickerOpen}}" hint-placeholder-val="{{ false }}">
+<div style="border: 1px solid rgba(7,18,56,0.12); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 8px">
+<div role="radiogroup" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px"><button type="button" role="radio" aria-checked="{{kind_sys}}" onClick="{{pick_kind_sys}}" style="{{kind_sys_style}}">Systems · 5</button><button type="button" role="radio" aria-checked="{{kind_app}}" onClick="{{pick_kind_app}}" style="{{kind_app_style}}">Appliances · 5</button></div>
+<ul role="listbox" style="list-style: none; margin: 0; padding: 0">
+<sc-for list="{{items}}" as="it" hint-placeholder-count="5">
+<li style="{{it.sep}}"><button type="button" role="option" aria-selected="{{it.on}}" onClick="{{it.pick}}" style="width: 100%; display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 6px; text-align: left">
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">{{it.name}}</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{it.meta}}</span></span>
+<span style="{{it.radio}}"><sc-if value="{{it.on}}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10-10"></path></svg></sc-if></span>
+</button></li>
+</sc-for>
+</ul>
+</div>
+</sc-if>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">EVERY TASK BELONGS TO SOMETHING — IT'S HOW YOUR HOME SCORE STAYS HONEST</span>
+</div>
+
+<label style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">HOW OFTEN</span><span aria-hidden="true" style="color: #FF3B62; font-weight: 700">*</span></span>
+<span style="display: flex; align-items: center; height: 50px; padding: 0 14px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box"><select value="{{recur}}" onChange="{{on_recur}}" style="flex: 1; min-width: 0; height: 100%; font-size: 16px; padding-right: 20px"><option value="once">Just once</option><option value="m1">Every month</option><option value="m3">Every 3 months</option><option value="m6">Twice a year</option><option value="y1">Every year</option><option value="yn">Every few years</option></select><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; pointer-events: none"><path d="M6 9l6 6l6-6"></path></svg></span>
+</label>
+<sc-if value="{{showYears}}" hint-placeholder-val="{{ false }}">
+<label style="display: flex; flex-direction: column; gap: 8px; padding-left: 14px; border-left: 2px solid rgba(37,64,216,0.35); margin-top: -4px">
+<span style="display: flex; align-items: baseline; justify-content: space-between"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">EVERY</span><span style="font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums">{{years}} years</span></span>
+<input type="range" min="2" max="10" value="{{years}}" onChange="{{on_years}}" aria-label="Every how many years" style="width: 100%; height: 28px; margin: 0">
+</label>
+</sc-if>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h2 class="m" style="margin: 0; display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: #071238"><span style="width: 6px; height: 6px; border-radius: 50%; background: #2540D8"></span>FIRST DUE</h2>
+
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">WHEN</span></span>
+<div role="radiogroup" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px"><sc-for list="{{dueChips}}" as="c" hint-placeholder-count="4"><button type="button" role="radio" aria-checked="{{c.on}}" onClick="{{c.pick}}" style="{{c.style}}"><span style="font-size: 14px; font-weight: 600">{{c.label}}</span><span class="m" style="{{c.subStyle}}">{{c.sub}}</span></button></sc-for></div>
+<sc-if value="{{pickDate}}" hint-placeholder-val="{{ false }}"><input type="date" value="{{date}}" onChange="{{on_date}}" min="2026-10-04" aria-label="Pick a date" style="width: 100%; height: 50px; padding: 0 14px; font-size: 16px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box"></sc-if>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">REMIND ME</span></span>
+<span style="display: flex; align-items: center; height: 50px; padding: 0 14px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box"><select value="{{rem}}" onChange="{{on_rem}}" style="flex: 1; min-width: 0; height: 100%; font-size: 16px; padding-right: 20px"><option value="0">The morning of</option><option value="1">1 day before</option><option value="3">3 days before</option><option value="7">1 week before</option><option value="14">2 weeks before</option></select><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; pointer-events: none"><path d="M6 9l6 6l6-6"></path></svg></span>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">{{remHelp}}</span></div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h2 class="m" style="margin: 0; display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: #071238"><span style="width: 6px; height: 6px; border-radius: 50%; background: #2540D8"></span>DETAILS</h2>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">OPTIONAL</span>
+</div>
+<label style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">NOTES</span></span>
+<textarea rows="3" value="{{desc}}" onChange="{{on_desc}}" maxlength="500" placeholder="Steps, filter size, which breaker…" style="width: 100%; padding: 12px 14px; font-size: 16px; line-height: 1.4; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box"></textarea>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">INSTRUCTIONS · MATERIALS · SAFETY NOTES</span></label>
+<div style="display: flex; gap: 10px">
+<div style="flex: 1; min-width: 0"><div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">TIME</span></span>
+<span style="display: flex; align-items: center; height: 50px; padding: 0 14px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box"><select value="{{time}}" onChange="{{on_time}}" style="flex: 1; min-width: 0; height: 100%; font-size: 16px; padding-right: 20px"><option value="">Not sure</option><option value="10">10 min</option><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1 hr</option><option value="120">2 hr</option><option value="240">Half a day</option></select><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; pointer-events: none"><path d="M6 9l6 6l6-6"></path></svg></span>
+</div></div>
+<div style="flex: 1; min-width: 0"><div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">DIFFICULTY</span></span>
+<span style="display: flex; align-items: center; height: 50px; padding: 0 14px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box"><select value="{{diff}}" onChange="{{on_diff}}" style="flex: 1; min-width: 0; height: 100%; font-size: 16px; padding-right: 20px"><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; pointer-events: none"><path d="M6 9l6 6l6-6"></path></svg></span>
+</div></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">WHO DOES IT</span></span>
+<div role="radiogroup" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px"><button type="button" role="radio" aria-checked="{{who_diy}}" onClick="{{pick_who_diy}}" style="{{who_diy_style}}">Me</button><button type="button" role="radio" aria-checked="{{who_pro}}" onClick="{{pick_who_pro}}" style="{{who_pro_style}}">A pro</button><button type="button" role="radio" aria-checked="{{who_either}}" onClick="{{pick_who_either}}" style="{{who_either_style}}">Either</button></div>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">{{whoHelp}}</span></div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h2 class="m" style="margin: 0; display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: #071238"><span style="width: 6px; height: 6px; border-radius: 50%; background: #2540D8"></span>COST</h2>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">OPTIONAL</span>
+</div>
+<div style="display: flex; gap: 10px"><div style="flex: 1; min-width: 0"><label style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">ESTIMATE</span></span>
+<span style="display: flex; align-items: center; gap: 4px; height: 50px; padding: 0 14px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box"><span style="font-size: 16px; color: rgba(7,18,56,0.5)">$</span><input type="text" inputmode="decimal" value="{{cost}}" onChange="{{on_cost}}" placeholder="0" style="flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font-size: 16px; font-variant-numeric: tabular-nums"></span>
+</label></div><div style="flex: 1.4; min-width: 0"><label style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">TOOLS &amp; SUPPLIES</span></span>
+<input type="text" value="{{tools}}" onChange="{{on_tools}}" placeholder="e.g. 16×25×1 filter" style="width: 100%; height: 50px; padding: 0 14px; font-size: 16px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box">
+</label></div></div>
+</section>
+
+<!-- What saving does, in one sentence -->
+<div role="status" style="{{sumBox}}">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{sumIcon}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-12a2 2 0 0 1-2-2v-12z"></path><path d="M16 3v4"></path><path d="M8 3v4"></path><path d="M4 11h16"></path></svg>
+<span style="font-size: 14px; line-height: 1.45">{{summary}}</span>
+</div>
+</form>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1440}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const v = (k, d) => st[k] !== undefined ? st[k] : d;
+    const set = (k) => (e) => this.setState({ [k]: e.target.value });
+    const out = { noSubmit: (e) => e.preventDefault(), H: 1440 };
+    const IC = {
+      hvac: 'M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0 M12 10v-7 M14 12h7 M12 14v7 M10 12h-7',
+      water: 'M7.5 19.4c2.6 2.1 6.4 2.1 9 0c2.6-2.1 3.3-5.7 1.6-8.5l-4.9-7.3c-.4-.6-1.3-.8-1.9-.4a1.4 1.4 0 0 0-.4.4l-4.9 7.3c-1.7 2.8-1 6.4 1.5 8.5z',
+      roof: 'M3 12l9-8l9 8 M5 10v10h14v-10',
+      bolt: 'M13 3l0 7l6 0l-8 11l0-7l-6 0l8-11',
+      box: 'M5 3h14a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-14a1 1 0 0 1-1-1v-16a1 1 0 0 1 1-1z M4 8h16 M8 5.5h.01 M12 14m-3.5 0a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0-7 0'
+    };
+    const ITEMS = {
+      sys: [
+        { id: 'furnace', name: 'Furnace', meta: 'HVAC · BASEMENT · 3 TASKS', icon: IC.hvac },
+        { id: 'wh', name: 'Water heater', meta: 'PLUMBING · BASEMENT · 2 TASKS', icon: IC.water },
+        { id: 'roof', name: 'Roof', meta: 'EXTERIOR · 2 TASKS', icon: IC.roof },
+        { id: 'gutters', name: 'Gutters', meta: 'EXTERIOR · 1 TASK', icon: IC.roof },
+        { id: 'panel', name: 'Electrical panel', meta: 'ELECTRICAL · GARAGE · 1 TASK', icon: IC.bolt }
+      ],
+      app: [
+        { id: 'washer', name: 'Washer', meta: 'LAUNDRY · 2 TASKS', icon: IC.box },
+        { id: 'dryer', name: 'Dryer', meta: 'LAUNDRY · 1 TASK', icon: IC.box },
+        { id: 'dish', name: 'Dishwasher', meta: 'KITCHEN · 1 TASK', icon: IC.box },
+        { id: 'fridge', name: 'Refrigerator', meta: 'KITCHEN · 1 TASK', icon: IC.box },
+        { id: 'hood', name: 'Range hood', meta: 'KITCHEN · 1 TASK', icon: IC.box }
+      ]
+    };
+    const ALL = ITEMS.sys.map(i => Object.assign({ kind: 'sys' }, i)).concat(ITEMS.app.map(i => Object.assign({ kind: 'app' }, i)));
+    // quick picks: fill name + item + how often + who in one tap
+    const COMMON = [
+      { label: 'Replace HVAC air filter', link: 'furnace', recur: 'm3', who: 'diy', time: '15', cost: '25', tools: '16×25×1 filter, MERV 8' },
+      { label: 'Clean gutters', link: 'gutters', recur: 'm6', who: 'either', time: '60' },
+      { label: 'Flush water heater', link: 'wh', recur: 'y1', who: 'diy', time: '45', tools: 'Garden hose, bucket' },
+      { label: 'Clean dryer vent', link: 'dryer', recur: 'y1', who: 'diy', time: '30' }
+    ];
+    const BY = {
+      furnace: ['Replace HVAC air filter', 'Service the furnace', 'Clean the burners'],
+      wh: ['Flush water heater', 'Check the anode rod', 'Test the relief valve'],
+      roof: ['Inspect roof flashing', 'Look for missing shingles'],
+      gutters: ['Clean gutters', 'Check downspouts drain away'],
+      panel: ['Label the breakers', 'Test GFCI outlets'],
+      washer: ['Wipe the door gasket', 'Clean the drain filter', 'Check hoses for bulges'],
+      dryer: ['Clean dryer vent', 'Clean the lint trap housing'],
+      dish: ['Clean the dishwasher filter', 'Run a cleaning cycle'],
+      fridge: ['Clean refrigerator coils', 'Replace the water filter'],
+      hood: ['Clean range hood filter']
+    };
+
+    const name = v('name', '');
+    const link = v('link', '');
+    const linked = ALL.find(i => i.id === link);
+    const kind = v('kind', linked ? linked.kind : 'sys');
+    const open = !!st.open;
+    out.name = name; out.on_name = set('name');
+
+    // suggestions: generic until an item is picked, then that item's usual jobs
+    const pool = linked
+      ? (BY[linked.id] || []).map(l => ({ label: l, link: linked.id }))
+      : COMMON;
+    const sugg = pool.filter(c => c.label !== name);
+    out.showCommon = !name.trim() || (linked && sugg.length > 0 && !(BY[linked.id] || []).includes(name));
+    out.commonTitle = linked ? 'USUAL FOR THE ' + linked.name.toUpperCase() : 'COMMON TASKS · TAP TO FILL IN';
+    out.common = sugg.slice(0, 4).map(c => ({
+      label: c.label,
+      pick: () => {
+        const full = COMMON.find(x => x.label === c.label) || {};
+        const it = ALL.find(i => i.id === (full.link || c.link));
+        this.setState(Object.assign({ name: c.label, link: it.id, kind: it.kind, open: false },
+          full.recur ? { recur: full.recur } : {}, full.who ? { who: full.who } : {}, full.time ? { time: full.time } : {},
+          full.cost ? { cost: full.cost } : {}, full.tools ? { tools: full.tools } : {}));
+      }
+    }));
+
+    // linked item field + inline picker
+    out.hasLink = !!linked; out.noLink = !linked;
+    out.linkName = linked ? linked.name : ''; out.linkMeta = linked ? (linked.kind === 'sys' ? 'SYSTEM · ' : 'APPLIANCE · ') + linked.meta.split(' · ')[0] : '';
+    out.linkIcon = linked ? linked.icon : '';
+    out.pickerOpen = open;
+    out.togglePicker = () => this.setState({ open: !open });
+    out.linkBox = 'width: 100%; display: flex; align-items: center; gap: 10px; min-height: 50px; padding: 8px 14px; box-sizing: border-box; border-radius: 12px; border: ' + (open ? '1.5px solid #2540D8' : '1px solid rgba(7,18,56,0.18)') + ';';
+    out.pickChev = 'display: flex; transition: transform .15s; transform: rotate(' + (open ? 180 : 0) + 'deg);';
+    const segBase = 'height: 40px; border-radius: 10px; font-size: 14px; font-weight: 600; text-align: center; box-sizing: border-box;';
+    const segOn = ' border: 1.5px solid #071238; background: #071238; color: #FFFFFF;';
+    const segOff = ' border: 1px solid rgba(7,18,56,0.18); color: rgba(7,18,56,0.7);';
+    ['sys', 'app'].forEach(o => {
+      out['kind_' + o] = kind === o;
+      out['pick_kind_' + o] = () => this.setState({ kind: o });
+      out['kind_' + o + '_style'] = segBase + (kind === o ? segOn : segOff);
+    });
+    out.items = ITEMS[kind].map((it, i) => ({
+      name: it.name, meta: it.meta, on: it.id === link,
+      pick: () => this.setState({ link: it.id, open: false }),
+      sep: i === 0 ? '' : 'border-top: 0.5px solid rgba(7,18,56,0.12);',
+      radio: 'width: 22px; height: 22px; border-radius: 50%; box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: center; ' + (it.id === link ? 'background: #071238; border: 1.5px solid #071238; color: #FFFFFF;' : 'border: 1.5px solid rgba(7,18,56,0.3);')
+    }));
+
+    // how often
+    const recur = v('recur', 'once');
+    out.recur = recur; out.on_recur = set('recur');
+    out.showYears = recur === 'yn';
+    const years = v('years', '3'); out.years = years; out.on_years = set('years');
+
+    // first due
+    const DUE = [
+      { id: 'today', label: 'Today', sub: 'SUN 4', d: 0, long: 'today' },
+      { id: 'sat', label: 'Saturday', sub: 'OCT 10', d: 6, long: 'Saturday, Oct 10' },
+      { id: 'two', label: '2 weeks', sub: 'OCT 18', d: 14, long: 'Sunday, Oct 18' },
+      { id: 'pick', label: 'Other', sub: 'PICK' }
+    ];
+    const due = v('due', 'today');
+    const chip = 'height: 56px; border-radius: 12px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;';
+    out.dueChips = DUE.map(o => ({ label: o.label, sub: o.sub, on: due === o.id, pick: () => this.setState({ due: o.id }),
+      style: chip + (due === o.id ? segOn : segOff),
+      subStyle: 'font-size: 9.5px; font-weight: 600; letter-spacing: 0.6px; color: ' + (due === o.id ? 'rgba(255,255,255,0.7)' : 'rgba(7,18,56,0.5)') + ';' }));
+    out.pickDate = due === 'pick';
+    const date = v('date', '2026-11-01'); out.date = date; out.on_date = set('date');
+    const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const DOW = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    let days, when;
+    if (due === 'pick') {
+      const p = date.split('-').map(Number);
+      const dt = new Date(p[0], p[1] - 1, p[2]);
+      days = Math.round((dt - new Date(2026, 9, 4)) / 86400000);
+      when = isNaN(days) ? 'on the date you pick' : DOW[dt.getDay()] + ', ' + MON[dt.getMonth()] + ' ' + dt.getDate();
+    } else { const o = DUE.find(x => x.id === due); days = o.d; when = o.long; }
+
+    // reminder: if the lead time is longer than the wait, say so
+    const rem = v('rem', '7'); out.rem = rem; out.on_rem = set('rem');
+    const lead = parseInt(rem, 10);
+    out.remHelp = (days < lead && lead > 0) ? 'DUE SOONER THAN THAT — WE\'LL REMIND YOU THE MORNING OF' : 'A NOTIFICATION ON YOUR PHONE';
+
+    // details + cost
+    out.desc = v('desc', ''); out.on_desc = set('desc');
+    out.time = v('time', ''); out.on_time = set('time');
+    out.diff = v('diff', 'easy'); out.on_diff = set('diff');
+    const who = v('who', 'diy');
+    [['diy'], ['pro'], ['either']].forEach(([o]) => {
+      out['who_' + o] = who === o;
+      out['pick_who_' + o] = () => this.setState({ who: o });
+      out['who_' + o + '_style'] = 'height: 46px; border-radius: 12px; font-size: 15px; font-weight: 600; text-align: center; box-sizing: border-box;' + (who === o ? segOn : segOff);
+    });
+    out.whoHelp = who === 'pro' ? 'WHEN YOU MARK IT DONE, WE\'LL ASK WHO YOU HIRED' : (who === 'either' ? 'WE\'LL SHOW A PRO OPTION IF IT GETS LATE' : 'YOU\'LL DO IT YOURSELF');
+    out.cost = v('cost', ''); out.on_cost = set('cost');
+    out.tools = v('tools', ''); out.on_tools = set('tools');
+
+    // summary
+    const RL = { once: '', m1: ', then every month', m3: ', then every 3 months', m6: ', then twice a year', y1: ', then every year', yn: ', then every ' + years + ' years' };
+    const ready = !!name.trim() && !!linked;
+    out.ready = ready; out.notReady = !ready;
+    out.summary = ready
+      ? 'Due ' + when + RL[recur] + '. It shows up under the ' + linked.name.toLowerCase() + ' and in Tasks.'
+      : (!name.trim() && !linked ? 'Add a name and pick what it\'s for to save.' : (!name.trim() ? 'Add a name to save.' : 'Pick what it\'s for to save.'));
+    out.sumBox = 'display: flex; gap: 10px; padding: 12px 14px; border-radius: 14px; box-sizing: border-box; ' + (ready ? 'border: 1.5px solid #2540D8;' : 'border: 1px dashed rgba(7,18,56,0.22); color: rgba(7,18,56,0.6);');
+    out.sumIcon = ready ? '#2540D8' : 'rgba(7,18,56,0.45)';
+    return out;
+  }
+}
+</script>
+</body>
+</html>

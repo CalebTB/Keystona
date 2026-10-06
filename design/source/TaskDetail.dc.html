@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona task</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1880px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; display: flex; flex-direction: column">
+<main style="padding: 12px 16px 20px; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<a href="Tasks.dc.html" style="display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -6px; font-size: 15px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"></path></svg>Tasks</a>
+<a href="AddTask.dc.html" style="min-height: 44px; display: flex; align-items: center; font-size: 15px; font-weight: 600">Edit</a>
+</div>
+
+<header style="display: flex; flex-direction: column; gap: 8px; margin-top: -8px">
+<span class="m" style="display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">HVAC · EVERY 3 MONTHS
+<sc-if value="{{open}}" hint-placeholder-val="{{ true }}"><span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px; border: 1px solid #B08A00; color: #6B4F00; font-size: 9px; font-weight: 700; letter-spacing: 0.8px">DUE IN 3 DAYS</span></sc-if>
+<sc-if value="{{done}}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px; border: 1px solid #4A6604; color: #4A6604; font-size: 9px; font-weight: 700; letter-spacing: 0.8px"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10-10"></path></svg>DONE TODAY</span></sc-if>
+</span>
+<h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.9px; line-height: 1.1">Replace HVAC air filter</h1>
+<span style="font-size: 15px; line-height: 1.45; color: rgba(7,18,56,0.6)">A clogged filter makes the furnace work harder and pushes dust through the house.</span>
+</header>
+
+<!-- When + the actions. Due soon = amber; done = olive -->
+<sc-if value="{{open}}" hint-placeholder-val="{{ true }}">
+<section aria-label="Due date" style="display: flex; flex-direction: column; gap: 14px; padding: 16px; border: 1.5px solid #B08A00; border-radius: 20px">
+<div style="display: flex; gap: 12px; align-items: center">
+<span style="width: 40px; height: 40px; border-radius: 12px; border: 1.5px solid #B08A00; box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B4F00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-12a2 2 0 0 1-2-2v-12z"></path><path d="M16 3v4"></path><path d="M8 3v4"></path><path d="M4 11h16"></path></svg></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 18px; font-weight: 700; letter-spacing: -0.3px">Due Wednesday, Oct 7</span>
+<span class="m" style="font-size: 10px; font-weight: 600; letter-spacing: 0.3px; color: #6B4F00">IN 3 DAYS · REMINDER WENT OUT SEP 30</span>
+</span>
+</div>
+<div style="display: flex; gap: 8px">
+<button type="button" onClick="{{markDone}}" style="flex: 1; height: 48px; border-radius: 999px; background: #2540D8; color: #FFFFFF; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center">Mark done</button>
+<a href="TaskSkip.dc.html" style="height: 48px; padding: 0 20px; border-radius: 999px; border: 1.5px solid rgba(7,18,56,0.2); box-sizing: border-box; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center">Not now</a>
+</div>
+<a href="#" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 12px; border-top: 0.5px solid rgba(7,18,56,0.12); font-size: 13px; font-weight: 600; min-height: 32px; color: rgba(7,18,56,0.6)"><span>Done — add cost, photos or a receipt</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.35)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 6l6 6l-6 6"></path></svg></a>
+</section>
+</sc-if>
+<sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
+<section aria-label="Done" style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 1.5px solid #4A6604; border-radius: 20px">
+<span style="width: 32px; height: 32px; border-radius: 50%; background: #ECF87F; color: #4A6604; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10-10"></path></svg></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 16px; font-weight: 700">Done today, 3 days early</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">NEXT ONE IS DUE JAN 4, 2027</span></span>
+<button type="button" onClick="{{undo}}" style="font-size: 14px; font-weight: 600; color: #B12347; min-height: 44px; padding: 0 0 0 8px">Undo</button>
+</section>
+</sc-if>
+
+<!-- What it belongs to -->
+<section aria-label="For" style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">FOR</h2></div>
+<a href="SystemDetail.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 64px; box-sizing: border-box; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px">
+<span style="width: 40px; height: 40px; border-radius: 12px; border: 1px solid rgba(7,18,56,0.14); box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0"></path><path d="M12 10v-7"></path><path d="M14 12h7"></path><path d="M12 14v7"></path><path d="M10 12h-7"></path></svg></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; font-weight: 600">Furnace</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">NF95-080B · BASEMENT</span></span>
+<span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px; border: 1px solid #4A6604; color: #4A6604; font-size: 9px; font-weight: 700; letter-spacing: 0.8px"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10-10"></path></svg>HEALTHY</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.35)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 6l6 6l-6 6"></path></svg>
+</a>
+</section>
+
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px"><div style="display: flex; flex-direction: column; gap: 5px; padding: 12px 10px; border: 1px solid rgba(7,18,56,0.12); border-radius: 14px; min-width: 0"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">TIME</span><span style="font-size: 15px; font-weight: 700; white-space: nowrap">15 min</span></div><div style="display: flex; flex-direction: column; gap: 5px; padding: 12px 10px; border: 1px solid rgba(7,18,56,0.12); border-radius: 14px; min-width: 0"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">LEVEL</span><span style="font-size: 15px; font-weight: 700; white-space: nowrap">Easy</span></div><div style="display: flex; flex-direction: column; gap: 5px; padding: 12px 10px; border: 1px solid rgba(7,18,56,0.12); border-radius: 14px; min-width: 0"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">WHO</span><span style="font-size: 15px; font-weight: 700; white-space: nowrap">You</span></div><div style="display: flex; flex-direction: column; gap: 5px; padding: 12px 10px; border: 1px solid rgba(7,18,56,0.12); border-radius: 14px; min-width: 0"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">COST</span><span style="font-size: 15px; font-weight: 700; white-space: nowrap">~$25</span></div></div>
+
+<section aria-label="How to do it" style="display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">HOW TO DO IT</h2></div>
+<ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px">
+<li style="display: flex; gap: 12px; align-items: flex-start"><span class="m" style="width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid #071238; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0">1</span><span style="font-size: 15px; line-height: 1.5; padding-top: 2px">Set the thermostat to <strong>Off</strong> so the blower stops.</span></li>
+<li style="display: flex; gap: 12px; align-items: flex-start"><span class="m" style="width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid #071238; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0">2</span><span style="font-size: 15px; line-height: 1.5; padding-top: 2px">Slide the old filter out of the slot on the side of the furnace. Note which way the arrow points.</span></li>
+<li style="display: flex; gap: 12px; align-items: flex-start"><span class="m" style="width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid #071238; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0">3</span><span style="font-size: 15px; line-height: 1.5; padding-top: 2px">Slide the new one in with the <strong>arrow pointing toward the furnace</strong>.</span></li>
+<li style="display: flex; gap: 12px; align-items: flex-start"><span class="m" style="width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid #071238; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0">4</span><span style="font-size: 15px; line-height: 1.5; padding-top: 2px">Write today's date on its edge, then turn the system back on.</span></li>
+</ol>
+</section>
+
+<section aria-label="You'll need" style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">YOU'LL NEED</h2></div>
+<div style="border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden"><div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; "><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">FILTER</span><span style="font-size: 14px; font-weight: 600; text-align: right">16 × 25 × 1 · MERV 8</span></div><div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-top: 0.5px solid rgba(7,18,56,0.12);"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">ALSO</span><span style="font-size: 14px; font-weight: 600; text-align: right">A marker</span></div></div>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">FILTER SIZE COMES FROM THE FURNACE'S DETAILS</span>
+</section>
+
+<section aria-label="Your notes" style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">YOUR NOTES</h2><a href="AddTask.dc.html" style="font-size: 13px; font-weight: 600; min-height: 32px; display: flex; align-items: center; margin: -6px 0">Edit</a></div>
+<p style="margin: 0; padding: 2px 0 2px 14px; border-left: 2px solid rgba(37,64,216,0.35); font-size: 15px; line-height: 1.5">Spares are on the shelf next to the water heater. The 4-pack from the warehouse store is the cheapest.</p>
+</section>
+
+<section aria-label="History" style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">HISTORY · {{histCount}}</h2><span class="m" style="font-size: 10px; font-weight: 600; letter-spacing: 0.6px; color: rgba(7,18,56,0.55)">{{onTime}}</span></div>
+<ol style="list-style: none; margin: 0; padding: 16px 14px; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px">
+<sc-if value="{{done}}" hint-placeholder-val="{{ false }}"><li style="position: relative; display: flex; gap: 14px; padding-bottom: 18px"><span aria-hidden="true" style="position: absolute; left: 5.5px; top: 16px; bottom: -4px; width: 1px; background: rgba(7,18,56,0.18)"></span><span style="position: relative; width: 12px; height: 12px; margin-top: 4px; border-radius: 50%; box-sizing: border-box; flex-shrink: 0; background: #4A6604;"></span><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">OCT 4, 2026 · 3 DAYS EARLY</span><span style="font-size: 15px; font-weight: 600">Done</span><span style="font-size: 13px; color: rgba(7,18,56,0.6)">You</span></span><span style="font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; padding-top: 16px">$25</span></li></sc-if>
+<li style="position: relative; display: flex; gap: 14px; padding-bottom: 18px"><span aria-hidden="true" style="position: absolute; left: 5.5px; top: 16px; bottom: -4px; width: 1px; background: rgba(7,18,56,0.18)"></span><span style="position: relative; width: 12px; height: 12px; margin-top: 4px; border-radius: 50%; box-sizing: border-box; flex-shrink: 0; background: #071238;"></span><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">JUL 6, 2026 · ON TIME</span><span style="font-size: 15px; font-weight: 600">Done</span><span style="font-size: 13px; color: rgba(7,18,56,0.6)">You · 10 min</span></span><span style="font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; padding-top: 16px">$24</span></li>
+<li style="position: relative; display: flex; gap: 14px; padding-bottom: 18px"><span aria-hidden="true" style="position: absolute; left: 5.5px; top: 16px; bottom: -4px; width: 1px; background: rgba(7,18,56,0.18)"></span><span style="position: relative; width: 12px; height: 12px; margin-top: 4px; border-radius: 50%; box-sizing: border-box; flex-shrink: 0; border: 2px solid #B08A00; background: #FFFFFF;"></span><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: #6B4F00">APR 9, 2026 · 2 DAYS LATE</span><span style="font-size: 15px; font-weight: 600">Done</span><span style="font-size: 13px; color: rgba(7,18,56,0.6)">You · 15 min</span></span><span style="font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; padding-top: 16px">$24</span></li>
+<li style="position: relative; display: flex; gap: 14px; padding-bottom: 0"><span style="position: relative; width: 12px; height: 12px; margin-top: 4px; border-radius: 50%; box-sizing: border-box; flex-shrink: 0; background: #071238;"></span><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">JAN 5, 2026 · ON TIME</span><span style="font-size: 15px; font-weight: 600">Done during a tune-up</span><span style="font-size: 13px; color: rgba(7,18,56,0.6)">Summit Heating &amp; Air</span></span><span style="font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; padding-top: 16px">—</span></li>
+</ol>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">SCHEDULE</h2></div><div style="border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden"><div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; "><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">REPEATS</span><span style="font-size: 14px; font-weight: 600; text-align: right">Every 3 months</span></div><div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-top: 0.5px solid rgba(7,18,56,0.12);"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">NEXT AFTER THIS</span><span style="font-size: 14px; font-weight: 600; text-align: right">{{nextDate}}</span></div><div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-top: 0.5px solid rgba(7,18,56,0.12);"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">REMINDER</span><span style="font-size: 14px; font-weight: 600; text-align: right">1 week before</span></div><div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-top: 0.5px solid rgba(7,18,56,0.12);"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">ADDED</span><span style="font-size: 14px; font-weight: 600; text-align: right">Suggested for the furnace</span></div></div></section>
+
+<button type="button" style="align-self: center; min-height: 44px; padding: 0 16px; font-size: 14px; font-weight: 600; color: #B12347">Delete this task</button>
+</main>
+<div style="margin-top: auto; position: sticky; bottom: 0">
+<nav aria-label="Main tabs" style="height: 84px; box-sizing: border-box; border-top: 0.5px solid rgba(7,18,56,0.12); background: #FFFFFF; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 8px 0 22px; flex-shrink: 0">
+<a href="Tabbed.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l-2 0l9-9l9 9l-2 0"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Home</span>
+</a>
+<a href="DocsSearchLed.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Docs</span>
+</a>
+<a href="Tasks.dc.html" aria-current="page" style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #FF3B62">
+<span style="position: absolute; top: -8px; left: 50%; margin-left: -10px; width: 20px; height: 3px; border-radius: 0 0 3px 3px; background: #FF3B62"></span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12l5 5l10-10"></path><path d="M2 12l5 5m5-5l5-5"></path></svg>
+<span style="font-size: 10px; font-weight: 700">Tasks</span>
+</a>
+<a href="ProjectsMany.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h6v8h-6z"></path><path d="M14 4h6v4h-6z"></path><path d="M4 16h6v4h-6z"></path><path d="M14 12h6v8h-6z"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Projects</span>
+</a>
+<a href="SettingsHub.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37c1 .608 2.296.07 2.572-1.065z"></path><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Settings</span>
+</a>
+</nav>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1880}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const done = !!st.done;
+    return {
+      done, open: !done,
+      markDone: () => this.setState({ done: true }),
+      undo: () => this.setState({ done: false }),
+      histCount: done ? 4 : 3,
+      onTime: done ? 'ON TIME 3 OF 4' : 'ON TIME 2 OF 3',
+      nextDate: done ? 'Jan 4, 2027' : 'Jan 7, 2027'
+    };
+  }
+}
+</script>
+</body>
+</html>

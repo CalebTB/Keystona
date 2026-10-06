@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona TaskMenu</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}select:focus{outline:none}
+input[type=time]::-webkit-calendar-picker-indicator{opacity:0.5}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}select:focus{outline:none}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; position: relative; overflow: hidden">
+<div aria-hidden="true" style="{{bgStyle}}"><dc-import name="Tabbed" hint-size="390px,1260px"></dc-import></div>
+<sc-if value="{{sheet}}" hint-placeholder-val="{{ true }}">
+<button type="button" aria-label="Close" onClick="{{close}}" style="position: absolute; inset: 0; background: rgba(7,18,56,0.32)"></button>
+<div aria-hidden="true" style="position: absolute; left: 16px; right: 16px; top: 112px; padding: 16px; border-radius: 20px; background: #FFFFFF; border: 1.5px solid #FF3B62; box-shadow: 0 18px 50px rgba(7,18,56,0.35); transform: scale(1.02); display: flex; flex-direction: column; gap: 10px; pointer-events: none">
+<div style="display: flex; align-items: center; justify-content: space-between"><span style="width: 40px; height: 40px; border-radius: 12px; border: 1px solid rgba(7,18,56,0.14); box-sizing: border-box; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l-2 0l9-9l9 9l-2 0"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"></path></svg></span><span class="m" style="font-size: 9.5px; font-weight: 700; letter-spacing: 0.6px; padding: 4px 9px; border-radius: 999px; border: 1px solid #FF3B62; color: #B12347">6 DAYS OVERDUE</span></div>
+<span style="font-size: 22px; font-weight: 800; letter-spacing: -0.6px; line-height: 1.15">Clean gutters &amp; downspouts</span>
+<span style="font-size: 14px; line-height: 1.45; color: rgba(7,18,56,0.65)">Clogged gutters overflow onto the fascia and foundation.</span>
+<span class="m" style="font-size: 10px; font-weight: 600; letter-spacing: 0.3px; color: rgba(7,18,56,0.55)">AROUND THE HOUSE · OUTSIDE · {{freqCaps}}</span>
+</div>
+<section role="menu" aria-label="Task options" style="position: absolute; left: 16px; right: 16px; top: 330px; background: #FFFFFF; border-radius: 18px; overflow: hidden; box-shadow: 0 18px 50px rgba(7,18,56,0.3)">
+<button type="button" role="menuitem" onClick="{{skip}}" style="width: 100%; display: flex; align-items: center; gap: 14px; padding: 12px 16px; min-height: 62px; box-sizing: border-box; text-align: left"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0"></path><path d="M12 7v5l3 3"></path></svg><span style="flex: 1; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 16px; font-weight: 600">Skip this time</span><span style="font-size: 13px; color: rgba(7,18,56,0.6)">Comes back in April. Your score won&rsquo;t drop.</span></span></button>
+<div style="border-top: 0.5px solid rgba(7,18,56,0.12)">
+<button type="button" role="menuitem" aria-expanded="{{freqOpen}}" onClick="{{toggleFreq}}" style="width: 100%; display: flex; align-items: center; gap: 14px; padding: 12px 16px; min-height: 62px; box-sizing: border-box; text-align: left"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-12a2 2 0 0 1-2-2v-12z"></path><path d="M16 3v4"></path><path d="M8 3v4"></path><path d="M4 11h16"></path></svg><span style="flex: 1; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 16px; font-weight: 600">Change how often</span><span style="font-size: 13px; color: rgba(7,18,56,0.6)">{{freqSub}}</span></span><span style="{{chev}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6l6-6"></path></svg></span></button>
+<sc-if value="{{freqOpen}}" hint-placeholder-val="{{ false }}"><div role="radiogroup" aria-label="How often" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 0 16px 14px 51px"><sc-for list="{{freqs}}" as="f" hint-placeholder-count="3"><button type="button" role="radio" aria-checked="{{f.on}}" onClick="{{f.pick}}" style="{{f.style}}">{{f.l}}</button></sc-for></div></sc-if>
+</div>
+<a href="TaskDetail.dc.html" role="menuitem" style="display: flex; align-items: center; gap: 14px; padding: 12px 16px; min-height: 52px; box-sizing: border-box; border-top: 0.5px solid rgba(7,18,56,0.12)"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3m0 2a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-10a2 2 0 0 1-2-2z"></path><path d="M9 7l6 0"></path><path d="M9 11l6 0"></path><path d="M9 15l4 0"></path></svg><span style="flex: 1; font-size: 16px; font-weight: 600">Open the task</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.35)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 6l6 6l-6 6"></path></svg></a>
+<button type="button" role="menuitem" onClick="{{stop}}" style="width: 100%; display: flex; align-items: center; gap: 14px; padding: 12px 16px; min-height: 62px; box-sizing: border-box; text-align: left; border-top: 6px solid rgba(7,18,56,0.06)"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#B12347" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"></path><path d="M17 17h-13a4 4 0 0 0 2-3v-3a7 7 0 0 1 1.279-3.716m2.072-1.934c.209-.127.425-.244.649-.35a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3"></path><path d="M9 17v1a3 3 0 0 0 6 0v-1"></path></svg><span style="flex: 1; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 16px; font-weight: 600; color: #B12347">Stop reminding me</span><span style="font-size: 13px; color: rgba(7,18,56,0.6)">For this home. Undo any time in Around the house.</span></span></button>
+</section>
+<span class="m" aria-hidden="true" style="position: absolute; left: 0; right: 0; bottom: 34px; text-align: center; font-size: 10px; font-weight: 600; letter-spacing: 0.8px; color: rgba(255,255,255,0.9)">TAP ANYWHERE TO CLOSE</span>
+</sc-if>
+<sc-if value="{{toast}}" hint-placeholder-val="{{ false }}">
+<div role="status" style="position: absolute; left: 12px; right: 12px; bottom: 104px; display: flex; align-items: center; gap: 12px; padding: 12px 8px 12px 16px; border-radius: 16px; background: #071238; color: #FFFFFF; box-shadow: 0 12px 30px rgba(7,18,56,0.3)">
+<span style="flex: 1; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 14.5px; font-weight: 700">{{toastTitle}}</span><span style="font-size: 12.5px; line-height: 1.35; color: rgba(255,255,255,0.7)">{{toastSub}}</span></span>
+<button type="button" onClick="{{undo}}" style="min-width: 64px; height: 44px; border-radius: 12px; font-size: 15px; font-weight: 700; color: #ECF87F">Undo</button>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const mode = st.mode || 'sheet';
+    const fq = st.fq || 'Twice a year';
+    const F = ['Every 3 months', 'Twice a year', 'Every year'];
+    const next = { 'Every 3 months': 'January', 'Twice a year': 'April', 'Every year': 'October 2027' }[fq];
+    const toasts = {
+      skip: ['Skipped — see you in ' + next, 'Your Home Health score didn’t change.'],
+      stop: ['Stopped gutter reminders', 'Turn it back on in Home profile → Around the house.'],
+      freq: ['Gutters: ' + fq.toLowerCase(), 'Next one is in ' + next + '.']
+    };
+    const open = !!st.open;
+    return {
+      sheet: mode === 'sheet', toast: mode !== 'sheet',
+      bgStyle: 'position: absolute; inset: 0; pointer-events: none; transition: filter .2s; ' + (mode === 'sheet' ? 'filter: blur(6px);' : ''),
+      freqCaps: fq.toUpperCase(),
+      toastTitle: toasts[mode] ? toasts[mode][0] : '', toastSub: toasts[mode] ? toasts[mode][1] : '',
+      close: () => this.setState({ mode: 'sheet', open: false }), undo: () => this.setState({ mode: 'sheet', open: false, fq: 'Twice a year' }),
+      skip: () => this.setState({ mode: 'skip' }), stop: () => this.setState({ mode: 'stop' }),
+      freqOpen: open, toggleFreq: () => this.setState({ open: !open }),
+      chev: 'display: flex; color: rgba(7,18,56,0.4); transition: transform .15s; transform: rotate(' + (open ? 180 : 0) + 'deg);',
+      freqSub: 'Now ' + fq.toLowerCase() + '. Pick what fits your house.',
+      freqs: F.map((l) => ({ l: l.replace('Every ', '').replace('3 months', 'Every 3 mo').replace(/^year$/, 'Yearly'), on: fq === l,
+        pick: () => this.setState({ fq: l, mode: l === 'Twice a year' ? 'sheet' : 'freq', open: false }),
+        style: 'height: 38px; border-radius: 10px; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; ' + (fq === l ? 'background: #071238; color: #FFFFFF;' : 'box-shadow: inset 0 0 0 1px rgba(7,18,56,0.16); color: rgba(7,18,56,0.65);') }))
+    };
+  }
+}
+</script>
+</body>
+</html>

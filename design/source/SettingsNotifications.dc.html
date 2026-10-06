@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona SettingsNotifications</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}select:focus{outline:none}
+input[type=time]::-webkit-calendar-picker-indicator{opacity:0.5}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1210px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; display: flex; flex-direction: column">
+<main style="padding: 12px 16px 24px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<a href="SettingsHub.dc.html" style="display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -6px; font-size: 15px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"></path></svg>Settings</a>
+</div>
+<header style="display: flex; flex-direction: column; gap: 6px; margin-top: -8px">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">SETTINGS</span>
+<h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.9px; line-height: 1.1">Notifications</h1>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{countText}}</span>
+</header>
+
+<!-- What one looks like -->
+<div aria-label="Example notification" style="display: flex; gap: 12px; padding: 12px 14px; border-radius: 18px; border: 1px solid rgba(7,18,56,0.12); box-shadow: 0 6px 18px rgba(7,18,56,0.08)">
+<svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true" style="flex-shrink: 0; border-radius: 9px; border: 1px solid rgba(7,18,56,0.1)"><rect width="40" height="40" fill="#FFFFFF"></rect><path d="M11 8h18l-4 24h-10z" fill="#FF3B62"></path><path d="M16.5 16h7" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"></path></svg>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="display: flex; justify-content: space-between"><span style="font-size: 13px; font-weight: 700">Keystona</span><span style="font-size: 12px; color: rgba(7,18,56,0.45)">{{exWhen}}</span></span><span style="font-size: 14px; font-weight: 600">{{exTitle}}</span><span style="font-size: 13px; color: rgba(7,18,56,0.65)">{{exBody}}</span></span>
+</div>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">EXAMPLE · WHAT A REMINDER LOOKS LIKE ON YOUR LOCK SCREEN</span>
+
+<section style="display: flex; flex-direction: column; gap: 8px; margin-top: -6px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">TASKS</h2></div><ul style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden">
+<li style=""><div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; box-sizing: border-box">
+<span style="width: 32px; height: 32px; border-radius: 9px; border: 1px solid rgba(7,18,56,0.12); box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-12a2 2 0 0 1-2-2v-12z"></path><path d="M16 3v4"></path><path d="M8 3v4"></path><path d="M4 11h16"></path></svg></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">A week before</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">SO YOU CAN BUY PARTS OR BOOK A PRO</span></span><button type="button" role="switch" aria-checked="{{task}}" aria-label="A week before" onClick="{{flip_task}}" style="{{taskTrack}}"><span style="{{taskKnob}}"></span></button>
+</div></li><li style="border-top: 0.5px solid rgba(7,18,56,0.12);"><div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; box-sizing: border-box">
+<span style="width: 32px; height: 32px; border-radius: 9px; border: 1px solid rgba(7,18,56,0.12); box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2-3v-3a7 7 0 0 1 4-6"></path><path d="M9 17v1a3 3 0 0 0 6 0v-1"></path></svg></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">The day before</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">A NUDGE THE NIGHT BEFORE</span></span><button type="button" role="switch" aria-checked="{{task1}}" aria-label="The day before" onClick="{{flip_task1}}" style="{{task1Track}}"><span style="{{task1Knob}}"></span></button>
+</div></li>
+</ul></section>
+
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">YOUR HOME</h2></div><ul style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden">
+<li style=""><div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; box-sizing: border-box">
+<span style="width: 32px; height: 32px; border-radius: 9px; border: 1px solid rgba(7,18,56,0.12); box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1-8.5 15a12 12 0 0 1-8.5-15a12 12 0 0 0 8.5-3"></path></svg></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">Warranties ending</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">BOOK REPAIRS WHILE THEY’RE COVERED</span></span><button type="button" role="switch" aria-checked="{{warr}}" aria-label="Warranties ending" onClick="{{flip_warr}}" style="{{warrTrack}}"><span style="{{warrKnob}}"></span></button>
+</div><sc-if value="{{warr}}" hint-placeholder-val="{{ true }}"><div style="display: flex; align-items: center; gap: 8px; padding: 0 14px 12px 58px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">REMIND ME</span><span style="display: flex; align-items: center; height: 32px; padding: 0 10px; border-radius: 9px; border: 1px solid rgba(7,18,56,0.18)"><select value="{{warrLead}}" onChange="{{on_warrLead}}" style="font-size: 13.5px; font-weight: 600; padding-right: 4px"><option value="90">90 days before</option><option value="60">60 days before</option><option value="30">30 days before</option></select></span></div></sc-if></li><li style="border-top: 0.5px solid rgba(7,18,56,0.12);"><div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; box-sizing: border-box">
+<span style="width: 32px; height: 32px; border-radius: 9px; border: 1px solid rgba(7,18,56,0.12); box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path><path d="M9 9l1 0"></path><path d="M9 13l6 0"></path><path d="M9 17l6 0"></path></svg></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">Insurance renewals</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">TIME TO SHOP RATES</span></span><button type="button" role="switch" aria-checked="{{ins}}" aria-label="Insurance renewals" onClick="{{flip_ins}}" style="{{insTrack}}"><span style="{{insKnob}}"></span></button>
+</div><sc-if value="{{ins}}" hint-placeholder-val="{{ true }}"><div style="display: flex; align-items: center; gap: 8px; padding: 0 14px 12px 58px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">REMIND ME</span><span style="display: flex; align-items: center; height: 32px; padding: 0 10px; border-radius: 9px; border: 1px solid rgba(7,18,56,0.18)"><select value="{{insLead}}" onChange="{{on_insLead}}" style="font-size: 13.5px; font-weight: 600; padding-right: 4px"><option value="60">60 days before</option><option value="30">30 days before</option><option value="14">14 days before</option></select></span></div></sc-if></li><li style="border-top: 0.5px solid rgba(7,18,56,0.12);"><div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; box-sizing: border-box; opacity: 0.6">
+<span style="width: 32px; height: 32px; border-radius: 9px; border: 1px solid rgba(7,18,56,0.12); box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"></path><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636-2.87l-8.106-13.536a1.914 1.914 0 0 0-3.274 0z"></path><path d="M12 16h.01"></path></svg></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">Recalls on your appliances</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">WE WATCH YOUR MODEL NUMBERS</span></span><span class="m" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px; font-size: 9px; font-weight: 700; letter-spacing: 0.8px; white-space: nowrap; border: 1px solid #FF3B62; color: #B12347;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-10a2 2 0 0 1-2-2v-6z"></path><path d="M8 11v-4a4 4 0 1 1 8 0v4"></path></svg>PREMIUM</span>
+</div></li><li style="border-top: 0.5px solid rgba(7,18,56,0.12);"><div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; box-sizing: border-box; opacity: 0.6">
+<span style="width: 32px; height: 32px; border-radius: 9px; border: 1px solid rgba(7,18,56,0.12); box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.657 18c-2.572 0-4.657-2.007-4.657-4.483c0-2.475 2.085-4.482 4.657-4.482c.393-1.762 1.794-3.2 3.675-3.773c1.88-.572 3.956-.193 5.444 1c1.488 1.19 2.162 3.007 1.77 4.769h.99c1.913 0 3.464 1.56 3.464 3.486c0 1.927-1.551 3.487-3.465 3.487h-11.878"></path></svg></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">Weather heads-ups</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">FREEZE WARNINGS · STORMS · HEAT</span></span><span class="m" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px; font-size: 9px; font-weight: 700; letter-spacing: 0.8px; white-space: nowrap; border: 1px solid #FF3B62; color: #B12347;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-10a2 2 0 0 1-2-2v-6z"></path><path d="M8 11v-4a4 4 0 1 1 8 0v4"></path></svg>PREMIUM</span>
+</div></li>
+</ul></section>
+
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">QUIET HOURS</h2></div>
+<div style="border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden">
+<div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; box-sizing: border-box"><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">Hold reminders overnight</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{quietMeta}}</span></span><button type="button" role="switch" aria-checked="{{quiet}}" aria-label="Hold reminders overnight" onClick="{{flip_quiet}}" style="{{quietTrack}}"><span style="{{quietKnob}}"></span></button></div>
+<sc-if value="{{quiet}}" hint-placeholder-val="{{ true }}">
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 14px 14px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">FROM</span></span>
+<input type="time" value="{{qFrom}}" onChange="{{onFrom}}" style="width: 100%; height: 46px; padding: 0 12px; font-size: 15px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">UNTIL</span></span>
+<input type="time" value="{{qTo}}" onChange="{{onTo}}" style="width: 100%; height: 46px; padding: 0 12px; font-size: 15px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box">
+</div>
+</div>
+</sc-if>
+</div>
+</section>
+<p style="margin: 0; display: flex; gap: 8px; font-size: 13px; line-height: 1.45; color: rgba(7,18,56,0.6)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B62" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"></path><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636-2.87l-8.106-13.536a1.914 1.914 0 0 0-3.274 0z"></path><path d="M12 16h.01"></path></svg>Emergency alerts always come through, even during quiet hours.</p>
+</main>
+<div style="margin-top: auto; position: sticky; bottom: 0">
+<nav aria-label="Main tabs" style="height: 84px; box-sizing: border-box; border-top: 0.5px solid rgba(7,18,56,0.12); background: #FFFFFF; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 8px 0 22px; flex-shrink: 0">
+<a href="Tabbed.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l-2 0l9-9l9 9l-2 0"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Home</span>
+</a>
+<a href="DocsSearchLed.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Docs</span>
+</a>
+<a href="Tasks.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12l5 5l10-10"></path><path d="M2 12l5 5m5-5l5-5"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Tasks</span>
+</a>
+<a href="ProjectsMany.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h6v8h-6z"></path><path d="M14 4h6v4h-6z"></path><path d="M4 16h6v4h-6z"></path><path d="M14 12h6v8h-6z"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Projects</span>
+</a>
+<a href="SettingsHub.dc.html" aria-current="page" style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #FF3B62">
+<span style="position: absolute; top: -8px; left: 50%; margin-left: -10px; width: 20px; height: 3px; border-radius: 0 0 3px 3px; background: #FF3B62"></span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37c1 .608 2.296.07 2.572-1.065z"></path><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"></path></svg>
+<span style="font-size: 10px; font-weight: 700">Settings</span>
+</a>
+</nav>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1210}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const sw = (on) => 'width: 51px; height: 31px; border-radius: 999px; position: relative; flex-shrink: 0; transition: background .15s; background: ' + (on ? '#2540D8' : 'rgba(7,18,56,0.16)') + ';';
+    const kn = (on) => 'position: absolute; top: 2px; left: ' + (on ? 22 : 2) + 'px; width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 4px rgba(7,18,56,0.25); transition: left .15s;';
+    const tog = (out, key, def) => { const on = st[key] !== undefined ? st[key] : def; out[key] = on; out['flip_' + key] = () => this.setState({ [key]: !on }); out[key + 'Track'] = sw(on); out[key + 'Knob'] = kn(on); return on; };
+
+    const out = {};
+    const a = tog(out, 'task', true), b = tog(out, 'task1', true), c = tog(out, 'warr', true), d = tog(out, 'ins', true);
+    const q = tog(out, 'quiet', true);
+    out.warrLead = st.warrLead || '60'; out.on_warrLead = (e) => this.setState({ warrLead: e.target.value });
+    out.insLead = st.insLead || '30'; out.on_insLead = (e) => this.setState({ insLead: e.target.value });
+    const on = [a, b, c, d].filter(Boolean).length;
+    out.countText = on + ' OF 6 ON · 2 NEED PREMIUM';
+    out.qFrom = st.qFrom || '22:00'; out.onFrom = (e) => this.setState({ qFrom: e.target.value });
+    out.qTo = st.qTo || '07:00'; out.onTo = (e) => this.setState({ qTo: e.target.value });
+    const fmt = (t) => { const [h, m] = t.split(':').map(Number); return ((h % 12) || 12) + (m ? ':' + String(m).padStart(2, '0') : '') + (h < 12 ? ' AM' : ' PM'); };
+    out.quietMeta = q ? 'NOTHING FROM ' + fmt(out.qFrom) + ' TO ' + fmt(out.qTo) : 'OFF · REMINDERS ARRIVE ANY TIME';
+    out.exWhen = a ? 'Sep 30' : 'Oct 6';
+    out.exTitle = a ? 'HVAC air filter — due in a week' : (b ? 'HVAC air filter — due tomorrow' : 'Warranty ends soon');
+    out.exBody = a ? 'Filter size 16×25×1. Spares are by the water heater.' : (b ? 'Takes 15 minutes. Spares are by the water heater.' : 'Dishwasher coverage ends Nov 18.');
+    return out;
+  }
+}
+</script>
+</body>
+</html>

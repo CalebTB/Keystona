@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona SettingsInvite</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}select:focus{outline:none}
+input[type=time]::-webkit-calendar-picker-indicator{opacity:0.5}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; position: relative; overflow: hidden">
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 390px; height: 870px; pointer-events: none"><dc-import name="SettingsHousehold" hint-size="390px,870px"></dc-import></div>
+<a href="SettingsHousehold.dc.html" aria-label="Close" style="position: absolute; inset: 0; background: rgba(7,18,56,0.45)"></a>
+<section role="dialog" aria-label="Invite someone" style="position: absolute; left: 0; right: 0; bottom: 0; height: 560px; background: #FFFFFF; border-radius: 22px 22px 0 0; display: flex; flex-direction: column">
+<span aria-hidden="true" style="align-self: center; margin-top: 8px; width: 36px; height: 4px; border-radius: 3px; background: rgba(7,18,56,0.2)"></span>
+<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 6px 16px 10px; border-bottom: 0.5px solid rgba(7,18,56,0.12)">
+<a href="SettingsHousehold.dc.html" style="justify-self: start; display: flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 500; color: rgba(7,18,56,0.6)">Cancel</a>
+<h1 style="margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -0.3px">Invite someone.</h1>
+<span></span>
+</div>
+<form onSubmit="{{send}}" style="flex: 1; padding: 18px 16px 24px; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">THEIR EMAIL</span><span aria-hidden="true" style="color: #FF3B62; font-weight: 700">*</span></span>
+<input type="email" value="{{email}}" onChange="{{onEmail}}" aria-required="true" placeholder="name@email.com" style="{{emailBox}}">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">{{emailHelp}}</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">WHAT THEY CAN DO</span>
+<div role="radiogroup" style="display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{roles}}" as="r" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{r.on}}" onClick="{{r.pick}}" style="{{r.box}}"><span style="{{r.radio}}"><span style="{{r.dot}}"></span></span><span style="flex: 1; display: flex; flex-direction: column; gap: 2px; text-align: left"><span style="font-size: 15px; font-weight: 700">{{r.name}}</span><span style="font-size: 13px; color: rgba(7,18,56,0.6)">{{r.desc}}</span></span></button></sc-for>
+</div>
+</div>
+<sc-if value="{{sent}}" hint-placeholder-val="{{ false }}"><div role="status" style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1.5px solid #4A6604; border-radius: 14px"><span style="width: 24px; height: 24px; border-radius: 50%; background: #ECF87F; color: #4A6604; display: flex; align-items: center; justify-content: center"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10-10"></path></svg></span><span style="font-size: 14px; font-weight: 600">{{sentText}}</span></div></sc-if>
+<button type="submit" style="{{sendBtn}}">Send invite</button>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">THE LINK WORKS FOR 7 DAYS · 2 SPOTS LEFT</span>
+</form>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const email = st.email || '';
+    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const role = st.role || 'editor';
+    const R = [['editor', 'Editor', 'Can add docs, photos and notes, and mark tasks done.'], ['viewer', 'Viewer', 'Can see everything, change nothing. Good for a parent or a house-sitter.']];
+    return {
+      email, onEmail: (e) => this.setState({ email: e.target.value, sent: false }),
+      emailBox: 'width: 100%; height: 50px; padding: 0 14px; font-size: 16px; border-radius: 12px; box-sizing: border-box; border: ' + (email && !ok ? '1.5px solid #FF3B62' : '1px solid rgba(7,18,56,0.18)') + ';',
+      emailHelp: email && !ok ? 'THAT DOESN’T LOOK LIKE AN EMAIL YET' : 'THEY’LL GET A LINK TO JOIN YOUR HOME',
+      roles: R.map(([k, name, desc]) => ({ name, desc, on: role === k, pick: () => this.setState({ role: k }),
+        box: 'width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; box-sizing: border-box; ' + (role === k ? 'box-shadow: inset 0 0 0 2px #071238;' : 'box-shadow: inset 0 0 0 1px rgba(7,18,56,0.18);'),
+        radio: 'width: 22px; height: 22px; border-radius: 50%; box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: center; ' + (role === k ? 'border: 2px solid #071238;' : 'border: 1.5px solid rgba(7,18,56,0.3);'),
+        dot: role === k ? 'width: 10px; height: 10px; border-radius: 50%; background: #071238;' : 'display: none;' })),
+      sent: !!st.sent, sentText: 'Invite sent to ' + email,
+      send: (e) => { e.preventDefault(); if (ok) this.setState({ sent: true }); },
+      sendBtn: 'height: 52px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600; ' + (ok ? 'background: #2540D8; color: #FFFFFF;' : 'background: rgba(7,18,56,0.08); color: rgba(7,18,56,0.35);')
+    };
+  }
+}
+</script>
+</body>
+</html>

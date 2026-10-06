@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona DocReading</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}select:focus{outline:none}
+input[type=time]::-webkit-calendar-picker-indicator{opacity:0.5}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+textarea{font:inherit;color:#071238;resize:none}textarea:focus{outline:none}textarea::placeholder{color:rgba(7,18,56,0.35)}input::placeholder{color:rgba(7,18,56,0.35)}.sb>*{flex-shrink:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; position: relative; overflow: hidden">
+<div aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none"><dc-import name="DocCamera" hint-size="390px,844px"></dc-import></div>
+<div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(5,9,28,0.55)"></div>
+<section role="dialog" aria-label="Reading your document" style="position: absolute; left: 16px; right: 16px; top: 150px; background: #FFFFFF; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.4)">
+<div style="display: flex; align-items: center; justify-content: space-between"><span class="m" style="font-size: 10px; font-weight: 700; letter-spacing: 1.2px; color: #B12347">★ SMART SCAN · 2 PAGES</span><span class="m" style="font-size: 10px; font-weight: 700; color: #2540D8">{{pct}}%</span></div>
+<span style="font-size: 22px; font-weight: 800; letter-spacing: -0.6px; line-height: 1.15">{{title}}</span>
+<div role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{pct}}" style="height: 6px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(7,18,56,0.15); overflow: hidden"><span style="{{bar}}"></span></div>
+<ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px">
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="4"><li style="display: flex; align-items: flex-start; gap: 12px"><span style="{{s.dot}}"><sc-if value="{{s.done}}" hint-placeholder-val="{{ true }}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10-10"></path></svg></sc-if></span><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="{{s.tStyle}}">{{s.t}}</span><sc-if value="{{s.hasFound}}" hint-placeholder-val="{{ false }}"><span style="font-size: 13.5px; font-weight: 600; color: #2540D8">{{s.found}}</span></sc-if></span></li></sc-for>
+</ol>
+<sc-if value="{{doneAll}}" hint-placeholder-val="{{ false }}"><a href="AddDocument.dc.html" style="height: 50px; border-radius: 999px; background: #2540D8; color: #FFFFFF; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center">Check what we found</a></sc-if>
+<sc-if value="{{notDone}}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{next}}" style="height: 50px; border-radius: 999px; border: 1.5px solid rgba(7,18,56,0.18); font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; color: rgba(7,18,56,0.7)">Keep going in the background</button></sc-if>
+<span class="m" style="text-align: center; font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">USUALLY UNDER 10 SECONDS · NOTHING IS SAVED UNTIL YOU CHECK IT</span>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const k = st.k !== undefined ? st.k : 2;
+    const S = [['Reading the text', 'Northline · Limited Warranty Certificate'], ['Working out what it is', 'Warranty'], ['Finding the dates', 'Expires Mar 15, 2031'], ['Matching it to your home', 'Your furnace — serial 2103A47719']];
+    return {
+      title: k >= 4 ? 'Found 4 details' : 'Reading your document…', pct: Math.min(100, Math.round(k / 4 * 100 + (k < 4 ? 12 : 0))),
+      bar: 'display: block; height: 100%; border-radius: 3px; background: #2540D8; transition: width .3s; width: ' + Math.min(100, k / 4 * 100 + (k < 4 ? 12 : 0)) + '%;',
+      doneAll: k >= 4, notDone: k < 4, next: () => this.setState({ k: Math.min(4, k + 1) }),
+      steps: S.map(([t, f], i) => { const done = i < k, active = i === k; return { t, found: f, hasFound: done, done,
+        dot: 'width: 22px; height: 22px; border-radius: 50%; box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: center; ' + (done ? 'background: #ECF87F; color: #4A6604; border: 1.5px solid #4A6604;' : (active ? 'border: 2.5px solid #2540D8; border-right-color: transparent;' : 'border: 1.5px solid rgba(7,18,56,0.2);')),
+        tStyle: 'font-size: 15px; font-weight: ' + (active ? 700 : 600) + '; color: ' + (done || active ? '#071238' : 'rgba(7,18,56,0.4)') + ';' }; })
+    };
+  }
+}
+</script>
+</body>
+</html>

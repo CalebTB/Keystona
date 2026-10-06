@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona add appliance</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,select{font:inherit;color:#071238}
+input::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,select:focus{outline:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0}
+input[type=range]{accent-color:#2540D8}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1560px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; display: flex; flex-direction: column">
+<form onSubmit="{{noSubmit}}" style="padding: 12px 16px 34px; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<a href="ScanFlow.dc.html" style="display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -6px; font-size: 15px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"></path></svg>Scan</a>
+</div>
+<header style="display: flex; flex-direction: column; gap: 6px; margin-top: -14px">
+<span class="m" style="display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)"><span style="width: 6px; height: 6px; border-radius: 50%; background: #2540D8"></span>HOME PROFILE · NEW</span>
+<h1 style="margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.9px; line-height: 1.1">Add an appliance.</h1>
+</header>
+<!-- what the scan filled in -->
+<div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1.5px solid #4A6604; border-radius: 16px">
+<span style="width: 26px; height: 26px; border-radius: 50%; background: #ECF87F; color: #4A6604; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10-10"></path></svg></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 600">We read 6 fields from the label</span><span style="font-size: 13px; color: rgba(7,18,56,0.6)">The ones edged in <span style="color: #2540D8; font-weight: 600">blue</span> came from it — check them, then save.</span></span>
+<a href="ScanFlow.dc.html" style="font-size: 13px; font-weight: 600; color: #B12347; min-height: 44px; display: flex; align-items: center; flex-shrink: 0">Rescan</a>
+</div>
+
+<section style="display: flex; flex-direction: column; gap: 14px">
+<label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 6px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">CATEGORY</span><span aria-hidden="true" style="color: #FF3B62; font-weight: 700; margin-left: -3px">*</span><!-- cat --></span>
+<span style="{{cat_box}}"><select value="{{v_cat}}" onChange="{{on_cat}}" style="flex: 1; min-width: 0; height: 100%; font-size: 16px; padding-right: 20px"><option value="laundry">Laundry</option><option value="kitchen">Kitchen</option><option value="climate">Climate</option><option value="cleaning">Cleaning</option><option value="outdoor">Outdoor</option><option value="bathroom">Bathroom</option></select><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; pointer-events: none"><path d="M6 9l6 6l6-6"></path></svg></span>
+</label>
+<label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 6px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">NAME</span><span aria-hidden="true" style="color: #FF3B62; font-weight: 700; margin-left: -3px">*</span><!-- name --></span>
+<span style="{{name_box}}"><input type="text" value="{{v_name}}" onChange="{{on_name}}" placeholder="Washer" aria-required="true" style="flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font-size: 16px"></span>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.45)">YOUR NAME FOR IT — E.G. "MAIN FRIDGE"</span></label>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h2 class="m" style="margin: 0; display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: #071238"><span style="width: 6px; height: 6px; border-radius: 50%; background: #2540D8"></span>IDENTIFICATION</h2>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">OPTIONAL</span>
+</div>
+<div style="display: flex; gap: 10px"><label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 6px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">BRAND</span><!-- brand --></span>
+<span style="{{brand_box}}"><input type="text" value="{{v_brand}}" onChange="{{on_brand}}" placeholder="Brand"  style="flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font-size: 16px"></span>
+</label><label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 6px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">MODEL</span><!-- model --></span>
+<span style="{{model_box}}"><input type="text" value="{{v_model}}" onChange="{{on_model}}" placeholder="Model"  style="flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font-size: 16px; font-variant-numeric: tabular-nums"></span>
+</label></div>
+<label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 6px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">SERIAL NUMBER</span><!-- serial --></span>
+<span style="{{serial_box}}"><input type="text" value="{{v_serial}}" onChange="{{on_serial}}" placeholder="Serial"  style="flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font-size: 16px; font-variant-numeric: tabular-nums"><button type="button" aria-label="Scan again" style="width: 36px; height: 36px; margin-right: -8px; display: flex; align-items: center; justify-content: center; color: #FF3B62"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7v-1a2 2 0 0 1 2-2h2"></path><path d="M4 17v1a2 2 0 0 0 2 2h2"></path><path d="M16 4h2a2 2 0 0 1 2 2v1"></path><path d="M16 20h2a2 2 0 0 0 2-2v-1"></path><path d="M5 12h14"></path></svg></button></span>
+</label>
+<label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 6px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">COLOR</span><!-- color --></span>
+<span style="{{color_box}}"><input type="text" value="{{v_color}}" onChange="{{on_color}}" placeholder="White"  style="flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font-size: 16px"></span>
+</label>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h2 class="m" style="margin: 0; display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: #071238"><span style="width: 6px; height: 6px; border-radius: 50%; background: #2540D8"></span>PURCHASE</h2>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">OPTIONAL</span>
+</div>
+<div style="display: flex; gap: 10px"><label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 6px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">PRICE</span><!-- price --></span>
+<span style="{{price_box}}"><span style="font-size: 16px; color: rgba(7,18,56,0.5)">$</span><input type="text" value="{{v_price}}" onChange="{{on_price}}" placeholder="0"  style="flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font-size: 16px; font-variant-numeric: tabular-nums"></span>
+</label><label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 6px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">RETAILER</span><!-- retailer --></span>
+<span style="{{retailer_box}}"><input type="text" value="{{v_retailer}}" onChange="{{on_retailer}}" placeholder="Where from"  style="flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font-size: 16px"></span>
+</label></div>
+<label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 6px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">PURCHASE DATE</span><!-- pdate --></span>
+<span style="{{pdate_box}}"><input type="text" value="{{v_pdate}}" onChange="{{on_pdate}}" placeholder="MM / DD / YYYY"  style="flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font-size: 16px; font-variant-numeric: tabular-nums"></span>
+</label>
+<div style="display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 10px 14px; border: 1px solid rgba(7,18,56,0.12); border-radius: 14px; box-sizing: border-box">
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; font-weight: 600">It has a warranty</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.45)">WE'LL TRACK THE EXPIRATION DATE</span></span>
+<button type="button" role="switch" aria-checked="{{warranty}}" aria-label="It has a warranty" onClick="{{flip_warranty}}" style="{{warrantyTrack}}"><span style="{{warrantyKnob}}"></span></button>
+</div>
+<sc-if value="{{warranty}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 14px; padding-left: 14px; border-left: 2px solid rgba(37,64,216,0.35)">
+<div style="display: flex; gap: 10px"><label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 6px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">PROVIDER</span><!-- wprov --></span>
+<span style="{{wprov_box}}"><input type="text" value="{{v_wprov}}" onChange="{{on_wprov}}" placeholder="Manufacturer"  style="flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font-size: 16px"></span>
+</label><label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 6px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">EXPIRES</span><!-- wexp --></span>
+<span style="{{wexp_box}}"><input type="text" value="{{v_wexp}}" onChange="{{on_wexp}}" placeholder="MM / YYYY"  style="flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font-size: 16px; font-variant-numeric: tabular-nums"></span>
+</label></div>
+<a href="#" style="display: flex; align-items: center; gap: 10px; min-height: 50px; padding: 0 14px; border: 1.5px dashed rgba(7,18,56,0.22); border-radius: 12px; font-size: 14px; font-weight: 600; color: rgba(7,18,56,0.7)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path></svg>Link the warranty from Docs</a>
+</div>
+</sc-if>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 14px">
+<button type="button" onClick="{{flip_specs}}" aria-expanded="{{specs}}" style="display: flex; align-items: center; justify-content: space-between; min-height: 44px; margin: -12px 0">
+<h2 class="m" style="margin: 0; display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: #071238"><span style="width: 6px; height: 6px; border-radius: 50%; background: #2540D8"></span>SPECIFICATIONS</h2>
+<span style="display: flex; align-items: center; gap: 8px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">{{specsSummary}}</span><span style="{{specsChev}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6l6-6"></path></svg></span></span>
+</button>
+<sc-if value="{{specs}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; gap: 10px"><label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 6px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">CAPACITY</span><!-- cap --></span>
+<span style="{{cap_box}}"><input type="text" value="{{v_cap}}" onChange="{{on_cap}}" placeholder="4.5"  style="flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font-size: 16px; font-variant-numeric: tabular-nums"><span style="font-size: 14px; color: rgba(7,18,56,0.5); flex-shrink: 0">cu ft</span></span>
+</label><label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 6px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">TYPE</span><!-- config --></span>
+<span style="{{config_box}}"><select value="{{v_config}}" onChange="{{on_config}}" style="flex: 1; min-width: 0; height: 100%; font-size: 16px; padding-right: 20px"><option value="front">Front-load</option><option value="top">Top-load</option><option value="stack">Stackable</option></select><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; pointer-events: none"><path d="M6 9l6 6l6-6"></path></svg></span>
+</label></div>
+<div style="display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 10px 14px; border: 1px solid rgba(7,18,56,0.12); border-radius: 14px; box-sizing: border-box">
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; font-weight: 600">ENERGY STAR certified</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.45)">READ FROM THE LABEL</span></span>
+<button type="button" role="switch" aria-checked="{{energy}}" aria-label="ENERGY STAR certified" onClick="{{flip_energy}}" style="{{energyTrack}}"><span style="{{energyKnob}}"></span></button>
+</div>
+</sc-if>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h2 class="m" style="margin: 0; display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: #071238"><span style="width: 6px; height: 6px; border-radius: 50%; background: #2540D8"></span>PHOTOS</h2>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">OPTIONAL</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px"><div style="position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; border: 1px solid rgba(37,64,216,0.25); background-image: linear-gradient(rgba(37,64,216,0.11) 1px, transparent 1px), linear-gradient(90deg, rgba(37,64,216,0.11) 1px, transparent 1px); background-size: 10px 10px; background-position: -1px -1px"><span class="m" style="position: absolute; left: 5px; bottom: 5px; padding: 2px 6px; border-radius: 999px; background: #FFFFFF; border: 1px solid rgba(7,18,56,0.12); font-size: 8px; font-weight: 700; letter-spacing: 0.6px; color: rgba(7,18,56,0.6)">LABEL</span></div><button type="button" aria-label="Add a photo" style="aspect-ratio: 1; border-radius: 12px; border: 1.5px dashed rgba(7,18,56,0.22); display: flex; align-items: center; justify-content: center; color: rgba(7,18,56,0.45)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></button><button type="button" aria-label="Add a photo" style="aspect-ratio: 1; border-radius: 12px; border: 1.5px dashed rgba(7,18,56,0.22); display: flex; align-items: center; justify-content: center; color: rgba(7,18,56,0.45)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></button><button type="button" aria-label="Add a photo" style="aspect-ratio: 1; border-radius: 12px; border: 1.5px dashed rgba(7,18,56,0.22); display: flex; align-items: center; justify-content: center; color: rgba(7,18,56,0.45)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></button></div><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.45)">FREE PLAN · 4 PHOTOS · THE LABEL PHOTO IS SAVED FOR YOU</span>
+</section>
+
+<div style="display: flex; gap: 10px; padding-top: 4px">
+<a href="Tabbed.dc.html" style="height: 52px; padding: 0 22px; border-radius: 999px; border: 1.5px solid rgba(7,18,56,0.2); box-sizing: border-box; font-size: 16px; font-weight: 600; display: flex; align-items: center">Cancel</a>
+<sc-if value="{{canSave}}" hint-placeholder-val="{{ true }}"><a href="ApplianceDetail.dc.html" style="flex: 1; height: 52px; border-radius: 999px; background: #2540D8; color: #FFFFFF; font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center">Save appliance</a></sc-if>
+<sc-if value="{{cantSave}}" hint-placeholder-val="{{ false }}"><button type="button" disabled aria-disabled="true" style="flex: 1; height: 52px; border-radius: 999px; background: rgba(7,18,56,0.08); color: rgba(7,18,56,0.35); font-size: 16px; font-weight: 600; text-align: center; cursor: default">Save appliance</button></sc-if>
+</div>
+<span class="m" style="text-align: center; margin-top: -14px; font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.45)">REQUIRED <span style="color: #FF3B62">*</span> · EVERYTHING ELSE CAN WAIT</span>
+</form>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1560}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const D = {"cat": "laundry", "name": "Washer", "brand": "Halden", "model": "HW45-FL2", "serial": "HL3390218K", "color": "", "price": "", "retailer": "", "pdate": "", "wprov": "", "wexp": "", "cap": "4.5", "config": "front"};
+    const SCAN = ["brand", "model", "serial", "cap", "config"];
+    const val = Object.assign({}, D, st.v || {});
+    const T = Object.assign({"warranty": false, "specs": false, "energy": true}, st.t || {});
+    const out = { noSubmit: (e) => e.preventDefault() };
+    Object.keys(D).forEach(k => {
+      out['v_' + k] = val[k];
+      out['on_' + k] = (e) => this.setState({ v: Object.assign({}, val, { [k]: e.target.value }) });
+      // the "from scan" tag disappears once you change the value yourself
+      const scanned = SCAN.indexOf(k) !== -1 && val[k] === D[k] && !!D[k];
+      out[k + '_scan'] = scanned;
+      out[k + '_box'] = 'position: relative; display: flex; align-items: center; gap: 8px; height: 50px; padding: 0 14px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box; transition: box-shadow .2s;' + (scanned ? ' box-shadow: inset 3px 0 0 #2540D8;' : '');
+    });
+    Object.keys(T).forEach(k => {
+      const on = !!T[k];
+      out[k] = on;
+      out['flip_' + k] = () => this.setState({ t: Object.assign({}, T, { [k]: !on }) });
+      out[k + 'Track'] = 'width: 51px; height: 31px; border-radius: 999px; padding: 2px; box-sizing: border-box; flex-shrink: 0; display: flex; transition: background .2s; justify-content: ' + (on ? 'flex-end' : 'flex-start') + '; background: ' + (on ? '#2540D8' : 'rgba(7,18,56,0.16)') + ';';
+      out[k + 'Knob'] = 'width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 1px 3px rgba(7,18,56,0.25);';
+    });
+    const ok = ["name"].every(k => String(val[k] || '').trim());
+    out.canSave = ok; out.cantSave = !ok;
+
+    out.specsSummary = T.specs ? 'HIDE' : '3 SCANNED';
+    out.specsChev = 'display: flex; color: rgba(7,18,56,0.45); transition: transform .15s; transform: rotate(' + (T.specs ? 180 : 0) + 'deg);';
+    return out;
+  }
+}
+</script>
+</body>
+</html>

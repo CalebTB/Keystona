@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona home day one plain</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; position: relative; overflow: hidden">
+
+<div style="padding: 28px 16px 0; display: flex; flex-direction: column; gap: 20px">
+<header style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div class="m" style="font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">SUN · OCT 4</div>
+<h1 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.7px; line-height: 1.05">Welcome, Caleb.</h1>
+<p class="m" style="margin: 0; font-size: 11.5px; font-weight: 500; color: rgba(7,18,56,0.55)">1428 Elm Hollow</p>
+</div>
+</header>
+<!-- Score card, waiting for data -->
+<div style="display: flex; align-items: center; gap: 14px; padding: 16px; border: 1.5px dashed rgba(7,18,56,0.2); border-radius: 22px">
+<svg width="64" height="64" viewBox="0 0 104 104" aria-hidden="true" style="flex-shrink: 0"><circle cx="52" cy="52" r="44" fill="none" stroke="rgba(7,18,56,0.12)" stroke-width="9"></circle><circle cx="52" cy="52" r="31" fill="none" stroke="rgba(7,18,56,0.09)" stroke-width="9"></circle><circle cx="52" cy="52" r="18" fill="none" stroke="rgba(7,18,56,0.06)" stroke-width="9"></circle></svg>
+<span style="display: flex; flex-direction: column; gap: 4px">
+<span class="m" style="font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">HOME HEALTH</span>
+<span style="font-family: ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif; font-size: 34px; font-weight: 800; line-height: 1; color: rgba(7,18,56,0.25)">—</span>
+<span style="font-size: 13px; color: rgba(7,18,56,0.6)">Add your systems to get your score</span>
+</span>
+</div>
+</div>
+
+<!-- Foreground: the three things that make it real -->
+<section aria-label="Set up your home" style="padding: 22px 16px 18px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">GET SET UP</span>
+<h2 style="margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.15">{{title}}</h2>
+<p style="margin: 0; font-size: 13.5px; line-height: 1.5; color: rgba(7,18,56,0.6)">{{sub}}</p>
+</div>
+
+<div style="display: flex; align-items: center; gap: 10px">
+<div aria-hidden="true" style="flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px">
+<sc-for list="{{segs}}" as="g" hint-placeholder-count="3"><span style="{{g.s}}"></span></sc-for>
+</div>
+<span class="m" style="font-size: 10px; font-weight: 600; letter-spacing: 0.6px; color: rgba(7,18,56,0.55); flex-shrink: 0">{{count}}</span>
+</div>
+
+<ul style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden">
+<sc-for list="{{steps}}" as="t" hint-placeholder-count="3">
+<li style="{{t.sep}}">
+<div style="display: flex; align-items: center; gap: 6px; padding: 8px 14px 8px 4px; min-height: 64px; box-sizing: border-box">
+<button aria-label="{{t.label}}" aria-pressed="{{t.done}}" onClick="{{t.toggle}}" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<span style="{{t.circle}}"><sc-if value="{{t.done}}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10-10"></path></svg></sc-if></span>
+</button>
+<a href="#" style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px">
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="{{t.titleStyle}}">{{t.name}}</span>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{t.meta}}</span>
+</span>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.35)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 6l6 6l-6 6"></path></svg>
+</a>
+</div>
+</li>
+</sc-for>
+</ul>
+
+<sc-if value="{{notDone}}" hint-placeholder-val="{{ true }}">
+<a href="#" style="height: 50px; border-radius: 999px; background: #2540D8; color: #FFFFFF; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center">{{cta}}</a>
+</sc-if>
+<sc-if value="{{allDone}}" hint-placeholder-val="{{ false }}">
+<a href="Tabbed.dc.html" style="height: 50px; border-radius: 999px; border: 1.5px solid #4A6604; box-sizing: border-box; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px">
+<span style="width: 20px; height: 20px; border-radius: 50%; background: #ECF87F; color: #4A6604; display: flex; align-items: center; justify-content: center"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10-10"></path></svg></span>
+See my home</a>
+</sc-if>
+</section>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0">
+<nav aria-label="Main tabs" style="height: 84px; box-sizing: border-box; border-top: 0.5px solid rgba(7,18,56,0.12); background: #FFFFFF; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 8px 0 22px; flex-shrink: 0">
+<a href="Tabbed.dc.html" aria-current="page" style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #FF3B62">
+<span style="position: absolute; top: -8px; left: 50%; margin-left: -10px; width: 20px; height: 3px; border-radius: 0 0 3px 3px; background: #FF3B62"></span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l-2 0l9-9l9 9l-2 0"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"></path></svg>
+<span style="font-size: 10px; font-weight: 700">Home</span>
+</a>
+<a href="DocsSearchLed.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Docs</span>
+</a>
+<a href="Tasks.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12l5 5l10-10"></path><path d="M2 12l5 5m5-5l5-5"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Tasks</span>
+</a>
+<a href="ProjectsMany.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h6v8h-6z"></path><path d="M14 4h6v4h-6z"></path><path d="M4 16h6v4h-6z"></path><path d="M14 12h6v8h-6z"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Projects</span>
+</a>
+<a href="SettingsHub.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37c1 .608 2.296.07 2.572-1.065z"></path><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Settings</span>
+</a>
+</nav>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const done = st.done || {};
+    const S = [
+      { id: 'sys', name: "Add your home's systems", meta: 'HVAC, WATER HEATER, ROOF · 3 MIN', cta: 'Start with your systems' },
+      { id: 'doc', name: 'Add one document', meta: 'A WARRANTY OR INSPECTION · 1 MIN', cta: 'Add a document' },
+      { id: 'sos', name: 'Set up emergency shutoffs', meta: 'WATER, GAS, ELECTRIC · 2 MIN', cta: 'Set up your shutoffs' }
+    ];
+    const n = S.filter(s => done[s.id]).length;
+    const next = S.find(s => !done[s.id]);
+    const flip = (id) => () => this.setState({ done: Object.assign({}, done, { [id]: !done[id] }) });
+    const steps = S.map((s, i) => {
+      const d = !!done[s.id];
+      return {
+        name: s.name, meta: s.meta, done: d, toggle: flip(s.id),
+        label: (d ? 'Mark not done: ' : 'Mark done: ') + s.name,
+        sep: i === 0 ? '' : 'border-top: 0.5px solid rgba(7,18,56,0.12);',
+        circle: 'width: 24px; height: 24px; border-radius: 50%; box-sizing: border-box; display: flex; align-items: center; justify-content: center; ' + (d ? 'background: #4A6604; border: 1.5px solid #4A6604; color: #ECF87F;' : (next && next.id === s.id ? 'border: 1.5px solid #2540D8;' : 'border: 1.5px solid rgba(7,18,56,0.3);')),
+        titleStyle: 'font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;' + (d ? ' text-decoration: line-through; color: rgba(7,18,56,0.45);' : '')
+      };
+    });
+    // finished = olive, the next step = cobalt, the rest = empty (same language as project phases)
+    const segs = S.map((s, i) => ({ s: 'height: 6px; border-radius: 3px; ' + (done[s.id] ? 'background: #4A6604;' : (next && next.id === s.id ? 'box-shadow: inset 0 0 0 1.5px #2540D8;' : 'box-shadow: inset 0 0 0 1px rgba(7,18,56,0.2);')) }));
+    // the example behind fades in and gains color as you go
+    const ghostStyle = 'position: absolute; left: 0; top: 0; width: 390px; height: 1260px; pointer-events: none; user-select: none; transition: opacity .4s, filter .4s; opacity: ' + (0.3 + 0.12 * n) + '; filter: grayscale(' + (1 - n / 3) + ');';
+    return {
+      ghostStyle, steps, segs,
+      count: n + ' OF 3 DONE',
+      title: n === 3 ? 'Your home is set up.' : 'Three steps to your first score',
+      sub: n === 3 ? 'Your score, reminders and history are live. Keystona keeps them up to date from here.' : 'About 6 minutes. Your reminders and what to do next fill in as you go.',
+      notDone: n < 3, allDone: n === 3,
+      cta: next ? next.cta : ''
+    };
+  }
+}
+</script>
+</body>
+</html>

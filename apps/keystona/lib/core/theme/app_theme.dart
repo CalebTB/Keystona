@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'aurora_colors.dart';
 import 'aurora_radius.dart';
@@ -139,7 +138,7 @@ abstract final class AppTheme {
           foregroundColor: const Color(0xFFFFFFFF),
           disabledBackgroundColor: AuroraColors.coralDim,
           disabledForegroundColor: AuroraColors.coral,
-          textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+          textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           minimumSize: const Size(double.infinity, 48),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
           shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.full),
@@ -154,7 +153,7 @@ abstract final class AppTheme {
           foregroundColor: const Color(0xFFFFFFFF),
           disabledBackgroundColor: AuroraColors.cobaltDim,
           disabledForegroundColor: AuroraColors.cobalt,
-          textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+          textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           minimumSize: const Size(double.infinity, 48),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
           shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.full),
@@ -167,7 +166,7 @@ abstract final class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: AuroraColors.ink,
           disabledForegroundColor: AuroraColors.inkTertiary,
-          textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+          textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           minimumSize: const Size(double.infinity, 48),
           padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 11.5),
           side: const BorderSide(color: AuroraColors.inkBorderStrong, width: 1.5),
@@ -180,7 +179,7 @@ abstract final class AppTheme {
         style: TextButton.styleFrom(
           foregroundColor: AuroraColors.coral,
           disabledForegroundColor: AuroraColors.inkTertiary,
-          textStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+          textStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.md),
         ),

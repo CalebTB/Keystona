@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona ReportBuilder</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}select:focus{outline:none}
+input[type=time]::-webkit-calendar-picker-indicator{opacity:0.5}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+textarea{font:inherit;color:#071238;resize:none}textarea:focus{outline:none}textarea::placeholder{color:rgba(7,18,56,0.35)}input::placeholder{color:rgba(7,18,56,0.35)}.sb>*{flex-shrink:0}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1960px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; display: flex; flex-direction: column">
+<main style="padding: 12px 16px 24px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<a href="HomeProfile.dc.html" style="display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -6px; font-size: 15px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"></path></svg>Home profile</a>
+</div>
+<header style="display: flex; flex-direction: column; gap: 6px; margin-top: -8px"><span style="display: flex; align-items: center; gap: 6px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">1428 ELM HOLLOW LN</span><span class="m" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px; font-size: 9px; font-weight: 700; letter-spacing: 0.8px; white-space: nowrap; background: #FF3B62; color: #FFFFFF;">★ PREMIUM</span></span><h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.9px; line-height: 1.1">Home History Report</h1><span style="font-size: 14.5px; line-height: 1.5; color: rgba(7,18,56,0.65)">One clean report of how this house has been cared for. You choose what goes in.</span></header>
+<div style="display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: 16px; border: 1px solid rgba(7,18,56,0.12)">
+<span role="img" aria-label="86 percent complete" style="position: relative; width: 52px; height: 52px; flex-shrink: 0"><svg width="52" height="52" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="21" fill="none" stroke="rgba(7,18,56,0.1)" stroke-width="6"></circle><circle cx="26" cy="26" r="21" fill="none" stroke="#4A6604" stroke-width="6" stroke-linecap="round" stroke-dasharray="113.5 132" transform="rotate(-90 26 26)"></circle></svg><span class="m" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800">86%</span></span>
+<span style="flex: 1; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 15px; font-weight: 700">Record is 86% complete</span><span style="font-size: 13px; line-height: 1.4; color: rgba(7,18,56,0.65)">23 of 47 entries have a receipt or document behind them.</span><a href="DocAddFrom.dc.html" style="font-size: 13px; font-weight: 600; color: #2540D8">Add the roof install receipt → 91%</a></span>
+</div>
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">WHO IT’S FOR</h2></div>
+<div role="radiogroup" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px"><sc-for list="{{purposes}}" as="p" hint-placeholder-count="4"><button type="button" role="radio" aria-checked="{{p.on}}" onClick="{{p.pick}}" style="{{p.style}}"><span style="font-size: 14.5px; font-weight: 700">{{p.l}}</span><span style="{{p.subStyle}}">{{p.sub}}</span></button></sc-for></div>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">PICKS SENSIBLE SECTIONS AND PRIVACY · CHANGE ANYTHING BELOW</span>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">WHAT’S IN IT</h2><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{pages}} PAGES</span></div>
+<ul style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden"><sc-for list="{{secs}}" as="r" hint-placeholder-count="6"><li style="{{r.sep}}"><div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 62px; box-sizing: border-box"><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="{{r.tStyle}}">{{r.t}}</span><span style="font-size: 12.5px; color: rgba(7,18,56,0.55)">{{r.sub}}</span><sc-if value="{{r.isProj}}" hint-placeholder-val="{{ false }}"><a href="ReportProjects.dc.html" style="align-self: flex-start; display: inline-flex; align-items: center; min-height: 44px; margin: -6px 0 -8px; font-size: 13.5px; font-weight: 700; color: #2540D8">Choose projects ›</a></sc-if></span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{r.count}}</span><button type="button" role="switch" aria-checked="{{r.on}}" aria-label="{{r.label}}" onClick="{{r.flip}}" style="{{r.track}}"><span style="{{r.knob}}"></span></button></div></li></sc-for></ul>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">MONEY</h2></div>
+<div role="radiogroup" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px"><sc-for list="{{costs}}" as="c" hint-placeholder-count="3"><button type="button" role="radio" aria-checked="{{c.on}}" onClick="{{c.pick}}" style="{{c.style}}"><span style="font-size: 13.5px; font-weight: 700">{{c.l}}</span><span style="{{c.subStyle}}">{{c.sub}}</span></button></sc-for></div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">PRIVACY</h2></div>
+<div style="border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden"><sc-for list="{{priv}}" as="r" hint-placeholder-count="4"><div style="{{r.row}}"><span style="flex: 1; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; font-weight: 600">{{r.t}}</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{r.sub}}</span></span><button type="button" role="switch" aria-checked="{{r.on}}" aria-label="{{r.t}}" onClick="{{r.flip}}" style="{{r.track}}"><span style="{{r.knob}}"></span></button></div></sc-for></div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">THE ACTUAL DOCUMENTS</h2></div>
+<div role="radiogroup" style="display: flex; flex-direction: column; gap: 6px"><sc-for list="{{att}}" as="a" hint-placeholder-count="3"><button type="button" role="radio" aria-checked="{{a.on}}" onClick="{{a.pick}}" style="{{a.style}}"><span style="{{a.radio}}"><span style="{{a.dot}}"></span></span><span style="flex: 1; display: flex; flex-direction: column; gap: 2px; text-align: left"><span style="font-size: 14.5px; font-weight: 700">{{a.l}}</span><span style="font-size: 12.5px; color: rgba(7,18,56,0.6)">{{a.sub}}</span></span></button></sc-for></div>
+</section>
+<a href="ReportPreview.dc.html" style="height: 54px; border-radius: 999px; background: #2540D8; color: #FFFFFF; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0-4 0"></path><path d="M21 12c-2.4 4-5.4 6-9 6c-3.6 0-6.6-2-9-6c2.4-4 5.4-6 9-6c3.6 0 6.6 2 9 6"></path></svg>Preview · {{pages}} pages</a>
+</main>
+<div style="margin-top: auto; position: sticky; bottom: 0">
+<nav aria-label="Main tabs" style="height: 84px; box-sizing: border-box; border-top: 0.5px solid rgba(7,18,56,0.12); background: #FFFFFF; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 8px 0 22px; flex-shrink: 0">
+<a href="Tabbed.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l-2 0l9-9l9 9l-2 0"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Home</span>
+</a>
+<a href="DocsSearchLed.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Docs</span>
+</a>
+<a href="Tasks.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12l5 5l10-10"></path><path d="M2 12l5 5m5-5l5-5"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Tasks</span>
+</a>
+<a href="ProjectsMany.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h6v8h-6z"></path><path d="M14 4h6v4h-6z"></path><path d="M4 16h6v4h-6z"></path><path d="M14 12h6v8h-6z"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Projects</span>
+</a>
+<a href="SettingsHub.dc.html" aria-current="page" style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #FF3B62">
+<span style="position: absolute; top: -8px; left: 50%; margin-left: -10px; width: 20px; height: 3px; border-radius: 0 0 3px 3px; background: #FF3B62"></span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37c1 .608 2.296.07 2.572-1.065z"></path><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"></path></svg>
+<span style="font-size: 10px; font-weight: 700">Settings</span>
+</a>
+</nav>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const chips = (key, opts, cur) => opts.map(([k, l]) => ({ l, on: cur === k, pick: () => this.setState({ [key]: k }), style: 'height: 36px; padding: 0 12px; border-radius: 999px; font-size: 13.5px; font-weight: 600; box-sizing: border-box; ' + (cur === k ? 'background: #071238; color: #FFFFFF;' : 'border: 1px solid rgba(7,18,56,0.18); color: rgba(7,18,56,0.75);') }));
+    const sw = (on) => 'width: 51px; height: 31px; border-radius: 999px; position: relative; flex-shrink: 0; transition: background .15s; background: ' + (on ? '#2540D8' : 'rgba(7,18,56,0.16)') + ';';
+    const kn = (on) => 'position: absolute; top: 2px; left: ' + (on ? 22 : 2) + 'px; width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 4px rgba(7,18,56,0.25); transition: left .15s;';
+
+    const S = [["glance", "The house at a glance", "Facts, record score, totals, anything worth knowing", "1 PAGE", [1, 1, 1, 1]], ["systems", "Systems & upkeep", "Ages, how they\u2019ve been kept up, warranties, what\u2019s coming", "1 PAGE", [1, 1, 1, 1]], ["projects", "Improvements", "3 of 4 finished \u00b7 you pick", "1 PAGE", [1, 1, 1, 1]], ["log", "Full maintenance log", "Every entry, one line each \u00b7 47 entries", "2 PAGES", [0, 0, 0, 1]], ["inventory", "Belongings & photos", "Room-by-room photos for claims", "2 PAGES", [0, 1, 0, 0]], ["emergency", "Emergency info", "Shutoffs, contacts \u2014 never for buyers", "1 PAGE", [0, 0, 0, 1]]];
+    const P = [["sell", "Selling my home", "For buyers and their agent"], ["ins", "Insurance or a claim", "Proof of condition and belongings"], ["refi", "Refinance or appraisal", "Upgrades and upkeep that add value"], ["me", "Just for me", "Everything, nothing hidden"]];
+    const pk = st.p || 'sell'; const pi = ['sell', 'ins', 'refi', 'me'].indexOf(pk);
+    const sec = st.sec || {};
+    const isOn = (s) => sec[pk + s[0]] !== undefined ? sec[pk + s[0]] : !!s[4][pi];
+    const pages = S.filter(isOn).reduce((n, s) => n + parseInt(s[3]), 0) + (st.att === 'append' ? 18 : 0);
+    const defCost = { sell: 'totals', ins: 'lines', refi: 'totals', me: 'lines' }[pk];
+    const cost = st['c' + pk] || defCost;
+    const PV = [['price', 'Hide what I paid for the house', 'PURCHASE PRICE AND MORTGAGE', pk !== 'me'], ['names', 'Show “Owner” instead of names', 'HOUSEHOLD AND CONTACT NAMES', pk === 'sell'], ['nums', 'Mask serial and policy numbers', 'SHOWS ••••7719 INSTEAD', pk !== 'me'], ['inside', 'Leave out photos of the inside', 'KEEPS SYSTEM LABELS AND BEFORE/AFTERS', false]];
+    const pv = st.pv || {};
+    const att = st.att || 'index';
+    return {
+      purposes: P.map(([k, l, sub]) => ({ l, sub, on: pk === k, pick: () => this.setState({ p: k }),
+        style: 'display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 12px; border-radius: 14px; box-sizing: border-box; text-align: left; ' + (pk === k ? 'background: #071238; color: #FFFFFF;' : 'border: 1px solid rgba(7,18,56,0.18);'),
+        subStyle: 'font-size: 12px; line-height: 1.3; color: ' + (pk === k ? 'rgba(255,255,255,0.7)' : 'rgba(7,18,56,0.55)') + ';' })),
+      pages,
+      secs: S.map((s, i) => { const o = isOn(s); return { t: s[1], sub: s[2], count: o ? s[3] : 'OFF', on: o, label: (o ? 'Leave out: ' : 'Include: ') + s[1],
+        flip: () => this.setState({ sec: Object.assign({}, sec, { [pk + s[0]]: !o }) }), track: sw(o), knob: kn(o),
+        tStyle: 'font-size: 15px; font-weight: 600; ' + (o ? '' : 'color: rgba(7,18,56,0.45);'), isProj: s[0] === 'projects' && o, sep: i ? 'border-top: 0.5px solid rgba(7,18,56,0.12);' : '' }; }),
+      costs: [['lines', 'Every cost', 'EACH RECEIPT'], ['totals', 'Totals only', 'BY SYSTEM + PROJECT'], ['none', 'No money', 'DATES AND WORK ONLY']].map(([k, l, sub]) => ({ l, sub, on: cost === k, pick: () => this.setState({ ['c' + pk]: k }),
+        style: 'display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px; border-radius: 12px; box-sizing: border-box; text-align: left; ' + (cost === k ? 'background: #071238; color: #FFFFFF;' : 'border: 1px solid rgba(7,18,56,0.18);'),
+        subStyle: 'font-size: 8.5px; font-weight: 700; letter-spacing: 0.5px; color: ' + (cost === k ? 'rgba(255,255,255,0.7)' : 'rgba(7,18,56,0.5)') + ';' })),
+      priv: PV.map(([k, t, sub, d], i) => { const o = pv[pk + k] !== undefined ? pv[pk + k] : d; return { t, sub, on: o, flip: () => this.setState({ pv: Object.assign({}, pv, { [pk + k]: !o }) }), track: sw(o), knob: kn(o),
+        row: 'display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; box-sizing: border-box; ' + (i ? 'border-top: 0.5px solid rgba(7,18,56,0.12);' : '') }; }),
+      att: [['index', 'Just a list of them', 'Titles and dates in the report · the files stay in Keystona'], ['append', 'Add them to the end', 'Receipts, warranties and permits as extra pages · about +18 pages'], ['zip', 'Separate download', 'A ZIP of the original files next to the report']].map(([k, l, sub]) => ({ l, sub, on: att === k, pick: () => this.setState({ att: k }),
+        style: 'width: 100%; display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 14px; box-sizing: border-box; ' + (att === k ? 'box-shadow: inset 0 0 0 2px #071238;' : 'box-shadow: inset 0 0 0 1px rgba(7,18,56,0.14);'),
+        radio: 'width: 22px; height: 22px; border-radius: 50%; box-sizing: border-box; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; ' + (att === k ? 'border: 2px solid #071238;' : 'border: 1.5px solid rgba(7,18,56,0.3);'),
+        dot: att === k ? 'width: 10px; height: 10px; border-radius: 50%; background: #071238;' : 'display: none;' }))
+    };
+  }
+}
+</script>
+</body>
+</html>

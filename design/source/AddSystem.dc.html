@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona add system</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,select{font:inherit;color:#071238}
+input::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,select:focus{outline:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0}
+input[type=range]{accent-color:#2540D8}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1200px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; display: flex; flex-direction: column">
+<form onSubmit="{{noSubmit}}" style="padding: 12px 16px 34px; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<a href="ScanFlow.dc.html" style="display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -6px; font-size: 15px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"></path></svg>Scan</a>
+</div>
+<header style="display: flex; flex-direction: column; gap: 6px; margin-top: -14px">
+<span class="m" style="display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)"><span style="width: 6px; height: 6px; border-radius: 50%; background: #2540D8"></span>HOME PROFILE · NEW</span>
+<h1 style="margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.9px; line-height: 1.1">Add a system.</h1>
+</header>
+<!-- what the scan filled in -->
+<div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1.5px solid #4A6604; border-radius: 16px">
+<span style="width: 26px; height: 26px; border-radius: 50%; background: #ECF87F; color: #4A6604; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10-10"></path></svg></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 600">We read 5 fields from the label</span><span style="font-size: 13px; color: rgba(7,18,56,0.6)">The ones edged in <span style="color: #2540D8; font-weight: 600">blue</span> came from it — check them, then save.</span></span>
+<a href="ScanFlow.dc.html" style="font-size: 13px; font-weight: 600; color: #B12347; min-height: 44px; display: flex; align-items: center; flex-shrink: 0">Rescan</a>
+</div>
+
+<section style="display: flex; flex-direction: column; gap: 14px">
+<label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 6px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">CATEGORY</span><span aria-hidden="true" style="color: #FF3B62; font-weight: 700; margin-left: -3px">*</span><!-- cat --></span>
+<span style="{{cat_box}}"><select value="{{v_cat}}" onChange="{{on_cat}}" style="flex: 1; min-width: 0; height: 100%; font-size: 16px; padding-right: 20px"><option value="hvac">HVAC</option><option value="plumbing">Plumbing</option><option value="electrical">Electrical</option><option value="exterior">Exterior</option><option value="interior">Interior</option><option value="roofing">Roofing</option><option value="climate">Climate</option><option value="safety">Safety</option><option value="water">Water</option><option value="foundation">Foundation</option></select><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; pointer-events: none"><path d="M6 9l6 6l6-6"></path></svg></span>
+</label>
+<label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 6px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">NAME</span><span aria-hidden="true" style="color: #FF3B62; font-weight: 700; margin-left: -3px">*</span><!-- name --></span>
+<span style="{{name_box}}"><input type="text" value="{{v_name}}" onChange="{{on_name}}" placeholder="Main floor HVAC" aria-required="true" style="flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font-size: 16px"></span>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.45)">YOUR NAME FOR IT — E.G. "MAIN FLOOR HVAC"</span></label>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h2 class="m" style="margin: 0; display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: #071238"><span style="width: 6px; height: 6px; border-radius: 50%; background: #2540D8"></span>IDENTIFICATION</h2>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">OPTIONAL</span>
+</div>
+<div style="display: flex; gap: 10px"><label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 6px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">BRAND</span><!-- brand --></span>
+<span style="{{brand_box}}"><input type="text" value="{{v_brand}}" onChange="{{on_brand}}" placeholder="Brand"  style="flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font-size: 16px"></span>
+</label><label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 6px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">MODEL</span><!-- model --></span>
+<span style="{{model_box}}"><input type="text" value="{{v_model}}" onChange="{{on_model}}" placeholder="Model"  style="flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font-size: 16px; font-variant-numeric: tabular-nums"></span>
+</label></div>
+<label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 6px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">SERIAL NUMBER</span><!-- serial --></span>
+<span style="{{serial_box}}"><input type="text" value="{{v_serial}}" onChange="{{on_serial}}" placeholder="Serial"  style="flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font-size: 16px; font-variant-numeric: tabular-nums"><button type="button" aria-label="Scan again" style="width: 36px; height: 36px; margin-right: -8px; display: flex; align-items: center; justify-content: center; color: #FF3B62"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7v-1a2 2 0 0 1 2-2h2"></path><path d="M4 17v1a2 2 0 0 0 2 2h2"></path><path d="M16 4h2a2 2 0 0 1 2 2v1"></path><path d="M16 20h2a2 2 0 0 0 2-2v-1"></path><path d="M5 12h14"></path></svg></button></span>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.45)">FIND ON UNIT LABEL</span></label>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h2 class="m" style="margin: 0; display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: #071238"><span style="width: 6px; height: 6px; border-radius: 50%; background: #2540D8"></span>INSTALL &amp; LIFESPAN</h2>
+
+</div>
+<div style="display: flex; gap: 10px"><label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 6px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">INSTALLED</span><!-- mon --></span>
+<span style="{{mon_box}}"><select value="{{v_mon}}" onChange="{{on_mon}}" style="flex: 1; min-width: 0; height: 100%; font-size: 16px; padding-right: 20px"><option value="">Month</option><option value="Jan">Jan</option><option value="Feb">Feb</option><option value="Mar">Mar</option><option value="Apr">Apr</option><option value="May">May</option><option value="Jun">Jun</option><option value="Jul">Jul</option><option value="Aug">Aug</option><option value="Sep">Sep</option><option value="Oct">Oct</option><option value="Nov">Nov</option><option value="Dec">Dec</option></select><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; pointer-events: none"><path d="M6 9l6 6l6-6"></path></svg></span>
+</label><label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 6px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">&nbsp;</span><!-- yr --></span>
+<span style="{{yr_box}}"><select value="{{v_yr}}" onChange="{{on_yr}}" style="flex: 1; min-width: 0; height: 100%; font-size: 16px; padding-right: 20px"><option value="">Year</option><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option><option value="2020">2020</option><option value="2019">2019</option><option value="2018">2018</option><option value="2017">2017</option><option value="2016">2016</option><option value="2015">2015</option><option value="2014">2014</option><option value="2013">2013</option><option value="2012">2012</option><option value="2011">2011</option><option value="2010">2010</option><option value="2009">2009</option><option value="2008">2008</option><option value="2007">2007</option><option value="2006">2006</option><option value="2005">2005</option><option value="2004">2004</option><option value="2003">2003</option><option value="2002">2002</option><option value="2001">2001</option><option value="2000">2000</option><option value="1999">1999</option><option value="1998">1998</option><option value="1997">1997</option><option value="1996">1996</option><option value="1995">1995</option><option value="1994">1994</option><option value="1993">1993</option><option value="1992">1992</option><option value="1991">1991</option><option value="1990">1990</option><option value="1989">1989</option><option value="1988">1988</option><option value="1987">1987</option><option value="1986">1986</option><option value="1985">1985</option><option value="1984">1984</option><option value="1983">1983</option><option value="1982">1982</option><option value="1981">1981</option><option value="1980">1980</option></select><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; pointer-events: none"><path d="M6 9l6 6l6-6"></path></svg></span>
+</label></div>
+<label style="display: flex; flex-direction: column; gap: 8px">
+<span style="display: flex; align-items: baseline; justify-content: space-between"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">EXPECTED LIFESPAN</span><span style="font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums">{{v_life}} years</span></span>
+<input type="range" min="1" max="40" value="{{v_life}}" onChange="{{on_life}}" aria-label="Expected lifespan in years" style="width: 100%; height: 28px; margin: 0">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.45)">{{lifeHelp}}</span>
+</label>
+<div style="display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 10px 14px; border: 1px solid rgba(7,18,56,0.12); border-radius: 14px; box-sizing: border-box">
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; font-weight: 600">Add its maintenance tasks</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.45)">{{autoMeta}}</span></span>
+<button type="button" role="switch" aria-checked="{{auto}}" aria-label="Add its maintenance tasks" onClick="{{flip_auto}}" style="{{autoTrack}}"><span style="{{autoKnob}}"></span></button>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h2 class="m" style="margin: 0; display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: #071238"><span style="width: 6px; height: 6px; border-radius: 50%; background: #2540D8"></span>PHOTOS</h2>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">OPTIONAL</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px"><div style="position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; border: 1px solid rgba(37,64,216,0.25); background-image: linear-gradient(rgba(37,64,216,0.11) 1px, transparent 1px), linear-gradient(90deg, rgba(37,64,216,0.11) 1px, transparent 1px); background-size: 10px 10px; background-position: -1px -1px"><span class="m" style="position: absolute; left: 5px; bottom: 5px; padding: 2px 6px; border-radius: 999px; background: #FFFFFF; border: 1px solid rgba(7,18,56,0.12); font-size: 8px; font-weight: 700; letter-spacing: 0.6px; color: rgba(7,18,56,0.6)">LABEL</span></div><button type="button" aria-label="Add a photo" style="aspect-ratio: 1; border-radius: 12px; border: 1.5px dashed rgba(7,18,56,0.22); display: flex; align-items: center; justify-content: center; color: rgba(7,18,56,0.45)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></button><button type="button" aria-label="Add a photo" style="aspect-ratio: 1; border-radius: 12px; border: 1.5px dashed rgba(7,18,56,0.22); display: flex; align-items: center; justify-content: center; color: rgba(7,18,56,0.45)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></button><button type="button" aria-label="Add a photo" style="aspect-ratio: 1; border-radius: 12px; border: 1.5px dashed rgba(7,18,56,0.22); display: flex; align-items: center; justify-content: center; color: rgba(7,18,56,0.45)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></button></div><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.45)">FREE PLAN · 4 PHOTOS · THE LABEL PHOTO IS SAVED FOR YOU</span>
+</section>
+
+<div style="display: flex; gap: 10px; padding-top: 4px">
+<a href="Tabbed.dc.html" style="height: 52px; padding: 0 22px; border-radius: 999px; border: 1.5px solid rgba(7,18,56,0.2); box-sizing: border-box; font-size: 16px; font-weight: 600; display: flex; align-items: center">Cancel</a>
+<sc-if value="{{canSave}}" hint-placeholder-val="{{ true }}"><a href="SystemDetail.dc.html" style="flex: 1; height: 52px; border-radius: 999px; background: #2540D8; color: #FFFFFF; font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center">Save system</a></sc-if>
+<sc-if value="{{cantSave}}" hint-placeholder-val="{{ false }}"><button type="button" disabled aria-disabled="true" style="flex: 1; height: 52px; border-radius: 999px; background: rgba(7,18,56,0.08); color: rgba(7,18,56,0.35); font-size: 16px; font-weight: 600; text-align: center; cursor: default">Save system</button></sc-if>
+</div>
+<span class="m" style="text-align: center; margin-top: -14px; font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.45)">REQUIRED <span style="color: #FF3B62">*</span> · EVERYTHING ELSE CAN WAIT</span>
+</form>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const D = {"cat": "hvac", "name": "Furnace", "brand": "Northline", "model": "NF95-080B", "serial": "2103A47719", "mon": "Mar", "yr": "2021", "life": "15"};
+    const SCAN = ["brand", "model", "serial", "mon", "yr"];
+    const val = Object.assign({}, D, st.v || {});
+    const T = Object.assign({"auto": true}, st.t || {});
+    const out = { noSubmit: (e) => e.preventDefault() };
+    Object.keys(D).forEach(k => {
+      out['v_' + k] = val[k];
+      out['on_' + k] = (e) => this.setState({ v: Object.assign({}, val, { [k]: e.target.value }) });
+      // the "from scan" tag disappears once you change the value yourself
+      const scanned = SCAN.indexOf(k) !== -1 && val[k] === D[k] && !!D[k];
+      out[k + '_scan'] = scanned;
+      out[k + '_box'] = 'position: relative; display: flex; align-items: center; gap: 8px; height: 50px; padding: 0 14px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box; transition: box-shadow .2s;' + (scanned ? ' box-shadow: inset 3px 0 0 #2540D8;' : '');
+    });
+    Object.keys(T).forEach(k => {
+      const on = !!T[k];
+      out[k] = on;
+      out['flip_' + k] = () => this.setState({ t: Object.assign({}, T, { [k]: !on }) });
+      out[k + 'Track'] = 'width: 51px; height: 31px; border-radius: 999px; padding: 2px; box-sizing: border-box; flex-shrink: 0; display: flex; transition: background .2s; justify-content: ' + (on ? 'flex-end' : 'flex-start') + '; background: ' + (on ? '#2540D8' : 'rgba(7,18,56,0.16)') + ';';
+      out[k + 'Knob'] = 'width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 1px 3px rgba(7,18,56,0.25);';
+    });
+    const ok = ["name"].every(k => String(val[k] || '').trim());
+    out.canSave = ok; out.cantSave = !ok;
+
+    const MED = { hvac: 15, plumbing: 50, electrical: 40, exterior: 30, interior: 20, roofing: 25, climate: 15, safety: 10, water: 12, foundation: 50 };
+    const TASKS = { hvac: 'FILTER CHANGES · ANNUAL TUNE-UP · 3 TASKS', plumbing: 'LEAK CHECKS · SHUTOFF TEST · 2 TASKS', roofing: 'SPRING & FALL INSPECTION · 2 TASKS', water: 'FLUSH SEDIMENT · ANODE CHECK · 2 TASKS', safety: 'MONTHLY TEST · BATTERY SWAP · 2 TASKS' };
+    out.on_cat = (e) => { const c = e.target.value; this.setState({ v: Object.assign({}, val, { cat: c, life: String(MED[c] || 15) }) }); };
+    const yr = parseInt(val.yr, 10);
+    const end = yr ? yr + parseInt(val.life, 10) : null;
+    out.lifeHelp = end ? ('TYPICAL FOR ' + val.cat.toUpperCase() + ' · PLAN TO REPLACE AROUND ' + end) : 'TYPICAL FOR ' + val.cat.toUpperCase() + ' — ADD THE INSTALL YEAR TO SEE WHEN';
+    out.autoMeta = T.auto ? (TASKS[val.cat] || 'ROUTINE CHECKS FOR THIS SYSTEM') : 'OFF · YOU CAN ADD TASKS YOURSELF';
+    return out;
+  }
+}
+</script>
+</body>
+</html>

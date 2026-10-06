@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona docs search</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+input{font:inherit;color:inherit}
+input::placeholder{color:rgba(7,18,56,0.4)}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; display: flex; flex-direction: column; overflow: hidden">
+
+<!-- Search bar: categories live inside the field as tokens -->
+<div style="display: flex; align-items: center; gap: 12px; padding: 20px 16px 12px">
+<div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 10px 0 12px; border: 1.5px solid #071238; border-radius: 12px; box-sizing: border-box">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.55)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0-14 0"></path><path d="M21 21l-6-6"></path></svg>
+<sc-if value="{{hasToken}}" hint-placeholder-val="{{ false }}">
+<span style="display: flex; align-items: center; gap: 4px; height: 28px; padding: 0 4px 0 10px; border-radius: 999px; background: #071238; color: #FFFFFF; font-size: 13px; font-weight: 600; flex-shrink: 0">{{tokenLabel}}
+<button aria-label="Remove category" onClick="{{clearToken}}" style="width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.75)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6l-12 12"></path><path d="M6 6l12 12"></path></svg></button>
+</span>
+</sc-if>
+<input type="search" aria-label="Search documents" placeholder="{{placeholder}}" value="{{q}}" onChange="{{onQuery}}" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font-size: 15px">
+<sc-if value="{{hasQuery}}" hint-placeholder-val="{{ false }}">
+<button aria-label="Clear search" onClick="{{clearQuery}}" style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: rgba(7,18,56,0.45); flex-shrink: 0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0"></path><path d="M10 10l4 4m0-4l-4 4"></path></svg></button>
+</sc-if>
+</div>
+<button onClick="{{cancel}}" style="font-size: 15px; font-weight: 600; color: #FF3B62; height: 44px">Cancel</button>
+</div>
+
+<div style="flex: 1; overflow-y: auto; padding: 8px 16px 24px; display: flex; flex-direction: column; gap: 22px">
+
+<!-- Nothing typed yet: suggestions -->
+<sc-if value="{{showSuggestions}}" hint-placeholder-val="{{ true }}">
+<section aria-label="Search in" style="display: flex; flex-direction: column; gap: 8px">
+<h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">SEARCH IN</h2>
+<ul style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden">
+<li><button onClick="{{pickInsurance}}" style="width: 100%; display: flex; align-items: center; gap: 12px; padding: 0 14px; min-height: 52px">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.75)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1-8.5 15a12 12 0 0 1-8.5-15a12 12 0 0 0 8.5-3"></path></svg>
+<span style="flex: 1; font-size: 15px; font-weight: 500">Insurance</span><span class="m" style="font-size: 13px; color: rgba(7,18,56,0.45)">2</span></button></li>
+<li style="border-top: 0.5px solid rgba(7,18,56,0.12)"><button onClick="{{pickWarranties}}" style="width: 100%; display: flex; align-items: center; gap: 12px; padding: 0 14px; min-height: 52px">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.75)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 15m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0"></path><path d="M13 17.5v4.5l2-1.5l2 1.5v-4.5"></path><path d="M10 19h-5a2 2 0 0 1-2-2v-10c0-1.1.9-2 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-1 1.73"></path><path d="M6 9l12 0"></path><path d="M6 12l3 0"></path><path d="M6 15l2 0"></path></svg>
+<span style="flex: 1; font-size: 15px; font-weight: 500">Warranties &amp; manuals</span><span class="m" style="font-size: 13px; color: rgba(7,18,56,0.45)">4</span></button></li>
+<li style="border-top: 0.5px solid rgba(7,18,56,0.12)"><button onClick="{{pickOwnership}}" style="width: 100%; display: flex; align-items: center; gap: 12px; padding: 0 14px; min-height: 52px">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.75)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l-2 0l9-9l9 9l-2 0"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"></path></svg>
+<span style="flex: 1; font-size: 15px; font-weight: 500">Ownership</span><span class="m" style="font-size: 13px; color: rgba(7,18,56,0.45)">3</span></button></li>
+<li style="border-top: 0.5px solid rgba(7,18,56,0.12)"><button onClick="{{pickMaintenance}}" style="width: 100%; display: flex; align-items: center; gap: 12px; padding: 0 14px; min-height: 52px">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.75)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10h3v-3l-3.5-3.5a6 6 0 0 1 8 8l6 6a2 2 0 0 1-3 3l-6-6a6 6 0 0 1-8-8l3.5 3.5"></path></svg>
+<span style="flex: 1; font-size: 15px; font-weight: 500">Maintenance records</span><span class="m" style="font-size: 13px; color: rgba(7,18,56,0.45)">2</span></button></li>
+<li style="border-top: 0.5px solid rgba(7,18,56,0.12)"><button onClick="{{pickPermits}}" style="width: 100%; display: flex; align-items: center; gap: 12px; padding: 0 14px; min-height: 52px">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.75)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5h-2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-12a2 2 0 0 0-2-2h-2"></path><path d="M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z"></path><path d="M9 14l2 2l4-4"></path></svg>
+<span style="flex: 1; font-size: 15px; font-weight: 500">Permits</span><span class="m" style="font-size: 13px; color: rgba(7,18,56,0.45)">1</span></button></li>
+</ul>
+</section>
+
+<section aria-label="Recent searches" style="display: flex; flex-direction: column; gap: 8px">
+<h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">RECENT</h2>
+<div style="display: flex; flex-direction: column">
+<button onClick="{{recentRoof}}" style="display: flex; align-items: center; gap: 12px; min-height: 44px; font-size: 15px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.45)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0"></path><path d="M12 7v5l3 3"></path></svg>roof</button>
+<button onClick="{{recentManual}}" style="display: flex; align-items: center; gap: 12px; min-height: 44px; font-size: 15px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.45)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0"></path><path d="M12 7v5l3 3"></path></svg>manual</button>
+<button onClick="{{recentClosing}}" style="display: flex; align-items: center; gap: 12px; min-height: 44px; font-size: 15px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.45)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0"></path><path d="M12 7v5l3 3"></path></svg>closing</button>
+</div>
+</section>
+</sc-if>
+
+<!-- Results -->
+<sc-if value="{{showResults}}" hint-placeholder-val="{{ false }}">
+<section aria-label="Results" style="display: flex; flex-direction: column; gap: 8px">
+<h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">{{resultsLabel}}</h2>
+
+<sc-if value="{{hasResults}}" hint-placeholder-val="{{ true }}">
+<ul style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden">
+<sc-for list="{{results}}" as="doc" hint-placeholder-count="3">
+<li style="{{doc.sep}}">
+<a href="#" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 64px; box-sizing: border-box">
+<span style="width: 32px; height: 40px; border-radius: 6px; border: 1px solid rgba(7,18,56,0.14); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-sizing: border-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path></svg></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{doc.pre}}<strong style="font-weight: 700; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px">{{doc.hit}}</strong>{{doc.post}}</span>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{doc.meta}}</span>
+</span>
+<sc-if value="{{doc.hasStatus}}" hint-placeholder-val="{{ false }}">
+<span class="m" style="{{doc.statusStyle}}"><sc-if value="{{doc.hasClock}}" hint-placeholder-val="{{ false }}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0"></path><path d="M12 7v5l3 3"></path></svg></sc-if>{{doc.status}}</span>
+</sc-if>
+</a>
+</li>
+</sc-for>
+</ul>
+</sc-if>
+
+<sc-if value="{{noResults}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 32px 16px">
+<span style="font-size: 17px; font-weight: 600">No documents match “{{q}}”</span>
+<span style="font-size: 13px; line-height: 1.5; color: rgba(7,18,56,0.55)">Free search checks document names and categories. Try a shorter word or clear the category.</span>
+</div>
+</sc-if>
+</section>
+
+<!-- Premium: searching inside the text, offered quietly -->
+<sc-if value="{{hasQuery}}" hint-placeholder-val="{{ false }}">
+<a href="#" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 60px; box-sizing: border-box; border: 1.5px dashed rgba(7,18,56,0.22); border-radius: 16px">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M5 13a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-10a2 2 0 0 1-2-2v-6z"></path><path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0-2 0"></path><path d="M8 11v-4a4 4 0 1 1 8 0v4"></path></svg>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 14px; font-weight: 600">Search inside your documents</span>
+<span style="font-size: 12px; line-height: 1.4; color: rgba(7,18,56,0.55)">Premium also finds “{{q}}” in the text of your PDFs and photos.</span>
+</span>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 6l6 6l-6 6"></path></svg>
+</a>
+</sc-if>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const START = { token: null, q: '' };
+    const st = Object.assign({}, START, this.state || {});
+    const token = st.token;
+    const q = st.q || '';
+    const query = q.trim().toLowerCase();
+    const names = { insurance: 'Insurance', warranties: 'Warranties', ownership: 'Ownership', maintenance: 'Maintenance', permits: 'Permits' };
+    const docs = [
+      { name: 'Dryer vent service receipt', cat: 'maintenance', date: 'OCT 2' },
+      { name: 'Bath renovation permit', cat: 'permits', date: 'SEP 20' },
+      { name: 'Roof 20-year warranty', cat: 'warranties', date: 'SEP 14', status: 'TO 2035', tone: 'neutral' },
+      { name: 'Bosch dishwasher warranty', cat: 'warranties', date: 'AUG 30', status: '45 DAYS', tone: 'amber' },
+      { name: 'Homeowners insurance policy', cat: 'insurance', date: 'MAY 12', status: '9 DAYS', tone: 'coral' },
+      { name: 'Flood insurance policy', cat: 'insurance', date: 'MAY 12' },
+      { name: 'HVAC service receipt', cat: 'maintenance', date: 'MAR 15' },
+      { name: 'Deed', cat: 'ownership', date: 'FEB 20' },
+      { name: 'Closing disclosure', cat: 'ownership', date: 'FEB 20' },
+      { name: 'Title insurance policy', cat: 'ownership', date: 'FEB 20' },
+      { name: 'Dryer owner manual', cat: 'warranties', date: 'JAN 28' },
+      { name: 'Washer owner manual', cat: 'warranties', date: 'JAN 28' }
+    ];
+    const tones = { coral: 'border: 1px solid #FF3B62; color: #B12347; font-weight: 700;', amber: 'border: 1px solid #B08A00; color: #6B4F00; font-weight: 700;', neutral: 'border: 1px solid rgba(7,18,56,0.16); color: rgba(7,18,56,0.55); font-weight: 600;' };
+    const matches = docs.filter((d) => (!token || d.cat === token) && (!query || d.name.toLowerCase().includes(query) || names[d.cat].toLowerCase().includes(query)));
+    const results = matches.map((d, i) => {
+      const at = query ? d.name.toLowerCase().indexOf(query) : -1;
+      const t = d.tone ? tones[d.tone] : null;
+      return {
+        pre: at >= 0 ? d.name.slice(0, at) : d.name,
+        hit: at >= 0 ? d.name.slice(at, at + query.length) : '',
+        post: at >= 0 ? d.name.slice(at + query.length) : '',
+        meta: names[d.cat].toUpperCase() + ' · ' + d.date,
+        hasStatus: !!d.status,
+        status: d.status || '',
+        statusStyle: t ? 'display: flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; font-size: 9px; letter-spacing: 0.8px; flex-shrink: 0; ' + t : '',
+        hasClock: d.tone === 'coral' || d.tone === 'amber',
+        sep: i === 0 ? '' : 'border-top: 0.5px solid rgba(7,18,56,0.12);'
+      };
+    });
+    const n = results.length;
+    const scope = token ? ' IN ' + names[token].toUpperCase() : '';
+    const set = (patch) => () => this.setState(patch);
+    return {
+      q,
+      hasToken: !!token,
+      tokenLabel: token ? names[token] : '',
+      hasQuery: query.length > 0,
+      placeholder: token ? 'Search ' + names[token].toLowerCase() : 'Search name or category',
+      showSuggestions: !token && !query,
+      showResults: !!token || !!query,
+      hasResults: n > 0,
+      noResults: n === 0,
+      results,
+      resultsLabel: n + (n === 1 ? ' RESULT' : ' RESULTS') + scope,
+      onQuery: (e) => this.setState({ q: e.target.value }),
+      clearQuery: set({ q: '' }),
+      clearToken: set({ token: null }),
+      cancel: set({ token: null, q: '' }),
+      pickInsurance: set({ token: 'insurance' }),
+      pickWarranties: set({ token: 'warranties' }),
+      pickOwnership: set({ token: 'ownership' }),
+      pickMaintenance: set({ token: 'maintenance' }),
+      pickPermits: set({ token: 'permits' }),
+      recentRoof: set({ q: 'roof' }),
+      recentManual: set({ q: 'manual' }),
+      recentClosing: set({ q: 'closing' })
+    };
+  }
+}
+</script>
+</body>
+</html>

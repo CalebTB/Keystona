@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona TaskReview</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}select:focus{outline:none}
+input[type=time]::-webkit-calendar-picker-indicator{opacity:0.5}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1580px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; display: flex; flex-direction: column">
+<main style="padding: 12px 16px 24px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<a href="HomeMidSetup.dc.html" style="display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -6px; font-size: 15px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"></path></svg>Home</a><button type="button" onClick="{{keepAll}}" style="min-height: 44px; display: flex; align-items: center; font-size: 15px; font-weight: 600; color: #2540D8">Turn all on</button>
+</div>
+<header style="display: flex; flex-direction: column; gap: 6px; margin-top: -8px">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">SETUP · STEP 2 OF 4</span>
+<h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.9px; line-height: 1.1">Review your reminders</h1>
+</header>
+<p style="margin: -8px 0 0; font-size: 14px; line-height: 1.5; color: rgba(7,18,56,0.65)">We suggested these from what you&rsquo;ve added and where you live. Turn off anything that doesn&rsquo;t fit &mdash; you can change this any time.</p>
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 16px; border: 1px solid rgba(7,18,56,0.12)">
+<div style="display: flex; align-items: baseline; justify-content: space-between"><span style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 24px; font-weight: 800; letter-spacing: -0.6px; font-variant-numeric: tabular-nums">{{nOn}}</span><span style="font-size: 14px; font-weight: 600; color: rgba(7,18,56,0.55)">of {{nAll}} on</span></span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{perMonth}}</span></div>
+<div aria-hidden="true" style="height: 6px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(7,18,56,0.18); overflow: hidden"><span style="{{bar}}"></span></div>
+</div>
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">FURNACE</h2><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">BECAUSE YOU ADDED A FURNACE</span></div>
+<ul style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden"><sc-for list="{{g_furn}}" as="r" hint-placeholder-count="4"><li style="{{r.sep}}"><div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; box-sizing: border-box"><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="{{r.nameStyle}}">{{r.name}}</span><span class="m" style="{{r.metaStyle}}">{{r.meta}}</span></span><button type="button" role="switch" aria-checked="{{r.on}}" aria-label="{{r.label}}" onClick="{{r.flip}}" style="{{r.track}}"><span style="{{r.knob}}"></span></button></div></li></sc-for></ul>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">WATER HEATER</h2><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">BECAUSE YOU ADDED A GAS WATER HEATER</span></div>
+<ul style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden"><sc-for list="{{g_wh}}" as="r" hint-placeholder-count="3"><li style="{{r.sep}}"><div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; box-sizing: border-box"><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="{{r.nameStyle}}">{{r.name}}</span><span class="m" style="{{r.metaStyle}}">{{r.meta}}</span></span><button type="button" role="switch" aria-checked="{{r.on}}" aria-label="{{r.label}}" onClick="{{r.flip}}" style="{{r.track}}"><span style="{{r.knob}}"></span></button></div></li></sc-for></ul>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">OUTSIDE</h2><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">EVERY HOUSE</span></div>
+<ul style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden"><sc-for list="{{g_out}}" as="r" hint-placeholder-count="3"><li style="{{r.sep}}"><div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; box-sizing: border-box"><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="{{r.nameStyle}}">{{r.name}}</span><span class="m" style="{{r.metaStyle}}">{{r.meta}}</span></span><button type="button" role="switch" aria-checked="{{r.on}}" aria-label="{{r.label}}" onClick="{{r.flip}}" style="{{r.track}}"><span style="{{r.knob}}"></span></button></div></li></sc-for></ul>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">SAFETY</h2><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">EVERY HOUSE</span></div>
+<ul style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden"><sc-for list="{{g_safe}}" as="r" hint-placeholder-count="2"><li style="{{r.sep}}"><div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; box-sizing: border-box"><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="{{r.nameStyle}}">{{r.name}}</span><span class="m" style="{{r.metaStyle}}">{{r.meta}}</span></span><button type="button" role="switch" aria-checked="{{r.on}}" aria-label="{{r.label}}" onClick="{{r.flip}}" style="{{r.track}}"><span style="{{r.knob}}"></span></button></div></li></sc-for></ul>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">FROM YOUR CLIMATE</h2><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">ZONE 4A</span></div>
+<ul style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden"><sc-for list="{{g_clim}}" as="r" hint-placeholder-count="2"><li style="{{r.sep}}"><div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; box-sizing: border-box"><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="{{r.nameStyle}}">{{r.name}}</span><span class="m" style="{{r.metaStyle}}">{{r.meta}}</span></span><button type="button" role="switch" aria-checked="{{r.on}}" aria-label="{{r.label}}" onClick="{{r.flip}}" style="{{r.track}}"><span style="{{r.knob}}"></span></button></div></li></sc-for></ul>
+</section>
+
+<span class="m" style="text-align: center; font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">MORE SHOW UP AS YOU ADD SYSTEMS AND APPLIANCES</span>
+</main>
+<div style="position: sticky; bottom: 0; margin-top: auto; background: #FFFFFF; border-top: 0.5px solid rgba(7,18,56,0.12); padding: 12px 16px 28px">
+<a href="HomeSparse.dc.html" style="height: 54px; border-radius: 999px; background: #2540D8; color: #FFFFFF; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center">{{cta}}</a>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1580}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const sw = (on) => 'width: 51px; height: 31px; border-radius: 999px; position: relative; flex-shrink: 0; transition: background .15s; background: ' + (on ? '#2540D8' : 'rgba(7,18,56,0.16)') + ';';
+    const kn = (on) => 'position: absolute; top: 2px; left: ' + (on ? 22 : 2) + 'px; width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 4px rgba(7,18,56,0.25); transition: left .15s;';
+    const G = [["furn", [["Replace HVAC air filter", "Every 3 months", true], ["Service the furnace", "Every fall", true], ["Replace the humidifier pad", "Every fall", false], ["Check the flue pipe for rust", "Every year", true]]], ["wh", [["Flush water heater sediment", "Every year", true], ["Test the relief valve", "Every year", true], ["Check the anode rod", "Every 3 years", true]]], ["out", [["Clean gutters & downspouts", "Twice a year", true], ["Re-caulk windows and doors", "Every year", true], ["Shut off and drain the sprinklers", "Every fall", false]]], ["safe", [["Test smoke & CO detectors", "Every month", true], ["Check the fire extinguisher gauge", "Every year", true]]], ["clim", [["Drain the outdoor faucets", "Every November", true], ["Check the basement for moisture", "Twice a year", true]]]];
+    const on = st.on || {};
+    const out = {}; let n = 0, all = 0;
+    const allKeys = [];
+    G.forEach(([gid, items]) => { out['g_' + gid] = items.map(([name, freq, def], i) => { const k = gid + i; allKeys.push(k); const o = on[k] !== undefined ? on[k] : def; all++; if (o) n++; return {
+      name, on: o, meta: o ? freq.toUpperCase() : 'OFF · WON’T SHOW UP', label: (o ? 'Turn off: ' : 'Turn on: ') + name, track: sw(o), knob: kn(o),
+      flip: () => this.setState({ on: Object.assign({}, on, { [k]: !o }) }),
+      nameStyle: 'font-size: 15px; font-weight: 600; line-height: 1.3; ' + (o ? '' : 'color: rgba(7,18,56,0.45);'),
+      metaStyle: 'font-size: 10px; font-weight: 600; letter-spacing: 0.3px; color: ' + (o ? 'rgba(7,18,56,0.55)' : 'rgba(7,18,56,0.4)') + ';',
+      sep: i ? 'border-top: 0.5px solid rgba(7,18,56,0.12);' : '' }; }); });
+    out.nOn = n; out.nAll = all; out.perMonth = 'ABOUT ' + Math.round(n * 0.55) + ' A MONTH';
+    out.bar = 'display: block; height: 100%; border-radius: 3px; background: #2540D8; width: ' + (n / all * 100) + '%;';
+    out.cta = 'Looks good — keep ' + n;
+    out.keepAll = () => { const o = {}; allKeys.forEach((k) => { o[k] = true; }); this.setState({ on: o }); };
+    return out;
+  }
+}
+</script>
+</body>
+</html>

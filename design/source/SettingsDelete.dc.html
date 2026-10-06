@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona SettingsDelete</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}select:focus{outline:none}
+input[type=time]::-webkit-calendar-picker-indicator{opacity:0.5}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; position: relative; overflow: hidden">
+<div aria-hidden="true" style="position: absolute; left: 0; top: -620px; width: 390px; height: 1620px; pointer-events: none"><dc-import name="SettingsHub" hint-size="390px,1620px"></dc-import></div>
+<div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(7,18,56,0.55)"></div>
+<section role="alertdialog" aria-label="Delete your account" style="position: absolute; left: 16px; right: 16px; top: 120px; background: #FFFFFF; border-radius: 24px; padding: 22px 20px 18px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 24px 60px rgba(7,18,56,0.35)">
+<span style="width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid #FF3B62; box-sizing: border-box; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF3B62" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"></path><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636-2.87l-8.106-13.536a1.914 1.914 0 0 0-3.274 0z"></path><path d="M12 16h.01"></path></svg></span>
+<h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.6px">Delete your account?</h1>
+<p style="margin: 0; font-size: 14px; line-height: 1.5; color: rgba(7,18,56,0.7)">This removes your home's whole record — <strong>12 documents, 34 completed tasks, 5 projects</strong> and every photo. Your household loses access too.</p>
+<div style="display: flex; gap: 10px; padding: 12px; border-radius: 12px; border: 1px solid rgba(7,18,56,0.12)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2540D8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-12a2 2 0 0 1-2-2v-12z"></path><path d="M16 3v4"></path><path d="M8 3v4"></path><path d="M4 11h16"></path></svg><span style="font-size: 13px; line-height: 1.45; color: rgba(7,18,56,0.7)"><strong style="color: #071238">30 days to change your mind.</strong> Log back in before Nov 4 and everything comes back. After that it's gone for good.</span></div>
+<a href="SettingsExport.dc.html" style="font-size: 14px; font-weight: 600; color: #2540D8; min-height: 32px; display: flex; align-items: center">Save a copy of your record first →</a>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">TYPE DELETE TO CONFIRM</span></span>
+<input type="text" value="{{word}}" onChange="{{onWord}}" autocomplete="off" autocapitalize="characters" aria-label="Type DELETE to confirm" style="{{wordBox}}">
+</div>
+<button type="button" style="{{delBtn}}" aria-disabled="{{notOk}}">Delete my account</button>
+<a href="SettingsHub.dc.html" style="height: 48px; border-radius: 999px; border: 1.5px solid rgba(7,18,56,0.2); box-sizing: border-box; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center">Keep my account</a>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const word = st.word || '';
+    const ok = word.trim().toUpperCase() === 'DELETE';
+    return { word, onWord: (e) => this.setState({ word: e.target.value }), notOk: !ok,
+      wordBox: 'width: 100%; height: 50px; padding: 0 14px; font-size: 16px; font-weight: 700; letter-spacing: 2px; border-radius: 12px; box-sizing: border-box; border: ' + (ok ? '1.5px solid #FF3B62' : '1px solid rgba(7,18,56,0.18)') + ';',
+      delBtn: 'height: 50px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; ' + (ok ? 'background: #FF3B62; color: #FFFFFF;' : 'background: rgba(7,18,56,0.08); color: rgba(7,18,56,0.35); cursor: default;') };
+  }
+}
+</script>
+</body>
+</html>

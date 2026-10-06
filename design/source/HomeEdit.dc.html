@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona HomeEdit</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}select:focus{outline:none}
+input[type=time]::-webkit-calendar-picker-indicator{opacity:0.5}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1560px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; display: flex; flex-direction: column">
+<div style="position: sticky; top: 0; z-index: 2; background: #FFFFFF; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 10px 16px; border-bottom: 0.5px solid rgba(7,18,56,0.12)">
+<a href="HomeProfile.dc.html" style="justify-self: start; display: flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 500; color: rgba(7,18,56,0.6)">Cancel</a>
+<h1 style="margin: 0; font-size: 16px; font-weight: 700">Edit home</h1>
+<span style="justify-self: end"><sc-if value="{{dirty}}" hint-placeholder-val="{{ false }}"><a href="HomeProfile.dc.html" style="display: flex; align-items: center; height: 36px; padding: 0 16px; border-radius: 999px; background: #2540D8; color: #FFFFFF; font-size: 14px; font-weight: 600">Save</a></sc-if><sc-if value="{{clean}}" hint-placeholder-val="{{ true }}"><span aria-disabled="true" style="display: flex; align-items: center; height: 36px; padding: 0 16px; border-radius: 999px; background: rgba(7,18,56,0.08); color: rgba(7,18,56,0.35); font-size: 14px; font-weight: 600">Save</span></sc-if></span>
+</div>
+<main style="padding: 18px 16px 32px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; flex-direction: column; gap: 8px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">PHOTO</span>
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px"><div style="position: relative"><div style="position: relative; aspect-ratio: 4 / 3; border-radius: 14px; overflow: hidden; border: 1px solid rgba(37,64,216,0.25); background-image: linear-gradient(rgba(37,64,216,0.11) 1px, transparent 1px), linear-gradient(90deg, rgba(37,64,216,0.11) 1px, transparent 1px); background-size: 22px 22px; background-position: -1px -1px"><span class="m" style="position: absolute; left: 8px; bottom: 8px; padding: 2px 7px; border-radius: 999px; background: #FFFFFF; border: 1px solid rgba(7,18,56,0.12); font-size: 8.5px; font-weight: 700; letter-spacing: 0.8px; color: rgba(7,18,56,0.6)">FRONT OF HOUSE</span></div><span class="m" style="position: absolute; right: 8px; top: 8px; padding: 2px 7px; border-radius: 999px; background: #071238; color: #FFFFFF; font-size: 8.5px; font-weight: 700; letter-spacing: 0.8px">COVER</span></div>
+<button type="button" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border-radius: 14px; border: 1.5px dashed rgba(7,18,56,0.22); color: rgba(7,18,56,0.55)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h1a2 2 0 0 0 2-2a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-14a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2"></path><path d="M9 13a3 3 0 1 0 6 0a3 3 0 0 0-6 0"></path></svg><span class="m" style="font-size: 9px; font-weight: 700; letter-spacing: 0.6px">ADD</span></button></div>
+</div>
+
+<section style="display: flex; flex-direction: column; gap: 14px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">ADDRESS</h2></div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">STREET</span><span aria-hidden="true" style="color: #FF3B62; font-weight: 700">*</span></span>
+<input type="text" inputmode="text" value="{{street}}" onChange="{{on_street}}" placeholder="" style="width: 100%; height: 50px; padding: 0 14px; font-size: 16px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box">
+</div>
+<div style="display: grid; grid-template-columns: 1.4fr 0.7fr 1fr; gap: 8px"><div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">CITY</span></span>
+<input type="text" inputmode="text" value="{{city}}" onChange="{{on_city}}" placeholder="" style="width: 100%; height: 50px; padding: 0 14px; font-size: 16px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box">
+</div><div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">STATE</span></span>
+<input type="text" inputmode="text" value="{{state}}" onChange="{{on_state}}" placeholder="" style="width: 100%; height: 50px; padding: 0 14px; font-size: 16px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box">
+</div><div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">ZIP</span></span>
+<input type="text" inputmode="numeric" value="{{zip}}" onChange="{{on_zip}}" placeholder="" style="width: 100%; height: 50px; padding: 0 14px; font-size: 16px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box">
+</div></div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 10px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">KIND OF HOME</h2></div>
+<div role="radiogroup" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px"><sc-for list="{{types}}" as="t" hint-placeholder-count="4"><button type="button" role="radio" aria-checked="{{t.on}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.l}}</button></sc-for></div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 14px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">SIZE & AGE</h2></div>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px"><div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">YEAR BUILT</span></span>
+<input type="text" inputmode="numeric" value="{{year}}" onChange="{{on_year}}" placeholder="1998" style="width: 100%; height: 50px; padding: 0 14px; font-size: 16px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">{{yearHelp}}</span></div><div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">SQUARE FEET</span></span>
+<input type="text" inputmode="numeric" value="{{sqft}}" onChange="{{on_sqft}}" placeholder="" style="width: 100%; height: 50px; padding: 0 14px; font-size: 16px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box">
+</div></div>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px"><div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">LOT (ACRES)</span></span>
+<input type="text" inputmode="decimal" value="{{lot}}" onChange="{{on_lot}}" placeholder="" style="width: 100%; height: 50px; padding: 0 14px; font-size: 16px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box">
+</div><div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">GARAGE</span></span>
+<input type="text" inputmode="text" value="{{garage}}" onChange="{{on_garage}}" placeholder="" style="width: 100%; height: 50px; padding: 0 14px; font-size: 16px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box">
+</div></div>
+<div style="border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden"><div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 6px 8px 14px; min-height: 56px; box-sizing: border-box">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">BEDROOMS</span>
+<span style="display: flex; align-items: center; gap: 4px"><button type="button" aria-label="Fewer" onClick="{{dec_beds}}" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: rgba(7,18,56,0.7)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button><span style="min-width: 36px; text-align: center; font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums">{{beds}}</span><button type="button" aria-label="More" onClick="{{inc_beds}}" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: rgba(7,18,56,0.7)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></button></span>
+</div><div style="border-top: 0.5px solid rgba(7,18,56,0.12)"><div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 6px 8px 14px; min-height: 56px; box-sizing: border-box">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">BATHROOMS</span>
+<span style="display: flex; align-items: center; gap: 4px"><button type="button" aria-label="Fewer" onClick="{{dec_baths}}" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: rgba(7,18,56,0.7)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button><span style="min-width: 36px; text-align: center; font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums">{{baths}}</span><button type="button" aria-label="More" onClick="{{inc_baths}}" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: rgba(7,18,56,0.7)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></button></span>
+</div></div><div style="border-top: 0.5px solid rgba(7,18,56,0.12)"><div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 6px 8px 14px; min-height: 56px; box-sizing: border-box">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">STORIES</span>
+<span style="display: flex; align-items: center; gap: 4px"><button type="button" aria-label="Fewer" onClick="{{dec_stories}}" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: rgba(7,18,56,0.7)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button><span style="min-width: 36px; text-align: center; font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums">{{stories}}</span><button type="button" aria-label="More" onClick="{{inc_stories}}" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: rgba(7,18,56,0.7)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></button></span>
+</div></div></div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 14px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">WHEN YOU BOUGHT IT</h2><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">OPTIONAL · ONLY YOU SEE THIS</span></div>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px"><div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">DATE</span></span>
+<input type="text" inputmode="text" value="{{bought}}" onChange="{{on_bought}}" placeholder="" style="width: 100%; height: 50px; padding: 0 14px; font-size: 16px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box">
+</div><div style="display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 3px; min-height: 13px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">PRICE</span></span>
+<input type="text" inputmode="numeric" value="{{price}}" onChange="{{on_price}}" placeholder="" style="width: 100%; height: 50px; padding: 0 14px; font-size: 16px; border: 1px solid rgba(7,18,56,0.18); border-radius: 12px; box-sizing: border-box">
+</div></div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">CLIMATE</h2></div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; background: rgba(7,18,56,0.04)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.6)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4l2 1l2-1"></path><path d="M12 2v6.5l3 1.72"></path><path d="M17.928 6.268l.134 2.232l1.866 1.232"></path><path d="M20.66 7l-5.629 3.25l.01 3.458"></path><path d="M19.928 14.268l-1.866 1.232l-.134 2.232"></path><path d="M20.66 17l-5.629-3.25l-2.99 1.738"></path><path d="M14 20l-2-1l-2 1"></path><path d="M12 22v-6.5l-3-1.72"></path><path d="M6.072 17.732l-.134-2.232l-1.866-1.232"></path><path d="M3.34 17l5.629-3.25l-.01-3.458"></path><path d="M4.072 9.732l1.866-1.232l.134-2.232"></path><path d="M3.34 7l5.629 3.25l2.99-1.738"></path></svg><span style="flex: 1; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; font-weight: 600">Zone 4A · mixed-humid</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.35; color: rgba(7,18,56,0.45)">{{zoneHelp}}</span></span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.4)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-10a2 2 0 0 1-2-2v-6z"></path><path d="M8 11v-4a4 4 0 1 1 8 0v4"></path></svg></div>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1560}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const D = { street: '1428 Elm Hollow Ln', city: 'Springfield', state: 'AL', zip: '35758', year: '1998', sqft: '2,140', lot: '0.31', garage: 'Attached · 2 cars', bought: 'Mar 2024', price: '$318,000', type: 'single', beds: 4, baths: 2.5, stories: 2 };
+    const v = (k) => st[k] !== undefined ? st[k] : D[k];
+    const dirty = Object.keys(D).some((k) => st[k] !== undefined && st[k] !== D[k]);
+    const out = { dirty, clean: !dirty };
+    ['street', 'city', 'state', 'zip', 'year', 'sqft', 'lot', 'garage', 'bought', 'price'].forEach((k) => { out[k] = v(k); out['on_' + k] = (e) => this.setState({ [k]: e.target.value }); });
+    const step = { beds: [1, 0, 9], baths: [0.5, 1, 8], stories: [1, 1, 4] };
+    Object.keys(step).forEach((k) => { const [s, lo, hi] = step[k]; out[k] = String(v(k)); out['inc_' + k] = () => this.setState({ [k]: Math.min(hi, v(k) + s) }); out['dec_' + k] = () => this.setState({ [k]: Math.max(lo, v(k) - s) }); });
+    const y = v('year'); const yOk = /^\d{4}$/.test(y) && +y > 1700 && +y <= 2026;
+    out.yearHelp = !yOk ? 'FOUR DIGITS, LIKE 1998' : (y !== D.year ? 'REMINDERS AND LIFESPANS WILL UPDATE' : '');
+    out.zoneHelp = v('zip') !== D.zip ? 'NEW ZIP · WE’LL RECHECK THE ZONE WHEN YOU SAVE' : 'SET FROM YOUR ZIP · CAN’T BE CHANGED BY HAND';
+    const T = [['single', 'Single-family'], ['town', 'Townhouse'], ['condo', 'Condo'], ['mobile', 'Manufactured']];
+    out.types = T.map(([k, l]) => ({ l, on: v('type') === k, pick: () => this.setState({ type: k }), style: 'height: 46px; border-radius: 12px; font-size: 14.5px; font-weight: 600; text-align: center; box-sizing: border-box; ' + (v('type') === k ? 'border: 1.5px solid #071238; background: #071238; color: #FFFFFF;' : 'border: 1px solid rgba(7,18,56,0.18); background: #FFFFFF; color: rgba(7,18,56,0.75);') }));
+    return out;
+  }
+}
+</script>
+</body>
+</html>

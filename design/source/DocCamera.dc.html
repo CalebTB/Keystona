@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona DocCamera</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font:inherit;color:#071238}select:focus{outline:none}
+input[type=time]::-webkit-calendar-picker-indicator{opacity:0.5}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+textarea{font:inherit;color:#071238;resize:none}textarea:focus{outline:none}textarea::placeholder{color:rgba(7,18,56,0.35)}input::placeholder{color:rgba(7,18,56,0.35)}.sb>*{flex-shrink:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #05091C; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #FFFFFF; position: relative; overflow: hidden">
+<div style="position: absolute; left: 0; right: 0; top: 0; display: flex; align-items: center; justify-content: space-between; padding: 54px 16px 0; z-index: 3">
+<a href="DocAddFrom.dc.html" aria-label="Close camera" style="width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6l-12 12"></path><path d="M6 6l12 12"></path></svg></a>
+<span class="m" style="{{modeStyle}}">{{modeLabel}}</span>
+<button type="button" onClick="{{flipFlash}}" aria-pressed="{{flash}}" aria-label="Flash" style="{{flashBtn}}"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3l0 7l6 0l-8 11l0-7l-6 0l8-11"></path></svg></button>
+</div>
+<div aria-hidden="true" style="position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, #3A3F55 0%, #10142A 65%)"></div>
+<div aria-hidden="true" style="position: absolute; left: 62px; top: 190px; width: 266px; height: 344px; background: #F4F1E8; transform: rotate(-3deg); box-shadow: 0 20px 40px rgba(0,0,0,0.45); border-radius: 3px; padding: 26px 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px">
+<span style="height: 12px; width: 60%; background: rgba(7,18,56,0.55); border-radius: 2px"></span><span style="height: 6px; width: 40%; background: rgba(7,18,56,0.3); border-radius: 2px"></span>
+<span style="height: 5px; width: 100%; background: rgba(7,18,56,0.18); border-radius: 2px; margin-top: 14px"></span><span style="height: 5px; width: 92%; background: rgba(7,18,56,0.18); border-radius: 2px"></span><span style="height: 5px; width: 96%; background: rgba(7,18,56,0.18); border-radius: 2px"></span><span style="height: 5px; width: 70%; background: rgba(7,18,56,0.18); border-radius: 2px"></span>
+<span style="height: 5px; width: 100%; background: rgba(7,18,56,0.18); border-radius: 2px; margin-top: 12px"></span><span style="height: 5px; width: 88%; background: rgba(7,18,56,0.18); border-radius: 2px"></span><span style="height: 5px; width: 94%; background: rgba(7,18,56,0.18); border-radius: 2px"></span>
+<span style="margin-top: auto; height: 22px; width: 46%; border: 1.5px solid rgba(7,18,56,0.35); border-radius: 2px"></span>
+</div>
+<div aria-hidden="true" style="position: absolute; left: 52px; top: 180px; width: 286px; height: 364px; transform: rotate(-3deg)">
+<span style="{{c1}}"></span><span style="{{c2}}"></span><span style="{{c3}}"></span><span style="{{c4}}"></span>
+</div>
+<div role="status" style="position: absolute; left: 0; right: 0; top: 566px; display: flex; justify-content: center; z-index: 3"><span style="{{hintStyle}}">{{hint}}</span></div>
+<div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 0 24px 40px; display: flex; flex-direction: column; gap: 18px; z-index: 3">
+<div role="radiogroup" aria-label="Capture" style="align-self: center; display: flex; gap: 4px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,0.1)"><sc-for list="{{modes}}" as="m" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{m.on}}" onClick="{{m.pick}}" style="{{m.style}}">{{m.l}}</button></sc-for></div>
+<div style="display: flex; align-items: center; justify-content: space-between">
+<span style="width: 56px; height: 56px; position: relative">
+<sc-if value="{{hasPages}}" hint-placeholder-val="{{ true }}"><span style="position: absolute; inset: 0; border-radius: 10px; background: #F4F1E8; border: 2px solid #FFFFFF; transform: rotate(-6deg)"></span><span style="position: absolute; inset: 0; border-radius: 10px; background: #F4F1E8; border: 2px solid #FFFFFF"></span><span class="m" style="position: absolute; right: -8px; top: -8px; min-width: 22px; height: 22px; padding: 0 5px; box-sizing: border-box; border-radius: 999px; background: #ECF87F; color: #4A6604; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center">{{pages}}</span></sc-if>
+</span>
+<button type="button" onClick="{{shoot}}" aria-label="Take picture" style="width: 78px; height: 78px; border-radius: 50%; border: 4px solid #FFFFFF; box-sizing: border-box; display: flex; align-items: center; justify-content: center"><span style="width: 62px; height: 62px; border-radius: 50%; background: #FFFFFF"></span></button>
+<sc-if value="{{hasPages}}" hint-placeholder-val="{{ true }}"><a href="{{doneHref}}" style="width: 72px; height: 44px; border-radius: 999px; background: #2540D8; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700">Done</a></sc-if>
+<sc-if value="{{noPages}}" hint-placeholder-val="{{ false }}"><span style="width: 72px"></span></sc-if>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const pages = st.pages !== undefined ? st.pages : 2;
+    const smart = st.mode !== 'plain';
+    const ready = st.ready !== undefined ? st.ready : true;
+    const flash = !!st.flash;
+    const corner = (pos) => {
+      const base = 'position: absolute; width: 34px; height: 34px; border-color: ' + (ready ? '#ECF87F' : 'rgba(255,255,255,0.7)') + '; border-style: solid; border-width: 0; transition: border-color .2s;';
+      const m = { tl: 'left: 0; top: 0; border-left-width: 4px; border-top-width: 4px; border-top-left-radius: 10px;', tr: 'right: 0; top: 0; border-right-width: 4px; border-top-width: 4px; border-top-right-radius: 10px;',
+                  bl: 'left: 0; bottom: 0; border-left-width: 4px; border-bottom-width: 4px; border-bottom-left-radius: 10px;', br: 'right: 0; bottom: 0; border-right-width: 4px; border-bottom-width: 4px; border-bottom-right-radius: 10px;' };
+      return base + m[pos]; };
+    return {
+      c1: corner('tl'), c2: corner('tr'), c3: corner('bl'), c4: corner('br'),
+      hint: ready ? 'Edges found — hold still' : 'Move closer · fill the frame',
+      hintStyle: 'padding: 8px 14px; border-radius: 999px; font-size: 14px; font-weight: 600; ' + (ready ? 'background: #ECF87F; color: #2E4003;' : 'background: rgba(255,255,255,0.14); color: #FFFFFF;'),
+      pages, hasPages: pages > 0, noPages: pages === 0,
+      shoot: () => this.setState({ pages: pages + 1, ready: !ready }),
+      doneHref: smart ? 'DocReading.dc.html' : 'AddDocument.dc.html',
+      modeLabel: smart ? '★ SMART SCAN · PAGE ' + (pages + 1) : 'PAGE ' + (pages + 1),
+      modeStyle: 'padding: 6px 12px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.8px; ' + (smart ? 'background: #FF3B62; color: #FFFFFF;' : 'background: rgba(255,255,255,0.14); color: #FFFFFF;'),
+      flash, flipFlash: () => this.setState({ flash: !flash }),
+      flashBtn: 'width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; ' + (flash ? 'background: #ECF87F; color: #2E4003;' : 'background: rgba(255,255,255,0.12); color: #FFFFFF;'),
+      modes: [['smart', 'Smart scan'], ['plain', 'Just the photo']].map(([k, l]) => { const on = (k === 'smart') === smart; return { l, on, pick: () => this.setState({ mode: k }),
+        style: 'height: 34px; padding: 0 14px; border-radius: 999px; font-size: 13px; font-weight: 600; ' + (on ? 'background: #FFFFFF; color: #071238;' : 'color: rgba(255,255,255,0.75);') }; })
+    };
+  }
+}
+</script>
+</body>
+</html>

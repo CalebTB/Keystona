@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona before and after</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #071238; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #FFFFFF; display: flex; flex-direction: column; overflow: hidden">
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px">
+<a href="ProjectPhotos.dc.html" style="display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -6px; font-size: 15px; font-weight: 500; color: #FFFFFF"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"></path></svg>Photos</a>
+<span style="font-size: 16px; font-weight: 700">{{name}}</span>
+<button type="button" aria-label="More" style="width: 44px; height: 44px; margin-right: -8px; display: flex; align-items: center; justify-content: center; color: #FFFFFF"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+</div>
+
+<!-- Drag anywhere on the photo to move the line -->
+<div onPointerDown="{{grab}}" role="slider" aria-label="Before and after" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{pct}}" tabindex="0" onKeyDown="{{keys}}" style="position: relative; height: 520px; touch-action: none; cursor: ew-resize; user-select: none; overflow: hidden; background-color: #FFFFFF; background-image: linear-gradient(rgba(37,64,216,0.16) 1px, transparent 1px), linear-gradient(90deg, rgba(37,64,216,0.16) 1px, transparent 1px); background-size: 13px 13px; background-position: -1px -1px;">
+<span style="{{afterClip}}">
+<span style="position: absolute; inset: 0; background-color: #FFFFFF; background-image: linear-gradient(rgba(37,64,216,0.14) 1px, transparent 1px), linear-gradient(90deg, rgba(37,64,216,0.14) 1px, transparent 1px); background-size: 30px 30px; background-position: -1px -1px;"></span>
+<span style="{{aWrap}}"><span class="m" style="position: absolute; right: 12px; top: 12px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.7px; white-space: nowrap; box-sizing: border-box; background: #ECF87F; border: 1px solid #ECF87F; color: #4A6604"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M5 12l5 5l10-10"></path></svg>AFTER · DAY {{day1}}</span></span>
+</span>
+<span style="{{bWrap}}"><span class="m" style="position: absolute; left: 12px; top: 12px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.7px; white-space: nowrap; box-sizing: border-box; background: #FFFFFF; border: 1px solid rgba(7,18,56,0.28); color: rgba(7,18,56,0.75)"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px currentColor; flex-shrink: 0"></span>BEFORE · DAY {{day0}}</span></span>
+<span style="{{line}}"></span>
+<span style="{{knob}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l-6 6l6 6"></path><path d="M15 6l6 6l-6 6"></path></svg></span>
+</div>
+
+<div style="flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 18px 16px 24px">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px">
+<span style="font-size: 26px; font-weight: 800; letter-spacing: -0.8px">{{gap}}</span>
+<span class="m" style="font-size: 10px; font-weight: 700; letter-spacing: 1px; color: #ECF87F">{{pctText}}</span>
+</div>
+<span class="m" style="font-size: 10px; font-weight: 600; letter-spacing: 0.6px; line-height: 1.5; color: rgba(255,255,255,0.6); margin-top: -8px">{{meta}}</span>
+<div style="display: flex; align-items: center; justify-content: space-between">
+<button type="button" onClick="{{prev}}" aria-label="Previous pair" style="{{prevStyle}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"></path></svg></button>
+<span style="display: flex; gap: 8px"><sc-for list="{{dots}}" as="d" hint-placeholder-count="2"><span style="{{d}}"></span></sc-for></span>
+<button type="button" onClick="{{next}}" aria-label="Next pair" style="{{nextStyle}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6l-6 6"></path></svg></button>
+</div>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto">
+<button type="button" style="height: 46px; border-radius: 999px; border: 1.5px solid rgba(255,255,255,0.35); box-sizing: border-box; color: #FFFFFF; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center">Share</button>
+<button type="button" onClick="{{flipCover}}" style="{{coverBtn}}">{{coverText}}</button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const PAIRS = [
+      { name: 'Shower wall', d0: 'AUG 31', d1: 'OCT 3', day0: 1, day1: 34, gap: '33 days apart', meta: 'AUG 31 · DEMO & PREP  →  OCT 3 · TILE & FIXTURES' },
+      { name: 'Floor', d0: 'SEP 1', d1: 'OCT 2', day0: 2, day1: 33, gap: '31 days apart', meta: 'SEP 1 · DEMO & PREP  →  OCT 2 · TILE & FIXTURES' }
+    ];
+    const i = st.i || 0;
+    const p = PAIRS[i];
+    const pos = st.pos !== undefined ? st.pos : 0.5;
+    const out = { name: p.name, d0: p.d0, d1: p.d1, day0: p.day0, day1: p.day1, gap: p.gap, meta: p.meta };
+    out.pct = Math.round(pos * 100);
+    const wrapS = (o) => 'position: absolute; inset: 0; z-index: 2; pointer-events: none; transition: opacity .15s; opacity: ' + o + ';';
+    out.bWrap = wrapS(pos < 0.32 ? 0 : 1); out.aWrap = wrapS(pos > 0.68 ? 0 : 1);
+    out.pctText = pos < 0.08 ? 'ALL AFTER' : pos > 0.92 ? 'ALL BEFORE' : 'DRAG TO COMPARE';
+    out.afterClip = 'position: absolute; inset: 0; clip-path: inset(0 0 0 ' + (pos * 100) + '%);';
+    out.line = 'position: absolute; top: 0; bottom: 0; left: ' + (pos * 100) + '%; width: 3px; margin-left: -1.5px; background: #ECF87F; box-shadow: 0 0 0 1px rgba(7,18,56,0.2);';
+    out.knob = 'position: absolute; top: 50%; left: ' + (pos * 100) + '%; width: 48px; height: 48px; margin: -24px 0 0 -24px; border-radius: 50%; background: #ECF87F; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(7,18,56,0.35); pointer-events: none;';
+    out.grab = (e) => {
+      const r = e.currentTarget.getBoundingClientRect();
+      const at = (x) => Math.max(0, Math.min(1, (x - r.left) / r.width));
+      this.setState({ pos: at(e.clientX) });
+      const mv = (ev) => this.setState({ pos: at(ev.clientX) });
+      const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); };
+      window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
+    };
+    out.keys = (e) => { if (e.key === 'ArrowLeft') this.setState({ pos: Math.max(0, pos - 0.05) }); if (e.key === 'ArrowRight') this.setState({ pos: Math.min(1, pos + 0.05) }); };
+    out.dots = PAIRS.map((_, k) => 'width: 6px; height: 6px; border-radius: 50%; background: ' + (k === i ? '#ECF87F' : 'rgba(255,255,255,0.4)') + ';');
+    out.prev = () => this.setState({ i: Math.max(0, i - 1), pos: 0.5 });
+    out.next = () => this.setState({ i: Math.min(PAIRS.length - 1, i + 1), pos: 0.5 });
+    const nb = 'width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: ';
+    out.prevStyle = nb + (i > 0 ? '#FFFFFF' : 'rgba(255,255,255,0.25)') + ';';
+    out.nextStyle = nb + (i < PAIRS.length - 1 ? '#FFFFFF' : 'rgba(255,255,255,0.25)') + ';';
+    const cover = !!(st.cover && st.cover[i]);
+    out.flipCover = () => this.setState({ cover: Object.assign({}, st.cover || {}, { [i]: !cover }) });
+    out.coverText = cover ? 'Project cover ✓' : 'Set as cover';
+    out.coverBtn = 'height: 46px; border-radius: 999px; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; ' + (cover ? 'background: #ECF87F; color: #071238;' : 'background: #FFFFFF; color: #071238;');
+    return out;
+  }
+}
+</script>
+</body>
+</html>

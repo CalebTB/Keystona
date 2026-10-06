@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona furnace</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 2020px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; display: flex; flex-direction: column">
+<main style="padding: 12px 16px 28px; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<a href="HomeSystems.dc.html" style="display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -6px; font-size: 15px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"></path></svg>Systems</a>
+<a href="AddSystem.dc.html" style="min-height: 44px; display: flex; align-items: center; font-size: 15px; font-weight: 600">Edit</a>
+</div>
+
+<header style="display: flex; flex-direction: column; gap: 8px; margin-top: -8px">
+<span class="m" style="display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">HVAC · SYSTEM <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px; border: 1px solid #4A6604; color: #4A6604; font-size: 9px; font-weight: 700; letter-spacing: 0.8px"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10-10"></path></svg>HEALTHY</span></span>
+<h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.9px; line-height: 1.1">Furnace</h1>
+<span style="font-size: 15px; color: rgba(7,18,56,0.6)">Northline NF95-080B · Basement utility room</span>
+</header>
+
+<div style="position: relative; aspect-ratio: 16 / 10; border-radius: 16px; overflow: hidden; border: 1px solid rgba(37,64,216,0.25); background-image: linear-gradient(rgba(37,64,216,0.11) 1px, transparent 1px), linear-gradient(90deg, rgba(37,64,216,0.11) 1px, transparent 1px); background-size: 22px 22px; background-position: -1px -1px"><span class="m" style="position: absolute; left: 10px; bottom: 10px; padding: 3px 8px; border-radius: 999px; background: #FFFFFF; border: 1px solid rgba(7,18,56,0.12); font-size: 9px; font-weight: 700; letter-spacing: 0.8px; color: rgba(7,18,56,0.6)">UNIT</span><a href="ItemPhotos.dc.html" class="m" style="position: absolute; right: 10px; top: 10px; display: flex; align-items: center; gap: 5px; height: 28px; padding: 0 10px; border-radius: 999px; background: #FFFFFF; border: 1px solid rgba(7,18,56,0.12); font-size: 9.5px; font-weight: 700; letter-spacing: 0.6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h1a2 2 0 0 0 2-2a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-14a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2"></path><path d="M12 13m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0"></path></svg>4 PHOTOS</a></div>
+
+<section aria-label="Lifespan" style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">LIFESPAN</h2></div>
+<div style="border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px">
+<span style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 30px; font-weight: 800; letter-spacing: -1px; font-variant-numeric: tabular-nums">5½ yrs</span><span style="font-size: 15px; font-weight: 600; color: rgba(7,18,56,0.6)">old</span></span>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">OF ~15 YRS EXPECTED</span>
+</div>
+<div role="img" aria-label="37 percent through its expected life" style="position: relative; height: 8px; border-radius: 4px; box-shadow: inset 0 0 0 1px rgba(7,18,56,0.2); overflow: hidden">
+<span style="position: absolute; left: 0; top: 0; bottom: 0; width: 37%; background: #2540D8; border-radius: 4px"></span>
+<span style="position: absolute; left: 75%; top: 0; bottom: 0; width: 1px; background: rgba(7,18,56,0.25)"></span>
+</div>
+<div style="display: flex; justify-content: space-between"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">INSTALLED MAR 2021</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">REPLACE AROUND 2036</span></div>
+<p style="margin: 0; padding-top: 12px; border-top: 0.5px solid rgba(7,18,56,0.12); font-size: 14px; line-height: 1.45; color: rgba(7,18,56,0.75)">About <strong>9½ years left</strong>. A furnace this size runs about $5,800–7,200 to replace — we'll start planning with you around 2033.</p>
+</div>
+</section>
+
+<section aria-label="Next up" style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">NEXT UP · {{taskCount}}</h2></div>
+<ul style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden">
+<sc-for list="{{tasks}}" as="t" hint-placeholder-count="2">
+<li style="{{t.sep}}">
+<div style="display: flex; align-items: center; gap: 6px; padding: 8px 14px 8px 4px; min-height: 64px; box-sizing: border-box">
+<button aria-label="{{t.checkLabel}}" aria-pressed="{{t.done}}" onClick="{{t.toggle}}" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<span style="{{t.circleStyle}}"><sc-if value="{{t.done}}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10-10"></path></svg></sc-if></span>
+</button>
+<a href="{{t.href}}" style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px">
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="{{t.titleStyle}}">{{t.name}}</span>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{t.meta}}</span>
+</span>
+<sc-if value="{{t.hasChip}}" hint-placeholder-val="{{ false }}">
+<span class="m" style="padding: 3px 8px; border-radius: 999px; border: 1px solid rgba(7,18,56,0.16); color: rgba(7,18,56,0.55); font-size: 9px; font-weight: 600; letter-spacing: 0.8px; flex-shrink: 0">{{t.chip}}</span>
+</sc-if>
+<span style="{{t.dateStyle}}">{{t.date}}</span>
+</a>
+</div>
+</li>
+</sc-for>
+</ul>
+<a href="ItemTasks.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 44px; border: 1px solid rgba(7,18,56,0.12); border-radius: 999px; font-size: 14px; font-weight: 600">All 5 HVAC tasks<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.35)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 6l6 6l-6 6"></path></svg></a>
+</section>
+
+<!-- Warranty: active = olive -->
+<section aria-label="Warranty" style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">WARRANTY</h2></div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px">
+<span style="width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid #4A6604; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-sizing: border-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4A6604" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1-8.5 15a12 12 0 0 1-8.5-15a12 12 0 0 0 8.5-3"></path></svg></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; font-weight: 600">10-year parts warranty</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">NORTHLINE · UNTIL MAR 2031</span></span>
+<span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px; border: 1px solid #4A6604; color: #4A6604; font-size: 9px; font-weight: 700; letter-spacing: 0.8px"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10-10"></path></svg>ACTIVE</span>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">IDENTIFICATION</h2></div><div style="border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden"><div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; "><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">BRAND</span><span style="font-size: 14px; font-weight: 600; text-align: right">Northline</span></div><div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-top: 0.5px solid rgba(7,18,56,0.12);"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">MODEL</span><span style="font-size: 14px; font-weight: 600; text-align: right"><span style="font-variant-numeric: tabular-nums">NF95-080B</span></span></div><div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-top: 0.5px solid rgba(7,18,56,0.12);"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">SERIAL</span><span style="font-size: 14px; font-weight: 600; text-align: right"><span style="display: inline-flex; align-items: center; gap: 2px; margin: -12px -8px -12px 0"><span style="font-variant-numeric: tabular-nums">2103A47719</span><button type="button" onClick="{{copy}}" aria-label="Copy serial number" style="min-width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: rgba(7,18,56,0.5)"><sc-if value="{{notCopied}}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8m0 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2z"></path><path d="M16 8v-2a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></sc-if><sc-if value="{{copied}}" hint-placeholder-val="{{ false }}"><span class="m" style="font-size: 9px; font-weight: 700; letter-spacing: 0.8px; color: #4A6604">COPIED</span></sc-if></button></span></span></div><div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-top: 0.5px solid rgba(7,18,56,0.12);"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">FUEL</span><span style="font-size: 14px; font-weight: 600; text-align: right">Natural gas</span></div><div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-top: 0.5px solid rgba(7,18,56,0.12);"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">OUTPUT</span><span style="font-size: 14px; font-weight: 600; text-align: right">80,000 BTU · 95% AFUE</span></div><div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-top: 0.5px solid rgba(7,18,56,0.12);"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">FILTER</span><span style="font-size: 14px; font-weight: 600; text-align: right">16 × 25 × 1 · MERV 8</span></div></div></section>
+
+<section aria-label="History" style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">HISTORY · 3</h2><span class="m" style="font-size: 10px; font-weight: 600; letter-spacing: 0.6px; color: rgba(7,18,56,0.55)">$5,189 SINCE 2021</span></div>
+<ol style="list-style: none; margin: 0; padding: 16px 14px; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px"><li style="position: relative; display: flex; gap: 14px; padding-bottom: 18px"><span aria-hidden="true" style="position: absolute; left: 5.5px; top: 16px; bottom: -4px; width: 1px; background: rgba(7,18,56,0.18)"></span><span style="position: relative; width: 12px; height: 12px; margin-top: 4px; border-radius: 50%; box-sizing: border-box; flex-shrink: 0; background: #071238;"></span><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">OCT 2025</span><span style="font-size: 15px; font-weight: 600">Annual tune-up</span><span style="font-size: 13px; color: rgba(7,18,56,0.6)">Summit Heating &amp; Air · receipt saved</span></span><span style="font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; padding-top: 16px">$129</span></li><li style="position: relative; display: flex; gap: 14px; padding-bottom: 18px"><span aria-hidden="true" style="position: absolute; left: 5.5px; top: 16px; bottom: -4px; width: 1px; background: rgba(7,18,56,0.18)"></span><span style="position: relative; width: 12px; height: 12px; margin-top: 4px; border-radius: 50%; box-sizing: border-box; flex-shrink: 0; background: #071238;"></span><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">FEB 2025</span><span style="font-size: 15px; font-weight: 600">Replaced the igniter</span><span style="font-size: 13px; color: rgba(7,18,56,0.6)">Summit Heating &amp; Air · under warranty</span></span><span style="font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; padding-top: 16px">$210</span></li><li style="position: relative; display: flex; gap: 14px; padding-bottom: 0"><span style="position: relative; width: 12px; height: 12px; margin-top: 4px; border-radius: 50%; box-sizing: border-box; flex-shrink: 0; border: 2px solid #071238; background: #FFFFFF;"></span><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">MAR 2021</span><span style="font-size: 15px; font-weight: 600">Installed</span><span style="font-size: 13px; color: rgba(7,18,56,0.6)">Summit Heating &amp; Air</span></span><span style="font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; padding-top: 16px">$4,850</span></li></ol>
+<a href="#" style="display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px; border: 1.5px dashed rgba(7,18,56,0.22); border-radius: 14px; font-size: 15px; font-weight: 600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>Log a repair or service</a>
+</section>
+
+<section aria-label="Documents" style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">DOCUMENTS · 3</h2></div><ul style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden"><li style=""><a href="DocDetail.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; box-sizing: border-box"><span style="width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(7,18,56,0.14); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-sizing: border-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path></svg></span><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; font-weight: 600">Northline warranty</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; color: rgba(7,18,56,0.55)">WARRANTY · PDF · UNTIL MAR 2031</span></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.35)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 6l6 6l-6 6"></path></svg></a></li><li style="border-top: 0.5px solid rgba(7,18,56,0.12);"><a href="#" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; box-sizing: border-box"><span style="width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(7,18,56,0.14); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-sizing: border-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path></svg></span><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; font-weight: 600">Install invoice</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; color: rgba(7,18,56,0.55)">RECEIPT · MAR 2021 · $4,850</span></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.35)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 6l6 6l-6 6"></path></svg></a></li><li style="border-top: 0.5px solid rgba(7,18,56,0.12);"><a href="#" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; box-sizing: border-box"><span style="width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(7,18,56,0.14); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-sizing: border-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path></svg></span><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; font-weight: 600">Tune-up report</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; color: rgba(7,18,56,0.55)">SERVICE · OCT 2025</span></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.35)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 6l6 6l-6 6"></path></svg></a></li></ul></section>
+</main>
+<div style="margin-top: auto; position: sticky; bottom: 0">
+<nav aria-label="Main tabs" style="height: 84px; box-sizing: border-box; border-top: 0.5px solid rgba(7,18,56,0.12); background: #FFFFFF; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 8px 0 22px; flex-shrink: 0">
+<a href="Tabbed.dc.html" aria-current="page" style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #FF3B62">
+<span style="position: absolute; top: -8px; left: 50%; margin-left: -10px; width: 20px; height: 3px; border-radius: 0 0 3px 3px; background: #FF3B62"></span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l-2 0l9-9l9 9l-2 0"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"></path></svg>
+<span style="font-size: 10px; font-weight: 700">Home</span>
+</a>
+<a href="DocsSearchLed.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Docs</span>
+</a>
+<a href="Tasks.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12l5 5l10-10"></path><path d="M2 12l5 5m5-5l5-5"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Tasks</span>
+</a>
+<a href="ProjectsMany.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h6v8h-6z"></path><path d="M14 4h6v4h-6z"></path><path d="M4 16h6v4h-6z"></path><path d="M14 12h6v8h-6z"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Projects</span>
+</a>
+<a href="SettingsHub.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37c1 .608 2.296.07 2.572-1.065z"></path><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Settings</span>
+</a>
+</nav>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":2020}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const flips = st.flips || {};
+    const flip = (id) => () => this.setState({ flips: Object.assign({}, flips, { [id]: !flips[id] }) });
+    const ROWS = [
+      { id: 'filter', name: 'Replace HVAC air filter', meta: 'HVAC · 15 MIN · $25', date: 'OCT 7', soon: true, href: 'TaskDetail.dc.html' },
+      { id: 'service', name: 'Service the furnace', meta: 'HVAC · FALL PREP', chip: 'PRO', date: 'OCT 28' }
+    ];
+    const tasks = ROWS.map((t, i) => {
+      const d = !!flips[t.id];
+      return {
+        name: t.name, meta: t.meta, chip: t.chip || '', hasChip: !!t.chip && !d, done: d,
+        href: t.href || '#',
+        date: d ? 'DONE' : t.date,
+        dateStyle: 'font-size: 10px; font-weight: 600; flex-shrink: 0; min-width: 40px; text-align: right; color: ' + (t.soon && !d ? '#6B4F00' : 'rgba(7,18,56,0.55)') + ';',
+        checkLabel: (d ? 'Mark not done: ' : 'Mark done: ') + t.name, toggle: flip(t.id),
+        circleStyle: 'width: 24px; height: 24px; border-radius: 50%; box-sizing: border-box; display: flex; align-items: center; justify-content: center; ' + (d ? 'background: #4A6604; border: 1.5px solid #4A6604; color: #ECF87F;' : (t.soon ? 'border: 1.5px solid #B08A00;' : 'border: 1.5px solid rgba(7,18,56,0.3);')),
+        titleStyle: 'font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; ' + (d ? 'text-decoration: line-through; color: rgba(7,18,56,0.45);' : ''),
+        sep: i === 0 ? '' : 'border-top: 0.5px solid rgba(7,18,56,0.12);'
+      };
+    });
+    const out = {
+      tasks, taskCount: ROWS.filter(t => !flips[t.id]).length,
+      copied: !!st.copied, notCopied: !st.copied,
+      copy: () => { this.setState({ copied: true }); clearTimeout(this._c); this._c = setTimeout(() => this.setState({ copied: false }), 1400); }
+    };
+    return out;
+  }
+}
+</script>
+</body>
+</html>

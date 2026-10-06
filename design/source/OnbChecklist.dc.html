@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona OnbChecklist</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+</style>
+</helmet>
+<div style="width: 390px; height: 900px; box-sizing: border-box; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; display: flex; flex-direction: column; position: relative; overflow: hidden">
+<div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 0; height: 320px; background-image: linear-gradient(rgba(255,59,98,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,59,98,0.12) 1px, transparent 1px); background-size: 22px 22px; background-position: -1px -1px; -webkit-mask-image: linear-gradient(#000 40%, transparent); mask-image: linear-gradient(#000 40%, transparent)"></div>
+<main style="position: relative; flex: 1; padding: 54px 20px 24px; display: flex; flex-direction: column; gap: 20px">
+<span style="width: 56px; height: 56px; border-radius: 50%; background: #ECF87F; color: #4A6604; display: flex; align-items: center; justify-content: center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10-10"></path></svg></span>
+<header style="display: flex; flex-direction: column; gap: 8px; margin-top: -4px">
+<h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -1px; line-height: 1.1">Your home is on Keystona.</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.5; color: rgba(7,18,56,0.65)">Here's the quickest way to make it useful. Each one takes a couple of minutes.</p>
+</header>
+<div style="display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 16px; background: #FFFFFF; border: 1px solid rgba(7,18,56,0.12)">
+<span style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(7,18,56,0.14); box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#071238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l-2 0l9-9l9 9l-2 0"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"></path></svg></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 16px; font-weight: 700">1428 Elm Hollow Ln</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">SINGLE-FAMILY · BUILT 1998 · 2,140 SQ FT · ZONE 4A</span></span>
+<span class="m" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px; background: #FF3B62; color: #FFFFFF; font-size: 9px; font-weight: 700; letter-spacing: 0.8px">★ TRIAL</span>
+</div>
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: center; justify-content: space-between; min-height: 20px"><h2 class="m" style="margin: 0; font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">DO THESE FIRST</h2><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">ABOUT 6 MIN</span></div>
+<ol style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden; background: #FFFFFF"><li style=""><a href="ScanFlow.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 72px; box-sizing: border-box">
+<span class="m" style="width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid #FF3B62; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #FF3B62; flex-shrink: 0">1</span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; font-weight: 700">Scan your systems</span><span style="font-size: 13px; color: rgba(7,18,56,0.6)">Brings in their maintenance reminders.</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">FURNACE, WATER HEATER, ROOF · 3 MIN</span></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.35)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 6l6 6l-6 6"></path></svg></a></li><li style="border-top: 0.5px solid rgba(7,18,56,0.12);"><a href="EmergencyEmpty.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 72px; box-sizing: border-box">
+<span class="m" style="width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid rgba(7,18,56,0.3); box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #071238; flex-shrink: 0">2</span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; font-weight: 700">Find your shutoffs</span><span style="font-size: 13px; color: rgba(7,18,56,0.6)">Works offline when you need it most.</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">WATER, GAS, ELECTRIC · 2 MIN</span></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.35)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 6l6 6l-6 6"></path></svg></a></li><li style="border-top: 0.5px solid rgba(7,18,56,0.12);"><a href="AddDocument.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 72px; box-sizing: border-box">
+<span class="m" style="width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid rgba(7,18,56,0.3); box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #071238; flex-shrink: 0">3</span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; font-weight: 700">Add one document</span><span style="font-size: 13px; color: rgba(7,18,56,0.6)">Your inspection report is a great first one.</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">A WARRANTY OR INSPECTION · 1 MIN</span></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.35)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 6l6 6l-6 6"></path></svg></a></li><li style="border-top: 0.5px solid rgba(7,18,56,0.12);"><a href="SettingsInvite.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 72px; box-sizing: border-box">
+<span class="m" style="width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid rgba(7,18,56,0.3); box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #071238; flex-shrink: 0">4</span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; font-weight: 700">Invite your household</span><span style="font-size: 13px; color: rgba(7,18,56,0.6)">Everyone sees the same home.</span><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">OPTIONAL</span></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.35)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 6l6 6l-6 6"></path></svg></a></li></ol>
+</section>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 6px">
+<a href="ScanFlow.dc.html"  style="height: 54px; border-radius: 999px; background: #FF3B62; color: #FFFFFF; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center">Start with my systems</a>
+<a href="HomeEmptyPlain.dc.html" style="min-height: 44px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; color: rgba(7,18,56,0.7)">Go to my home first</a>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

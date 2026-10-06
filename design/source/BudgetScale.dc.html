@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keystona budget at scale</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.m{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left}
+a{color:#071238;text-decoration:none}a:hover{color:#2540D8}
+@keyframes kpulse{0%{box-shadow:0 0 0 0 rgba(255,59,98,.5)}70%{box-shadow:0 0 0 6px rgba(255,59,98,0)}100%{box-shadow:0 0 0 0 rgba(255,59,98,0)}}
+.pulse{animation:kpulse 1.8s infinite}
+input,textarea{font:inherit;color:#071238}
+input::placeholder,textarea::placeholder{color:rgba(7,18,56,0.35)}
+input:focus,textarea:focus{outline:none}
+textarea{resize:none}
+</style>
+</helmet>
+<div style="width: 1330px; height: 1114px; box-sizing: border-box; padding: 34px 20px 20px; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; color: #071238; display: flex; gap: 60px; position: relative"><span style="position: absolute; left: 24px; top: 12px"><span class="m" style="font-size: 10px; font-weight: 700; letter-spacing: 1.2px; color: rgba(7,18,56,0.45)">OVERVIEW · OVER TIME</span></span><span style="position: absolute; left: 474px; top: 12px"><span class="m" style="font-size: 10px; font-weight: 700; letter-spacing: 1.2px; color: rgba(7,18,56,0.45)">MATERIALS · RECEIPT GROUPED BY TRIP</span></span><span style="position: absolute; left: 924px; top: 12px"><span class="m" style="font-size: 10px; font-weight: 700; letter-spacing: 1.2px; color: rgba(7,18,56,0.45)">SAME RECEIPT · GROUPED BY ITEM</span></span><svg width="40" height="16" viewBox="0 0 40 16" fill="none" stroke="rgba(7,18,56,0.3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="position: absolute; top: 500px; left: 420px"><path d="M2 8h34"></path><path d="M30 3l6 5l-6 5"></path></svg><div style="width: 390px; height: 1060px; flex-shrink: 0; border: 1px solid rgba(7,18,56,0.14); border-radius: 36px; overflow: hidden; display: flex; flex-direction: column; background: #FFFFFF"><main style="flex: 1; min-height: 0; overflow-y: auto; padding: 16px 16px 20px; display: flex; flex-direction: column; gap: 20px"><div style="display: flex; align-items: center; justify-content: space-between">
+<a href="ProjectsMany.dc.html" style="display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -6px; font-size: 15px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"></path></svg>Basement finishing</a>
+<a href="#" style="min-height: 44px; display: flex; align-items: center; font-size: 15px; font-weight: 600">Edit</a>
+</div>
+<header style="display: flex; flex-direction: column; gap: 6px; margin-top: -8px">
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">BASEMENT FINISHING · ON HOLD</span>
+<h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.9px; line-height: 1.1">Budget</h1>
+</header>
+<section aria-label="Total" style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: baseline; gap: 8px"><span style="font-size: 34px; font-weight: 800; letter-spacing: -1.2px; font-variant-numeric: tabular-nums">{{total}}</span><span style="font-size: 15px; font-weight: 600; color: rgba(7,18,56,0.55)">of {{budget}}</span></div>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{sumMeta}}</span>
+</section>
+<section aria-label="Spending over time" style="display: flex; flex-direction: column; gap: 8px">
+<div style="position: relative">
+<sc-for list="{{gridTags}}" as="g" hint-placeholder-count="4"><span class="m" style="{{g.s}}">{{g.t}}</span></sc-for>
+<sc-for list="{{dotTags}}" as="g" hint-placeholder-count="2"><span class="m" style="{{g.s}}">{{g.t}}</span></sc-for>
+<svg width="358" height="190" viewBox="0 0 358 190" role="img" aria-label="Spending over time" style="display: block; overflow: visible">
+<sc-for list="{{grid}}" as="g" hint-placeholder-count="3"><line x1="0" x2="358" y1="{{g.y}}" y2="{{g.y}}" stroke="rgba(7,18,56,0.1)" stroke-width="1"></line></sc-for>
+<line x1="0" x2="358" y1="{{capY}}" y2="{{capY}}" stroke="#071238" stroke-width="1.5" stroke-dasharray="2 3"></line>
+<text x="358" y="{{capTY}}" text-anchor="end" font-size="9" font-weight="700" fill="#071238" font-family="-apple-system, system-ui, sans-serif" letter-spacing="0.8">BUDGET $18,000 · WAY UP ↑</text>
+<path d="{{actD}}" fill="none" stroke="#071238" stroke-width="2.5" stroke-linejoin="round"></path>
+<path d="{{pauseD}}" fill="none" stroke="#071238" stroke-width="2" stroke-dasharray="3 4"></path>
+<line x1="{{pauseX}}" x2="{{pauseX}}" y1="{{pauseY1}}" y2="170" stroke="#B08A00" stroke-width="1.5" stroke-dasharray="3 3"></line>
+<text x="{{pauseTX}}" y="{{pauseTY}}" font-size="9" font-weight="700" fill="#6B4F00" font-family="-apple-system, system-ui, sans-serif" letter-spacing="0.8">PAUSED AUG 12</text>
+<sc-for list="{{dots}}" as="p" hint-placeholder-count="5"><circle cx="{{p.x}}" cy="{{p.y}}" r="{{p.r}}" fill="{{p.fill}}" stroke="#FFFFFF" stroke-width="1.5"></circle></sc-for>
+<text x="0" y="186" font-size="9" font-weight="600" fill="rgba(7,18,56,0.45)" font-family="-apple-system, system-ui, sans-serif">JUN</text>
+<text x="{{julX}}" y="186" font-size="9" font-weight="600" fill="rgba(7,18,56,0.45)" font-family="-apple-system, system-ui, sans-serif">JUL</text>
+<text x="{{augX}}" y="186" font-size="9" font-weight="600" fill="rgba(7,18,56,0.45)" font-family="-apple-system, system-ui, sans-serif">AUG</text>
+<text x="{{sepX}}" y="186" font-size="9" font-weight="600" fill="rgba(7,18,56,0.45)" font-family="-apple-system, system-ui, sans-serif">SEP</text>
+<text x="358" y="186" text-anchor="end" font-size="9" font-weight="700" fill="#2540D8" font-family="-apple-system, system-ui, sans-serif">TODAY</text>
+</svg>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px 14px">
+<span class="m" style="display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)"><span style="width: 8px; height: 8px; border-radius: 50%; background: #FF3B62"></span>ONE DOT PER STORE TRIP · BIGGER = MORE</span>
+</div>
+</section>
+<ul aria-label="Categories" style="list-style: none; margin: 0; padding: 0; border: 1px solid rgba(7,18,56,0.12); border-radius: 16px; overflow: hidden">
+<sc-for list="{{crows}}" as="c" hint-placeholder-count="6">
+<li style="{{c.sep}}"><div style="{{c.row}}">
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px"><span style="font-size: 14px; font-weight: 600">{{c.name}} <span style="font-weight: 500; color: rgba(7,18,56,0.5)">{{c.count}}</span></span><span aria-hidden="true" style="width: 100%; max-width: 150px; height: 6px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(7,18,56,0.2); overflow: hidden"><span style="{{c.fill}}"></span></span></span>
+<span style="{{c.figStyle}}">{{c.fig}}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.35)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 6l6 6l-6 6"></path></svg>
+</div></li>
+</sc-for>
+</ul></main><nav aria-label="Main tabs" style="height: 84px; box-sizing: border-box; border-top: 0.5px solid rgba(7,18,56,0.12); background: #FFFFFF; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 8px 0 22px; flex-shrink: 0">
+<a href="Tabbed.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l-2 0l9-9l9 9l-2 0"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Home</span>
+</a>
+<a href="DocsSearchLed.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Docs</span>
+</a>
+<a href="Tasks.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12l5 5l10-10"></path><path d="M2 12l5 5m5-5l5-5"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Tasks</span>
+</a>
+<a href="ProjectsMany.dc.html" aria-current="page" style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #FF3B62">
+<span style="position: absolute; top: -8px; left: 50%; margin-left: -10px; width: 20px; height: 3px; border-radius: 0 0 3px 3px; background: #FF3B62"></span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h6v8h-6z"></path><path d="M14 4h6v4h-6z"></path><path d="M4 16h6v4h-6z"></path><path d="M14 12h6v8h-6z"></path></svg>
+<span style="font-size: 10px; font-weight: 700">Projects</span>
+</a>
+<a href="SettingsHub.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37c1 .608 2.296.07 2.572-1.065z"></path><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Settings</span>
+</a>
+</nav></div><div style="width: 390px; height: 1060px; flex-shrink: 0; border: 1px solid rgba(7,18,56,0.14); border-radius: 36px; overflow: hidden; display: flex; flex-direction: column; background: #FFFFFF"><main style="flex: 1; min-height: 0; overflow-y: auto; padding: 16px 16px 20px; display: flex; flex-direction: column; gap: 20px"><div style="display: flex; align-items: center; justify-content: space-between">
+<span style="display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -6px; font-size: 15px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"></path></svg>Budget</span>
+<a href="AddExpense.dc.html" style="min-height: 44px; display: flex; align-items: center; font-size: 15px; font-weight: 600">Add</a>
+</div>
+<header style="display: flex; flex-direction: column; gap: 6px; margin-top: -8px">
+<h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.9px; line-height: 1.1">Materials</h1>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{r1.head}}</span>
+</header>
+<div style="display: flex; flex-direction: column; gap: 10px; margin-top: -4px">
+<label style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px; border: 1px solid rgba(7,18,56,0.12); border-radius: 12px; box-sizing: border-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0-14 0"></path><path d="M21 21l-6-6"></path></svg><input type="search" value="{{r1.q}}" onChange="{{r1.onQ}}" placeholder="{{r1.ph}}" aria-label="Search materials" style="flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font: inherit; font-size: 15px; color: #071238; outline: none"></label>
+<div style="display: flex; align-items: center; gap: 10px">
+<div role="tablist" aria-label="Group by" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 3px; border: 1px solid rgba(7,18,56,0.12); border-radius: 12px">
+<button type="button" role="tab" aria-selected="{{r1.isTrip}}" onClick="{{r1.toTrip}}" style="{{r1.tripTab}}">By trip</button>
+<button type="button" role="tab" aria-selected="{{r1.isItem}}" onClick="{{r1.toItem}}" style="{{r1.itemTab}}">By item</button>
+</div>
+<button type="button" onClick="{{r1.flipAll}}" style="min-height: 40px; font-size: 13px; font-weight: 600; color: #2540D8; white-space: nowrap">{{r1.allLabel}}</button>
+</div>
+</div>
+<div style="display: flex; flex-direction: column"><svg width="100%" height="10" viewBox="0 0 356 10" preserveAspectRatio="none" aria-hidden="true" style="display: block"><path d="M0 10 L8 0 L16 10 L24 0 L32 10 L40 0 L48 10 L56 0 L64 10 L72 0 L80 10 L88 0 L96 10 L104 0 L112 10 L120 0 L128 10 L136 0 L144 10 L152 0 L160 10 L168 0 L176 10 L184 0 L192 10 L200 0 L208 10 L216 0 L224 10 L232 0 L240 10 L248 0 L256 10 L264 0 L272 10 L280 0 L288 10 L296 0 L304 10 L312 0 L320 10 L328 0 L336 10 L344 0 L352 10" fill="none" stroke="rgba(7,18,56,0.25)" stroke-width="1"></path></svg><div style="border-left: 1px solid rgba(7,18,56,0.25); border-right: 1px solid rgba(7,18,56,0.25); padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 10px"><div style="display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center">
+<span class="m" style="font-size: 12px; font-weight: 800; letter-spacing: 3px">MATERIALS · ITEMIZED</span>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">BASEMENT FINISHING</span>
+</div><span aria-hidden="true" style="display: block; border-top: 1.5px dashed rgba(7,18,56,0.25); margin: 4px 0"></span>
+<sc-if value="{{r1.isTrip}}" hint-placeholder-val="{{ true }}">
+<sc-for list="{{r1.trips}}" as="t" hint-placeholder-count="5">
+<div style="display: flex; flex-direction: column">
+<button type="button" onClick="{{t.toggle}}" aria-expanded="{{t.open}}" style="width: 100%; display: flex; flex-direction: column; gap: 3px; padding: 8px 0; text-align: left">
+<span style="display: flex; align-items: flex-end; gap: 6px; width: 100%"><span class="m" style="font-size: 11px; font-weight: 800; letter-spacing: 1px">{{t.date}}</span><span class="m" style="font-size: 11px; font-weight: 700; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{t.who}}</span><span aria-hidden="true" style="flex: 1; min-width: 10px; border-bottom: 1.5px dotted rgba(7,18,56,0.3); margin-bottom: 4px"></span><span style="font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums">{{t.amt}}</span></span>
+<span style="display: flex; align-items: center; justify-content: space-between"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{t.meta}}</span><span style="{{t.chev}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6l6-6"></path></svg></span></span>
+</button>
+<sc-if value="{{t.open}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 2px 0 10px 12px; border-left: 1.5px dashed rgba(7,18,56,0.2); margin-left: 2px">
+<sc-for list="{{t.lines}}" as="l" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 1px; padding: 4px 0">
+<span style="display: flex; align-items: flex-end; gap: 6px"><span style="{{l.nameStyle}}">{{l.n}}</span><span aria-hidden="true" style="flex: 1; min-width: 10px; border-bottom: 1.5px dotted rgba(7,18,56,0.25); margin-bottom: 4px"></span><span style="{{l.amtStyle}}">{{l.amt}}</span></span>
+<span style="{{l.qtyStyle}}">{{l.qty}}</span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</sc-for>
+</sc-if>
+<sc-if value="{{r1.isItem}}" hint-placeholder-val="{{ false }}">
+<sc-for list="{{r1.groups}}" as="g" hint-placeholder-count="8">
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 6px 0">
+<span style="display: flex; align-items: flex-end; gap: 6px"><span style="font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{g.n}}</span><span aria-hidden="true" style="flex: 1; min-width: 10px; border-bottom: 1.5px dotted rgba(7,18,56,0.25); margin-bottom: 4px"></span><span style="font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums">{{g.amt}}</span></span>
+<span style="display: flex; align-items: center; gap: 8px"><span style="{{g.qtyStyle}}">{{g.qty}}</span><span aria-hidden="true" style="flex: 1; max-width: 90px; height: 4px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(7,18,56,0.15); overflow: hidden"><span style="{{g.bar}}"></span></span></span>
+</div>
+</sc-for>
+<sc-if value="{{r1.hasRest}}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{r1.showRest}}" style="width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 0 12px; border: 1.5px dashed rgba(7,18,56,0.22); border-radius: 10px; box-sizing: border-box; font-size: 13.5px; font-weight: 600"><span>{{r1.restLabel}}</span><span style="font-variant-numeric: tabular-nums">{{r1.restAmt}}</span></button>
+</sc-if>
+</sc-if>
+<sc-if value="{{r1.none}}" hint-placeholder-val="{{ false }}"><span style="font-size: 14px; text-align: center; color: rgba(7,18,56,0.6); padding: 10px 0">Nothing matches “{{r1.q}}”.</span></sc-if>
+<span aria-hidden="true" style="display: block; border-top: 1.5px dashed rgba(7,18,56,0.25); margin: 4px 0"></span>
+<div style="display: flex; justify-content: space-between"><span class="m" style="font-size: 11px; font-weight: 600; letter-spacing: 1px; color: rgba(7,18,56,0.6)">{{r1.subLabel}}</span><span style="font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums">{{r1.sub}}</span></div>
+<sc-if value="{{r1.showRet}}" hint-placeholder-val="{{ true }}"><div style="display: flex; justify-content: space-between"><span class="m" style="font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #4A6604">RETURNS</span><span style="font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; color: #4A6604">−$25.68</span></div></sc-if>
+<div style="display: flex; justify-content: space-between"><span class="m" style="font-size: 11px; font-weight: 600; letter-spacing: 1px; color: rgba(7,18,56,0.6)">BUDGET</span><span style="font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums">$6,500.00</span></div>
+<span aria-hidden="true" style="display: block; border-top: 1.5px dashed rgba(7,18,56,0.25); margin: 4px 0"></span>
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span class="m" style="font-size: 13px; font-weight: 800; letter-spacing: 2px">LEFT</span><span style="font-size: 26px; font-weight: 800; letter-spacing: -0.8px; font-variant-numeric: tabular-nums">{{r1.left}}</span></div></div><svg width="100%" height="10" viewBox="0 0 356 10" preserveAspectRatio="none" aria-hidden="true" style="display: block; transform: scaleY(-1)"><path d="M0 10 L8 0 L16 10 L24 0 L32 10 L40 0 L48 10 L56 0 L64 10 L72 0 L80 10 L88 0 L96 10 L104 0 L112 10 L120 0 L128 10 L136 0 L144 10 L152 0 L160 10 L168 0 L176 10 L184 0 L192 10 L200 0 L208 10 L216 0 L224 10 L232 0 L240 10 L248 0 L256 10 L264 0 L272 10 L280 0 L288 10 L296 0 L304 10 L312 0 L320 10 L328 0 L336 10 L344 0 L352 10" fill="none" stroke="rgba(7,18,56,0.25)" stroke-width="1"></path></svg></div></main><nav aria-label="Main tabs" style="height: 84px; box-sizing: border-box; border-top: 0.5px solid rgba(7,18,56,0.12); background: #FFFFFF; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 8px 0 22px; flex-shrink: 0">
+<a href="Tabbed.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l-2 0l9-9l9 9l-2 0"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Home</span>
+</a>
+<a href="DocsSearchLed.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Docs</span>
+</a>
+<a href="Tasks.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12l5 5l10-10"></path><path d="M2 12l5 5m5-5l5-5"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Tasks</span>
+</a>
+<a href="ProjectsMany.dc.html" aria-current="page" style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #FF3B62">
+<span style="position: absolute; top: -8px; left: 50%; margin-left: -10px; width: 20px; height: 3px; border-radius: 0 0 3px 3px; background: #FF3B62"></span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h6v8h-6z"></path><path d="M14 4h6v4h-6z"></path><path d="M4 16h6v4h-6z"></path><path d="M14 12h6v8h-6z"></path></svg>
+<span style="font-size: 10px; font-weight: 700">Projects</span>
+</a>
+<a href="SettingsHub.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37c1 .608 2.296.07 2.572-1.065z"></path><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Settings</span>
+</a>
+</nav></div><div style="width: 390px; height: 1060px; flex-shrink: 0; border: 1px solid rgba(7,18,56,0.14); border-radius: 36px; overflow: hidden; display: flex; flex-direction: column; background: #FFFFFF"><main style="flex: 1; min-height: 0; overflow-y: auto; padding: 16px 16px 20px; display: flex; flex-direction: column; gap: 20px"><div style="display: flex; align-items: center; justify-content: space-between">
+<span style="display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -6px; font-size: 15px; font-weight: 500"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"></path></svg>Budget</span>
+<a href="AddExpense.dc.html" style="min-height: 44px; display: flex; align-items: center; font-size: 15px; font-weight: 600">Add</a>
+</div>
+<header style="display: flex; flex-direction: column; gap: 6px; margin-top: -8px">
+<h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.9px; line-height: 1.1">Materials</h1>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{r2.head}}</span>
+</header>
+<div style="display: flex; flex-direction: column; gap: 10px; margin-top: -4px">
+<label style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px; border: 1px solid rgba(7,18,56,0.12); border-radius: 12px; box-sizing: border-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(7,18,56,0.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0-14 0"></path><path d="M21 21l-6-6"></path></svg><input type="search" value="{{r2.q}}" onChange="{{r2.onQ}}" placeholder="{{r2.ph}}" aria-label="Search materials" style="flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font: inherit; font-size: 15px; color: #071238; outline: none"></label>
+<div style="display: flex; align-items: center; gap: 10px">
+<div role="tablist" aria-label="Group by" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 3px; border: 1px solid rgba(7,18,56,0.12); border-radius: 12px">
+<button type="button" role="tab" aria-selected="{{r2.isTrip}}" onClick="{{r2.toTrip}}" style="{{r2.tripTab}}">By trip</button>
+<button type="button" role="tab" aria-selected="{{r2.isItem}}" onClick="{{r2.toItem}}" style="{{r2.itemTab}}">By item</button>
+</div>
+<button type="button" onClick="{{r2.flipAll}}" style="min-height: 40px; font-size: 13px; font-weight: 600; color: #2540D8; white-space: nowrap">{{r2.allLabel}}</button>
+</div>
+</div>
+<div style="display: flex; flex-direction: column"><svg width="100%" height="10" viewBox="0 0 356 10" preserveAspectRatio="none" aria-hidden="true" style="display: block"><path d="M0 10 L8 0 L16 10 L24 0 L32 10 L40 0 L48 10 L56 0 L64 10 L72 0 L80 10 L88 0 L96 10 L104 0 L112 10 L120 0 L128 10 L136 0 L144 10 L152 0 L160 10 L168 0 L176 10 L184 0 L192 10 L200 0 L208 10 L216 0 L224 10 L232 0 L240 10 L248 0 L256 10 L264 0 L272 10 L280 0 L288 10 L296 0 L304 10 L312 0 L320 10 L328 0 L336 10 L344 0 L352 10" fill="none" stroke="rgba(7,18,56,0.25)" stroke-width="1"></path></svg><div style="border-left: 1px solid rgba(7,18,56,0.25); border-right: 1px solid rgba(7,18,56,0.25); padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 10px"><div style="display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center">
+<span class="m" style="font-size: 12px; font-weight: 800; letter-spacing: 3px">MATERIALS · ITEMIZED</span>
+<span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 1.2px; color: rgba(7,18,56,0.55)">BASEMENT FINISHING</span>
+</div><span aria-hidden="true" style="display: block; border-top: 1.5px dashed rgba(7,18,56,0.25); margin: 4px 0"></span>
+<sc-if value="{{r2.isTrip}}" hint-placeholder-val="{{ true }}">
+<sc-for list="{{r2.trips}}" as="t" hint-placeholder-count="5">
+<div style="display: flex; flex-direction: column">
+<button type="button" onClick="{{t.toggle}}" aria-expanded="{{t.open}}" style="width: 100%; display: flex; flex-direction: column; gap: 3px; padding: 8px 0; text-align: left">
+<span style="display: flex; align-items: flex-end; gap: 6px; width: 100%"><span class="m" style="font-size: 11px; font-weight: 800; letter-spacing: 1px">{{t.date}}</span><span class="m" style="font-size: 11px; font-weight: 700; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{t.who}}</span><span aria-hidden="true" style="flex: 1; min-width: 10px; border-bottom: 1.5px dotted rgba(7,18,56,0.3); margin-bottom: 4px"></span><span style="font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums">{{t.amt}}</span></span>
+<span style="display: flex; align-items: center; justify-content: space-between"><span class="m" style="font-size: 10px; font-weight: 500; letter-spacing: 0.3px; line-height: 1.3; color: rgba(7,18,56,0.55)">{{t.meta}}</span><span style="{{t.chev}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6l6-6"></path></svg></span></span>
+</button>
+<sc-if value="{{t.open}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 2px 0 10px 12px; border-left: 1.5px dashed rgba(7,18,56,0.2); margin-left: 2px">
+<sc-for list="{{t.lines}}" as="l" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 1px; padding: 4px 0">
+<span style="display: flex; align-items: flex-end; gap: 6px"><span style="{{l.nameStyle}}">{{l.n}}</span><span aria-hidden="true" style="flex: 1; min-width: 10px; border-bottom: 1.5px dotted rgba(7,18,56,0.25); margin-bottom: 4px"></span><span style="{{l.amtStyle}}">{{l.amt}}</span></span>
+<span style="{{l.qtyStyle}}">{{l.qty}}</span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</sc-for>
+</sc-if>
+<sc-if value="{{r2.isItem}}" hint-placeholder-val="{{ false }}">
+<sc-for list="{{r2.groups}}" as="g" hint-placeholder-count="8">
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 6px 0">
+<span style="display: flex; align-items: flex-end; gap: 6px"><span style="font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{g.n}}</span><span aria-hidden="true" style="flex: 1; min-width: 10px; border-bottom: 1.5px dotted rgba(7,18,56,0.25); margin-bottom: 4px"></span><span style="font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums">{{g.amt}}</span></span>
+<span style="display: flex; align-items: center; gap: 8px"><span style="{{g.qtyStyle}}">{{g.qty}}</span><span aria-hidden="true" style="flex: 1; max-width: 90px; height: 4px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(7,18,56,0.15); overflow: hidden"><span style="{{g.bar}}"></span></span></span>
+</div>
+</sc-for>
+<sc-if value="{{r2.hasRest}}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{r2.showRest}}" style="width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 0 12px; border: 1.5px dashed rgba(7,18,56,0.22); border-radius: 10px; box-sizing: border-box; font-size: 13.5px; font-weight: 600"><span>{{r2.restLabel}}</span><span style="font-variant-numeric: tabular-nums">{{r2.restAmt}}</span></button>
+</sc-if>
+</sc-if>
+<sc-if value="{{r2.none}}" hint-placeholder-val="{{ false }}"><span style="font-size: 14px; text-align: center; color: rgba(7,18,56,0.6); padding: 10px 0">Nothing matches “{{r2.q}}”.</span></sc-if>
+<span aria-hidden="true" style="display: block; border-top: 1.5px dashed rgba(7,18,56,0.25); margin: 4px 0"></span>
+<div style="display: flex; justify-content: space-between"><span class="m" style="font-size: 11px; font-weight: 600; letter-spacing: 1px; color: rgba(7,18,56,0.6)">{{r2.subLabel}}</span><span style="font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums">{{r2.sub}}</span></div>
+<sc-if value="{{r2.showRet}}" hint-placeholder-val="{{ true }}"><div style="display: flex; justify-content: space-between"><span class="m" style="font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #4A6604">RETURNS</span><span style="font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; color: #4A6604">−$25.68</span></div></sc-if>
+<div style="display: flex; justify-content: space-between"><span class="m" style="font-size: 11px; font-weight: 600; letter-spacing: 1px; color: rgba(7,18,56,0.6)">BUDGET</span><span style="font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums">$6,500.00</span></div>
+<span aria-hidden="true" style="display: block; border-top: 1.5px dashed rgba(7,18,56,0.25); margin: 4px 0"></span>
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span class="m" style="font-size: 13px; font-weight: 800; letter-spacing: 2px">LEFT</span><span style="font-size: 26px; font-weight: 800; letter-spacing: -0.8px; font-variant-numeric: tabular-nums">{{r2.left}}</span></div></div><svg width="100%" height="10" viewBox="0 0 356 10" preserveAspectRatio="none" aria-hidden="true" style="display: block; transform: scaleY(-1)"><path d="M0 10 L8 0 L16 10 L24 0 L32 10 L40 0 L48 10 L56 0 L64 10 L72 0 L80 10 L88 0 L96 10 L104 0 L112 10 L120 0 L128 10 L136 0 L144 10 L152 0 L160 10 L168 0 L176 10 L184 0 L192 10 L200 0 L208 10 L216 0 L224 10 L232 0 L240 10 L248 0 L256 10 L264 0 L272 10 L280 0 L288 10 L296 0 L304 10 L312 0 L320 10 L328 0 L336 10 L344 0 L352 10" fill="none" stroke="rgba(7,18,56,0.25)" stroke-width="1"></path></svg></div></main><nav aria-label="Main tabs" style="height: 84px; box-sizing: border-box; border-top: 0.5px solid rgba(7,18,56,0.12); background: #FFFFFF; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 8px 0 22px; flex-shrink: 0">
+<a href="Tabbed.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l-2 0l9-9l9 9l-2 0"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Home</span>
+</a>
+<a href="DocsSearchLed.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Docs</span>
+</a>
+<a href="Tasks.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12l5 5l10-10"></path><path d="M2 12l5 5m5-5l5-5"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Tasks</span>
+</a>
+<a href="ProjectsMany.dc.html" aria-current="page" style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #FF3B62">
+<span style="position: absolute; top: -8px; left: 50%; margin-left: -10px; width: 20px; height: 3px; border-radius: 0 0 3px 3px; background: #FF3B62"></span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h6v8h-6z"></path><path d="M14 4h6v4h-6z"></path><path d="M4 16h6v4h-6z"></path><path d="M14 12h6v8h-6z"></path></svg>
+<span style="font-size: 10px; font-weight: 700">Projects</span>
+</a>
+<a href="SettingsHub.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(7,18,56,0.35)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37c1 .608 2.296.07 2.572-1.065z"></path><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"></path></svg>
+<span style="font-size: 10px; font-weight: 600">Settings</span>
+</a>
+</nav></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1114}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const m0 = (n) => '$' + Math.round(n).toLocaleString('en-US');
+    const m2 = (n) => (n < 0 ? '−' : '') + '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    // day 0 = Jun 1 · paused Aug 12 = 72 · today Oct 5 = 126
+    const TRIPS = [
+      { id: 't1', date: 'Jun 14', d: 13, who: 'Valley Lumber', rc: true, lines: [
+        { k: 'stud', n: '2×4×8′ stud', q: 100, u: 4.28 },
+        { k: 'pt', n: '2×4×8′ treated (bottom plate)', q: 24, u: 6.97 },
+        { k: 'nails', n: '3″ framing nails, 5 lb', q: 2, u: 18.98 },
+        { k: 'glue', n: 'Construction adhesive', q: 6, u: 5.48 },
+        { k: 'tapcon', n: 'Concrete screws, 100-pk', q: 3, u: 24.97 }] },
+      { id: 't2', date: 'Jun 21', d: 20, who: 'Valley Lumber', rc: true, lines: [
+        { k: 'stud', n: '2×4×8′ stud', q: 30, u: 4.28 },
+        { k: 'stud', n: '2×4×8′ stud', q: -6, u: 4.28, ret: true },
+        { k: 'foam', n: '2″ foam board, 4×8', q: 14, u: 38.50 },
+        { k: 'seam', n: 'Foam seam tape', q: 4, u: 7.98 }] },
+      { id: 't3', date: 'Jul 9', d: 38, who: 'Ace Supply', rc: true, lines: [
+        { k: 'romex', n: '14/2 wire, 250 ft', q: 2, u: 89.00 },
+        { k: 'boxes', n: 'Outlet boxes', q: 22, u: 0.89 },
+        { k: 'outlets', n: 'Outlets, 10-pk', q: 2, u: 14.97 },
+        { k: 'cans', n: '6″ recessed lights, 6-pk', q: 2, u: 59.98 }] },
+      { id: 't4', date: 'Jul 26', d: 55, who: 'Valley Lumber', rc: true, lines: [
+        { k: 'drywall', n: '½″ drywall, 4×8', q: 48, u: 14.25 },
+        { k: 'dwscrews', n: 'Drywall screws, 5 lb', q: 3, u: 26.48 },
+        { k: 'mud', n: 'Joint compound, 5 gal', q: 4, u: 17.98 },
+        { k: 'deliv', n: 'Delivery', q: 1, u: 79.00, fee: true }] },
+      { id: 't5', date: 'Aug 10', d: 70, who: 'Ace Supply', rc: false, lines: [
+        { k: 'mesh', n: 'Mesh tape', q: 6, u: 6.48 },
+        { k: 'bead', n: 'Corner bead', q: 12, u: 3.97 },
+        { k: 'sponge', n: 'Sanding sponges', q: 10, u: 3.48 },
+        { k: 'filter', n: 'Shop-vac filter', q: 1, u: 24.97 }] }
+    ];
+    TRIPS.forEach(t => { t.lines.forEach(l => l.amt = Math.round(l.q * l.u * 100) / 100); t.amt = t.lines.reduce((a, l) => a + l.amt, 0); });
+    const matSpent = TRIPS.reduce((a, t) => a + t.amt, 0);
+    const lineCount = TRIPS.reduce((a, t) => a + t.lines.length, 0);
+    const cats = [
+      { id: 'mat', name: 'Materials', budget: 6500, spent: matSpent, n: lineCount },
+      { id: 'labor', name: 'Labor', budget: 7000, spent: 600, n: 1, buys: [{ d: 44, amt: 600 }] },
+      { id: 'floor', name: 'Flooring', budget: 2500, spent: 0, n: 0 },
+      { id: 'perm', name: 'Permits', budget: 400, spent: 260, n: 1, buys: [{ d: 6, amt: 260 }] },
+      { id: 'rent', name: 'Rentals', budget: 400, spent: 217, n: 2, buys: [{ d: 27, amt: 128 }, { d: 57, amt: 89 }] },
+      { id: 'cont', name: 'Contingency', budget: 1200, spent: 0, n: 0 }
+    ].map(c => { const pct = c.budget ? c.spent / c.budget : 0; return Object.assign(c, { pct, tone: c.id === 'cont' ? 'net' : pct > 1 ? 'over' : pct >= 0.8 ? 'near' : 'ok' }); });
+    const TONE = { ok: '#2540D8', near: '#B08A00', over: '#FF3B62', net: 'rgba(7,18,56,0.3)' };
+    const TONETXT = { ok: '#071238', near: '#6B4F00', over: '#B12347', net: 'rgba(7,18,56,0.55)' };
+    const budget = 18000;
+    const total = cats.reduce((a, c) => a + c.spent, 0);
+    const out = {};
+
+    const X = (d) => d / 126 * 358, Y = (v) => 170 - v / 5000 * 140;
+    out.total = m0(total); out.budget = m0(budget);
+    out.sumMeta = m0(budget - total) + ' LEFT · ' + lineCount + ' MATERIAL LINES ACROSS ' + TRIPS.length + ' TRIPS';
+    out.grid = [1000, 2000, 3000, 4000].map(v => ({ y: Y(v), ty: Y(v) - 3, label: '$' + v / 1000 + 'K' }));
+    out.capY = 12; out.capTY = 8;
+    // one point per purchase event: a store trip counts once, however many lines it has
+    const ev = TRIPS.map(t => ({ d: t.d, amt: t.amt, mat: true, t }));
+    cats.forEach(c => (c.buys || []).forEach(b => ev.push({ d: b.d, amt: b.amt, mat: false })));
+    ev.sort((a, b) => a.d - b.d);
+    let acc = 0, dd = 'M0 ' + Y(0);
+    const dots = [];
+    ev.forEach(e => { dd += ' L' + X(e.d).toFixed(1) + ' ' + Y(acc).toFixed(1); acc += e.amt; dd += ' L' + X(e.d).toFixed(1) + ' ' + Y(acc).toFixed(1); dots.push(Object.assign({ y: Y(acc) }, e)); });
+    dd += ' L' + X(72).toFixed(1) + ' ' + Y(acc).toFixed(1);
+    out.actD = dd;
+    out.pauseD = 'M' + X(72).toFixed(1) + ' ' + Y(acc).toFixed(1) + ' L358 ' + Y(acc).toFixed(1);
+    out.pauseX = X(72); out.pauseTX = X(72) + 6; out.pauseY1 = Y(acc) - 34; out.pauseTY = Y(acc) - 24;
+    out.dots = dots.map(p => ({ x: X(p.d), y: p.y, r: p.mat ? Math.max(3.5, Math.sqrt(p.amt) / 3.4) : 3, fill: p.mat ? '#FF3B62' : '#071238' }));
+    out.dotTags = dots.filter(p => p.mat && p.amt > 600).map(p => ({ t: m0(p.amt), s: 'position: absolute; z-index: 1; left: ' + (X(p.d) - 30) + 'px; width: 60px; text-align: center; top: ' + (p.y - Math.sqrt(p.amt) / 3.4 - 17) + 'px; font-size: 9.5px; font-weight: 700; color: #B12347; pointer-events: none;' }));
+    out.gridTags = [1000, 2000, 3000, 4000].map(v => ({ t: '$' + v / 1000 + 'K', s: 'position: absolute; z-index: 1; left: 0; top: ' + (Y(v) - 13) + 'px; font-size: 9px; font-weight: 600; color: rgba(7,18,56,0.45); pointer-events: none;' }));
+    out.julX = X(30); out.augX = X(61); out.sepX = X(92);
+    out.crows = cats.map((c, i) => ({
+      name: c.name, count: c.n ? '· ' + c.n + (c.n === 1 ? ' item' : ' items') : '',
+      fill: 'display: block; height: 100%; width: ' + Math.min(100, Math.round(c.pct * 100)) + '%; background: ' + TONE[c.tone] + ';',
+      fig: c.id === 'cont' ? m0(c.budget) + ' set aside' : c.spent ? m0(c.spent) + ' / ' + m0(c.budget) : 'Not started',
+      figStyle: 'font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; color: ' + (c.spent ? TONETXT[c.tone] : 'rgba(7,18,56,0.45)') + ';',
+      sep: i === 0 ? '' : 'border-top: 0.5px solid rgba(7,18,56,0.12);',
+      row: 'display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 10px 14px; box-sizing: border-box;' + (c.id === 'mat' ? ' box-shadow: inset 3px 0 0 #2540D8;' : '')
+    }));
+    const mk = (key, mode0) => {
+      const s = st[key] || {};
+      const mode = s.mode || mode0;
+      const q = (s.q || '').trim().toLowerCase();
+      const set = (p) => this.setState({ [key]: Object.assign({}, s, p) });
+      const match = (l) => !q || l.n.toLowerCase().includes(q) || l.k.includes(q);
+      const r = { q: s.q || '', onQ: (e) => set({ q: e.target.value }), ph: 'Search ' + lineCount + ' lines — try “2×4” or “drywall”' };
+      r.head = lineCount + ' LINES · ' + TRIPS.length + ' TRIPS · ' + m2(matSpent) + ' OF $6,500';
+      const tabBase = 'height: 34px; border-radius: 9px; font-size: 13.5px; font-weight: 600; text-align: center;';
+      r.isTrip = mode === 'trip'; r.isItem = mode === 'item';
+      r.tripTab = tabBase + (r.isTrip ? ' background: #071238; color: #FFFFFF;' : ' color: rgba(7,18,56,0.65);');
+      r.itemTab = tabBase + (r.isItem ? ' background: #071238; color: #FFFFFF;' : ' color: rgba(7,18,56,0.65);');
+      r.toTrip = () => set({ mode: 'trip' }); r.toItem = () => set({ mode: 'item' });
+      // ---- by trip: one receipt per store run; newest open, the rest folded to a subtotal ----
+      const openMap = s.open || { t5: true };
+      const fmtQty = (l) => l.fee ? 'FLAT FEE' : (l.ret ? 'RETURNED ' + (-l.q) + ' @ ' + m2(l.u) : l.q + ' @ ' + m2(l.u));
+      const trips = TRIPS.slice().reverse().map(t => {
+        const lines = t.lines.filter(match);
+        return { t, lines };
+      }).filter(x => x.lines.length);
+      r.trips = trips.map(({ t, lines }) => {
+        const open = q ? true : !!openMap[t.id];
+        return {
+          date: t.date.toUpperCase(), who: '· ' + t.who.toUpperCase(), amt: m2(t.amt), open,
+          meta: t.lines.length + ' LINES' + (t.rc ? ' · RECEIPT SAVED' : ' · NO RECEIPT') + (q ? ' · ' + lines.length + ' MATCH' : ''),
+          chev: 'display: flex; color: rgba(7,18,56,0.45); transition: transform .15s; transform: rotate(' + (open ? 180 : 0) + 'deg);',
+          toggle: () => set({ open: Object.assign({}, openMap, { [t.id]: !openMap[t.id] }) }),
+          lines: lines.map(l => ({
+            n: l.ret ? 'Return · ' + l.n : l.n, amt: m2(l.amt), qty: fmtQty(l),
+            nameStyle: 'font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;' + (l.ret ? ' color: #4A6604;' : ''),
+            amtStyle: 'font-size: 13.5px; font-weight: 600; font-variant-numeric: tabular-nums;' + (l.ret ? ' color: #4A6604;' : ''),
+            qtyStyle: 'font-size: 10px; font-weight: 600; letter-spacing: 0.4px; font-variant-numeric: tabular-nums; color: ' + (l.ret ? '#4A6604' : 'rgba(7,18,56,0.5)') + ';'
+          }))
+        };
+      });
+      const allOpen = TRIPS.every(t => openMap[t.id]);
+      r.allLabel = r.isTrip ? (allOpen ? 'Fold all' : 'Open all') : (s.rest ? 'Top 8' : 'Show all');
+      r.flipAll = () => r.isTrip ? set({ open: allOpen ? {} : TRIPS.reduce((a, t) => (a[t.id] = true, a), {}) }) : set({ rest: !s.rest });
+      // ---- by item: the same product across trips becomes one line (100 + 30 − 6 studs) ----
+      const G = {};
+      TRIPS.forEach(t => t.lines.filter(match).forEach(l => {
+        const g = G[l.k] || (G[l.k] = { k: l.k, n: l.n, q: 0, amt: 0, parts: [], u: l.u, fee: l.fee, trips: {} });
+        g.q += l.q; g.amt += l.amt; g.parts.push(l.q); g.trips[t.id] = 1;
+      }));
+      const groups = Object.values(G).sort((a, b) => b.amt - a.amt);
+      const maxAmt = groups.length ? groups[0].amt : 1;
+      const TOP = 8;
+      const shown = s.rest || q ? groups : groups.slice(0, TOP);
+      const rest = groups.slice(TOP);
+      r.groups = shown.map(g => {
+        const nt = Object.keys(g.trips).length;
+        return {
+          n: g.n, amt: m2(g.amt),
+          qty: g.fee ? 'FLAT FEE' : (g.parts.length > 1 ? g.q + ' TOTAL · ' + g.parts.map((p, i) => (i ? (p < 0 ? ' − ' : ' + ') : '') + Math.abs(p)).join('') + ' · ' + nt + ' TRIPS' : g.q + ' @ ' + m2(g.u)),
+          qtyStyle: 'font-size: 10px; font-weight: 600; letter-spacing: 0.4px; font-variant-numeric: tabular-nums; white-space: nowrap; color: ' + (g.parts.length > 1 ? '#2540D8' : 'rgba(7,18,56,0.5)') + ';',
+          bar: 'display: block; height: 100%; width: ' + Math.round(100 * g.amt / maxAmt) + '%; background: #071238;'
+        };
+      });
+      r.hasRest = !s.rest && !q && rest.length > 0;
+      r.restLabel = rest.length + ' smaller items';
+      r.restAmt = m2(rest.reduce((a, g) => a + g.amt, 0));
+      r.showRest = () => set({ rest: true });
+      const vis = TRIPS.reduce((a, t) => a + t.lines.filter(match).reduce((b, l) => b + l.amt, 0), 0);
+      r.none = !!q && vis === 0;
+      r.showRet = !q;
+      r.subLabel = q ? 'MATCHING' : 'SUBTOTAL';
+      r.sub = m2(q ? vis : matSpent + 25.68);
+      r.left = m2(6500 - matSpent);
+      return r;
+    };
+    out.r1 = mk('r1', 'trip');
+    out.r2 = mk('r2', 'item');
+    return out;
+  }
+}
+</script>
+</body>
+</html>

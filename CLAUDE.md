@@ -9,8 +9,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Stack:** Flutter (mobile) · Supabase (backend) · RevenueCat + Stripe (payments) · Firebase (FCM) · Sentry (errors) · PostHog (analytics)
 
 **Brand:** Keystona — "The smart way to manage your home"
-- Deep Navy: #1A2B4A · Gold Accent: #C9A84C · Warm Off-White: #FAF8F5
-- Typography: Outfit (headlines) · Plus Jakarta Sans (body)
+- Design system: **Aurora**, defined by the kit in `design/` (see "Design Source of Truth" below). Tokens live in `apps/keystona/lib/core/theme/aurora_*.dart`.
+- Palette: Ink #071238 · Cobalt #2540D8 (actions) · Coral #FF3B62 (act-now) · Olive/Lime (done) · Amber (soon)
+- Typography: platform system font (SF Pro on iOS, Roboto on Android) — never bundle fonts
+
+## Design Source of Truth
+
+The Aurora design kit in `design/` is the source of truth for every screen. It **wins over** `Keystona_Aurora_Design_System.md`, `Keystona_Aurora_Component_Library.md` and any older `AppColors`/Navy-Gold/Outfit guidance in this file (entries marked SUPERSEDED).
+
+- Screens: `design/screens/` (PNG, 390 pt wide) and `design/source/*.dc.html` (exact copy, sizes, states, links).
+- Build order: `design/BUILD_ORDER.md`. Work one commit at a time and use its commit messages.
+- Behaviour rules: `design/Keystona_Implementation_Notes.md` (long-press menus, Undo snackbars, offline, reminders).
+- Treat the HTML as a spec, never transpile it. px values are logical pixels at the 390 pt reference width; they become tokens, scaled by the responsive layer.
+- Build every screen from `lib/core/widgets/aurora/` and the `Aurora*` tokens. No hex values or numeric literals in feature code.
+- New shared widgets, router changes and migrations need Caleb's OK first.
+- Every screen ships with a golden test compared against its PNG, loading/empty/error states, overflow tests at small/large/tablet sizes and text scale 2.0, and 44 pt minimum touch targets.
+- Font: platform system font. Never bundle SF Pro.
+- Aurora rules: one coral surface per screen; coral means "act now"; cobalt for actions and save; lime only for wins; amber for "soon"; no tinted fills; words always accompany status color.
+- UI work is done by the `storyboard-to-flutter` agent, which replaces screens in place and deletes the superseded UI.
 
 ## Navigation
 
@@ -37,6 +53,7 @@ Use specialized agents for different aspects of development:
 | `integration-wiring` | Cross-feature wiring, routing, shared state | `.claude/agents/integration-wiring.md` |
 | `keystona-qa-specialist` | Tests, verification, security boundary checks | `.claude/agents/keystona-qa-specialist.md` |
 | `dashboard-home-builder` | Home tab (complex — 8 states, 7 sections) | `.claude/agents/dashboard-home-builder.md` |
+| `storyboard-to-flutter` | Convert a Claude HTML storyboard/mockup into Flutter screens | `.claude/agents/storyboard-to-flutter.md` |
 
 Invoke agents from CLI:
 ```bash
@@ -45,6 +62,7 @@ claude "Create the check-overdue-tasks Edge Function" --agent supabase-backend-s
 claude "Wire up cross-feature navigation" --agent integration-wiring
 claude "Write tests for task completion flow" --agent keystona-qa-specialist
 claude "Build the Home tab dashboard" --agent dashboard-home-builder
+claude "Convert storyboards/paywall.html to Flutter" --agent storyboard-to-flutter
 ```
 
 ## Skills
@@ -99,11 +117,11 @@ lib/features/[feature_name]/
 - Empty state matching the **Empty States Catalog** exactly
 - Pull-to-refresh (if scrollable list)
 
-**Platform UI:** iOS-first adaptive widgets
-- Use Cupertino on iOS, Material on Android
-- Use adaptive helpers in `lib/core/widgets/adaptive/`
-- Never write platform checks directly
-- See Platform UI Guide for complete component matrix
+**Platform UI:** Aurora is a custom look shared by iOS and Android
+- Build screens from `lib/core/widgets/aurora/` and the Aurora tokens; no Material ripple
+- Use native pickers/sheets only where the kit's screens call for them
+- Never write raw platform checks in feature code
+- No hard-coded values in widgets: sizes, radii, colors, durations and opacities come from tokens, scaled by the responsive layer (`AuroraBreakpoints`); layouts must not overflow on small screens or large text scale
 
 **Database Queries:**
 - Always filter by `property_id` first
@@ -173,10 +191,10 @@ Comprehensive specifications in `keystona-project-files/`:
 <!-- Format:
 - **[Pattern Name]**: [Brief description] → See `[file path]`
 -->
-- **Semantic Color Palette**: All colors in `AppColors` as `abstract final class` constants — no hex values in widgets or theme → `lib/core/theme/app_colors.dart`
-- **Pre-built TextStyles as getters**: `AppTextStyles` uses `static TextStyle get` (not `const`) because `GoogleFonts.*` constructs at runtime → `lib/core/theme/app_text_styles.dart`
-- **4px Spacing Grid**: All spacing, radii, padding via `AppSizes`, `AppRadius`, `AppPadding` — never hardcoded → `lib/core/theme/app_sizes.dart`
-- **Theme references design tokens only**: `app_theme.dart` contains no raw Colors, TextStyles, or numbers — always `AppColors.*`, `AppTextStyles.*`, `AppSizes.*`
+- **[SUPERSEDED by Aurora kit — see Design Source of Truth] Semantic Color Palette**: All colors in `AppColors` as `abstract final class` constants — no hex values in widgets or theme → `lib/core/theme/app_colors.dart`
+- **[SUPERSEDED] Pre-built TextStyles as getters**: `AppTextStyles` uses `static TextStyle get` (not `const`) because `GoogleFonts.*` constructs at runtime → `lib/core/theme/app_text_styles.dart`
+- **[SUPERSEDED] 4px Spacing Grid**: All spacing, radii, padding via `AppSizes`, `AppRadius`, `AppPadding` — never hardcoded → `lib/core/theme/app_sizes.dart`
+- **Theme references design tokens only**: `app_theme.dart` contains no raw Colors, TextStyles, or numbers — always `AuroraColors.*`, `AuroraType.*`, `AuroraSpacing.*`, `AuroraRadius.*`
 - **Static Service Pattern**: Pure logic classes use `abstract final class` with static methods — no instantiation, no state (SnackbarService, PhotoPicker, AppDateUtils, CurrencyFormatter, Validators)
 - **Services throw, UI catches**: AuthService/StorageService throw on failure with no UI concerns — callers catch and route to SnackbarService
 - **Riverpod providers co-located**: All service providers in `lib/services/providers/service_providers.dart`, not scattered across features
