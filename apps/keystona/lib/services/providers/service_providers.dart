@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/subscription/models/premium_access.dart';
 import '../../features/subscription/providers/subscription_provider.dart';
 import '../auth_service.dart';
 import '../connectivity_service.dart';
@@ -36,12 +37,31 @@ final storageServiceProvider = Provider<StorageService>(
   (ref) => StorageService(),
 );
 
-/// Whether the current user has an active Keystona Pro entitlement.
+/// Whether the current user has premium access. Gates all 8 premium features.
 ///
-/// Derived from [trialStatusProvider] which reads [profiles.subscription_tier]
-/// from Supabase — kept in sync by the RevenueCat webhook. Defaults to `false`
-/// while the async fetch is in-flight.
+/// Decision logic lives in [PremiumAccess.resolve], which is pure and fully
+/// tested — see `test/features/premium_access_test.dart`. This provider only
+/// collects the inputs.
+///
+/// It previously read `profiles.subscription_tier == 'premium'` alone, on the
+/// documented assumption that a RevenueCat webhook kept that column in sync.
+/// No such webhook exists, so nothing ever wrote the column and the gate was
+/// permanently false: a paying user got the "Pro" label on the subscription
+/// screen and a locked app everywhere else. RevenueCat's entitlements are now
+/// the primary signal, with the server tier as a fallback.
 final isPremiumProvider = Provider<bool>((ref) {
-  final trial = ref.watch(trialStatusProvider);
-  return trial.value?.subscriptionTier == 'premium';
+  final customerInfo = ref.watch(customerInfoStreamProvider);
+  final trial = ref.watch(trialStatusProvider).value;
+
+  return PremiumAccess.resolve(
+    // null, not an empty set, while RevenueCat is still loading or errored —
+    // the resolver treats "unknown" differently from "definitively not
+    // subscribed", which is what stops a cold start locking out a subscriber.
+    activeEntitlementIds: customerInfo.hasValue
+        ? customerInfo.value!.entitlements.active.keys.toSet()
+        : null,
+    serverTier: trial?.subscriptionTier,
+    trialEndsAt: trial?.trialEndsAt,
+    now: DateTime.now(),
+  ).isPremium;
 });

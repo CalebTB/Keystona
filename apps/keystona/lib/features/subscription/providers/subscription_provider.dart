@@ -42,11 +42,15 @@ class TrialStatus {
   final DateTime? trialEndsAt;
   final String subscriptionTier;
 
-  /// True when the user is on an active premium trial.
+  /// True when the user is on an active trial.
+  ///
+  /// Deliberately NOT gated on `subscriptionTier == 'premium'`. A signup trial
+  /// sits on a row whose tier is still the `'free'` default — nothing writes
+  /// that column — so requiring premium here meant [shouldShowTrialBanner] was
+  /// always false and the trial banner never rendered. Same root cause as the
+  /// premium gate; see [PremiumAccess].
   bool get isInTrial =>
-      subscriptionTier == 'premium' &&
-      trialEndsAt != null &&
-      DateTime.now().isBefore(trialEndsAt!);
+      trialEndsAt != null && DateTime.now().isBefore(trialEndsAt!);
 
   /// True when the trial has ended but the 14-day grace period has not expired.
   bool get isInGracePeriod {

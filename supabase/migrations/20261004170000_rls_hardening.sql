@@ -166,6 +166,15 @@ CREATE POLICY "Users can update own tasks"
 
 -- ── 5. Trigger functions were callable as RPCs by anon ──────────────────────
 --
+-- WARNING: this section DOES NOT WORK and is superseded by
+-- 20261005040000_revoke_function_execute_from_public.sql.
+--
+-- EXECUTE on a function is granted to PUBLIC by default, and anon/authenticated
+-- inherit through PUBLIC — so revoking from the named roles below changes
+-- nothing. Confirmed after this migration applied: has_function_privilege('anon',
+-- ...) was still true for all nine. Left in place rather than edited because
+-- this file is already applied; the follow-up revokes from PUBLIC.
+--
 -- These are trigger bodies, not API surface, but PostgREST exposes every
 -- public function at /rest/v1/rpc/<name>. As SECURITY DEFINER they ran with
 -- owner privileges. handle_new_user() in particular inserts into profiles.
