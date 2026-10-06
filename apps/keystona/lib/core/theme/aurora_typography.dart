@@ -137,11 +137,188 @@ abstract final class AuroraType {
         color: AuroraColors.paper,
       );
 
+  /// 15px 600 — pill button label.
+  static TextStyle get button => TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        height: 1.2,
+        color: AuroraColors.ink,
+      );
+
+  /// 14px 600 — compact pill and inline text-button label.
+  static TextStyle get buttonSm => TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        height: 1.2,
+        color: AuroraColors.ink,
+      );
+
+  /// 15px 500 — sheet Cancel.
+  static TextStyle get cancel => TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+        height: 1.2,
+        color: AuroraColors.inkSubtle,
+      );
+
+  /// 16px 400 — text and select field value.
+  static TextStyle get input => TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        height: 1.4,
+        color: AuroraColors.ink,
+      );
+
+  /// 13.5px 600 — chip label.
+  static TextStyle get chip => TextStyle(
+        fontSize: 13.5,
+        fontWeight: FontWeight.w600,
+        height: 1.2,
+        color: AuroraColors.ink,
+      );
+
+  /// 10px 500 +0.3px — helper text under fields. ALWAYS uppercase at call site.
+  static TextStyle get helper => TextStyle(
+        fontFeatures: _tabular,
+        fontSize: 10,
+        fontWeight: FontWeight.w500,
+        height: 1.35,
+        letterSpacing: 0.3,
+        color: AuroraColors.inkHelper,
+      );
+
+  /// 10px 500 +0.3px — row meta line (ink 55%). Uppercase at call site.
+  static TextStyle get meta => TextStyle(
+        fontFeatures: _tabular,
+        fontSize: 10,
+        fontWeight: FontWeight.w500,
+        height: 1.3,
+        letterSpacing: 0.3,
+        color: AuroraColors.inkSecondary,
+      );
+
+  /// 10px 600 — row trailing date / count.
+  static TextStyle get rowDate => TextStyle(
+        fontFeatures: _tabular,
+        fontSize: 10,
+        fontWeight: FontWeight.w600,
+        height: 1.3,
+        color: AuroraColors.inkSecondary,
+      );
+
+  /// 10px 600 +1.2px ink — form section title. Uppercase at call site.
+  static TextStyle get sectionTitle => TextStyle(
+        fontFeatures: _tabular,
+        fontSize: 10,
+        fontWeight: FontWeight.w600,
+        height: 1.2,
+        letterSpacing: 1.2,
+        color: AuroraColors.ink,
+      );
+
+  /// 14px 600 — task row title.
+  static TextStyle get rowTitle => TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        height: 1.2,
+        color: AuroraColors.ink,
+      );
+
   /// 10px 600 — tab bar label (700 when active via `copyWith`).
   static TextStyle get tabLabel => TextStyle(
         fontSize: 10,
         fontWeight: FontWeight.w600,
         height: 1.2,
         color: AuroraColors.inkPlaceholder,
+      );
+}
+
+/// Type styles specific to the shared core widgets.
+abstract final class AuroraSharedType {
+  static const List<FontFeature> _tabular = [FontFeature.tabularFigures()];
+
+  /// 22px 800 −0.5 — empty/error/confirm title.
+  static TextStyle get stateTitle => TextStyle(
+        fontSize: 22,
+        fontWeight: FontWeight.w800,
+        height: 1.2,
+        letterSpacing: -0.5,
+        color: AuroraColors.ink,
+      );
+
+  /// 15px 400 on the empty/error body (ink 65%).
+  static TextStyle get stateBody => TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w400,
+        height: 1.5,
+        color: AuroraColors.inkBody,
+      );
+
+  /// 14.5px 400 modal body copy.
+  static TextStyle get modalBody => TextStyle(
+        fontSize: 14.5,
+        fontWeight: FontWeight.w400,
+        height: 1.5,
+        color: AuroraColors.inkBody,
+      );
+
+  /// 15px 600 inline link rows ("Need Emergency?").
+  static TextStyle get linkRow => TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        height: 1.3,
+        color: AuroraColors.ink,
+      );
+
+  /// 14.5px 700 snackbar message.
+  static TextStyle get snackbarTitle => TextStyle(
+        fontSize: 14.5,
+        fontWeight: FontWeight.w700,
+        height: 1.3,
+        color: AuroraColors.paper,
+      );
+
+  /// 12.5px 400 snackbar second line.
+  static TextStyle get snackbarSub => TextStyle(
+        fontSize: 12.5,
+        fontWeight: FontWeight.w400,
+        height: 1.3,
+        color: AuroraOnInk.secondary,
+      );
+
+  /// 15px 700 snackbar action (lime).
+  static TextStyle get snackbarAction => TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w700,
+        height: 1.2,
+        color: AuroraColors.lime,
+      );
+
+  /// 9px 600 +0.8 — status pill label (700 on done/behind via copyWith).
+  static TextStyle get pill => TextStyle(
+        fontFeatures: _tabular,
+        fontSize: 9,
+        fontWeight: FontWeight.w600,
+        height: 1.2,
+        letterSpacing: 0.8,
+        color: AuroraColors.inkSecondary,
+      );
+
+  /// 13.5px 700 offline banner title.
+  static TextStyle get offlineTitle => TextStyle(
+        fontSize: 13.5,
+        fontWeight: FontWeight.w700,
+        height: 1.2,
+        color: AuroraColors.amberDeep,
+      );
+
+  /// 9.5px 600 +0.4 offline banner second line.
+  static TextStyle get offlineSub => TextStyle(
+        fontFeatures: _tabular,
+        fontSize: 9.5,
+        fontWeight: FontWeight.w600,
+        height: 1.2,
+        letterSpacing: 0.4,
+        color: AuroraColors.amberDeep,
       );
 }

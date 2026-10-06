@@ -28,13 +28,9 @@ abstract final class AuroraShadows {
     ),
   ];
 
-  /// FAB elevation — coral glow.
-  static const List<BoxShadow> fab = <BoxShadow>[
-    BoxShadow(
-      color: Color(0x59FF3B62), // coral at 35%
-      offset: Offset(0, 4),
-      blurRadius: 12,
-    ),
+  /// Floating action button lift (ink, no brand glow).
+  static const List<BoxShadow> fabAction = <BoxShadow>[
+    BoxShadow(color: Color(0x40071238), offset: Offset(0, 4), blurRadius: 12),
   ];
 
   /// Switch knob.

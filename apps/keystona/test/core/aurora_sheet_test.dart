@@ -120,7 +120,8 @@ void main() {
       expect(r.bottomLeft.x, 0, reason: 'bottom corners stay square');
     });
 
-    testWidgets('tightens on compact and opens up on tablet', (tester) async {
+    testWidgets('stays 22px on compact and tablet (kit has one radius)',
+        (tester) async {
       late BorderRadius compact;
       late BorderRadius tablet;
       await _pumpAt(tester, _compact, Builder(builder: (c) {
@@ -131,8 +132,8 @@ void main() {
         tablet = AuroraSheet.topRadius(c);
         return const SizedBox();
       }));
-      expect(compact.topLeft.x, 18);
-      expect(tablet.topLeft.x, 28);
+      expect(compact.topLeft.x, 22);
+      expect(tablet.topLeft.x, 22);
     });
   });
 

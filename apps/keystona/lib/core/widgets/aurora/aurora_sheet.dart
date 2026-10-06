@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import '../../theme/aurora_breakpoints.dart';
 import '../../theme/aurora_colors.dart';
 import '../../theme/aurora_radius.dart';
+import '../../theme/aurora_scale.dart';
+import '../../theme/aurora_sizes.dart';
 import '../../theme/aurora_spacing.dart';
 import '../../theme/aurora_typography.dart';
 import 'aurora_button.dart';
+import 'aurora_pressable.dart';
 
 /// Target sheet height as a fraction of screen height.
 ///
@@ -66,22 +69,11 @@ class AuroraSheetAction {
 /// corner radius, backdrop, handle and padding are all resolved here, so
 /// they stay consistent and responsive without any decoration at call sites.
 abstract final class AuroraSheet {
-  /// Backdrop scrim — §3.2. Lighter than a modal; sheets are less interruptive.
-  static final Color _backdrop = AuroraColors.ink.withValues(alpha: 0.45);
+  /// Backdrop scrim — ink 45%.
+  static const Color _backdrop = AuroraColors.scrim;
 
-  /// Top corner radius, responsive by device class.
-  ///
-  /// Spec baseline is 22px (`radius-2xl`) on a regular phone. Compact phones
-  /// tighten to 18px so the sheet doesn't eat its own title row; tablets open
-  /// up to 28px to stay proportionate against a much larger surface.
-  static BorderRadius topRadius(BuildContext context) {
-    final r = switch (AuroraBreakpoints.of(context)) {
-      AuroraDeviceClass.compact => 18.0,
-      AuroraDeviceClass.regular => 22.0,
-      AuroraDeviceClass.tablet => 28.0,
-    };
-    return BorderRadius.vertical(top: Radius.circular(r));
-  }
+  /// Top corner radius — 22 on every device class (kit).
+  static BorderRadius topRadius(BuildContext context) => AuroraRadius.sheetTop;
 
   /// Standard sheet. Returns the value passed to `Navigator.pop`.
   ///
@@ -154,8 +146,8 @@ abstract final class AuroraSheet {
     );
   }
 
-  /// iOS-style action list — §3.6. Resolves to the tapped action's index,
-  /// or `null` if cancelled.
+  /// Action list — §3.6. Resolves to the tapped action's index, or `null` if
+  /// cancelled.
   static Future<int?> actionSheet(
     BuildContext context, {
     required String title,
@@ -168,13 +160,14 @@ abstract final class AuroraSheet {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          for (var i = 0; i < actions.length; i++)
+          for (var i = 0; i < actions.length; i++) ...[
+            if (i > 0) const _Hairline(),
             _ActionRow(
               action: actions[i],
               onTap: () => Navigator.of(context).pop(i),
             ),
-          const Divider(height: 1, thickness: 0.5, color: AuroraColors.inkBorder),
-          const SizedBox(height: AuroraSpacing.space3),
+          ],
+          const _Hairline(),
           GhostButton(
             label: cancelLabel,
             onPressed: () => Navigator.of(context).pop(),
@@ -193,7 +186,21 @@ abstract final class AuroraSheet {
           : null;
 }
 
-/// Sheet chrome — handle, optional title row, divider, padded body (§3.2).
+/// 0.5 pt ink 12% divider.
+class _Hairline extends StatelessWidget {
+  const _Hairline();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Divider(
+      height: AuroraBorders.hairline,
+      thickness: AuroraBorders.hairline,
+      color: AuroraColors.inkBorder,
+    );
+  }
+}
+
+/// Sheet chrome — grabber, optional header, hairline, padded body.
 class _SheetFrame extends StatelessWidget {
   const _SheetFrame({
     required this.child,
@@ -213,12 +220,13 @@ class _SheetFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final a = context.aurora;
     final body = Padding(
       padding: EdgeInsets.fromLTRB(
-        AuroraSpacing.screenPadH,
-        AuroraSpacing.space7,
-        AuroraSpacing.screenPadH,
-        AuroraSpacing.screenPadBottom + MediaQuery.paddingOf(context).bottom,
+        a.of(AuroraSpacing.screenPadH),
+        a.of(AuroraSpacing.space8),
+        a.of(AuroraSpacing.screenPadH),
+        a.of(AuroraSpacing.space10) + MediaQuery.paddingOf(context).bottom,
       ),
       child: child,
     );
@@ -233,7 +241,7 @@ class _SheetFrame extends StatelessWidget {
             confirmLabel: confirmLabel,
             onConfirm: onConfirm,
           ),
-          const Divider(height: 1, thickness: 0.5, color: AuroraColors.inkBorder),
+          const _Hairline(),
         ],
         if (shrinkWrap)
           Flexible(child: SingleChildScrollView(child: body))
@@ -244,25 +252,30 @@ class _SheetFrame extends StatelessWidget {
   }
 }
 
-/// 4×36 handle, ink-border-strong, 8px from the top of the sheet (§3.2).
+/// 36x4 grabber, ink 20%, 8 pt from the top of the sheet.
 class _DragHandle extends StatelessWidget {
   const _DragHandle();
 
   @override
   Widget build(BuildContext context) {
+    final a = context.aurora;
     return Container(
-      margin: const EdgeInsets.only(top: AuroraSpacing.space3),
-      width: 36,
-      height: 4,
+      margin: EdgeInsets.only(top: a.of(AuroraSpacing.space3)),
+      width: AuroraSizes.grabberWidth,
+      height: AuroraSizes.grabberHeight,
       decoration: const BoxDecoration(
         color: AuroraColors.inkBorderStrong,
-        borderRadius: AuroraRadius.full,
+        borderRadius: AuroraRadius.bar,
       ),
     );
   }
 }
 
-/// Cancel (left) · title (centre) · confirm pill (right) — 12px below handle.
+/// Cancel (left) | centered 16/700 title | 36 pt Save pill (right).
+///
+/// The title is capped at a fraction of the header so Cancel and Save always
+/// keep room; the two sides share the rest equally, which keeps the title
+/// centered.
 class _TitleRow extends StatelessWidget {
   const _TitleRow({
     required this.title,
@@ -276,41 +289,75 @@ class _TitleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasConfirm = confirmLabel != null;
+    final a = context.aurora;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AuroraSpacing.screenPadH,
-        AuroraSpacing.space5,
-        AuroraSpacing.screenPadH,
-        AuroraSpacing.space5,
+      padding: EdgeInsets.fromLTRB(
+        a.of(AuroraSpacing.screenPadH),
+        a.of(AuroraSpacing.space2),
+        a.of(AuroraSpacing.screenPadH),
+        a.of(AuroraSpacing.space4),
       ),
-      child: Row(
-        children: [
-          GhostButton(
-            label: 'Cancel',
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          Expanded(
-            child: Text(
-              title,
-              style: AuroraType.h3.copyWith(fontWeight: FontWeight.w700),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+      child: LayoutBuilder(
+        builder: (context, constraints) => Row(
+          children: [
+            Expanded(
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: _CancelButton(
+                  onTap: () => Navigator.of(context).pop(),
+                ),
+              ),
             ),
-          ),
-          if (hasConfirm)
-            SaveButton(label: confirmLabel!, onPressed: onConfirm)
-          else
-          // Balances the Cancel button so the title stays optically centred.
-            const SizedBox(width: 64),
-        ],
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: constraints.maxWidth * AuroraSizes.sheetTitleFraction,
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: a.of(AuroraSpacing.space3)),
+                child: Text(
+                  title,
+                  style: AuroraType.sheetTitle,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: confirmLabel == null
+                    ? const SizedBox.shrink()
+                    : SaveButton(
+                        label: confirmLabel!,
+                        onPressed: onConfirm,
+                        compact: true,
+                      ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-/// 56px action row — §3.6.
+class _CancelButton extends StatelessWidget {
+  const _CancelButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return AuroraPressable(
+      onTap: onTap,
+      enforceTouchTarget: true,
+      child: Text('Cancel', style: AuroraType.cancel),
+    );
+  }
+}
+
+/// Action row, 56 pt minimum — §3.6.
 class _ActionRow extends StatelessWidget {
   const _ActionRow({required this.action, required this.onTap});
 
@@ -319,27 +366,30 @@ class _ActionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final a = context.aurora;
     final color = action.destructive ? AuroraColors.coral : AuroraColors.ink;
-    return InkWell(
+    return AuroraPressable(
       onTap: onTap,
-      child: SizedBox(
-        height: 56,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          minHeight: a.minControl(AuroraSizes.actionRow),
+        ),
         child: Row(
           children: [
             if (action.icon != null) ...[
-              Icon(action.icon, size: 24, color: color),
-              const SizedBox(width: AuroraSpacing.space5),
+              Icon(action.icon, size: a.of(AuroraIconSizes.xl), color: color),
+              SizedBox(width: a.of(AuroraSpacing.space5)),
             ],
             Expanded(
               child: Text(
                 action.label,
-                style: AuroraType.body.copyWith(color: color),
+                style: AuroraType.button.copyWith(color: color),
               ),
             ),
             Icon(
               Icons.chevron_right,
-              size: 20,
-              color: AuroraColors.inkTertiary,
+              size: a.of(AuroraIconSizes.md),
+              color: AuroraColors.inkHelper,
             ),
           ],
         ),

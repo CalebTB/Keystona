@@ -36,6 +36,15 @@ abstract final class AuroraSpacing {
   /// 32px — screen-level breathing room.
   static const double space10 = 32;
 
+  /// 26px — gap between form sections.
+  static const double formSection = 26;
+
+  /// 18px — horizontal padding of a full-size pill button.
+  static const double pillH = 18;
+
+  /// 14px — horizontal padding of a compact pill (sheet Save).
+  static const double pillHCompact = 14;
+
   /// 16px — screen horizontal edge padding.
   static const double screenPadH = 16;
 
@@ -58,16 +67,4 @@ abstract final class AuroraPadding {
 
   /// Compact card padding (10px all sides).
   static const EdgeInsets cardCompact = EdgeInsets.all(AuroraSpacing.space4);
-
-  /// Primary button padding.
-  static const EdgeInsets button = EdgeInsets.symmetric(
-    horizontal: 18,
-    vertical: 12,
-  );
-
-  /// Secondary button padding (1px reduced for border).
-  static const EdgeInsets buttonSecondary = EdgeInsets.symmetric(
-    horizontal: 17,
-    vertical: 11.5,
-  );
 }

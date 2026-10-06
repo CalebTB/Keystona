@@ -101,6 +101,15 @@ abstract final class AuroraColors {
   /// Icon tile border. (0.14 opacity)
   static const Color inkTileBorder = Color(0x24071238);
 
+  /// Input, chip and select borders on paper. (0.18 opacity)
+  static const Color inkInputBorder = Color(0x2E071238);
+
+  /// Cancel / quiet action text. (0.60 opacity)
+  static const Color inkSubtle = Color(0x99071238);
+
+  /// Empty check-circle outline on task rows. (0.30 opacity)
+  static const Color inkCheckBorder = Color(0x4D071238);
+
   /// Switch-off track. (0.16 opacity)
   static const Color inkTrackOff = Color(0x29071238);
 
@@ -128,4 +137,16 @@ abstract final class AuroraColors {
 
   static Color get focusCoral => coral.withValues(alpha: 0.12);
   static Color get focusCobalt => cobalt.withValues(alpha: 0.12);
+}
+
+/// Text on an ink surface (snackbar).
+abstract final class AuroraOnInk {
+  /// Secondary line on ink. (white 0.70)
+  static const Color secondary = Color(0xB3FFFFFF);
+}
+
+/// Non-brand structural colors.
+abstract final class AuroraStructure {
+  /// Fully transparent (host surfaces that paint their own decoration).
+  static const Color transparent = Color(0x00FFFFFF);
 }

@@ -2,56 +2,75 @@ import 'package:flutter/material.dart';
 
 import '../../theme/aurora_colors.dart';
 import '../../theme/aurora_radius.dart';
+import '../../theme/aurora_scale.dart';
+import '../../theme/aurora_sizes.dart';
+import '../../theme/aurora_spacing.dart';
 import '../../theme/aurora_typography.dart';
+import 'aurora_pressable.dart';
 
-/// Status chip — JetBrains Mono, 9px, uppercase, 4px radius.
+/// Status chip — 9 pt uppercase word in a pill. The word always accompanies
+/// the color.
 ///
-/// Text is ALWAYS rendered uppercase — call [label.toUpperCase()] is done
-/// internally. Background + text color come from the status pair:
+/// The kit forbids tinted fills, so statuses are outlines on paper; only a win
+/// ([StatusChip.done]) is a solid lime fill.
 ///
-///   Overdue:   coralDim bg / coralDeep text
-///   Due soon:  yellowDim bg / yellowDeep text
-///   Scheduled: cobaltDim bg / cobaltDeep text
-///   Done:      limeDim bg / limeDeep text
+///   Overdue:   coral outline, coralDeep text
+///   Due soon:  amber outline, amberDeep text
+///   Scheduled: cobalt outline, cobaltDeep text
+///   Done:      solid lime, oliveDeep text
 ///
-/// Pass [background] and [foreground] directly for custom states.
+/// Pass [background] and [foreground] (and optionally [borderColor]) for
+/// custom states.
 class StatusChip extends StatelessWidget {
   const StatusChip({
     super.key,
     required this.label,
     required this.background,
     required this.foreground,
+    this.borderColor,
   });
 
   final String label;
   final Color background;
   final Color foreground;
 
-  // ── Named constructors for common states ────────────────────────────────────
+  /// Outline color; null draws no outline.
+  final Color? borderColor;
 
   const StatusChip.overdue({super.key, required this.label})
-      : background = AuroraColors.coralDim,
-        foreground = AuroraColors.coralDeep;
+      : background = AuroraColors.paper,
+        foreground = AuroraColors.coralDeep,
+        borderColor = AuroraColors.coral;
 
   const StatusChip.dueSoon({super.key, required this.label})
-      : background = AuroraColors.yellowDim,
-        foreground = AuroraColors.yellowDeep;
+      : background = AuroraColors.paper,
+        foreground = AuroraColors.amberDeep,
+        borderColor = AuroraColors.amber;
 
   const StatusChip.scheduled({super.key, required this.label})
-      : background = AuroraColors.cobaltDim,
-        foreground = AuroraColors.cobaltDeep;
+      : background = AuroraColors.paper,
+        foreground = AuroraColors.cobaltDeep,
+        borderColor = AuroraColors.cobalt;
 
   const StatusChip.done({super.key, required this.label})
-      : background = AuroraColors.limeDim,
-        foreground = AuroraColors.limeDeep;
+      : background = AuroraColors.lime,
+        foreground = AuroraColors.oliveDeep,
+        borderColor = null;
 
   @override
   Widget build(BuildContext context) {
+    final a = context.aurora;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: a.symmetric(
+        horizontal: AuroraSpacing.space3,
+        vertical: AuroraSpacing.space1,
+      ),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: AuroraRadius.xs,
+        borderRadius: AuroraRadius.full,
+        border: borderColor == null
+            ? null
+            : Border.all(color: borderColor!, width: AuroraBorders.regular),
       ),
       child: Text(
         label.toUpperCase(),
@@ -61,9 +80,8 @@ class StatusChip extends StatelessWidget {
   }
 }
 
-/// Filter pill — default: paper bg + inkBorder; active: ink bg + white text.
-///
-/// Displays an optional count number in mono after the label.
+/// Filter chip — 36 pt pill. Selected: ink fill, paper text. Unselected:
+/// paper with an ink 18% border. Optional [count] follows the label.
 class FilterPill extends StatelessWidget {
   const FilterPill({
     super.key,
@@ -80,44 +98,50 @@ class FilterPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = selected ? AuroraColors.ink : AuroraColors.paper;
-    final fg = selected ? Colors.white : AuroraColors.ink;
+    final a = context.aurora;
+    final fg = selected ? AuroraColors.paper : AuroraColors.ink;
 
-    return GestureDetector(
+    return AuroraPressable(
       onTap: onTap,
+      selected: selected,
+      semanticLabel: count == null ? label : '$label, $count',
+      enforceTouchTarget: true,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: AuroraRadius.full,
-          border: selected
-              ? null
-              : Border.all(color: AuroraColors.inkBorder),
+        constraints: BoxConstraints(
+          minHeight: a.of(AuroraSizes.chipHeight),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: fg,
-              ),
-            ),
-            if (count != null) ...[
-              const SizedBox(width: 4),
-              Text(
-                '$count',
-                style: TextStyle(
-                  fontFamily: 'JetBrainsMono',
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700,
-                  color: fg,
+        padding: a.symmetric(
+          horizontal: AuroraSpacing.space5,
+          vertical: AuroraSpacing.space2,
+        ),
+        decoration: BoxDecoration(
+          color: selected ? AuroraColors.ink : AuroraColors.paper,
+          borderRadius: AuroraRadius.full,
+          border: Border.all(
+            color: selected ? AuroraColors.ink : AuroraColors.inkInputBorder,
+            width: AuroraBorders.regular,
+          ),
+        ),
+        child: Center(
+          widthFactor: 1,
+          heightFactor: 1,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AuroraType.chip.copyWith(color: fg),
                 ),
               ),
+              if (count != null) ...[
+                SizedBox(width: a.of(AuroraSpacing.space1)),
+                Text('$count', style: AuroraType.labelSm.copyWith(color: fg)),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

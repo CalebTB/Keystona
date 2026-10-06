@@ -2,17 +2,24 @@ import 'package:flutter/material.dart';
 
 import '../../theme/aurora_colors.dart';
 import '../../theme/aurora_radius.dart';
+import '../../theme/aurora_scale.dart';
+import '../../theme/aurora_sizes.dart';
 import '../../theme/aurora_spacing.dart';
 import '../../theme/aurora_typography.dart';
+import 'aurora_card.dart';
+import 'aurora_pressable.dart';
 
 /// Task list row — Aurora style.
 ///
-/// Background varies by urgency:
-///   Default:   paper + inkBorder
-///   Overdue:   coralDim, no border
-///   Due today: lime, no border
+/// Paper with an ink 12% border. Urgency is a colored left rule plus words,
+/// never a tinted fill:
+///   Overdue:   coral rule, the due label in coralDeep
+///   Due today: amber rule ("soon")
+///   Done:      olive check circle, struck-through title
 ///
-/// Icon tile is 30×30 with radius-sm (8px) and category-specific color.
+/// Leading is the 44 pt check button when [onToggle] is given, otherwise the
+/// outlined icon tile when [iconData] is given. Long-press ([onLongPress])
+/// opens the row's context menu — there is no ⋯ button.
 class AuroraTaskRow extends StatelessWidget {
   const AuroraTaskRow({
     super.key,
@@ -25,11 +32,14 @@ class AuroraTaskRow extends StatelessWidget {
     this.iconColor,
     this.overdue = false,
     this.dueToday = false,
+    this.done = false,
+    this.onToggle,
+    this.onLongPress,
   });
 
   final String name;
 
-  /// Formatted date string, e.g. "JUN 30". Rendered in mono.
+  /// Formatted date string, e.g. "JUN 30".
   final String dueLabel;
 
   /// Secondary meta text, e.g. "DUE IN 8 DAYS · 10 MIN".
@@ -38,6 +48,8 @@ class AuroraTaskRow extends StatelessWidget {
   final VoidCallback onTap;
 
   final IconData? iconData;
+
+  /// Optional solid fill behind the icon; the tile is outlined when null.
   final Color? iconBackground;
   final Color? iconColor;
 
@@ -47,76 +59,129 @@ class AuroraTaskRow extends StatelessWidget {
   /// Task is due today.
   final bool dueToday;
 
-  Color get _background {
-    if (overdue) return AuroraColors.coralDim;
-    if (dueToday) return AuroraColors.lime;
-    return AuroraColors.paper;
-  }
+  /// Task is completed.
+  final bool done;
 
-  bool get _hasBorder => !overdue && !dueToday;
+  /// Tap on the check circle. Shows the circle when non-null.
+  final VoidCallback? onToggle;
+
+  final VoidCallback? onLongPress;
+
+  Color? get _accent {
+    if (done) return null;
+    if (overdue) return AuroraColors.coral;
+    if (dueToday) return AuroraColors.amber;
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final a = context.aurora;
+    return AuroraCard(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AuroraSpacing.space5,
-          vertical: 11,
-        ),
-        decoration: BoxDecoration(
-          color: _background,
-          borderRadius: AuroraRadius.lg,
-          border: _hasBorder
-              ? Border.all(color: AuroraColors.inkBorder)
-              : null,
-        ),
-        child: Row(
-          children: [
-            // Icon tile
+      onLongPress: onLongPress,
+      accentColor: _accent,
+      padding: a.symmetric(
+        horizontal: AuroraSpacing.space5,
+        vertical: AuroraSpacing.space3,
+      ),
+      child: Row(
+        children: [
+          if (onToggle != null) ...[
+            _CheckCircle(done: done, onTap: onToggle!),
+            SizedBox(width: a.of(AuroraSpacing.space3)),
+          ] else if (iconData != null) ...[
             Container(
-              width: 30,
-              height: 30,
+              width: a.of(AuroraSizes.iconTile),
+              height: a.of(AuroraSizes.iconTile),
               decoration: BoxDecoration(
-                color: iconBackground ?? AuroraColors.butter,
+                color: iconBackground ?? AuroraColors.paper,
                 borderRadius: AuroraRadius.sm,
+                border: Border.all(
+                  color: AuroraColors.inkTileBorder,
+                  width: AuroraBorders.regular,
+                ),
               ),
-              child: iconData != null
-                  ? Icon(iconData, size: 16, color: iconColor ?? AuroraColors.ink)
-                  : null,
-            ),
-            const SizedBox(width: AuroraSpacing.space3),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: AuroraType.h3.copyWith(fontSize: 12.5),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    metaLine.toUpperCase(),
-                    style: AuroraType.label.copyWith(
-                      color: AuroraColors.inkSecondary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+              child: Icon(
+                iconData,
+                size: a.of(AuroraIconSizes.sm),
+                color: iconColor ?? AuroraColors.ink,
               ),
             ),
-            const SizedBox(width: AuroraSpacing.space3),
-            Text(
-              dueLabel.toUpperCase(),
-              style: AuroraType.label.copyWith(
-                fontWeight: FontWeight.w600,
-                color: overdue ? AuroraColors.coralDeep : AuroraColors.inkSecondary,
-              ),
-            ),
+            SizedBox(width: a.of(AuroraSpacing.space5)),
           ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: AuroraType.rowTitle.copyWith(
+                    decoration: done ? TextDecoration.lineThrough : null,
+                    color: done ? AuroraColors.inkHelper : AuroraColors.ink,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: a.of(AuroraSpacing.space1)),
+                Text(
+                  metaLine.toUpperCase(),
+                  style: AuroraType.meta,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: a.of(AuroraSpacing.space3)),
+          Text(
+            dueLabel.toUpperCase(),
+            textAlign: TextAlign.end,
+            style: AuroraType.rowDate.copyWith(
+              color: overdue && !done
+                  ? AuroraColors.coralDeep
+                  : AuroraColors.inkSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 24 pt circle inside a 44 pt touch target. Done = olive fill, lime check.
+class _CheckCircle extends StatelessWidget {
+  const _CheckCircle({required this.done, required this.onTap});
+
+  final bool done;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final a = context.aurora;
+    return Semantics(
+      checked: done,
+      child: AuroraPressable(
+        onTap: onTap,
+        enforceTouchTarget: true,
+        child: Container(
+          width: a.of(AuroraSizes.checkCircle),
+          height: a.of(AuroraSizes.checkCircle),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: done ? AuroraColors.olive : AuroraColors.paper,
+            border: Border.all(
+              color: done ? AuroraColors.olive : AuroraColors.inkCheckBorder,
+              width: AuroraBorders.emphasis,
+            ),
+          ),
+          child: done
+              ? Icon(
+                  Icons.check,
+                  size: a.of(AuroraIconSizes.xs),
+                  color: AuroraColors.lime,
+                )
+              : null,
         ),
       ),
     );

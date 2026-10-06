@@ -45,3 +45,10 @@ abstract final class AuroraRadius {
   /// Top corners of a bottom sheet (22px).
   static const BorderRadius sheetTop = BorderRadius.vertical(top: Radius.circular(22));
 }
+
+/// Radii for the shared core widgets.
+abstract final class AuroraSharedRadius {
+  /// Bottom-only 3px — tab bar active indicator.
+  static const BorderRadius barBottom =
+      BorderRadius.vertical(bottom: Radius.circular(3));
+}

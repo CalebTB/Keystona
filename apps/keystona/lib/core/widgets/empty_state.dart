@@ -2,15 +2,22 @@ import 'package:flutter/material.dart';
 
 import '../theme/aurora_colors.dart';
 import '../theme/aurora_radius.dart';
+import '../theme/aurora_scale.dart';
+import '../theme/aurora_sizes.dart';
 import '../theme/aurora_spacing.dart';
 import '../theme/aurora_typography.dart';
 import 'aurora/aurora_button.dart';
-import 'aurora/aurora_card.dart';
 
-/// Pattern C — Icon + h3 title + body + optional CTA.
+/// Pattern C — outlined icon circle + title + body + optional CTA.
 ///
 /// Use for standard empty lists and sections. All copy must come from the
-/// Empty States Catalog to ensure consistency across the app.
+/// Empty States Catalog (or the kit screen where one exists: DocsEmpty,
+/// ProjectsEmpty, EmergencyEmpty, NotificationsEmpty, TasksCaughtUp).
+///
+/// Kit look: no fills. The icon sits in an outlined circle, neutral by
+/// default and coral when [accent] is set (an empty state that asks for the
+/// first item). The CTA is a full-width coral pill; [secondaryLabel] adds the
+/// outline pill beneath it.
 class EmptyState extends StatelessWidget {
   const EmptyState({
     super.key,
@@ -19,9 +26,12 @@ class EmptyState extends StatelessWidget {
     required this.subtitle,
     this.actionLabel,
     this.onAction,
+    this.accent = false,
+    this.secondaryLabel,
+    this.onSecondary,
   });
 
-  /// Icon displayed above the title text.
+  /// Icon displayed in the outlined circle above the title.
   final IconData icon;
 
   /// Primary heading text. Use sentence case.
@@ -36,48 +46,34 @@ class EmptyState extends StatelessWidget {
   /// Callback for the action button tap.
   final VoidCallback? onAction;
 
+  /// Coral circle outline and icon instead of the neutral one.
+  final bool accent;
+
+  /// Optional label for the outline pill under the action.
+  final String? secondaryLabel;
+
+  /// Callback for the secondary pill.
+  final VoidCallback? onSecondary;
+
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AuroraSpacing.space9),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 48,
-              color: AuroraColors.inkTertiary,
-            ),
-            const SizedBox(height: AuroraSpacing.space7),
-            Text(
-              title,
-              style: AuroraType.h3,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AuroraSpacing.space3),
-            Text(
-              subtitle,
-              style: AuroraType.body.copyWith(
-                color: AuroraColors.inkSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: AuroraSpacing.space9),
-              PrimaryButton(label: actionLabel!, onPressed: onAction),
-            ],
-          ],
-        ),
-      ),
+    return _EmptyStateBody(
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
+      actionLabel: actionLabel,
+      onAction: onAction,
+      accent: accent,
+      secondaryLabel: secondaryLabel,
+      onSecondary: onSecondary,
     );
   }
 }
 
-/// Pattern A — Motivational hero circle empty state.
+/// Pattern A — first-time / zero-state of a primary feature screen.
 ///
-/// Coral hero circle with icon, h1 title, body subtitle, and coral CTA.
-/// Use for the first-time / zero-state of a primary feature screen.
+/// Same outlined-circle layout as [EmptyState] with the coral accent and a
+/// full-width CTA. (The coral hero disc is not in the kit.)
 class EmptyStateHero extends StatelessWidget {
   const EmptyStateHero({
     super.key,
@@ -96,91 +92,125 @@ class EmptyStateHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return _EmptyStateBody(
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
+      actionLabel: actionLabel,
+      onAction: onAction,
+      accent: true,
+    );
+  }
+}
+
+class _EmptyStateBody extends StatelessWidget {
+  const _EmptyStateBody({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.accent,
+    this.actionLabel,
+    this.onAction,
+    this.secondaryLabel,
+    this.onSecondary,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool accent;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
+
+  @override
+  Widget build(BuildContext context) {
+    final a = context.aurora;
+    final tone = accent ? AuroraColors.coral : AuroraColors.inkSecondary;
+    final ring = accent ? AuroraColors.coral : AuroraColors.inkBorderStrong;
+    final hasAction = actionLabel != null && onAction != null;
+    final hasSecondary = secondaryLabel != null && onSecondary != null;
+
+    // Centered when short, scrolls (without claiming drags) when taller than
+    // the space available, e.g. large text on a small phone.
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AuroraSpacing.space9),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Coral hero circle with yellow blob
-            SizedBox(
-              width: 120,
-              height: 120,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: const BoxDecoration(
-                      color: AuroraColors.coral,
-                      borderRadius: AuroraRadius.full,
-                    ),
-                    child: const Center(
-                      child: SizedBox.shrink(),
+      child: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: a.contentMaxWidth),
+          child: Padding(
+            padding: a.all(AuroraSpacing.space9),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: a.of(AuroraSharedSizes.emptyIconCircle),
+                  height: a.of(AuroraSharedSizes.emptyIconCircle),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: ring,
+                      width: AuroraBorders.regular,
                     ),
                   ),
-                  // Yellow decorative blob
-                  Positioned(
-                    top: -20,
-                    right: -20,
-                    child: Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: AuroraColors.yellow.withValues(alpha: 0.32),
-                        shape: BoxShape.circle,
+                  child: Center(
+                    child: ExcludeSemantics(
+                      child: Icon(
+                        icon,
+                        size: a.of(AuroraSharedSizes.emptyIconGlyph),
+                        color: tone,
                       ),
                     ),
                   ),
-                  // Centered icon
-                  const Center(
-                    child: SizedBox.shrink(),
+                ),
+                SizedBox(height: a.of(AuroraSpacing.space7)),
+                Text(
+                  title,
+                  style: AuroraSharedType.stateTitle,
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: a.of(AuroraSpacing.space5)),
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: a.of(AuroraSharedSizes.bodyMaxWidth),
                   ),
-                  Center(
-                    child: Icon(
-                      icon,
-                      size: 48,
-                      color: Colors.white,
-                    ),
+                  child: Text(
+                    subtitle,
+                    style: AuroraSharedType.stateBody,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                if (hasAction) ...[
+                  SizedBox(height: a.of(AuroraSpacing.space9)),
+                  PrimaryButton(
+                    label: actionLabel!,
+                    onPressed: onAction,
+                    expand: true,
                   ),
                 ],
-              ),
+                if (hasSecondary) ...[
+                  SizedBox(height: a.of(AuroraSpacing.space3)),
+                  SecondaryButton(
+                    label: secondaryLabel!,
+                    onPressed: onSecondary,
+                    expand: true,
+                  ),
+                ],
+              ],
             ),
-            const SizedBox(height: AuroraSpacing.space8),
-            Text(
-              title,
-              style: AuroraType.h1,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AuroraSpacing.space3),
-            Text(
-              subtitle,
-              style: AuroraType.body.copyWith(
-                color: AuroraColors.inkSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: AuroraSpacing.space9),
-              PrimaryButton(
-                label: actionLabel!,
-                onPressed: onAction,
-                expand: true,
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
-/// Pattern E — Inline CTA card.
+/// Pattern E — inline CTA card.
 ///
-/// Butter-background AuroraCard with icon tile, title, subtitle, and half-width
-/// cobalt SaveButton. Use for secondary empty states within a screen that
-/// already has another primary empty state or for feature upsell sections.
+/// Paper card with a hairline border (no tint), outlined icon tile, title,
+/// subtitle and a cobalt button. Use for secondary empty states within a
+/// screen that already has another primary empty state or for feature upsell
+/// sections.
 class EmptyStateCta extends StatelessWidget {
   const EmptyStateCta({
     super.key,
@@ -199,56 +229,52 @@ class EmptyStateCta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AuroraCard(
-      padding: const EdgeInsets.all(AuroraSpacing.space8),
-      child: Container(
-        decoration: const BoxDecoration(
-          color: AuroraColors.butter,
-          borderRadius: AuroraRadius.xl,
+    final a = context.aurora;
+    return Container(
+      width: double.infinity,
+      padding: a.all(AuroraSpacing.space7),
+      decoration: BoxDecoration(
+        color: AuroraColors.paper,
+        borderRadius: AuroraRadius.xl,
+        border: Border.all(
+          color: AuroraColors.inkBorder,
+          width: AuroraBorders.regular,
         ),
-        padding: const EdgeInsets.all(AuroraSpacing.space8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Icon tile
-            Container(
-              width: 48,
-              height: 48,
-              decoration: const BoxDecoration(
-                color: AuroraColors.cobaltDim,
-                borderRadius: AuroraRadius.sm,
-              ),
-              child: Icon(
-                icon,
-                size: 24,
-                color: AuroraColors.cobalt,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: a.of(AuroraSharedSizes.iconTile),
+            height: a.of(AuroraSharedSizes.iconTile),
+            decoration: BoxDecoration(
+              borderRadius: AuroraRadius.tile,
+              border: Border.all(
+                color: AuroraColors.inkTileBorder,
+                width: AuroraBorders.regular,
               ),
             ),
-            const SizedBox(height: AuroraSpacing.space5),
-            Text(
-              title,
-              style: AuroraType.h3,
-            ),
-            const SizedBox(height: AuroraSpacing.space2),
-            Text(
-              subtitle,
-              style: AuroraType.body.copyWith(
-                color: AuroraColors.inkSecondary,
+            child: Center(
+              child: ExcludeSemantics(
+                child: Icon(
+                  icon,
+                  size: a.of(AuroraIconSizes.md),
+                  color: AuroraColors.ink,
+                ),
               ),
             ),
-            const SizedBox(height: AuroraSpacing.space7),
-            // Half-width cobalt CTA
-            FractionallySizedBox(
-              widthFactor: 0.5,
-              child: SaveButton(
-                label: actionLabel,
-                onPressed: onAction,
-                expand: true,
-              ),
-            ),
-          ],
-        ),
+          ),
+          SizedBox(height: a.of(AuroraSpacing.space5)),
+          Text(title, style: AuroraType.h3),
+          SizedBox(height: a.of(AuroraSpacing.space2)),
+          Text(
+            subtitle,
+            style: AuroraType.body.copyWith(color: AuroraColors.inkBody),
+          ),
+          SizedBox(height: a.of(AuroraSpacing.space7)),
+          SaveButton(label: actionLabel, onPressed: onAction),
+        ],
       ),
     );
   }

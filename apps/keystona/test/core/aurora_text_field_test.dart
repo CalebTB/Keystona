@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:keystona/core/theme/aurora_sizes.dart';
+import 'package:keystona/core/widgets/aurora/aurora_field_chrome.dart';
 import 'package:keystona/core/widgets/aurora/aurora_text_field.dart';
 
 /// Regression tests for the `minLines can't be greater than maxLines`
@@ -47,10 +49,11 @@ void main() {
       }
     });
 
-    testWidgets('a 4+ line textarea still opens at 4 lines', (tester) async {
+    testWidgets('a 3+ line textarea opens at 3 lines (kit rows=3)',
+        (tester) async {
       await _pump(tester, 6);
       final field = tester.widget<TextField>(find.byType(TextField));
-      expect(field.minLines, 4);
+      expect(field.minLines, 3);
     });
 
     testWidgets('a single-line field stays at 1 line', (tester) async {
@@ -59,24 +62,15 @@ void main() {
       expect(field.minLines, 1);
     });
 
-    testWidgets('container height grows with minLines, 4 lines stays 120',
+    testWidgets('box is at least 50 high and grows with the lines',
         (tester) async {
-      // 48 + (minLines - 1) * 24 — the 4-line case must keep its old 120px.
-      for (final (maxLines, expected) in [(1, 48.0), (2, 72.0), (3, 96.0), (4, 120.0), (8, 120.0)]) {
+      var previous = 0.0;
+      for (final maxLines in [1, 2, 3, 8]) {
         await _pump(tester, maxLines);
-        final box = tester.widget<Container>(
-          find
-              .ancestor(
-                of: find.byType(TextField),
-                matching: find.byType(Container),
-              )
-              .first,
-        );
-        expect(
-          box.constraints?.minHeight,
-          expected,
-          reason: 'maxLines: $maxLines',
-        );
+        final height = tester.getSize(find.byType(AuroraFieldBox)).height;
+        expect(height, greaterThanOrEqualTo(AuroraSizes.inputHeight));
+        expect(height, greaterThanOrEqualTo(previous));
+        previous = height;
       }
     });
   });

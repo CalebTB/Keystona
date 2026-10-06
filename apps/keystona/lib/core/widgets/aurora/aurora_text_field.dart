@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/aurora_colors.dart';
-import '../../theme/aurora_radius.dart';
+import '../../theme/aurora_scale.dart';
 import '../../theme/aurora_spacing.dart';
 import '../../theme/aurora_typography.dart';
+import 'aurora_field_chrome.dart';
 
-/// Single-line or multi-line text field following Aurora Design System v2.0.
+/// Single-line or multi-line text field following the Aurora kit.
 ///
-/// Pass [maxLines] > 1 for a textarea (no fixed height).
-/// Single-line fields have a 48px total height.
-/// Focus state: coral 2px border + focusCoral glow shadow.
+/// 50 pt minimum height, 12 radius, 1 pt ink 18% border, uppercase 10 pt label
+/// above and uppercase helper text below. Focus turns the border cobalt
+/// (1.5 pt). A failing [validator] turns it coral and shows the message below.
+///
+/// Pass [maxLines] > 1 for a textarea (opens at up to 3 lines and grows).
 class AuroraTextField extends StatefulWidget {
   const AuroraTextField({
     super.key,
@@ -34,13 +37,13 @@ class AuroraTextField extends StatefulWidget {
   final bool required;
   final String? hintText;
 
-  /// Rendered uppercase below the field in labelSm / inkTertiary.
+  /// Rendered uppercase below the field.
   final String? helperText;
 
   final TextInputType? keyboardType;
   final int? maxLength;
 
-  /// 1 = single-line 48px height. > 1 = textarea with 120px min-height.
+  /// 1 = single line. > 1 = textarea.
   final int maxLines;
 
   final bool readOnly;
@@ -52,6 +55,9 @@ class AuroraTextField extends StatefulWidget {
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
   final FocusNode? focusNode;
+
+  /// A textarea opens at this many lines (never more than [maxLines]).
+  static const int textareaOpenLines = 3;
 
   @override
   State<AuroraTextField> createState() => _AuroraTextFieldState();
@@ -74,123 +80,95 @@ class _AuroraTextFieldState extends State<AuroraTextField> {
 
   @override
   void dispose() {
-    if (widget.focusNode == null) {
-      _focusNode.removeListener(_onFocusChange);
-      _focusNode.dispose();
-    }
+    _focusNode.removeListener(_onFocusChange);
+    if (widget.focusNode == null) _focusNode.dispose();
     super.dispose();
   }
 
-  BoxDecoration get _containerDecoration => BoxDecoration(
-        color: AuroraColors.paper,
-        borderRadius: AuroraRadius.md,
-        border: Border.all(
-          color: _isFocused ? AuroraColors.coral : AuroraColors.inkBorder,
-          width: _isFocused ? 2.0 : 1.5,
-        ),
-        boxShadow: _isFocused
-            ? [
-                BoxShadow(
-                  color: AuroraColors.focusCoral,
-                  blurRadius: 4,
-                  spreadRadius: 0,
-                ),
-              ]
-            : null,
-      );
-
   bool get _isTextarea => widget.maxLines > 1;
 
-  /// A textarea opens at 4 lines, but never more than [maxLines] —
-  /// TextFormField asserts if minLines > maxLines.
+  /// minLines must never exceed maxLines.
   int get _minLines => _isTextarea
-      ? (widget.maxLines < 4 ? widget.maxLines : 4)
+      ? (widget.maxLines < AuroraTextField.textareaOpenLines
+          ? widget.maxLines
+          : AuroraTextField.textareaOpenLines)
       : 1;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _FieldLabel(label: widget.label, isRequired: widget.required),
-        const SizedBox(height: AuroraSpacing.space1),
-        Container(
-          constraints: BoxConstraints(
-            minHeight: _isTextarea ? 48 + (_minLines - 1) * 24 : 48,
-          ),
-          decoration: _containerDecoration,
-          padding: const EdgeInsets.symmetric(
-            horizontal: AuroraSpacing.space7,
-            vertical: AuroraSpacing.space5,
-          ),
-          child: TextFormField(
-            controller: widget.controller,
-            focusNode: _focusNode,
-            keyboardType: widget.keyboardType,
-            maxLength: widget.maxLength,
-            maxLines: widget.maxLines,
-            minLines: _minLines,
-            readOnly: widget.readOnly,
-            onTap: widget.onTap,
-            onChanged: widget.onChanged,
-            validator: widget.validator,
-            style: AuroraType.body,
-            cursorColor: AuroraColors.coral,
-            decoration: InputDecoration(
-              isDense: true,
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              errorBorder: InputBorder.none,
-              focusedErrorBorder: InputBorder.none,
-              contentPadding: EdgeInsets.zero,
-              hintText: widget.hintText,
-              hintStyle: AuroraType.body.copyWith(
-                color: AuroraColors.inkTertiary,
+    final a = context.aurora;
+    return FormField<String>(
+      validator: (_) => widget.validator?.call(widget.controller.text),
+      builder: (state) {
+        final error = state.errorText;
+        final hasError = error != null;
+        final helper = hasError ? error : widget.helperText;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AuroraFieldLabel(label: widget.label, isRequired: widget.required),
+            SizedBox(height: a.of(AuroraSpacing.space2)),
+            AuroraFieldBox(
+              active: _isFocused,
+              error: hasError,
+              padding: a.symmetric(
+                horizontal: AuroraSpacing.space6,
+                vertical: _isTextarea ? AuroraSpacing.space5 : 0,
               ),
-              suffixIcon: widget.suffix,
-              counterText: '',
+              child: Row(
+                crossAxisAlignment: _isTextarea
+                    ? CrossAxisAlignment.start
+                    : CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: widget.controller,
+                      focusNode: _focusNode,
+                      keyboardType: widget.keyboardType,
+                      maxLength: widget.maxLength,
+                      maxLines: widget.maxLines,
+                      minLines: _minLines,
+                      readOnly: widget.readOnly,
+                      onTap: widget.onTap,
+                      onChanged: (value) {
+                        state.didChange(value);
+                        widget.onChanged?.call(value);
+                      },
+                      style: AuroraType.input,
+                      cursorColor: AuroraColors.cobalt,
+                      decoration: InputDecoration(
+                        isDense: true,
+                        filled: false,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        errorBorder: InputBorder.none,
+                        focusedErrorBorder: InputBorder.none,
+                        disabledBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                        hintText: widget.hintText,
+                        hintStyle: AuroraType.input.copyWith(
+                          color: AuroraColors.inkPlaceholder,
+                        ),
+                        counterText: '',
+                      ),
+                    ),
+                  ),
+                  if (widget.suffix != null) ...[
+                    SizedBox(width: a.of(AuroraSpacing.space3)),
+                    widget.suffix!,
+                  ],
+                ],
+              ),
             ),
-          ),
-        ),
-        if (widget.helperText != null) ...[
-          const SizedBox(height: AuroraSpacing.space1),
-          Text(
-            widget.helperText!.toUpperCase(),
-            style: AuroraType.labelSm.copyWith(color: AuroraColors.inkTertiary),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _FieldLabel extends StatelessWidget {
-  const _FieldLabel({required this.label, required this.isRequired});
-
-  final String label;
-  final bool isRequired;
-
-  @override
-  Widget build(BuildContext context) {
-    if (!isRequired) {
-      return Text(
-        label.toUpperCase(),
-        style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
-      );
-    }
-    return RichText(
-      text: TextSpan(
-        text: label.toUpperCase(),
-        style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
-        children: const [
-          TextSpan(
-            text: ' *',
-            style: TextStyle(color: AuroraColors.coral),
-          ),
-        ],
-      ),
+            if (helper != null) ...[
+              SizedBox(height: a.of(AuroraSpacing.space2)),
+              AuroraFieldHelper(text: helper, isError: hasError),
+            ],
+          ],
+        );
+      },
     );
   }
 }

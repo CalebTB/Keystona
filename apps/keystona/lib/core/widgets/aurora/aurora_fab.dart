@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/aurora_colors.dart';
+import '../../theme/aurora_scale.dart';
 import '../../theme/aurora_shadows.dart';
+import '../../theme/aurora_sizes.dart';
+import 'aurora_pressable.dart';
 
-/// Aurora floating action button — coral, 56×56, circular, with coral glow.
+/// Aurora floating action button — cobalt (an action, not "act now"),
+/// circular, with a soft ink lift.
 ///
-/// On iOS, embed in a `Stack + Positioned(bottom: 24, right: 24)` since
+/// On iOS, embed in a `Stack + Positioned` at the screen-edge insets since
 /// `CupertinoPageScaffold` has no floatingActionButton slot.
 class AuroraFAB extends StatelessWidget {
   const AuroraFAB({
@@ -21,21 +25,27 @@ class AuroraFAB extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final a = context.aurora;
+    final button = AuroraPressable(
       onTap: onPressed,
-      child: Tooltip(
-        message: tooltip ?? '',
-        child: Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: AuroraColors.coral,
-            shape: BoxShape.circle,
-            boxShadow: AuroraShadows.fab,
-          ),
-          child: Icon(icon, color: Colors.white, size: 24),
+      semanticLabel: tooltip,
+      child: Container(
+        constraints: BoxConstraints.tightFor(
+          width: a.of(AuroraSizes.fab),
+          height: a.of(AuroraSizes.fab),
+        ),
+        decoration: BoxDecoration(
+          color: AuroraColors.cobalt,
+          shape: BoxShape.circle,
+          boxShadow: AuroraShadows.fabAction,
+        ),
+        child: Icon(
+          icon,
+          color: AuroraColors.paper,
+          size: a.of(AuroraIconSizes.xl),
         ),
       ),
     );
+    return tooltip == null ? button : Tooltip(message: tooltip!, child: button);
   }
 }

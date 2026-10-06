@@ -1,10 +1,14 @@
 import 'dart:math' as math;
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../theme/aurora_colors.dart';
+import '../theme/aurora_radius.dart';
+import '../theme/aurora_scale.dart';
+import '../theme/aurora_sizes.dart';
+import '../theme/aurora_spacing.dart';
+import '../theme/aurora_tab_icons.dart';
 import '../theme/aurora_typography.dart';
 
 /// Persistent bottom-navigation shell that wraps the five primary tabs.
@@ -22,7 +26,7 @@ class AppShell extends StatelessWidget {
     return Scaffold(
       backgroundColor: AuroraColors.paper,
       body: navigationShell,
-      bottomNavigationBar: _AppTabBar(
+      bottomNavigationBar: AppTabBar(
         currentIndex: navigationShell.currentIndex,
         onTap: (index) => navigationShell.goBranch(
           index,
@@ -33,56 +37,56 @@ class AppShell extends StatelessWidget {
   }
 }
 
-// ── Custom frosted-glass tab bar ──────────────────────────────────────────────
-
-class _AppTabBar extends StatelessWidget {
-  const _AppTabBar({required this.currentIndex, required this.onTap});
+/// Aurora tab bar (kit nav "Main tabs"): paper surface, hairline top border,
+/// five equal columns. Inactive tabs are ink 35%; the active tab is coral with
+/// a coral bar on top. Height is [AuroraSizes.tabBarHeight] at minimum and
+/// grows with the text scale and the bottom safe-area inset.
+class AppTabBar extends StatelessWidget {
+  const AppTabBar({super.key, required this.currentIndex, required this.onTap});
 
   final int currentIndex;
   final ValueChanged<int> onTap;
 
   static const _tabs = [
-    _TabItem(label: 'Home',     icon: _TabIcon.home),
-    _TabItem(label: 'Docs',     icon: _TabIcon.docs),
-    _TabItem(label: 'Tasks',    icon: _TabIcon.tasks),
-    _TabItem(label: 'Projects', icon: _TabIcon.projects),
-    _TabItem(label: 'Settings', icon: _TabIcon.settings),
+    _TabItem(label: 'Home', icon: AuroraTabIcon.home),
+    _TabItem(label: 'Docs', icon: AuroraTabIcon.docs),
+    _TabItem(label: 'Tasks', icon: AuroraTabIcon.tasks),
+    _TabItem(label: 'Projects', icon: AuroraTabIcon.projects),
+    _TabItem(label: 'Settings', icon: AuroraTabIcon.settings),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final bottomPad = MediaQuery.of(context).padding.bottom;
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            color: Color(0xEBFFFFFF), // paper 92% opacity
-            border: Border(
-              top: BorderSide(color: AuroraColors.inkBorder, width: 0.5),
-            ),
+    final a = context.aurora;
+    final inset = MediaQuery.viewPaddingOf(context).bottom;
+    final bottomPad = math.max(inset, a.of(AuroraSharedSizes.tabPadBottomMin));
+    return Container(
+      constraints: BoxConstraints(minHeight: a.of(AuroraSizes.tabBarHeight)),
+      decoration: const BoxDecoration(
+        color: AuroraColors.paper,
+        border: Border(
+          top: BorderSide(
+            color: AuroraColors.inkBorder,
+            width: AuroraBorders.hairline,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+        ),
+      ),
+      padding: EdgeInsets.only(bottom: bottomPad),
+      child: Semantics(
+        container: true,
+        label: 'Main tabs',
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(
-                height: 56,
-                child: Row(
-                  children: List.generate(_tabs.length, (i) {
-                    return Expanded(
-                      child: GestureDetector(
-                        onTap: () => onTap(i),
-                        behavior: HitTestBehavior.opaque,
-                        child: _TabCell(
-                          item: _tabs[i],
-                          active: i == currentIndex,
-                        ),
-                      ),
-                    );
-                  }),
+              for (var i = 0; i < _tabs.length; i++)
+                Expanded(
+                  child: _TabCell(
+                    item: _tabs[i],
+                    active: i == currentIndex,
+                    onTap: () => onTap(i),
+                  ),
                 ),
-              ),
-              SizedBox(height: bottomPad),
             ],
           ),
         ),
@@ -92,195 +96,86 @@ class _AppTabBar extends StatelessWidget {
 }
 
 class _TabCell extends StatelessWidget {
-  const _TabCell({required this.item, required this.active});
+  const _TabCell({
+    required this.item,
+    required this.active,
+    required this.onTap,
+  });
 
   final _TabItem item;
   final bool active;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? AuroraColors.coral : AuroraColors.inkTertiary;
-    return Stack(
-      alignment: Alignment.topCenter,
-      children: [
-        // Top indicator bar — only visible on active tab.
-        if (active)
-          Container(
-            width: 20,
-            height: 3,
-            decoration: const BoxDecoration(
-              color: AuroraColors.coral,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(3),
-                bottomRight: Radius.circular(3),
-              ),
-            ),
-          ),
-
-        // Icon + label column.
-        Padding(
-          padding: const EdgeInsets.only(top: 10),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+    final a = context.aurora;
+    final color = active ? AuroraColors.coral : AuroraColors.inkPlaceholder;
+    return Semantics(
+      button: true,
+      selected: active,
+      label: item.label,
+      excludeSemantics: true,
+      onTap: onTap,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: AuroraSizes.minTouch),
+          child: Stack(
+            alignment: Alignment.topCenter,
             children: [
-              _TabSvgIcon(icon: item.icon, color: color),
-              const SizedBox(height: 3),
-              Text(
-                item.label,
-                style: AuroraType.bodySm.copyWith(
-                  fontSize: 10,
-                  color: color,
-                  fontWeight: active ? FontWeight.w700 : FontWeight.w600,
+              if (active)
+                Container(
+                  width: a.of(AuroraSharedSizes.tabIndicatorWidth),
+                  height: a.of(AuroraSharedSizes.tabIndicatorHeight),
+                  decoration: const BoxDecoration(
+                    color: AuroraColors.coral,
+                    borderRadius: AuroraSharedRadius.barBottom,
+                  ),
+                ),
+              Padding(
+                padding: EdgeInsets.only(
+                  top: a.of(AuroraSharedSizes.tabPadTop),
+                  left: a.of(AuroraSpacing.space1),
+                  right: a.of(AuroraSpacing.space1),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CustomPaint(
+                      size: Size.square(a.of(AuroraIconSizes.lg)),
+                      painter: AuroraTabIconPainter(
+                        icon: item.icon,
+                        color: color,
+                      ),
+                    ),
+                    SizedBox(height: a.of(AuroraSharedSizes.tabIconLabelGap)),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        item.label,
+                        maxLines: 1,
+                        softWrap: false,
+                        style: AuroraType.tabLabel.copyWith(
+                          color: color,
+                          fontWeight:
+                              active ? FontWeight.w700 : FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
-      ],
+      ),
     );
   }
 }
-
-// ── SVG icon painter ──────────────────────────────────────────────────────────
-
-enum _TabIcon { home, docs, tasks, projects, settings }
-
-class _TabSvgIcon extends StatelessWidget {
-  const _TabSvgIcon({required this.icon, required this.color});
-
-  final _TabIcon icon;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      size: const Size(22, 22),
-      painter: _TabIconPainter(icon: icon, color: color),
-    );
-  }
-}
-
-class _TabIconPainter extends CustomPainter {
-  const _TabIconPainter({required this.icon, required this.color});
-
-  final _TabIcon icon;
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.8
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    // Scale from 24×24 viewBox to actual size.
-    final sx = size.width / 24;
-    final sy = size.height / 24;
-    canvas.scale(sx, sy);
-
-    switch (icon) {
-      case _TabIcon.home:
-        // M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z
-        final path = Path()
-          ..moveTo(3, 9)
-          ..lineTo(12, 2)
-          ..lineTo(21, 9)
-          ..lineTo(21, 20)
-          ..arcToPoint(const Offset(19, 22),
-              radius: const Radius.circular(2))
-          ..lineTo(5, 22)
-          ..arcToPoint(const Offset(3, 20),
-              radius: const Radius.circular(2))
-          ..close();
-        canvas.drawPath(path, paint);
-
-      case _TabIcon.docs:
-        // M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z  +  polyline 14 2 14 8 20 8
-        final body = Path()
-          ..moveTo(14, 2)
-          ..lineTo(6, 2)
-          ..arcToPoint(const Offset(4, 4),
-              radius: const Radius.circular(2))
-          ..lineTo(4, 20)
-          ..arcToPoint(const Offset(6, 22),
-              radius: const Radius.circular(2))
-          ..lineTo(18, 22)
-          ..arcToPoint(const Offset(20, 20),
-              radius: const Radius.circular(2))
-          ..lineTo(20, 8)
-          ..close();
-        canvas.drawPath(body, paint);
-        final fold = Path()
-          ..moveTo(14, 2)
-          ..lineTo(14, 8)
-          ..lineTo(20, 8);
-        canvas.drawPath(fold, paint);
-
-      case _TabIcon.tasks:
-        // Checkmark-list: two horizontal lines + a check mark.
-        // Line 1
-        canvas.drawLine(const Offset(9, 8), const Offset(19, 8), paint);
-        // Line 2
-        canvas.drawLine(const Offset(9, 12), const Offset(19, 12), paint);
-        // Line 3
-        canvas.drawLine(const Offset(9, 16), const Offset(19, 16), paint);
-        // Check circle on the left
-        canvas.drawCircle(const Offset(5, 8), 2, paint);
-        canvas.drawCircle(const Offset(5, 12), 2, paint);
-        canvas.drawCircle(const Offset(5, 16), 2, paint);
-
-      case _TabIcon.projects:
-        // Four rounded squares in a 2×2 grid
-        final rr = RRect.fromRectAndRadius(
-            const Rect.fromLTWH(3, 3, 7, 7), const Radius.circular(1.5));
-        final rr2 = RRect.fromRectAndRadius(
-            const Rect.fromLTWH(14, 3, 7, 7), const Radius.circular(1.5));
-        final rr3 = RRect.fromRectAndRadius(
-            const Rect.fromLTWH(3, 14, 7, 7), const Radius.circular(1.5));
-        final rr4 = RRect.fromRectAndRadius(
-            const Rect.fromLTWH(14, 14, 7, 7), const Radius.circular(1.5));
-        canvas
-          ..drawRRect(rr, paint)
-          ..drawRRect(rr2, paint)
-          ..drawRRect(rr3, paint)
-          ..drawRRect(rr4, paint);
-
-      case _TabIcon.settings:
-        // Gear: center circle + 8-tooth cog outline.
-        canvas.drawCircle(const Offset(12, 12), 3, paint);
-        final gear = Path();
-        const double ro = 9.5; // outer radius
-        const double ri = 7.8; // inner radius (between teeth)
-        const int teeth = 8;
-        for (int i = 0; i < teeth; i++) {
-          final a0 = (i / teeth) * math.pi * 2 - math.pi / 2;
-          final a1 = a0 + (0.35 / teeth) * math.pi * 2;
-          final a2 = a0 + (0.65 / teeth) * math.pi * 2;
-          final a3 = a0 + (1.0 / teeth) * math.pi * 2;
-          if (i == 0) {
-            gear.moveTo(12 + ri * math.cos(a0), 12 + ri * math.sin(a0));
-          }
-          gear
-            ..lineTo(12 + ro * math.cos(a1), 12 + ro * math.sin(a1))
-            ..lineTo(12 + ro * math.cos(a2), 12 + ro * math.sin(a2))
-            ..lineTo(12 + ri * math.cos(a3), 12 + ri * math.sin(a3));
-        }
-        gear.close();
-        canvas.drawPath(gear, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_TabIconPainter old) =>
-      old.icon != icon || old.color != color;
-}
-
-// ── Data ──────────────────────────────────────────────────────────────────────
 
 class _TabItem {
   const _TabItem({required this.label, required this.icon});
   final String label;
-  final _TabIcon icon;
+  final AuroraTabIcon icon;
 }

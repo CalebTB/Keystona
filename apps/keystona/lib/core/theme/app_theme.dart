@@ -2,12 +2,22 @@ import 'package:flutter/material.dart';
 
 import 'aurora_colors.dart';
 import 'aurora_radius.dart';
+import 'aurora_sizes.dart';
+import 'aurora_spacing.dart';
 import 'aurora_typography.dart';
 
-/// Keystona Material 3 theme — Aurora Design System v2.0.
+/// Keystona Material 3 theme — Aurora kit.
+///
+/// Built only from Aurora tokens. Aurora widgets in `core/widgets/aurora/`
+/// style themselves; this theme is the baseline for stock Material widgets
+/// that screens still use. Cobalt is the action color, coral only means
+/// "act now"/error, and there are no tinted container fills.
 ///
 /// Wire in [MaterialApp.theme] via [AppTheme.light].
 abstract final class AppTheme {
+  static const WidgetStateProperty<Color?> _noOutline =
+      WidgetStatePropertyAll<Color?>(AuroraColors.paper);
+
   static ThemeData get light {
     return ThemeData(
       useMaterial3: true,
@@ -16,35 +26,38 @@ abstract final class AppTheme {
       // ─── Canvas ─────────────────────────────────────────────────────────────
       scaffoldBackgroundColor: AuroraColors.paper,
       canvasColor: AuroraColors.paper,
+      // Aurora has no Material ripple.
+      splashFactory: NoSplash.splashFactory,
+      highlightColor: AuroraColors.inkDisabledFill,
 
       // ─── Color Scheme ────────────────────────────────────────────────────────
       colorScheme: const ColorScheme.light(
-        primary: AuroraColors.coral,
-        onPrimary: Color(0xFFFFFFFF),
-        primaryContainer: AuroraColors.coralDim,
-        onPrimaryContainer: AuroraColors.coralDeep,
-        secondary: AuroraColors.cobalt,
-        onSecondary: Color(0xFFFFFFFF),
-        secondaryContainer: AuroraColors.cobaltDim,
-        onSecondaryContainer: AuroraColors.cobaltDeep,
+        primary: AuroraColors.cobalt,
+        onPrimary: AuroraColors.paper,
+        primaryContainer: AuroraColors.paper,
+        onPrimaryContainer: AuroraColors.ink,
+        secondary: AuroraColors.ink,
+        onSecondary: AuroraColors.paper,
+        secondaryContainer: AuroraColors.paper,
+        onSecondaryContainer: AuroraColors.ink,
         tertiary: AuroraColors.lime,
-        onTertiary: AuroraColors.ink,
-        tertiaryContainer: AuroraColors.limeDim,
-        onTertiaryContainer: AuroraColors.limeDeep,
+        onTertiary: AuroraColors.oliveDeep,
+        tertiaryContainer: AuroraColors.lime,
+        onTertiaryContainer: AuroraColors.oliveDeep,
         error: AuroraColors.coral,
-        onError: Color(0xFFFFFFFF),
-        errorContainer: AuroraColors.coralDim,
+        onError: AuroraColors.paper,
+        errorContainer: AuroraColors.paper,
         onErrorContainer: AuroraColors.coralDeep,
         surface: AuroraColors.paper,
         onSurface: AuroraColors.ink,
-        surfaceContainerHighest: AuroraColors.butter,
+        surfaceContainerHighest: AuroraColors.inkDisabledFill,
         onSurfaceVariant: AuroraColors.inkSecondary,
         outline: AuroraColors.inkBorder,
         outlineVariant: AuroraColors.inkBorderStrong,
         shadow: AuroraColors.ink,
-        scrim: AuroraColors.ink,
+        scrim: AuroraColors.scrim,
         inverseSurface: AuroraColors.ink,
-        onInverseSurface: Color(0xFFFFFFFF),
+        onInverseSurface: AuroraColors.paper,
         inversePrimary: AuroraColors.lime,
       ),
 
@@ -83,64 +96,72 @@ abstract final class AppTheme {
       appBarTheme: AppBarTheme(
         backgroundColor: AuroraColors.paper,
         foregroundColor: AuroraColors.ink,
+        surfaceTintColor: AuroraColors.paper,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: AuroraType.h2.copyWith(color: AuroraColors.ink),
-        iconTheme: const IconThemeData(color: AuroraColors.ink, size: 24),
-        actionsIconTheme: const IconThemeData(color: AuroraColors.ink, size: 24),
+        titleTextStyle: AuroraType.sheetTitle,
+        iconTheme: const IconThemeData(
+          color: AuroraColors.ink,
+          size: AuroraIconSizes.xl,
+        ),
+        actionsIconTheme: const IconThemeData(
+          color: AuroraColors.ink,
+          size: AuroraIconSizes.xl,
+        ),
       ),
 
       // ─── Bottom Navigation Bar ────────────────────────────────────────────────
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AuroraColors.paper,
-        selectedItemColor: AuroraColors.coral,
-        unselectedItemColor: AuroraColors.inkTertiary,
+        selectedItemColor: AuroraColors.ink,
+        unselectedItemColor: AuroraColors.inkPlaceholder,
         showSelectedLabels: true,
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
-        selectedLabelStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
-        unselectedLabelStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+        selectedLabelStyle: AuroraType.tabLabel.copyWith(
+          fontWeight: FontWeight.w700,
+        ),
+        unselectedLabelStyle: AuroraType.tabLabel,
       ),
 
       // ─── Navigation Bar (Material 3) ──────────────────────────────────────────
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AuroraColors.paper,
-        indicatorColor: AuroraColors.coralDim,
+        surfaceTintColor: AuroraColors.paper,
+        indicatorColor: AuroraColors.paper,
         iconTheme: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return const IconThemeData(color: AuroraColors.coral, size: 24);
-          }
-          return const IconThemeData(color: AuroraColors.inkTertiary, size: 24);
+          final color = states.contains(WidgetState.selected)
+              ? AuroraColors.ink
+              : AuroraColors.inkPlaceholder;
+          return IconThemeData(color: color, size: AuroraIconSizes.xl);
         }),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: AuroraColors.coral,
+            return AuroraType.tabLabel.copyWith(
+              color: AuroraColors.ink,
+              fontWeight: FontWeight.w700,
             );
           }
-          return const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: AuroraColors.inkTertiary,
-          );
+          return AuroraType.tabLabel;
         }),
         elevation: 0,
       ),
 
-      // ─── Elevated Button ──────────────────────────────────────────────────────
+      // ─── Elevated Button (primary pill) ──────────────────────────────────────
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AuroraColors.coral,
-          foregroundColor: const Color(0xFFFFFFFF),
-          disabledBackgroundColor: AuroraColors.coralDim,
-          disabledForegroundColor: AuroraColors.coral,
-          textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          minimumSize: const Size(double.infinity, 48),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          backgroundColor: AuroraColors.cobalt,
+          foregroundColor: AuroraColors.paper,
+          disabledBackgroundColor: AuroraColors.inkDisabledFill,
+          disabledForegroundColor: AuroraColors.inkPlaceholder,
+          textStyle: AuroraType.button,
+          minimumSize: const Size(double.infinity, AuroraSizes.buttonHeight),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AuroraSpacing.pillH,
+            vertical: AuroraSpacing.space5,
+          ),
           shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.full),
           elevation: 0,
         ),
@@ -150,26 +171,35 @@ abstract final class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: AuroraColors.cobalt,
-          foregroundColor: const Color(0xFFFFFFFF),
-          disabledBackgroundColor: AuroraColors.cobaltDim,
-          disabledForegroundColor: AuroraColors.cobalt,
-          textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          minimumSize: const Size(double.infinity, 48),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          foregroundColor: AuroraColors.paper,
+          disabledBackgroundColor: AuroraColors.inkDisabledFill,
+          disabledForegroundColor: AuroraColors.inkPlaceholder,
+          textStyle: AuroraType.button,
+          minimumSize: const Size(double.infinity, AuroraSizes.buttonHeight),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AuroraSpacing.pillH,
+            vertical: AuroraSpacing.space5,
+          ),
           shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.full),
           elevation: 0,
         ),
       ),
 
-      // ─── Outlined Button ──────────────────────────────────────────────────────
+      // ─── Outlined Button (secondary pill) ─────────────────────────────────────
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AuroraColors.ink,
-          disabledForegroundColor: AuroraColors.inkTertiary,
-          textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          minimumSize: const Size(double.infinity, 48),
-          padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 11.5),
-          side: const BorderSide(color: AuroraColors.inkBorderStrong, width: 1.5),
+          disabledForegroundColor: AuroraColors.inkPlaceholder,
+          textStyle: AuroraType.button,
+          minimumSize: const Size(double.infinity, AuroraSizes.buttonHeight),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AuroraSpacing.pillH,
+            vertical: AuroraSpacing.space5,
+          ),
+          side: const BorderSide(
+            color: AuroraColors.inkBorderStrong,
+            width: AuroraBorders.emphasis,
+          ),
           shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.full),
         ),
       ),
@@ -177,10 +207,14 @@ abstract final class AppTheme {
       // ─── Text Button ─────────────────────────────────────────────────────────
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AuroraColors.coral,
-          disabledForegroundColor: AuroraColors.inkTertiary,
-          textStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          foregroundColor: AuroraColors.cobalt,
+          disabledForegroundColor: AuroraColors.inkPlaceholder,
+          textStyle: AuroraType.buttonSm,
+          minimumSize: const Size(AuroraSizes.minTouch, AuroraSizes.minTouch),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AuroraSpacing.space5,
+            vertical: AuroraSpacing.space3,
+          ),
           shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.md),
         ),
       ),
@@ -188,11 +222,15 @@ abstract final class AppTheme {
       // ─── Card ─────────────────────────────────────────────────────────────────
       cardTheme: const CardThemeData(
         color: AuroraColors.paper,
+        surfaceTintColor: AuroraColors.paper,
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: AuroraRadius.xl,
-          side: BorderSide(color: AuroraColors.inkBorder, width: 1),
+          side: BorderSide(
+            color: AuroraColors.inkBorder,
+            width: AuroraBorders.regular,
+          ),
         ),
       ),
 
@@ -201,57 +239,81 @@ abstract final class AppTheme {
         filled: true,
         fillColor: AuroraColors.paper,
         labelStyle: AuroraType.label,
-        hintStyle: AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
-        floatingLabelStyle: AuroraType.label.copyWith(color: AuroraColors.coral),
-        errorStyle: AuroraType.bodySm.copyWith(color: AuroraColors.coral),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        hintStyle: AuroraType.input.copyWith(color: AuroraColors.inkPlaceholder),
+        floatingLabelStyle: AuroraType.label.copyWith(color: AuroraColors.cobalt),
+        helperStyle: AuroraType.helper,
+        errorStyle: AuroraType.helper.copyWith(color: AuroraColors.coral),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AuroraSpacing.space6,
+          vertical: AuroraSpacing.space5,
+        ),
         border: const OutlineInputBorder(
           borderRadius: AuroraRadius.md,
-          borderSide: BorderSide(color: AuroraColors.inkBorder, width: 1.5),
+          borderSide: BorderSide(
+            color: AuroraColors.inkInputBorder,
+            width: AuroraBorders.regular,
+          ),
         ),
         enabledBorder: const OutlineInputBorder(
           borderRadius: AuroraRadius.md,
-          borderSide: BorderSide(color: AuroraColors.inkBorder, width: 1.5),
+          borderSide: BorderSide(
+            color: AuroraColors.inkInputBorder,
+            width: AuroraBorders.regular,
+          ),
         ),
         focusedBorder: const OutlineInputBorder(
           borderRadius: AuroraRadius.md,
-          borderSide: BorderSide(color: AuroraColors.coral, width: 2),
+          borderSide: BorderSide(
+            color: AuroraColors.cobalt,
+            width: AuroraBorders.emphasis,
+          ),
         ),
         errorBorder: const OutlineInputBorder(
           borderRadius: AuroraRadius.md,
-          borderSide: BorderSide(color: AuroraColors.coral, width: 1.5),
+          borderSide: BorderSide(
+            color: AuroraColors.coral,
+            width: AuroraBorders.regular,
+          ),
         ),
         focusedErrorBorder: const OutlineInputBorder(
           borderRadius: AuroraRadius.md,
-          borderSide: BorderSide(color: AuroraColors.coral, width: 2),
+          borderSide: BorderSide(
+            color: AuroraColors.coral,
+            width: AuroraBorders.emphasis,
+          ),
         ),
         disabledBorder: const OutlineInputBorder(
           borderRadius: AuroraRadius.md,
-          borderSide: BorderSide(color: AuroraColors.inkBorder, width: 1),
+          borderSide: BorderSide(
+            color: AuroraColors.inkBorder,
+            width: AuroraBorders.regular,
+          ),
         ),
       ),
 
       // ─── Divider ─────────────────────────────────────────────────────────────
       dividerTheme: const DividerThemeData(
         color: AuroraColors.inkBorder,
-        thickness: 0.5,
-        space: 0,
+        thickness: AuroraBorders.hairline,
+        space: AuroraBorders.hairline,
       ),
 
       // ─── Chip ─────────────────────────────────────────────────────────────────
       chipTheme: ChipThemeData(
         backgroundColor: AuroraColors.paper,
         selectedColor: AuroraColors.ink,
-        disabledColor: AuroraColors.butter,
-        labelStyle: AuroraType.body.copyWith(fontWeight: FontWeight.w500),
-        secondaryLabelStyle: AuroraType.body.copyWith(
-          fontWeight: FontWeight.w500,
-          color: const Color(0xFFFFFFFF),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+        disabledColor: AuroraColors.inkDisabledFill,
+        surfaceTintColor: AuroraColors.paper,
+        checkmarkColor: AuroraColors.paper,
+        labelStyle: AuroraType.chip,
+        secondaryLabelStyle: AuroraType.chip.copyWith(color: AuroraColors.paper),
+        padding: const EdgeInsets.symmetric(horizontal: AuroraSpacing.space2),
         shape: const RoundedRectangleBorder(
           borderRadius: AuroraRadius.full,
-          side: BorderSide(color: AuroraColors.inkBorder, width: 1),
+          side: BorderSide(
+            color: AuroraColors.inkInputBorder,
+            width: AuroraBorders.regular,
+          ),
         ),
         elevation: 0,
         pressElevation: 0,
@@ -260,71 +322,72 @@ abstract final class AppTheme {
       // ─── List Tile ────────────────────────────────────────────────────────────
       listTileTheme: ListTileThemeData(
         tileColor: AuroraColors.paper,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AuroraSpacing.screenPadH,
+          vertical: AuroraSpacing.space1,
+        ),
         titleTextStyle: AuroraType.body,
         subtitleTextStyle: AuroraType.bodySm.copyWith(
           color: AuroraColors.inkSecondary,
         ),
         iconColor: AuroraColors.ink,
-        minLeadingWidth: 24,
+        minLeadingWidth: AuroraIconSizes.xl,
         shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.lg),
       ),
 
       // ─── Icon ─────────────────────────────────────────────────────────────────
-      iconTheme: const IconThemeData(color: AuroraColors.ink, size: 24),
+      iconTheme: const IconThemeData(
+        color: AuroraColors.ink,
+        size: AuroraIconSizes.xl,
+      ),
 
       // ─── Snack Bar ────────────────────────────────────────────────────────────
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AuroraColors.ink,
-        contentTextStyle: AuroraType.body.copyWith(color: const Color(0xFFFFFFFF)),
+        contentTextStyle: AuroraType.body.copyWith(color: AuroraColors.paper),
         actionTextColor: AuroraColors.lime,
         behavior: SnackBarBehavior.floating,
-        shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.md),
-        elevation: 4,
+        shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.lg),
+        elevation: 0,
       ),
 
       // ─── Dialog ───────────────────────────────────────────────────────────────
       dialogTheme: DialogThemeData(
         backgroundColor: AuroraColors.paper,
+        surfaceTintColor: AuroraColors.paper,
         elevation: 0,
         titleTextStyle: AuroraType.h2,
         contentTextStyle: AuroraType.body,
-        shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.xl),
+        shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.modal),
       ),
 
       // ─── Bottom Sheet ─────────────────────────────────────────────────────────
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: AuroraColors.paper,
+        surfaceTintColor: AuroraColors.paper,
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(22),
-            topRight: Radius.circular(22),
-          ),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: AuroraRadius.sheetTop),
         modalBackgroundColor: AuroraColors.paper,
+        modalBarrierColor: AuroraColors.scrim,
         modalElevation: 0,
       ),
 
       // ─── Progress Indicator ───────────────────────────────────────────────────
       progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: AuroraColors.coral,
-        linearTrackColor: AuroraColors.butter,
-        circularTrackColor: AuroraColors.butter,
+        color: AuroraColors.cobalt,
+        linearTrackColor: AuroraColors.inkDisabledFill,
+        circularTrackColor: AuroraColors.inkDisabledFill,
       ),
 
       // ─── Switch ───────────────────────────────────────────────────────────────
       switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return const Color(0xFFFFFFFF);
-          }
-          return AuroraColors.inkTertiary;
-        }),
+        thumbColor: const WidgetStatePropertyAll<Color?>(AuroraColors.paper),
         trackColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) return AuroraColors.coral;
-          return AuroraColors.butter;
+          if (states.contains(WidgetState.selected)) return AuroraColors.cobalt;
+          return AuroraColors.inkTrackOff;
         }),
+        trackOutlineColor: _noOutline,
+        trackOutlineWidth: const WidgetStatePropertyAll<double?>(0),
       ),
 
       // ─── Checkbox ─────────────────────────────────────────────────────────────
@@ -333,19 +396,25 @@ abstract final class AppTheme {
           if (states.contains(WidgetState.selected)) return AuroraColors.cobalt;
           return AuroraColors.paper;
         }),
-        checkColor: WidgetStateProperty.all(const Color(0xFFFFFFFF)),
-        side: const BorderSide(color: AuroraColors.inkBorder, width: 1.5),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+        checkColor: const WidgetStatePropertyAll<Color?>(AuroraColors.paper),
+        side: const BorderSide(
+          color: AuroraColors.inkInputBorder,
+          width: AuroraBorders.emphasis,
+        ),
+        shape: const RoundedRectangleBorder(borderRadius: AuroraRadius.xs),
       ),
 
       // ─── Tab Bar ──────────────────────────────────────────────────────────────
-      tabBarTheme: const TabBarThemeData(
-        labelColor: AuroraColors.coral,
-        unselectedLabelColor: AuroraColors.inkTertiary,
-        labelStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
-        unselectedLabelStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
-        indicator: UnderlineTabIndicator(
-          borderSide: BorderSide(color: AuroraColors.coral, width: 2),
+      tabBarTheme: TabBarThemeData(
+        labelColor: AuroraColors.ink,
+        unselectedLabelColor: AuroraColors.inkPlaceholder,
+        labelStyle: AuroraType.tabLabel.copyWith(fontWeight: FontWeight.w700),
+        unselectedLabelStyle: AuroraType.tabLabel,
+        indicator: const UnderlineTabIndicator(
+          borderSide: BorderSide(
+            color: AuroraColors.ink,
+            width: AuroraBorders.indicator,
+          ),
         ),
         indicatorSize: TabBarIndicatorSize.label,
         dividerColor: AuroraColors.inkBorder,
@@ -353,8 +422,8 @@ abstract final class AppTheme {
 
       // ─── FAB ──────────────────────────────────────────────────────────────────
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: AuroraColors.coral,
-        foregroundColor: Color(0xFFFFFFFF),
+        backgroundColor: AuroraColors.cobalt,
+        foregroundColor: AuroraColors.paper,
         elevation: 0,
         shape: CircleBorder(),
       ),

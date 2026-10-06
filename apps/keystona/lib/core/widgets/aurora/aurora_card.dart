@@ -2,55 +2,92 @@ import 'package:flutter/material.dart';
 
 import '../../theme/aurora_colors.dart';
 import '../../theme/aurora_radius.dart';
-import '../../theme/aurora_spacing.dart';
+import '../../theme/aurora_scale.dart';
 import '../../theme/aurora_shadows.dart';
+import '../../theme/aurora_sizes.dart';
+import '../../theme/aurora_spacing.dart';
 import '../../theme/aurora_typography.dart';
+import 'aurora_pressable.dart';
 
 /// Standard content container.
 ///
-/// White background, 1px inkBorder, 16px radius, 14px padding.
-/// No shadow by default — Aurora is a flat system.
+/// Paper, 1 pt ink 12% border, 16 radius, 14 padding. No shadow by default.
+/// [accentColor] adds the 4 pt colored left rule used on urgent cards and rows
+/// (coral overdue, amber soon).
 class AuroraCard extends StatelessWidget {
   const AuroraCard({
     super.key,
     required this.child,
     this.padding,
     this.onTap,
+    this.onLongPress,
     this.shadow = false,
+    this.accentColor,
   });
 
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final VoidCallback? onTap;
 
+  /// Long-press opens the row's context menu (kit: replaces ⋯ buttons).
+  final VoidCallback? onLongPress;
+
   /// Set [shadow] to add the subtle card lift (opt-in, not default).
   final bool shadow;
 
+  /// Colored left rule. Null for none.
+  final Color? accentColor;
+
   @override
   Widget build(BuildContext context) {
-    final inner = Container(
+    final a = context.aurora;
+    Widget body = Padding(
+      padding: padding ?? a.all(AuroraSpacing.space6),
+      child: child,
+    );
+    if (accentColor != null) {
+      body = ClipRRect(
+        borderRadius: AuroraRadius.xl,
+        child: Stack(
+          children: [
+            Padding(
+              padding: EdgeInsets.only(left: AuroraBorders.accentRule),
+              child: body,
+            ),
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: AuroraBorders.accentRule,
+              child: ColoredBox(color: accentColor!),
+            ),
+          ],
+        ),
+      );
+    }
+    final inner = DecoratedBox(
       decoration: BoxDecoration(
         color: AuroraColors.paper,
         borderRadius: AuroraRadius.xl,
-        border: Border.all(color: AuroraColors.inkBorder),
+        border: Border.all(
+          color: AuroraColors.inkBorder,
+          width: AuroraBorders.regular,
+        ),
         boxShadow: shadow ? AuroraShadows.card : null,
       ),
-      padding: padding ?? const EdgeInsets.all(AuroraSpacing.space6),
-      child: child,
+      child: body,
     );
 
-    if (onTap != null) {
-      return GestureDetector(onTap: onTap, child: inner);
-    }
-    return inner;
+    if (onTap == null && onLongPress == null) return inner;
+    return AuroraPressable(onTap: onTap, onLongPress: onLongPress, child: inner);
   }
 }
 
 /// Compact tile for stats, quick actions, and mini-callouts.
 ///
-/// Used inside a card or grid — never freestanding. 14px radius, no border.
-/// [background] defaults to [AuroraColors.butter]. Other valid fills:
-/// cobalt (save/info), lime (success/done), coralDim (alert).
+/// Used inside a card or grid — never freestanding. 14 radius, paper with a
+/// 1 pt border (no tinted fill). Pass [background] only for a solid brand
+/// fill (cobalt, lime, ink); the border is then dropped.
 class AuroraTile extends StatelessWidget {
   const AuroraTile({
     super.key,
@@ -67,30 +104,36 @@ class AuroraTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final inner = Container(
+    final a = context.aurora;
+    final inner = DecoratedBox(
       decoration: BoxDecoration(
-        color: background ?? AuroraColors.butter,
+        color: background ?? AuroraColors.paper,
         borderRadius: AuroraRadius.lg,
+        border: background == null
+            ? Border.all(
+                color: AuroraColors.inkBorder,
+                width: AuroraBorders.regular,
+              )
+            : null,
       ),
-      padding: padding ??
-          const EdgeInsets.symmetric(
-            horizontal: AuroraSpacing.space5,
-            vertical: AuroraSpacing.space4,
-          ),
-      child: child,
+      child: Padding(
+        padding: padding ??
+            a.symmetric(
+              horizontal: AuroraSpacing.space5,
+              vertical: AuroraSpacing.space4,
+            ),
+        child: child,
+      ),
     );
-
-    if (onTap != null) {
-      return GestureDetector(onTap: onTap, child: inner);
-    }
-    return inner;
+    return onTap == null ? inner : AuroraPressable(onTap: onTap, child: inner);
   }
 }
 
-/// Dashboard hero — coral background with yellow decorative blob.
+/// Dashboard hero — coral, with the yellow sun spot.
 ///
-/// One per screen, never two stacked. Displays the home health score,
-/// a trend label in lime, and the three pillar scores below a divider.
+/// One coral surface per screen. Displays the home health score, a trend line
+/// in lime, and the three pillar scores below a divider. The score stays white
+/// whatever its value; urgency lives in the content around it.
 class AuroraHeroCard extends StatelessWidget {
   const AuroraHeroCard({
     super.key,
@@ -112,46 +155,43 @@ class AuroraHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AuroraColors.coral,
-        borderRadius: AuroraRadius.xxl,
-      ),
-      child: ClipRRect(
-        borderRadius: AuroraRadius.xxl,
+    final a = context.aurora;
+    return ClipRRect(
+      borderRadius: AuroraRadius.xxl,
+      child: DecoratedBox(
+        decoration: const BoxDecoration(color: AuroraColors.coral),
         child: Stack(
           children: [
-            // Decorative yellow blob
             Positioned(
-              top: -50,
-              right: -50,
+              top: -a.of(AuroraSizes.heroSunOffset),
+              right: -a.of(AuroraSizes.heroSunOffset),
               child: Container(
-                width: 180,
-                height: 180,
-                decoration: BoxDecoration(
-                  color: AuroraColors.yellow.withValues(alpha: 0.32),
+                width: a.of(AuroraSizes.heroSun),
+                height: a.of(AuroraSizes.heroSun),
+                decoration: const BoxDecoration(
+                  color: AuroraColors.heroSun,
                   shape: BoxShape.circle,
                 ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(AuroraSpacing.space7),
+              padding: a.all(AuroraSpacing.space7),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     'HOME HEALTH',
-                    style: AuroraType.label.copyWith(
-                      color: Colors.white.withValues(alpha: 0.78),
-                    ),
+                    style: AuroraType.label.copyWith(color: AuroraColors.paper),
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: a.of(AuroraSpacing.space2)),
                   Text(
                     '$score',
-                    style: AuroraType.displayXl.copyWith(color: Colors.white),
+                    style: AuroraType.displayXl.copyWith(
+                      color: AuroraColors.paper,
+                    ),
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: a.of(AuroraSpacing.space2)),
                   Text(
                     trend.toUpperCase(),
                     style: AuroraType.label.copyWith(
@@ -159,17 +199,19 @@ class AuroraHeroCard extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: AuroraSpacing.space5),
-                  Container(height: 0.5, color: Colors.white.withValues(alpha: 0.20)),
-                  const SizedBox(height: AuroraSpacing.space5),
+                  SizedBox(height: a.of(AuroraSpacing.space5)),
+                  const Divider(
+                    height: AuroraBorders.hairline,
+                    thickness: AuroraBorders.hairline,
+                    color: AuroraColors.onCoralTrack,
+                  ),
+                  SizedBox(height: a.of(AuroraSpacing.space5)),
                   Row(
                     children: [
                       Expanded(
                         child: _Pillar(label: 'MAINT.', value: maintScore),
                       ),
-                      Expanded(
-                        child: _Pillar(label: 'DOCS', value: docsScore),
-                      ),
+                      Expanded(child: _Pillar(label: 'DOCS', value: docsScore)),
                       Expanded(
                         child: _Pillar(label: 'EMERG.', value: emergScore),
                       ),
@@ -193,19 +235,18 @@ class _Pillar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final a = context.aurora;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: AuroraType.labelSm.copyWith(
-            color: Colors.white.withValues(alpha: 0.65),
-          ),
+          style: AuroraType.labelSm.copyWith(color: AuroraColors.paper),
         ),
-        const SizedBox(height: 3),
+        SizedBox(height: a.of(AuroraSpacing.space1)),
         Text(
           '$value',
-          style: AuroraType.h3.copyWith(color: Colors.white),
+          style: AuroraType.h3.copyWith(color: AuroraColors.paper),
         ),
       ],
     );

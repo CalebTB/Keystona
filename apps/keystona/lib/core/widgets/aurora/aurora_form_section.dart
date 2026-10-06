@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/aurora_colors.dart';
+import '../../theme/aurora_radius.dart';
+import '../../theme/aurora_scale.dart';
+import '../../theme/aurora_sizes.dart';
 import '../../theme/aurora_spacing.dart';
 import '../../theme/aurora_typography.dart';
 
-/// A labeled form section with a cobalt dot eyebrow and optional OPTIONAL tag.
+/// A labeled form section: cobalt dot, ink 10/600 uppercase title, optional
+/// OPTIONAL tag on the right, then its children 14 pt apart.
 ///
-/// Renders: [● TITLE]  [OPTIONAL?]
-/// followed by its children with space3 (8px) gaps between them.
-///
-/// Outer top padding is space8 (20px) so sections breathe on a form screen.
+/// Sections are separated by 26 pt (applied as top padding).
 class AuroraFormSection extends StatelessWidget {
   const AuroraFormSection({
     super.key,
@@ -24,48 +25,41 @@ class AuroraFormSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final a = context.aurora;
+    final gap = SizedBox(height: a.of(AuroraSpacing.space6));
     return Padding(
-      padding: const EdgeInsets.only(top: AuroraSpacing.space8),
+      padding: EdgeInsets.only(top: a.of(AuroraSpacing.formSection)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ── Eyebrow header ────────────────────────────────────────────────
           Row(
             children: [
-              // Cobalt 7×7 dot — signals this is an action/form surface.
               Container(
-                width: 7,
-                height: 7,
+                width: a.of(AuroraSizes.sectionDot),
+                height: a.of(AuroraSizes.sectionDot),
                 decoration: const BoxDecoration(
                   color: AuroraColors.cobalt,
-                  borderRadius: BorderRadius.all(Radius.circular(2)),
+                  borderRadius: AuroraRadius.full,
                 ),
               ),
-              const SizedBox(width: 6),
-              Text(
-                title.toUpperCase(),
-                style: AuroraType.label.copyWith(
-                  color: AuroraColors.inkSecondary,
+              SizedBox(width: a.of(AuroraSpacing.space2)),
+              Expanded(
+                child: Semantics(
+                  header: true,
+                  child: Text(
+                    title.toUpperCase(),
+                    style: AuroraType.sectionTitle,
+                  ),
                 ),
               ),
               if (isOptional) ...[
-                const Spacer(),
-                Text(
-                  'OPTIONAL',
-                  style: AuroraType.labelSm.copyWith(
-                    color: AuroraColors.inkTertiary,
-                  ),
-                ),
+                SizedBox(width: a.of(AuroraSpacing.space3)),
+                Text('OPTIONAL', style: AuroraType.label),
               ],
             ],
           ),
-          const SizedBox(height: AuroraSpacing.space3),
-          // ── Fields with uniform gap ───────────────────────────────────────
-          for (int i = 0; i < children.length; i++) ...[
-            children[i],
-            if (i < children.length - 1) const SizedBox(height: AuroraSpacing.space3),
-          ],
+          for (final child in children) ...[gap, child],
         ],
       ),
     );
