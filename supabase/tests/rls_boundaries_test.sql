@@ -122,10 +122,14 @@ values
   ('1a1a1a1a-1111-4111-8111-aaaaaaaaaaaa', '11111111-1111-4111-8111-111111111111', 'homeowners', 'A Insurance'),
   ('2b2b2b2b-2222-4222-8222-bbbbbbbbbbbb', '22222222-2222-4222-8222-222222222222', 'homeowners', 'B Insurance');
 
-insert into projects (property_id, user_id, name)
+insert into projects (id, property_id, user_id, name)
 values
-  ('1a1a1a1a-1111-4111-8111-aaaaaaaaaaaa', '11111111-1111-4111-8111-111111111111', 'A project'),
-  ('2b2b2b2b-2222-4222-8222-bbbbbbbbbbbb', '22222222-2222-4222-8222-222222222222', 'B project');
+  ('1a1a1a1a-1111-4111-8111-eeeeeeeeeeee', '1a1a1a1a-1111-4111-8111-aaaaaaaaaaaa', '11111111-1111-4111-8111-111111111111', 'A project'),
+  ('2b2b2b2b-2222-4222-8222-ffffffffffff', '2b2b2b2b-2222-4222-8222-bbbbbbbbbbbb', '22222222-2222-4222-8222-222222222222', 'B project');
+
+insert into project_phases (id, project_id, user_id, name) values
+  ('aaaa0006-1111-4111-8111-aaaaaaaaaaaa', '1a1a1a1a-1111-4111-8111-eeeeeeeeeeee',
+   '11111111-1111-4111-8111-111111111111', 'A phase');
 
 -- Documents need a category_id. Reuse a system category rather than creating
 -- one, so this test does not depend on document_categories' own policies.
@@ -247,6 +251,48 @@ select pg_temp.assert_eq((select count(*) from emergency_contacts), 0, 'anon rea
 select pg_temp.assert_eq((select count(*) from insurance_info),     0, 'anon reads no insurance_info');
 
 reset role;
+
+-- ── Hardening regressions ───────────────────────────────────────────────────
+-- Each of these SUCCEEDED before 20261004170000_rls_hardening.sql and must
+-- stay denied. The isolation assertions above only prove nothing broke; these
+-- prove the migration actually closed something.
+
+select pg_temp.assert_insert_blocked($$
+  insert into project_phase_templates (project_type, name) values ('kitchen','poisoned')
+$$, 'reference templates are not user-writable');
+
+select pg_temp.assert_insert_blocked($$
+  insert into project_phases (project_id, user_id, name)
+  values ('2b2b2b2b-2222-4222-8222-ffffffffffff',
+          '11111111-1111-4111-8111-111111111111', 'injected')
+$$, 'no phase into another user''s project, even under own user_id');
+
+select pg_temp.assert_insert_blocked($$
+  insert into task_completions (task_id, user_id, property_id)
+  values ('2b2b2b2b-2222-4222-8222-dddddddddddd',
+          '11111111-1111-4111-8111-111111111111',
+          '1a1a1a1a-1111-4111-8111-aaaaaaaaaaaa')
+$$, 'no completion pointing at another user''s task');
+
+-- Re-parenting: own row, someone else's property. Blocked by WITH CHECK, so
+-- it raises 42501 rather than matching zero rows.
+select pg_temp.assert_insert_blocked($$
+  update systems set property_id = '2b2b2b2b-2222-4222-8222-bbbbbbbbbbbb'
+   where user_id = '11111111-1111-4111-8111-111111111111'
+$$, 'cannot re-parent own system onto another user''s property');
+
+select pg_temp.assert_insert_blocked($$
+  update maintenance_tasks set property_id = '2b2b2b2b-2222-4222-8222-bbbbbbbbbbbb'
+   where id = '1a1a1a1a-1111-4111-8111-cccccccccccc'
+$$, 'cannot re-parent own task onto another user''s property');
+
+-- Legitimate owner operations must still work — the opposite failure mode.
+with renamed as (
+  update maintenance_tasks set name = 'renamed'
+   where id = '1a1a1a1a-1111-4111-8111-cccccccccccc' returning 1
+)
+select pg_temp.assert_eq((select count(*) from renamed), 1,
+  'owner can still rename own task');
 
 -- ── Negative control ────────────────────────────────────────────────────────
 -- Everything above is a list of assertions that passed. That is only
