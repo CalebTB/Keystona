@@ -7,6 +7,7 @@ import '../../../services/providers/service_providers.dart';
 import '../models/document_category.dart';
 import '../models/document_ocr.dart';
 import '../models/document_scan.dart';
+import '../models/document_tags.dart';
 import '../models/document_upload_state.dart';
 import '../models/renewal_source.dart';
 import '../../subscription/providers/subscription_provider.dart';
@@ -15,11 +16,8 @@ import '../services/document_upload_repository.dart';
 import 'document_categories_provider.dart';
 import 'document_detail_provider.dart';
 import 'document_renewal_provider.dart';
-import 'document_search_provider.dart';
-import 'docs_tab_provider.dart';
 import 'document_upload_services_provider.dart';
-import 'expiring_documents_provider.dart';
-import 'documents_provider.dart';
+import 'document_removal.dart';
 import 'scan_reading_provider.dart';
 
 part 'document_upload_provider.g.dart';
@@ -228,18 +226,14 @@ class DocumentUploadNotifier extends _$DocumentUploadNotifier {
   /// Adds a tag: trimmed, not empty, not a repeat, within the limits.
   /// Returns false when it was not added.
   bool addTag(String raw) {
-    final tag = raw.replaceAll(',', ' ').trim();
-    final tooMany = state.tags.length >= AuroraUploadRules.maxTags;
-    final duplicate = state.tags.any(
-      (t) => t.toLowerCase() == tag.toLowerCase(),
+    final next = DocumentTags.adding(
+      state.tags,
+      raw,
+      max: AuroraUploadRules.maxTags,
+      maxLength: AuroraUploadRules.maxTagLength,
     );
-    if (tag.isEmpty ||
-        tag.length > AuroraUploadRules.maxTagLength ||
-        tooMany ||
-        duplicate) {
-      return false;
-    }
-    state = state.copyWith(tags: [...state.tags, tag]);
+    if (next == null) return false;
+    state = state.copyWith(tags: next);
     return true;
   }
 
@@ -307,14 +301,8 @@ class DocumentUploadNotifier extends _$DocumentUploadNotifier {
         uploadedDocument: saved,
         renewalMarkFailed: markFailed,
       );
-      ref.invalidate(documentsProvider);
-      ref.invalidate(documentCategoryCountsProvider);
-      ref.invalidate(docsTabProvider);
-      ref.invalidate(expiringDocumentsProvider);
-      if (renewal != null) {
-        ref.invalidate(documentDetailProvider(renewal.id));
-        ref.invalidate(documentSearchProvider);
-      }
+      invalidateDocumentLists(ref.invalidate);
+      if (renewal != null) ref.invalidate(documentDetailProvider(renewal.id));
     } on DocumentLimitException {
       if (!ref.mounted) return;
       state = state.copyWith(

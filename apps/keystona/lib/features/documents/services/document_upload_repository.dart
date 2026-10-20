@@ -63,7 +63,7 @@ class SupabaseDocumentUploadRepository implements DocumentUploadRepository {
       'id, name, category_id, document_type_id, created_at, updated_at, '
       'expiration_date, thumbnail_path, file_path, file_size_bytes, '
       'mime_type, page_count, ocr_status, notes, linked_system_id, '
-      'linked_appliance_id, metadata';
+      'linked_appliance_id, metadata, tags';
 
   @override
   Future<Document> upload(
@@ -119,27 +119,17 @@ class SupabaseDocumentUploadRepository implements DocumentUploadRepository {
 
     // 5. The row. user_id has no database default.
     onProgress(0.8);
-    final notes = request.notes?.trim();
     final response = await client
         .from('documents')
-        .insert({
-          'property_id': propertyId,
-          'user_id': user.id,
-          'name': request.name.trim(),
-          'category_id': request.categoryId,
-          'file_path': path,
-          'file_size_bytes': await uploadFile.length(),
-          'mime_type': request.mimeType,
-          'page_count': request.pageCount,
-          'expiration_date': request.expirationDate == null
-              ? null
-              : _dateOnly(request.expirationDate!),
-          'notes': (notes == null || notes.isEmpty) ? null : notes,
-          'linked_system_id': request.linkedSystemId,
-          'linked_appliance_id': request.linkedApplianceId,
-          'metadata': {if (request.tags.isNotEmpty) 'tags': request.tags},
-          'ocr_status': 'pending',
-        })
+        .insert(
+          insertRow(
+            request,
+            userId: user.id,
+            propertyId: propertyId,
+            path: path,
+            fileSizeBytes: await uploadFile.length(),
+          ),
+        )
         .select(_columns)
         .single();
 
@@ -154,8 +144,39 @@ class SupabaseDocumentUploadRepository implements DocumentUploadRepository {
     });
   }
 
+  /// The `documents` row for [request]. user_id has no database default, and
+  /// tags go in the `tags` TEXT[] column.
+  static Map<String, dynamic> insertRow(
+    DocumentUploadRequest request, {
+    required String userId,
+    required String propertyId,
+    required String path,
+    required int fileSizeBytes,
+  }) {
+    final notes = request.notes?.trim();
+    return {
+      'property_id': propertyId,
+      'user_id': userId,
+      'name': request.name.trim(),
+      'category_id': request.categoryId,
+      'file_path': path,
+      'file_size_bytes': fileSizeBytes,
+      'mime_type': request.mimeType,
+      'page_count': request.pageCount,
+      'expiration_date': request.expirationDate == null
+          ? null
+          : _dateOnly(request.expirationDate!),
+      'notes': (notes == null || notes.isEmpty) ? null : notes,
+      'linked_system_id': request.linkedSystemId,
+      'linked_appliance_id': request.linkedApplianceId,
+      'tags': request.tags,
+      'ocr_status': 'pending',
+    };
+  }
+
   /// DATE columns take `YYYY-MM-DD`, not a timestamp.
-  String _dateOnly(DateTime date) => date.toIso8601String().split('T').first;
+  static String _dateOnly(DateTime date) =>
+      date.toIso8601String().split('T').first;
 
   Future<File> _prepare(File file, String mimeType) async {
     if (mimeType.startsWith('application/')) return file;

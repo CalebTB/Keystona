@@ -1,5 +1,6 @@
 import '../../../services/supabase_service.dart';
 import '../models/document_renewal.dart';
+import '../models/document_tags.dart';
 import '../models/document_upload_state.dart';
 import '../models/renewal_source.dart';
 
@@ -28,7 +29,7 @@ class SupabaseDocumentRenewalRepository implements DocumentRenewalRepository {
     final row = await client
         .from('documents')
         .select(
-          'id, name, category_id, metadata, linked_system_id, '
+          'id, name, category_id, metadata, tags, linked_system_id, '
           'linked_appliance_id, category:document_categories(name)',
         )
         .eq('id', documentId)
@@ -37,14 +38,16 @@ class SupabaseDocumentRenewalRepository implements DocumentRenewalRepository {
     if (row == null) throw StateError('Document not found');
 
     final metadata = (row['metadata'] as Map<String, dynamic>?) ?? const {};
-    final tags = metadata['tags'];
     return RenewalSource(
       id: row['id'] as String,
       name: row['name'] as String,
       categoryId: row['category_id'] as String,
       categoryName:
           (row['category'] as Map<String, dynamic>?)?['name'] as String? ?? '',
-      tags: tags is List ? [for (final t in tags) t.toString()] : const [],
+      tags: DocumentTags.fromRow(
+        row['tags'],
+        metadata[DocumentTags.legacyMetadataKey],
+      ),
       link: await _link(
         systemId: row['linked_system_id'] as String?,
         applianceId: row['linked_appliance_id'] as String?,

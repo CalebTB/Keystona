@@ -16,6 +16,7 @@ import 'package:keystona/features/documents/providers/document_repositories_prov
 import 'package:keystona/features/documents/providers/documents_provider.dart';
 import 'package:keystona/features/documents/repositories/document_file_actions.dart';
 import 'package:keystona/features/documents/repositories/document_files_repository.dart';
+import 'package:keystona/features/documents/repositories/document_mutations_repository.dart';
 import 'package:keystona/features/documents/repositories/document_search_repository.dart';
 import 'package:keystona/features/documents/repositories/expiring_documents_repository.dart';
 import 'package:keystona/services/providers/service_providers.dart';
@@ -51,6 +52,7 @@ Document fixtureDocument({
   DateTime? expiration,
   String? notes,
   Map<String, dynamic> metadata = const {},
+  List<String> tags = const [],
   String? mimeType = 'application/pdf',
   int? pageCount = 3,
   String ocrStatus = 'pending',
@@ -66,6 +68,7 @@ Document fixtureDocument({
       mimeType: mimeType,
       pageCount: pageCount,
       metadata: metadata,
+      tags: tags,
       expirationDate: expiration,
       notes: notes,
       ocrStatus: ocrStatus,
@@ -86,7 +89,10 @@ class DocumentsStore {
   final List<Map<String, dynamic>> updates = [];
   final List<String> deleted = [];
   final List<String> restored = [];
+  int getByIdCalls = 0;
   bool failUpdate = false;
+  bool failDelete = false;
+  bool failRestore = false;
 }
 
 /// Stands in for the list notifier the detail notifier delegates to.
@@ -100,6 +106,7 @@ class FakeDocuments extends DocumentsNotifier {
 
   @override
   Future<Document> getById(String id) async {
+    store.getByIdCalls++;
     if (store.gate != null) await store.gate!.future;
     if (store.failLoads > 0) {
       store.failLoads--;
@@ -115,14 +122,30 @@ class FakeDocuments extends DocumentsNotifier {
     store.document = store.document.copyWith(
       name: changes['name'] as String? ?? store.document.name,
       notes: changes['notes'] as String?,
+      tags: (changes['tags'] as List<dynamic>?)?.cast<String>() ??
+          store.document.tags,
     );
+  }
+}
+
+/// Stands in for the database functions behind delete and Undo, recording
+/// each call in [DocumentsStore].
+class FakeMutations implements DocumentMutationsRepository {
+  FakeMutations(this.store);
+
+  final DocumentsStore store;
+
+  @override
+  Future<void> softDelete(String documentId) async {
+    if (store.failDelete) throw Exception('delete failed');
+    store.deleted.add(documentId);
   }
 
   @override
-  Future<void> softDelete(String id) async => store.deleted.add(id);
-
-  @override
-  Future<void> restore(String id) async => store.restored.add(id);
+  Future<void> restore(String documentId) async {
+    if (store.failRestore) throw Exception('restore failed');
+    store.restored.add(documentId);
+  }
 }
 
 class FakeCategories extends DocumentCategoriesNotifier {
@@ -242,13 +265,19 @@ ExpiringDocument expiring(
 List<Override> detailOverrides({
   required DocumentsStore documents,
   bool premium = false,
+  Future<Map<String, int>> Function(Ref ref)? counts,
   List<DocumentLinkEntry> links = const [],
   FakeActions? actions,
 }) =>
     [
       documentsProvider.overrideWith(() => FakeDocuments(documents)),
+      documentMutationsRepositoryProvider.overrideWithValue(
+        FakeMutations(documents),
+      ),
       documentCategoriesProvider.overrideWith(FakeCategories.new),
-      documentCategoryCountsProvider.overrideWith((ref) async => kCounts),
+      documentCategoryCountsProvider.overrideWith(
+        counts ?? (ref) async => kCounts,
+      ),
       documentLinksProvider.overrideWith(() => FakeLinks(links)),
       documentFilesRepositoryProvider.overrideWithValue(FakeFiles()),
       documentFileActionsProvider.overrideWithValue(actions ?? FakeActions()),

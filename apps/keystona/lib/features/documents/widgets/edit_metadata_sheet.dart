@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/aurora_docs_b.dart';
 import '../../../core/theme/aurora_scale.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/utils/validators.dart';
@@ -12,9 +13,11 @@ import '../../../core/widgets/snackbar_service.dart';
 import '../models/document.dart';
 import '../models/document_edit.dart';
 import '../models/document_format.dart';
+import '../models/document_tags.dart';
 import '../providers/document_categories_provider.dart';
+import 'upload/upload_tags_field.dart';
 
-/// Sheet for editing a document's name, category, end date and notes.
+/// Sheet for editing a document's name, category, end date, notes and tags.
 ///
 /// It does not know how a save is stored: [onSave] does that, and the sheet
 /// closes with `true` once it succeeds.
@@ -59,6 +62,7 @@ class _EditMetadataSheetState extends ConsumerState<EditMetadataSheet> {
   late final TextEditingController _name;
   late final TextEditingController _notes;
   late String _categoryId;
+  late List<String> _tags;
   DateTime? _expiration;
   bool _saving = false;
 
@@ -68,6 +72,7 @@ class _EditMetadataSheetState extends ConsumerState<EditMetadataSheet> {
     _name = TextEditingController(text: widget.document.name);
     _notes = TextEditingController(text: widget.document.notes ?? '');
     _categoryId = widget.document.categoryId;
+    _tags = DocumentTags.of(widget.document);
     _expiration = widget.document.expirationDate;
   }
 
@@ -110,12 +115,28 @@ class _EditMetadataSheetState extends ConsumerState<EditMetadataSheet> {
     setState(() => _expiration = picked);
   }
 
+  bool _addTag(String raw) {
+    final next = DocumentTags.adding(
+      _tags,
+      raw,
+      max: AuroraUploadRules.maxTags,
+      maxLength: AuroraUploadRules.maxTagLength,
+    );
+    if (next == null) return false;
+    setState(() => _tags = next);
+    return true;
+  }
+
+  void _removeTag(String tag) =>
+      setState(() => _tags = [..._tags]..remove(tag));
+
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final notes = _notes.text.trim();
     final edit = DocumentEdit(
       name: _name.text.trim(),
       categoryId: _categoryId,
+      tags: _tags,
       expirationDate: _expiration,
       notes: notes.isEmpty ? null : notes,
     );
@@ -178,6 +199,13 @@ class _EditMetadataSheetState extends ConsumerState<EditMetadataSheet> {
               controller: _notes,
               maxLines: 4,
               maxLength: EditMetadataSheet.notesMaxLength,
+            ),
+            gap,
+            UploadTagsField(
+              tags: _tags,
+              onAdd: _addTag,
+              onRemove: _removeTag,
+              enabled: !_saving,
             ),
             gap,
             SaveButton(

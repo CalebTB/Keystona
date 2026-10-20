@@ -51,8 +51,8 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   group('responsive', () {
-    for (final viewport in kViewports) {
-      for (final scale in kTextScales) {
+    for (final viewport in activeViewports) {
+      for (final scale in scalesFor(viewport)) {
         testWidgets('renewal form @ ${viewport.name}, text x$scale', (
           tester,
         ) async {
@@ -381,6 +381,33 @@ void main() {
       expect(find.text('HOME'), findsOneWidget);
       expect(renewals.marks, isEmpty);
       expect(uploads.calls, 0);
+    });
+
+    // Bug: closing a renewal reset the form, the closing screen rebuilt, and
+    // the rebuild re-applied the renewal into the fresh state. The next
+    // ordinary "new document" then opened as that renewal.
+    testWidgets('closing a renewal leaves no renewal behind for the next add', (
+      tester,
+    ) async {
+      await _open(
+        tester,
+        overrides: renewalOverrides(
+          renewals: FakeRenewalRepository(),
+          uploads: FakeUploadRepository(),
+        ),
+      );
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(DocumentUploadScreen)),
+      );
+      expect(container.read(documentUploadProvider).isRenewal, isTrue);
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      final next = container.read(documentUploadProvider);
+      expect(next.isRenewal, isFalse);
+      expect(next.name, isEmpty);
+      expect(next.tags, isEmpty);
     });
   });
 

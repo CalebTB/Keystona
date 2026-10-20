@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/aurora/aurora_sheet.dart';
 import '../../../core/widgets/upgrade_sheet.dart';
 import '../../../services/providers/service_providers.dart';
+import '../providers/document_flow.dart';
 import '../providers/document_upload_provider.dart';
 import 'upload/add_from_sheet_body.dart';
 import 'upload/upload_source_actions.dart';
@@ -32,6 +33,8 @@ abstract final class UploadSourceSheet {
     WidgetRef ref, {
     required VoidCallback onFilePicked,
   }) async {
+    // A new flow starts clean, whatever the last one left behind.
+    DocumentFlow.reset(ref);
     // Captured before any await: ref is invalid once the sheet unmounts.
     final actions = UploadSourceActions(
       ref.read(documentUploadProvider.notifier),

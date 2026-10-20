@@ -247,8 +247,8 @@ void testResponsiveLoaded(
   Widget Function() build, {
   required Widget Function(Widget app) wrap,
 }) {
-  for (final viewport in kViewports) {
-    for (final scale in kTextScales) {
+  for (final viewport in activeViewports) {
+    for (final scale in scalesFor(viewport)) {
       testWidgets('$description @ ${viewport.name}, text x$scale', (
         tester,
       ) async {

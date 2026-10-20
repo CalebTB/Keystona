@@ -10,8 +10,11 @@ import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../core/widgets/upgrade_sheet.dart';
 import '../docs_copy.dart';
+import '../models/document_category.dart';
 import '../models/document_upload_state.dart';
+import '../models/renewal_source.dart';
 import '../providers/document_categories_provider.dart';
+import '../providers/document_flow.dart';
 import '../providers/document_renewal_provider.dart';
 import '../providers/document_upload_provider.dart';
 import '../widgets/upload/upload_form_body.dart';
@@ -27,12 +30,18 @@ import '../widgets/upload/upload_progress_bar.dart';
 ///
 /// With [renewDocumentId] it renews that document: the form starts from the
 /// old one and, once saved, the old one is marked replaced.
-class DocumentUploadScreen extends ConsumerWidget {
+class DocumentUploadScreen extends ConsumerStatefulWidget {
   const DocumentUploadScreen({super.key, this.renewDocumentId});
 
   /// The document being renewed; null for an ordinary new document.
   final String? renewDocumentId;
 
+  @override
+  ConsumerState<DocumentUploadScreen> createState() =>
+      _DocumentUploadScreenState();
+}
+
+class _DocumentUploadScreenState extends ConsumerState<DocumentUploadScreen> {
   static const UpgradeSheetConfig _limitUpgrade = UpgradeSheetConfig(
     headline: 'Unlock Unlimited Documents',
     reason: 'Your Document Vault is full on the Free plan.',
@@ -45,7 +54,44 @@ class DocumentUploadScreen extends ConsumerWidget {
   );
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void initState() {
+    super.initState();
+    // Like the renewal below: apply the default category when the screen
+    // starts and when the categories (re)load, never from build().
+    ref.listenManual(
+      documentCategoriesProvider,
+      (_, next) => _useDefaultCategory(next.value),
+    );
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _useDefaultCategory(ref.read(documentCategoriesProvider).value),
+    );
+    final renewId = widget.renewDocumentId;
+    if (renewId == null) return;
+    // Apply the renewal ONCE, when the screen starts (and if the old
+    // document's details arrive or reload later). Re-applying on every
+    // rebuild wrote the renewal back into the form after it was closed and
+    // reset, so the next ordinary "new document" opened as that renewal.
+    ref.listenManual(
+      renewalSourceProvider(renewId),
+      (_, next) => _applyRenewal(next.value),
+    );
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _applyRenewal(ref.read(renewalSourceProvider(renewId)).value),
+    );
+  }
+
+  void _useDefaultCategory(List<DocumentCategory>? categories) {
+    if (categories == null || !mounted) return;
+    ref.read(documentUploadProvider.notifier).useDefaultCategory(categories);
+  }
+
+  void _applyRenewal(RenewalSource? source) {
+    if (source == null || !mounted) return;
+    ref.read(documentUploadProvider.notifier).applyRenewal(source);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     ref.listen<DocumentUploadState>(documentUploadProvider, (prev, next) {
       _onSaved(context, ref, prev, next);
       _onFailed(context, ref, prev, next);
@@ -54,39 +100,14 @@ class DocumentUploadScreen extends ConsumerWidget {
     final state = ref.watch(documentUploadProvider);
     final categories = ref.watch(documentCategoriesProvider);
     final notifier = ref.read(documentUploadProvider.notifier);
-    ref.listen(documentCategoriesProvider, (_, next) {
-      final list = next.value;
-      if (list != null) notifier.useDefaultCategory(list);
-    });
-    final renewId = renewDocumentId;
+    final renewId = widget.renewDocumentId;
     final renewal = renewId == null
         ? null
         : ref.watch(renewalSourceProvider(renewId));
-    if (renewId != null) {
-      ref.listen(renewalSourceProvider(renewId), (_, next) {
-        final source = next.value;
-        if (source != null) notifier.applyRenewal(source);
-      });
-      final source = renewal?.value;
-      if (source != null) {
-        // Already cached on the first frame: no listener event fires.
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (context.mounted) notifier.applyRenewal(source);
-        });
-      }
-    }
-    final loaded = categories.value;
-    if (loaded != null) {
-      // First frame with categories already cached: no listener event fires.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) notifier.useDefaultCategory(loaded);
-      });
-    }
-
     return PopScope(
       canPop: !state.isSaving,
       onPopInvokedWithResult: (didPop, _) {
-        if (didPop) ref.invalidate(documentUploadProvider);
+        if (didPop) DocumentFlow.reset(ref);
       },
       child: Scaffold(
         backgroundColor: AuroraColors.paper,
@@ -160,7 +181,7 @@ class DocumentUploadScreen extends ConsumerWidget {
         subtitle: DocsCopy.renewalMarkFailedHint,
       );
     }
-    ref.invalidate(documentUploadProvider);
+    DocumentFlow.reset(ref);
     if (id == null) {
       context.pop();
       return;

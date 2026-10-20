@@ -3,12 +3,16 @@ class DocumentEdit {
   const DocumentEdit({
     required this.name,
     required this.categoryId,
+    this.tags = const [],
     this.expirationDate,
     this.notes,
   });
 
   final String name;
   final String categoryId;
+
+  /// The full tag list after the edit (written to `documents.tags`).
+  final List<String> tags;
 
   /// Null removes the end date.
   final DateTime? expirationDate;
@@ -25,6 +29,7 @@ class DocumentEdit {
             ? null
             : _dateOnly(expirationDate!),
         'notes': notes,
+        'tags': tags,
       };
 
   static String _dateOnly(DateTime d) =>

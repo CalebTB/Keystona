@@ -8,6 +8,7 @@ import 'package:keystona/features/documents/widgets/detail/document_detail_top_b
 import 'package:keystona/features/documents/widgets/detail/document_facts_section.dart';
 import 'package:keystona/features/documents/widgets/detail/document_preview_card.dart';
 import 'package:keystona/features/documents/widgets/shared/docs_section_header.dart';
+import 'package:keystona/features/documents/models/document_tags.dart';
 import 'package:keystona/features/documents/widgets/detail/document_tags_row.dart';
 
 import 'detail_search_support.dart';
@@ -52,15 +53,35 @@ void main() {
   });
 
   test('tags are chips, not a fact row', () {
-    final doc = fixtureDocument(metadata: {
-      'tags': ['test', '#cargo'],
-      'serial': '2103A47719',
-    });
+    final doc = fixtureDocument(
+      tags: ['test', '#cargo'],
+      metadata: {'serial': '2103A47719'},
+    );
     expect(
       DocumentFactsSection.factsOf(doc).map((f) => f.label),
       ['Serial'],
     );
-    expect(DocumentTagsRow.tagsOf(doc), ['test', 'cargo']);
+    expect(DocumentTags.of(doc), ['test', 'cargo']);
+  });
+
+  test('an old row with tags only in metadata still shows them', () {
+    final legacy = fixtureDocument(metadata: {
+      'tags': ['furnace', ' #2021 install '],
+      'serial': '2103A47719',
+    });
+    expect(DocumentTags.of(legacy), ['furnace', '2021 install']);
+    expect(
+      DocumentFactsSection.factsOf(legacy).map((f) => f.label),
+      ['Serial'],
+    );
+  });
+
+  test('the tags column wins over old metadata tags', () {
+    final doc = fixtureDocument(
+      tags: ['new'],
+      metadata: {'tags': ['old']},
+    );
+    expect(DocumentTags.of(doc), ['new']);
   });
 
   testWidgets('tag chips render with a leading #', (t) async {

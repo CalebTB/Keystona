@@ -12,6 +12,7 @@ import '../../../core/widgets/snackbar_service.dart';
 import '../models/document.dart';
 import '../providers/document_detail_provider.dart';
 import '../providers/document_links_provider.dart';
+import '../providers/document_removal.dart';
 import '../providers/document_repositories_provider.dart';
 import '../widgets/detail/document_delete_flow.dart';
 import '../widgets/detail/document_detail_body.dart';
@@ -106,14 +107,13 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
   }
 
   Future<void> _delete() async {
-    final notifier = _notifier;
     final container = ProviderScope.containerOf(context);
     final id = widget.documentId;
     setState(() => _deleting = true);
     await DocumentDeleteFlow.run(
       context,
-      delete: notifier.softDelete,
-      restore: () => restoreDeletedDocument(container, id),
+      delete: () => deleteDocument(container, id),
+      restore: () => restoreDocument(container, id),
     );
     if (mounted) setState(() => _deleting = false);
   }

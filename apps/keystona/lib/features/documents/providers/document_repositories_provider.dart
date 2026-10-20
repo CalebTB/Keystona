@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../services/supabase_service.dart';
 import '../repositories/document_file_actions.dart';
+import '../repositories/document_mutations_repository.dart';
 import '../repositories/document_files_repository.dart';
 import '../repositories/document_search_repository.dart';
 import '../repositories/expiring_documents_repository.dart';
@@ -13,7 +14,14 @@ part 'document_repositories_provider.g.dart';
 
 @riverpod
 DocumentSearchRepository documentSearchRepository(Ref ref) =>
-    SupabaseDocumentSearchRepository(SupabaseService.client);
+    FallbackDocumentSearchRepository(
+      fullText: SupabaseFullTextSearchRepository(SupabaseService.client),
+      byName: SupabaseNameSearchRepository(SupabaseService.client),
+    );
+
+@riverpod
+DocumentMutationsRepository documentMutationsRepository(Ref ref) =>
+    SupabaseDocumentMutationsRepository.client(SupabaseService.client);
 
 @riverpod
 ExpiringDocumentsRepository expiringDocumentsRepository(Ref ref) =>

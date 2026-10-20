@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/aurora_docs_c.dart';
 import '../../../../core/theme/aurora_scale.dart';
+import '../../models/document_tags.dart';
 import '../../models/coverage_info.dart';
 import '../../models/document.dart';
 import '../../models/document_renewal.dart';
@@ -51,6 +52,7 @@ class DocumentDetailBody extends StatelessWidget {
     final replaced = DocumentRenewal.replacedAt(document.metadata) != null;
     final newerId = DocumentRenewal.replacedBy(document.metadata);
     final coverage = replaced ? null : CoverageInfo.of(document);
+    final tags = DocumentTags.of(document);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -81,9 +83,9 @@ class DocumentDetailBody extends StatelessWidget {
         DocumentLinkedSection(documentId: document.id, onOpen: onOpenLink),
         SizedBox(height: a.of(AuroraDocsCSizes.sectionGap)),
         DocumentNotesSection(notes: document.notes, onAdd: onEdit),
-        if (DocumentTagsRow.tagsOf(document).isNotEmpty) ...[
+        if (tags.isNotEmpty) ...[
           SizedBox(height: a.of(AuroraDocsCSizes.sectionGap)),
-          DocumentTagsRow(tags: DocumentTagsRow.tagsOf(document)),
+          DocumentTagsRow(tags: tags),
         ],
         SizedBox(height: a.of(AuroraDocsCSizes.sectionGap)),
         DocumentFileSection(document: document),

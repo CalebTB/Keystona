@@ -3,16 +3,15 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../models/document.dart';
 import '../models/document_edit.dart';
 import 'document_repositories_provider.dart';
-import 'document_search_provider.dart';
+import 'document_removal.dart';
 import 'documents_provider.dart';
-import 'expiring_documents_provider.dart';
 
 part 'document_detail_provider.g.dart';
 
 /// State for the Document Detail screen, keyed by document [id] and
-/// auto-disposed when the screen is popped. Writes go through
-/// [DocumentsNotifier] so the list stays in sync, and the sibling search and
-/// expiring providers are invalidated alongside it.
+/// auto-disposed when the screen is popped. Edits go through
+/// [DocumentsNotifier] and then refetch every list built from documents.
+/// Delete and Undo are `deleteDocument` / `restoreDocument`.
 @riverpod
 class DocumentDetailNotifier extends _$DocumentDetailNotifier {
   @override
@@ -38,6 +37,7 @@ class DocumentDetailNotifier extends _$DocumentDetailNotifier {
       current.copyWith(
         name: edit.name,
         categoryId: edit.categoryId,
+        tags: edit.tags,
         expirationDate: edit.expirationDate,
         notes: edit.notes,
       ),
@@ -51,19 +51,10 @@ class DocumentDetailNotifier extends _$DocumentDetailNotifier {
     }
 
     if (!ref.mounted) return;
-    _invalidateSiblings();
+    invalidateDocumentLists(ref.invalidate);
     // Re-fetch so the joined category and timestamps are the persisted ones.
     ref.invalidateSelf();
     await future;
-  }
-
-  /// Soft-deletes the document. Does not navigate: the caller pops and offers
-  /// Undo.
-  Future<void> softDelete() async {
-    final document = state.value;
-    if (document == null) return;
-    await ref.read(documentsProvider.notifier).softDelete(document.id);
-    if (ref.mounted) _invalidateSiblings();
   }
 
   /// Placeholder for swapping the stored file.
@@ -72,17 +63,4 @@ class DocumentDetailNotifier extends _$DocumentDetailNotifier {
   Future<void> replaceFile() async {
     throw UnimplementedError('replaceFile() implemented by issue #N');
   }
-
-  void _invalidateSiblings() {
-    ref.invalidate(expiringDocumentsProvider);
-    ref.invalidate(documentSearchProvider);
-  }
-}
-
-/// Undoes a delete after the detail screen (and its notifier) is gone, so it
-/// runs on the app container.
-Future<void> restoreDeletedDocument(ProviderContainer container, String id) async {
-  await container.read(documentsProvider.notifier).restore(id);
-  container.invalidate(expiringDocumentsProvider);
-  container.invalidate(documentSearchProvider);
 }

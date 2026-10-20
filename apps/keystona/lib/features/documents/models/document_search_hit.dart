@@ -31,6 +31,7 @@ class DocumentSearchHit {
     required this.addedAt,
     this.expirationDate,
     this.snippet,
+    this.tags = const [],
   });
 
   final String id;
@@ -46,4 +47,7 @@ class DocumentSearchHit {
   /// Matched text from inside the file, with matches wrapped in `**`.
   /// Premium full-text search only.
   final String? snippet;
+
+  /// The document's tags (`documents.tags`).
+  final List<String> tags;
 }

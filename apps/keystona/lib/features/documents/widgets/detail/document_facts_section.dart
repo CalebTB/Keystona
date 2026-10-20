@@ -7,6 +7,7 @@ import '../../../../core/theme/aurora_spacing.dart';
 import '../../../../core/theme/aurora_typography.dart';
 import '../../models/document.dart';
 import '../../models/document_format.dart';
+import '../../models/document_tags.dart';
 import '../shared/docs_section_header.dart';
 import 'detail_fact_card.dart';
 import 'document_claim_card.dart';
@@ -29,13 +30,13 @@ class DocumentFactsSection extends StatelessWidget {
   static const String claimPhoneKey = 'claim_phone';
   static const String claimProviderKey = 'claim_provider';
   static const String claimPageKey = 'claim_page';
-  static const String tagsKey = 'tags';
   static const Set<String> _claimKeys = {
     claimPhoneKey,
     claimProviderKey,
     claimPageKey,
-    // Tags are shown as chips under Notes, not as a fact row.
-    tagsKey,
+    // Tags are shown as chips under Notes, not as a fact row. Older rows may
+    // still hold them in metadata.
+    DocumentTags.legacyMetadataKey,
   };
 
   /// Facts to list, skipping empty values and the claim keys.

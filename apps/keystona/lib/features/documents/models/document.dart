@@ -72,6 +72,9 @@ abstract class Document with _$Document {
     /// Freeform notes entered by the user. [#21] form, [#22] display.
     String? notes,
 
+    /// Free-form tags (`documents.tags`, a TEXT[] column). Empty when none.
+    @Default(<String>[]) List<String> tags,
+
     /// ID of a linked home system. [#22] linked chip.
     String? linkedSystemId,
 

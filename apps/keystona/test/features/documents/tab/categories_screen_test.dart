@@ -363,8 +363,8 @@ void main() {
       ),
     );
 
-    for (final viewport in kViewports) {
-      for (final scale in kTextScales) {
+    for (final viewport in activeViewports) {
+      for (final scale in scalesFor(viewport)) {
         testWidgets('delete panel open @ ${viewport.name}, text x$scale', (
           tester,
         ) async {
