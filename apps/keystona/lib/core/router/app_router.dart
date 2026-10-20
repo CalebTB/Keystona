@@ -119,6 +119,13 @@ abstract final class AppRoutes {
   static const homeEdit = '/home/edit';
   static const homeLifespan = '/home/lifespan';
   static const homeReminders = '/home/reminders';
+  static const homeProfile = '/home/profile';
+  static const homeScan = '/home/scan';
+  static const homeSystemPhotos = '/home/systems/:systemId/photos';
+  static const homeAppliancePhotos = '/home/appliances/:applianceId/photos';
+  static const homeSystemReminders = '/home/systems/:systemId/reminders';
+  static const homeApplianceReminders =
+      '/home/appliances/:applianceId/reminders';
   static const emergency = '/emergency';
   static const emergencyShutoffDetail = '/emergency/shutoffs/:type';
   static const emergencyContacts = '/emergency/contacts';
@@ -392,6 +399,22 @@ final routerProvider = Provider<GoRouter>((ref) {
                               ),
                             ),
                           ),
+                          GoRoute(
+                            path: 'photos',
+                            name: 'system-photos',
+                            pageBuilder: (_, state) => _buildPage(
+                              state,
+                              const PlaceholderScreen(name: 'System photos'),
+                            ),
+                          ),
+                          GoRoute(
+                            path: 'reminders',
+                            name: 'system-reminders',
+                            pageBuilder: (_, state) => _buildPage(
+                              state,
+                              const PlaceholderScreen(name: 'System reminders'),
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -435,9 +458,42 @@ final routerProvider = Provider<GoRouter>((ref) {
                               ),
                             ),
                           ),
+                          GoRoute(
+                            path: 'photos',
+                            name: 'appliance-photos',
+                            pageBuilder: (_, state) => _buildPage(
+                              state,
+                              const PlaceholderScreen(name: 'Appliance photos'),
+                            ),
+                          ),
+                          GoRoute(
+                            path: 'reminders',
+                            name: 'appliance-reminders',
+                            pageBuilder: (_, state) => _buildPage(
+                              state,
+                              const PlaceholderScreen(name: 'Appliance reminders'),
+                            ),
+                          ),
                         ],
                       ),
                     ],
+                  ),
+                  GoRoute(
+                    path: 'profile',
+                    name: 'home-profile',
+                    pageBuilder: (_, state) => _buildPage(
+                      state,
+                      const PlaceholderScreen(name: 'Home profile'),
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'scan',
+                    name: 'home-scan',
+                    pageBuilder: (_, state) => _buildPage(
+                      state,
+                      const PlaceholderScreen(name: 'Scan a label'),
+                      fullscreenDialog: true,
+                    ),
                   ),
                   GoRoute(
                     path: 'edit',
