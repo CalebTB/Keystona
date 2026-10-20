@@ -48,6 +48,10 @@ Still open:
 - [ ] Climate zone from ZIP is a state-level stand-in; address lookup needs a real autocomplete provider; trial purchase is mocked (RevenueCat).
 - [ ] Existing documents' search vectors pick up tags only when the row next changes.
 
+## Security notes
+
+- [ ] Older tables accept a link to another user's row without checking who owns it: `documents.linked_system_id` / `linked_appliance_id` / `linked_warranty_doc_id`, `maintenance_tasks.linked_system_id` / `linked_appliance_id`, `systems`/`appliances.linked_warranty_doc_id`. Nothing of the other user's can be read (rows are filtered by `user_id`), but a foreign-key error reveals whether an id exists. `item_service_log` was caught by the commit security review and now checks the property, the item and the linked document on both insert and update (`20261020130100`); apply the same check to those older write policies (a small migration + SQL test) when convenient.
+
 ## Setup / dashboard (not code)
 
 - [ ] Apple + Google sign-in: enable providers in the Supabase dashboard, allow-list `io.supabase.keystona://login-callback/`, register the URL scheme in `ios/Runner/Info.plist` and `AndroidManifest.xml`.
