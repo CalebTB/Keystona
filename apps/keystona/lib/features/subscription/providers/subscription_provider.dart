@@ -29,6 +29,10 @@ const kFreeDocumentLimit = 25;
 /// Maximum number of active projects for free-tier accounts.
 const kFreeProjectLimit = 2;
 
+/// Maximum number of photos per system or appliance for free-tier accounts.
+/// Enforced in the app only (no server limit).
+const kFreeItemPhotoLimit = 4;
+
 // ── Trial status ──────────────────────────────────────────────────────────────
 
 /// Trial and grace-period state for the current user, derived from the
