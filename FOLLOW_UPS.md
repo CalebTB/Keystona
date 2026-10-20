@@ -97,20 +97,24 @@ Chosen 2026-10-20 ("go with the defaults"). Details and the full kit-vs-schema a
 
 Built 2026-10-20/21: HomeProfile, HomeEdit, HomeLifespan; HomeSystems, ScanFlow, AddSystem (+ edit), SystemDetail, the repair-log sheet; HomeAppliances, AddAppliance (+ edit), ApplianceDetail; ItemTasks / ItemPhotos / ItemReminders for both kinds. Home tab address row opens the profile; the profile links to Around the house; "Add a task" from an item opens the task form with that item already picked.
 
-Open:
+Decided 2026-10-21 (user answers):
 
-- [Y] **Scan-label Edge Function** (needs approval to change): the kit wants auto-detect ("Label found · hold still"), per-field confidence, structured specs (FUEL/OUTPUT/FILTER for systems; type/capacity/Energy Star for appliances) and an install date, none of which it returns. Today the camera is the native picker (no live viewfinder, flash or edge detection; same package gap as the document camera).
-- [Y] `get_system_lifespan_overview` (systems-only RPC) is no longer called; drop it if nothing else uses it.
-- [Y] Item history rows are not tappable: `LogServiceSheet(editing:)` and remove-with-Undo exist and are tested but have no trigger in the timeline.
-- [let me know the difference] ItemTasks "Done" tab shows task completions only, not `item_service_log` entries (the kit's "Replaced the igniter" row).
-- [need more depth to know `ItemNextUpList` (shared) has no `onLongPress`, so SystemDetail and ApplianceDetail compose `AuroraTaskRow` directly (`SystemNextUp`, `ApplianceNextUp`); add it to the shared list and delete both.
-- [Im fine with that, unless we want to have a feature that deals with an AI prompt going and finding the default lifespan, idk yet] Hand-added appliances get an invented default lifespan by type (`lifespan/appliance_lifespan.dart`); real values needed.
-- [So is this dependent on install date then?] Changing "year built" shows the kit's note but nothing recomputes reminders or lifespans.
-- [Fine with mew, Y] Climate stores only the zone number; "4A · mixed-humid" is derived at runtime from the stand-in lookup. `garage_type` is free text.
-- [Y] Omitted for lack of a source: Records/Emergency rings, "up N since Sep", Project and Recently cards on the profile (History Report card waits for Sprint 9).
-- [Y, gate it from free users] The "What to set aside" table carries a Premium tag but is not gated.
-- [Maybe we can find a way to reduce? If not thats okay] The first full `dart run build_runner build` after big changes takes ~16 minutes; later runs are fast.
-- [Y] Three near-identical page frames (`ItemPage`, `RemindersPage`, `home_common`) and two form-photo models (`FormPhoto`, `models/form_photo.dart`): consolidate when core widgets are approved.
+- Scan-label Edge Function: APPROVED to change (structured specs, label found, per-field confidence; additive). In progress. Live camera auto-detect / flash still need a camera package (separate approval).
+- `get_system_lifespan_overview` DROPPED from the live database (`20261021120000`); nothing used it.
+- Item history rows become tappable (edit through `LogServiceSheet`, remove with a 10 s Undo): approved, in progress.
+- "What to set aside" table: gated to Premium (free users see it locked): approved, in progress.
+- Hand-added appliances keep the invented default lifespan by type for now. Idea for later: look the default up with AI.
+- Climate stores only the zone number; `garage_type` stays free text: accepted.
+- Omitted cards (Records/Emergency rings, "up N since Sep", Project, Recently; History Report waits for Sprint 9): accepted.
+- Consolidating the three page frames and the two form-photo models: accepted, do it when shared core widgets are approved.
+- Generator speed: `build.yaml` now keeps freezed/riverpod/json_serializable out of `test/`; a no-change run takes 5 s (was 19 s). A huge batch of new annotated files (like three agents landing ~230 at once) still takes many minutes; that is inherent.
+
+Still open:
+
+- [ ] **Done tab:** merge `item_service_log` entries with finished task completions, as the kit's Done tab does (recommended; waiting on the user's go).
+- [ ] **Year built:** use it as the fallback start date for systems with no install date, labelled as an estimate (recommended; waiting on the user's go). Today the "year built changed" note is shown but nothing uses year built.
+- [ ] `ItemNextUpList` (shared) has no `onLongPress`, so SystemDetail and ApplianceDetail compose `AuroraTaskRow` directly (`SystemNextUp`, `ApplianceNextUp`): move the long-press into the shared list and delete both (internal refactor, no visible change; in progress).
+- [ ] Verify the Anthropic model id in `scan-label` (`claude-opus-4-8`) is current before relying on it.
 
 Decisions still open (Sprint 3): should the callout on the profile also show at "aging" (75-90%) or only 90%+? Where should "no home yet" send people (today onboarding's property step)? Several photos on Edit Home (today one)? "Add by hand" from the scan chooser: which kind? Should HomeSystems "+ Add" show the chooser first (today it opens the system camera)? Photo limit during the trial? Should an item screen allow deleting a task (kit has no delete UI)? "HEALTHY" = status + lifespan band (as built).
 
