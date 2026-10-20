@@ -9,9 +9,12 @@ import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
 import '../../features/auth/screens/splash_screen.dart';
+import '../../features/documents/models/document_renewal.dart';
 import '../../features/documents/screens/document_categories_screen.dart';
 import '../../features/documents/screens/document_detail_screen.dart';
+import '../../features/documents/screens/document_search_screen.dart';
 import '../../features/documents/screens/document_upload_screen.dart';
+import '../../features/documents/screens/documents_expiring_screen.dart';
 import '../../features/documents/screens/documents_screen.dart';
 import '../../features/maintenance/models/maintenance_task.dart';
 import '../../features/maintenance/screens/maintenance_screen.dart';
@@ -518,7 +521,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: 'upload',
                     pageBuilder: (_, state) => _buildPage(
                       state,
-                      const DocumentUploadScreen(),
+                      DocumentUploadScreen(
+                        renewDocumentId:
+                            state.uri.queryParameters[DocumentRenewal.queryParam],
+                      ),
                       fullscreenDialog: true,
                     ),
                   ),
@@ -526,14 +532,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: 'search',
                     pageBuilder: (_, state) => _buildPage(
                       state,
-                      const PlaceholderScreen(name: 'Search Documents'),
+                      const DocumentSearchScreen(),
                     ),
                   ),
                   GoRoute(
                     path: 'expiring',
                     pageBuilder: (_, state) => _buildPage(
                       state,
-                      const PlaceholderScreen(name: 'Expiring Documents'),
+                      const DocumentsExpiringScreen(),
                     ),
                   ),
                   GoRoute(

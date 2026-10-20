@@ -1,596 +1,140 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/aurora_colors.dart';
-import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_scale.dart';
 import '../../../core/theme/aurora_spacing.dart';
-import '../../../core/theme/aurora_typography.dart';
-import '../models/document_category.dart';
-import '../providers/document_categories_provider.dart';
+import '../../../core/widgets/aurora/aurora_field_chrome.dart';
 import '../../../core/widgets/aurora/aurora_sheet.dart';
-import '../../../core/widgets/snackbar_service.dart';
+import '../categories_copy.dart';
+import '../models/category_lists.dart';
+import '../models/document_category.dart';
+import 'categories/category_icon_picker.dart';
+import 'categories/category_name_field.dart';
 
-// ── Icon catalog ──────────────────────────────────────────────────────────────
+// Kept so existing imports of the icon catalog through this file still
+// resolve; new code imports models/category_icons.dart directly.
+export '../models/category_icons.dart' show CategoryIcons;
 
-/// Maps icon name strings (stored in DB) to Flutter [IconData].
+/// Renames (and re-icons) a custom category in a bottom sheet.
 ///
-/// The string key is what is persisted to Supabase; the [IconData] value is
-/// used only for display. Add new icons here and they will appear in the picker.
-abstract final class CategoryIcons {
-  static const Map<String, IconData> all = {
-    'document': Icons.description_outlined,
-    'home': Icons.home_outlined,
-    'shield': Icons.shield_outlined,
-    'wrench': Icons.handyman_outlined,
-    'dollar': Icons.attach_money,
-    'car': Icons.directions_car_outlined,
-    'tree': Icons.park_outlined,
-    'fire': Icons.local_fire_department_outlined,
-    'droplet': Icons.water_drop_outlined,
-    'bolt': Icons.bolt_outlined,
-    'camera': Icons.photo_camera_outlined,
-    'folder': Icons.folder_outlined,
-    'star': Icons.star_outline,
-    'heart': Icons.favorite_outline,
-    'lock': Icons.lock_outline,
-    'key': Icons.key_outlined,
-    'phone': Icons.phone_outlined,
-    'calendar': Icons.calendar_today_outlined,
-    'tag': Icons.label_outline,
-    'archive': Icons.inventory_2_outlined,
-    'clipboard': Icons.assignment_outlined,
-    'scroll': Icons.description_outlined,
-  };
-
-  /// Returns the [IconData] for [key], falling back to [Icons.folder_outlined].
-  static IconData forKey(String key) => all[key] ?? Icons.folder_outlined;
-}
-
-// ── Color catalog ─────────────────────────────────────────────────────────────
-
-/// 12 preset hex colors available for custom categories.
-const List<String> kCategoryColors = [
-  '#1565C0', // blue
-  '#0097A7', // teal
-  '#388E3C', // green
-  '#F57C00', // orange
-  '#D32F2F', // red
-  '#7B1FA2', // purple
-  '#C9A84C', // gold
-  '#1A2B4A', // navy
-  '#795548', // brown
-  '#546E7A', // slate
-  '#E91E63', // pink
-  '#607D8B', // blue-gray
-];
-
-// ── Sheet ─────────────────────────────────────────────────────────────────────
-
-/// Shows [CategoryFormSheet] and returns true if the operation succeeded.
-///
-/// Pass [existing] to pre-fill the form for an edit. Omit it for a create.
-Future<bool> showCategoryFormSheet(
-  BuildContext context, {
-  DocumentCategory? existing,
-}) async {
-  final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-  bool? result;
-
-  if (isIOS) {
-    result = await showCupertinoModalPopup<bool>(
-      context: context,
-      builder: (_) => CategoryFormSheet(existing: existing),
-    );
-  } else {
-    result = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: AuroraSheet.topRadius(context),
-      ),
-      builder: (_) => CategoryFormSheet(existing: existing),
+/// New categories are made inline on the categories screen, so this sheet only
+/// edits.
+abstract final class CategoryFormSheet {
+  /// Shows the sheet for [category]. [onSave] writes the change and throws if
+  /// it fails; the sheet closes on success and stays open on failure.
+  static Future<void> show(
+    BuildContext context, {
+    required DocumentCategory category,
+    required Future<void> Function(String name, String icon) onSave,
+  }) {
+    // The Save pill lives in the sheet's title row, outside the body, so the
+    // body registers its submit handler here.
+    final session = _EditSession();
+    return AuroraSheet.showAuto<void>(
+      context,
+      title: CategoriesCopy.editTitle,
+      confirmLabel: CategoriesCopy.save,
+      onConfirm: () => session.submit?.call(),
+      child: _EditBody(category: category, onSave: onSave, session: session),
     );
   }
-
-  return result ?? false;
 }
 
-/// Bottom sheet for creating or editing a custom document category.
-class CategoryFormSheet extends ConsumerStatefulWidget {
-  const CategoryFormSheet({super.key, this.existing});
+class _EditSession {
+  Future<void> Function()? submit;
+}
 
-  /// Pre-fills the form when editing an existing category.
-  final DocumentCategory? existing;
+class _EditBody extends StatefulWidget {
+  const _EditBody({
+    required this.category,
+    required this.onSave,
+    required this.session,
+  });
+
+  final DocumentCategory category;
+  final Future<void> Function(String name, String icon) onSave;
+  final _EditSession session;
 
   @override
-  ConsumerState<CategoryFormSheet> createState() => _CategoryFormSheetState();
+  State<_EditBody> createState() => _EditBodyState();
 }
 
-class _CategoryFormSheetState extends ConsumerState<CategoryFormSheet> {
-  late final TextEditingController _nameController;
-  late String _selectedIcon;
-  late String _selectedColor;
-  bool _loading = false;
-  String? _nameError;
+class _EditBodyState extends State<_EditBody> {
+  late final TextEditingController _name = TextEditingController(
+    text: widget.category.name,
+  );
+  late String _icon = widget.category.icon;
+  String? _error;
+  bool _saving = false;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.existing?.name ?? '');
-    _selectedIcon = widget.existing?.icon ?? CategoryIcons.all.keys.first;
-    _selectedColor = widget.existing?.color ?? kCategoryColors.first;
+    widget.session.submit = _submit;
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
+    widget.session.submit = null;
+    _name.dispose();
     super.dispose();
   }
 
-  bool get _isEdit => widget.existing != null;
-
   Future<void> _submit() async {
-    final name = _nameController.text.trim();
-    if (name.isEmpty) {
-      setState(() => _nameError = 'Name is required');
+    if (_saving) return;
+    final text = _name.text.trim();
+    if (text.isEmpty) {
+      setState(() => _error = CategoriesCopy.nameRequired);
       return;
     }
-    if (name.length > 50) {
-      setState(() => _nameError = 'Name must be 50 characters or fewer');
+    if (text.length > CategoryLists.maxNameLength) {
+      setState(() => _error = CategoriesCopy.nameTooLong);
       return;
     }
-    setState(() {
-      _nameError = null;
-      _loading = true;
-    });
-
+    _saving = true;
     try {
-      final notifier = ref.read(documentCategoriesProvider.notifier);
-      if (_isEdit) {
-        await notifier.updateCategory(
-          widget.existing!.id,
-          name: name,
-          icon: _selectedIcon,
-          color: _selectedColor,
-        );
-      } else {
-        await notifier.create(
-          name: name,
-          icon: _selectedIcon,
-          color: _selectedColor,
-        );
-      }
-      if (mounted) Navigator.of(context, rootNavigator: true).pop(true);
+      await widget.onSave(text, _icon);
+      if (mounted) Navigator.of(context).pop();
     } catch (_) {
-      if (mounted) {
-        setState(() => _loading = false);
-        SnackbarService.showError(
-          context,
-          _isEdit
-              ? 'Failed to update category.'
-              : 'Failed to create category.',
-        );
-      }
+      if (mounted) setState(() => _error = CategoriesCopy.saveFailed);
+    } finally {
+      _saving = false;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    final title = _isEdit ? 'Edit Category' : 'New Category';
-
-    if (isIOS) {
-      return _IOSSheet(
-        title: title,
-        nameController: _nameController,
-        nameError: _nameError,
-        selectedIcon: _selectedIcon,
-        selectedColor: _selectedColor,
-        loading: _loading,
-        onIconSelected: (icon) => setState(() => _selectedIcon = icon),
-        onColorSelected: (color) => setState(() => _selectedColor = color),
-        onSubmit: _submit,
-        onCancel: () => Navigator.of(context, rootNavigator: true).pop(false),
-      );
-    }
-
-    return _AndroidSheet(
-      title: title,
-      nameController: _nameController,
-      nameError: _nameError,
-      selectedIcon: _selectedIcon,
-      selectedColor: _selectedColor,
-      loading: _loading,
-      onIconSelected: (icon) => setState(() => _selectedIcon = icon),
-      onColorSelected: (color) => setState(() => _selectedColor = color),
-      onSubmit: _submit,
-    );
-  }
-}
-
-// ── iOS variant ───────────────────────────────────────────────────────────────
-
-class _IOSSheet extends StatelessWidget {
-  const _IOSSheet({
-    required this.title,
-    required this.nameController,
-    required this.nameError,
-    required this.selectedIcon,
-    required this.selectedColor,
-    required this.loading,
-    required this.onIconSelected,
-    required this.onColorSelected,
-    required this.onSubmit,
-    required this.onCancel,
-  });
-
-  final String title;
-  final TextEditingController nameController;
-  final String? nameError;
-  final String selectedIcon;
-  final String selectedColor;
-  final bool loading;
-  final ValueChanged<String> onIconSelected;
-  final ValueChanged<String> onColorSelected;
-  final VoidCallback onSubmit;
-  final VoidCallback onCancel;
-
-  @override
-  Widget build(BuildContext context) {
-    // Material wrapper required: TextField needs a Material ancestor inside
-    // showCupertinoModalPopup which only provides a Cupertino context.
-    return Material(
-      type: MaterialType.transparency,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AuroraColors.paper,
-            borderRadius: AuroraSheet.topRadius(context),
-          ),
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.viewInsetsOf(context).bottom,
-          ),
-          child: SingleChildScrollView(
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(height: AuroraSpacing.space3),
-                  Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AuroraColors.inkBorderStrong,
-                      borderRadius: AuroraRadius.full,
-                    ),
-                  ),
-                  const SizedBox(height: AuroraSpacing.space3),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AuroraSpacing.screenPadH,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        CupertinoButton(
-                          padding: EdgeInsets.zero,
-                          onPressed: loading ? null : onCancel,
-                          child: const Text('Cancel'),
-                        ),
-                        Text(
-                          title,
-                          style: AuroraType.bodySm
-                              .copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        CupertinoButton(
-                          padding: EdgeInsets.zero,
-                          onPressed: loading ? null : onSubmit,
-                          child: loading
-                              ? const CupertinoActivityIndicator()
-                              : const Text('Save'),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  const SizedBox(height: AuroraSpacing.space5),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AuroraSpacing.screenPadH,
-                    ),
-                    child: _FormBody(
-                      nameController: nameController,
-                      nameError: nameError,
-                      selectedIcon: selectedIcon,
-                      selectedColor: selectedColor,
-                      onIconSelected: onIconSelected,
-                      onColorSelected: onColorSelected,
-                    ),
-                  ),
-                  const SizedBox(height: AuroraSpacing.space7),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Android variant ───────────────────────────────────────────────────────────
-
-class _AndroidSheet extends StatelessWidget {
-  const _AndroidSheet({
-    required this.title,
-    required this.nameController,
-    required this.nameError,
-    required this.selectedIcon,
-    required this.selectedColor,
-    required this.loading,
-    required this.onIconSelected,
-    required this.onColorSelected,
-    required this.onSubmit,
-  });
-
-  final String title;
-  final TextEditingController nameController;
-  final String? nameError;
-  final String selectedIcon;
-  final String selectedColor;
-  final bool loading;
-  final ValueChanged<String> onIconSelected;
-  final ValueChanged<String> onColorSelected;
-  final VoidCallback onSubmit;
-
-  @override
-  Widget build(BuildContext context) {
+    final a = context.aurora;
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-      ),
+      padding: a.all(AuroraSpacing.space7),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: AuroraSpacing.space3),
-          Container(
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AuroraColors.inkBorder,
-              borderRadius: BorderRadius.circular(2),
-            ),
+          const AuroraFieldLabel(
+            label: CategoriesCopy.nameLabel,
+            isRequired: true,
           ),
-          const SizedBox(height: AuroraSpacing.space5),
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AuroraSpacing.screenPadH,
-            ),
-            child: Row(
-              children: [Text(title, style: AuroraType.h3)],
-            ),
+          SizedBox(height: a.of(AuroraSpacing.space2)),
+          CategoryNameField(
+            controller: _name,
+            hintText: CategoriesCopy.namePlaceholder,
+            maxLength: CategoryLists.maxNameLength,
+            onChanged: (_) {
+              if (_error != null) setState(() => _error = null);
+            },
+            onSubmitted: (_) => _submit(),
           ),
-          const SizedBox(height: AuroraSpacing.space5),
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AuroraSpacing.screenPadH,
-            ),
-            child: _FormBody(
-              nameController: nameController,
-              nameError: nameError,
-              selectedIcon: selectedIcon,
-              selectedColor: selectedColor,
-              onIconSelected: onIconSelected,
-              onColorSelected: onColorSelected,
-            ),
+          if (_error != null) ...[
+            SizedBox(height: a.of(AuroraSpacing.space2)),
+            AuroraFieldHelper(text: _error!, isError: true),
+          ],
+          SizedBox(height: a.of(AuroraSpacing.space7)),
+          CategoryIconPicker(
+            selected: _icon,
+            onSelected: (key) => setState(() => _icon = key),
           ),
-          const SizedBox(height: AuroraSpacing.space5),
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AuroraSpacing.screenPadH,
-            ),
-            child: SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: FilledButton(
-                onPressed: loading ? null : onSubmit,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AuroraColors.coral,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: AuroraRadius.sm,
-                  ),
-                ),
-                child: loading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AuroraColors.paper,
-                        ),
-                      )
-                    : Text(
-                        'Save',
-                        style: AuroraType.bodyLg.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AuroraColors.paper,
-                        ),
-                      ),
-              ),
-            ),
-          ),
-          const SizedBox(height: AuroraSpacing.space7),
         ],
       ),
-    );
-  }
-}
-
-// ── Shared form body ──────────────────────────────────────────────────────────
-
-class _FormBody extends StatelessWidget {
-  const _FormBody({
-    required this.nameController,
-    required this.nameError,
-    required this.selectedIcon,
-    required this.selectedColor,
-    required this.onIconSelected,
-    required this.onColorSelected,
-  });
-
-  final TextEditingController nameController;
-  final String? nameError;
-  final String selectedIcon;
-  final String selectedColor;
-  final ValueChanged<String> onIconSelected;
-  final ValueChanged<String> onColorSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Name',
-          style: AuroraType.bodySm.copyWith(fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: AuroraSpacing.space1),
-        TextField(
-          controller: nameController,
-          maxLength: 50,
-          textCapitalization: TextCapitalization.words,
-          decoration: InputDecoration(
-            hintText: 'e.g. Pool & Spa',
-            errorText: nameError,
-            border: OutlineInputBorder(
-              borderRadius: AuroraRadius.md,
-              borderSide: const BorderSide(color: AuroraColors.inkBorder),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: AuroraRadius.md,
-              borderSide: const BorderSide(color: AuroraColors.inkBorder),
-            ),
-            counterStyle: AuroraType.bodySm,
-          ),
-        ),
-        const SizedBox(height: AuroraSpacing.space5),
-        Text(
-          'Icon',
-          style: AuroraType.bodySm.copyWith(fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: AuroraSpacing.space3),
-        _IconPicker(selected: selectedIcon, onSelected: onIconSelected),
-        const SizedBox(height: AuroraSpacing.space5),
-        Text(
-          'Color',
-          style: AuroraType.bodySm.copyWith(fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: AuroraSpacing.space3),
-        _ColorPicker(selected: selectedColor, onSelected: onColorSelected),
-      ],
-    );
-  }
-}
-
-// ── Icon picker ───────────────────────────────────────────────────────────────
-
-class _IconPicker extends StatelessWidget {
-  const _IconPicker({required this.selected, required this.onSelected});
-
-  final String selected;
-  final ValueChanged<String> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 56,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        children: CategoryIcons.all.entries.map((entry) {
-          final isSelected = entry.key == selected;
-          return GestureDetector(
-            onTap: () => onSelected(entry.key),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              width: 48,
-              height: 48,
-              margin: const EdgeInsets.only(right: AuroraSpacing.space3),
-              decoration: BoxDecoration(
-                color: isSelected ? AuroraColors.ink : AuroraColors.butter,
-                borderRadius: AuroraRadius.sm,
-                border: Border.all(
-                  color: isSelected ? AuroraColors.ink : AuroraColors.inkBorder,
-                  width: isSelected ? 2 : 1,
-                ),
-              ),
-              child: Icon(
-                entry.value,
-                size: 20,
-                color: isSelected ? AuroraColors.paper : AuroraColors.inkSecondary,
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-}
-
-// ── Color picker ──────────────────────────────────────────────────────────────
-
-class _ColorPicker extends StatelessWidget {
-  const _ColorPicker({required this.selected, required this.onSelected});
-
-  final String selected;
-  final ValueChanged<String> onSelected;
-
-  static Color _fromHex(String hex) {
-    final clean = hex.replaceFirst('#', '');
-    return Color(int.parse('FF$clean', radix: 16));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AuroraSpacing.space3,
-      runSpacing: AuroraSpacing.space3,
-      children: kCategoryColors.map((hex) {
-        final isSelected = hex == selected;
-        return GestureDetector(
-          onTap: () => onSelected(hex),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: _fromHex(hex),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isSelected ? AuroraColors.ink : Colors.transparent,
-                width: 3,
-              ),
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: _fromHex(hex).withValues(alpha: 0.4),
-                        blurRadius: 6,
-                        spreadRadius: 1,
-                      ),
-                    ]
-                  : null,
-            ),
-            child: isSelected
-                ? const Icon(Icons.check, size: 18, color: AuroraColors.paper)
-                : null,
-          ),
-        );
-      }).toList(),
     );
   }
 }

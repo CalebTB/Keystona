@@ -1,262 +1,193 @@
-import 'dart:io';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/router/app_router.dart';
 import '../../../core/theme/aurora_colors.dart';
-import '../../../core/theme/aurora_spacing.dart';
-import '../../../core/theme/aurora_typography.dart';
+import '../../../core/theme/aurora_scale.dart';
+import '../../../core/widgets/error_view.dart';
+import '../../../core/widgets/snackbar_service.dart';
+import '../../../core/widgets/upgrade_sheet.dart';
+import '../docs_copy.dart';
 import '../models/document_upload_state.dart';
+import '../providers/document_categories_provider.dart';
+import '../providers/document_renewal_provider.dart';
 import '../providers/document_upload_provider.dart';
-import '../widgets/upload_category_step.dart';
-import '../widgets/upload_metadata_step.dart';
-import '../widgets/upload_progress_step.dart';
-import '../widgets/upload_source_sheet.dart';
+import '../widgets/upload/upload_form_body.dart';
+import '../widgets/upload/upload_form_skeleton.dart';
+import '../widgets/upload/upload_header.dart';
+import '../widgets/upload/upload_progress_bar.dart';
 
-/// Multi-step wizard for uploading a document to the vault.
+/// New document (kit: AddDocument): the file, its details, and Save with
+/// upload progress.
 ///
-/// Step flow:
-///   source picker → category → metadata → progress/success
+/// Opened once a file has been picked from the add-from sheet; opened with no
+/// file (e.g. from the onboarding checklist) it shows Scan, Photos and Files.
 ///
-/// The source picker opens automatically on first frame. If the user cancels,
-/// the screen pops back to the document list.
-class DocumentUploadScreen extends ConsumerStatefulWidget {
-  const DocumentUploadScreen({super.key});
+/// With [renewDocumentId] it renews that document: the form starts from the
+/// old one and, once saved, the old one is marked replaced.
+class DocumentUploadScreen extends ConsumerWidget {
+  const DocumentUploadScreen({super.key, this.renewDocumentId});
+
+  /// The document being renewed; null for an ordinary new document.
+  final String? renewDocumentId;
+
+  static const UpgradeSheetConfig _limitUpgrade = UpgradeSheetConfig(
+    headline: 'Unlock Unlimited Documents',
+    reason: 'Your Document Vault is full on the Free plan.',
+    features: [
+      'Unlimited document storage',
+      'Smart scan fills in the details for you',
+      'Full-text search across all docs',
+    ],
+    triggerKey: 'doc_limit',
+  );
 
   @override
-  ConsumerState<DocumentUploadScreen> createState() =>
-      _DocumentUploadScreenState();
-}
-
-class _DocumentUploadScreenState extends ConsumerState<DocumentUploadScreen> {
-  bool _sourcePickerShown = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _showSourcePicker();
-    });
-  }
-
-  Future<void> _showSourcePicker() async {
-    _sourcePickerShown = true;
-
-    // File already set by the calling screen — skip the source picker.
-    if (ref.read(documentUploadProvider).file != null) return;
-
-    bool filePicked = false;
-    await UploadSourceSheet.show(
-      context,
-      ref,
-      onFilePicked: () => filePicked = true,
-    );
-
-    // If no file was picked (user cancelled), pop back.
-    if (!filePicked && mounted) {
-      context.pop();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     ref.listen<DocumentUploadState>(documentUploadProvider, (prev, next) {
-      if (prev?.step != DocumentUploadStep.success &&
-          next.step == DocumentUploadStep.success) {
-        HapticFeedback.heavyImpact();
-      }
+      _onSaved(context, ref, prev, next);
+      _onFailed(context, ref, prev, next);
     });
 
     final state = ref.watch(documentUploadProvider);
-
-    // Nothing to show until a file is selected.
-    if (state.file == null && !_sourcePickerShown) {
-      return const Scaffold(body: SizedBox.shrink());
+    final categories = ref.watch(documentCategoriesProvider);
+    final notifier = ref.read(documentUploadProvider.notifier);
+    ref.listen(documentCategoriesProvider, (_, next) {
+      final list = next.value;
+      if (list != null) notifier.useDefaultCategory(list);
+    });
+    final renewId = renewDocumentId;
+    final renewal = renewId == null
+        ? null
+        : ref.watch(renewalSourceProvider(renewId));
+    if (renewId != null) {
+      ref.listen(renewalSourceProvider(renewId), (_, next) {
+        final source = next.value;
+        if (source != null) notifier.applyRenewal(source);
+      });
+      final source = renewal?.value;
+      if (source != null) {
+        // Already cached on the first frame: no listener event fires.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) notifier.applyRenewal(source);
+        });
+      }
     }
-
-    final title = _titleForStep(state.step);
-    final canPop = state.step == DocumentUploadStep.category ||
-        state.step == DocumentUploadStep.metadata;
-
-    final showBack = state.step == DocumentUploadStep.metadata;
+    final loaded = categories.value;
+    if (loaded != null) {
+      // First frame with categories already cached: no listener event fires.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) notifier.useDefaultCategory(loaded);
+      });
+    }
 
     return PopScope(
-      canPop: canPop,
+      canPop: !state.isSaving,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop && !canPop) return;
-        if (state.step == DocumentUploadStep.metadata) {
-          ref.read(documentUploadProvider.notifier).goBack();
-        }
+        if (didPop) ref.invalidate(documentUploadProvider);
       },
-      child: Platform.isIOS
-          ? _IOSScaffold(
-              title: title,
-              step: state.step,
-              onBack: showBack ? _handleBack : null,
-              child: _stepContent(state),
-            )
-          : _MaterialScaffold(
-              title: title,
-              step: state.step,
-              onBack: showBack ? _handleBack : null,
-              child: _stepContent(state),
-            ),
-    );
-  }
-
-  Widget _stepContent(DocumentUploadState state) {
-    return switch (state.step) {
-      DocumentUploadStep.category => UploadCategoryStep(onNext: () {}),
-      DocumentUploadStep.metadata => UploadMetadataStep(
-          onNext: () {},
-          onBack: _handleBack,
-        ),
-      DocumentUploadStep.uploading ||
-      DocumentUploadStep.success =>
-        UploadProgressStep(
-          onDone: () {
-            // Reset provider state before popping so the next upload starts fresh.
-            ref.invalidate(documentUploadProvider);
-            context.pop();
-          },
-          onRetry: () =>
-              ref.read(documentUploadProvider.notifier).retryUpload(),
-        ),
-    };
-  }
-
-  void _handleBack() {
-    final step = ref.read(documentUploadProvider).step;
-    if (step == DocumentUploadStep.metadata) {
-      ref.read(documentUploadProvider.notifier).goBack();
-    } else {
-      context.pop();
-    }
-  }
-
-  String _titleForStep(DocumentUploadStep step) {
-    switch (step) {
-      case DocumentUploadStep.category:
-        return 'Add Document';
-      case DocumentUploadStep.metadata:
-        return 'Document Details';
-      case DocumentUploadStep.uploading:
-        return 'Uploading';
-      case DocumentUploadStep.success:
-        return 'Saved';
-    }
-  }
-}
-
-// ── iOS scaffold ──────────────────────────────────────────────────────────────
-
-class _IOSScaffold extends StatelessWidget {
-  const _IOSScaffold({
-    required this.title,
-    required this.step,
-    required this.onBack,
-    required this.child,
-  });
-
-  final String title;
-  final DocumentUploadStep step;
-  final VoidCallback? onBack;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: Text(title),
-        leading: onBack != null
-            ? CupertinoButton(
-                padding: EdgeInsets.zero,
-                onPressed: onBack,
-                child: const Icon(CupertinoIcons.back),
-              )
-            : const SizedBox.shrink(),
-        trailing: step == DocumentUploadStep.uploading ||
-                step == DocumentUploadStep.success
-            ? const SizedBox.shrink()
-            : CupertinoButton(
-                padding: EdgeInsets.zero,
-                onPressed: () => context.pop(),
-                child: const Text('Cancel'),
+      child: Scaffold(
+        backgroundColor: AuroraColors.paper,
+        body: SafeArea(
+          bottom: false,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: context.aurora.contentMaxWidth,
               ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AuroraSpacing.space5,
-            AuroraSpacing.space5,
-            AuroraSpacing.space5,
-            AuroraSpacing.space7,
+              child: Column(
+                children: [
+                  UploadHeader(
+                    onCancel: state.isSaving ? null : () => context.pop(),
+                    onSave: state.canSave && !state.isSaving
+                        ? notifier.submit
+                        : null,
+                    saving: state.isSaving,
+                  ),
+                  if (state.isSaving)
+                    UploadProgressBar(progress: state.progress),
+                  Expanded(
+                    child: renewal != null && renewal.hasError
+                        ? ErrorView(
+                            message: DocsCopy.renewalLoadError,
+                            onRetry: () =>
+                                ref.invalidate(renewalSourceProvider(renewId!)),
+                          )
+                        : categories.when(
+                            loading: () => const UploadFormSkeleton(),
+                            error: (_, _) => ErrorView(
+                              message:
+                                  'We could not load your categories. '
+                                  'Check your connection and try again.',
+                              onRetry: () =>
+                                  ref.invalidate(documentCategoriesProvider),
+                            ),
+                            // A renewal waits for the old document's details
+                            // so the form opens already filled in.
+                            data: (list) => renewId != null && !state.isRenewal
+                                ? const UploadFormSkeleton()
+                                : UploadFormBody(categories: list),
+                          ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          child: child,
         ),
       ),
     );
   }
-}
 
-// ── Material scaffold ──────────────────────────────────────────────────────────
-
-class _MaterialScaffold extends StatelessWidget {
-  const _MaterialScaffold({
-    required this.title,
-    required this.step,
-    required this.onBack,
-    required this.child,
-  });
-
-  final String title;
-  final DocumentUploadStep step;
-  final VoidCallback? onBack;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final isTerminal = step == DocumentUploadStep.uploading ||
-        step == DocumentUploadStep.success;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title, style: AuroraType.h3),
-        leading: onBack != null
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: onBack,
-              )
-            : null,
-        actions: isTerminal
-            ? null
-            : [
-                TextButton(
-                  onPressed: () => context.pop(),
-                  child: Text(
-                    'Cancel',
-                    style: AuroraType.bodyLg.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AuroraColors.inkSecondary,
-                    ),
-                  ),
-                ),
-              ],
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AuroraSpacing.space5,
-            AuroraSpacing.space5,
-            AuroraSpacing.space5,
-            AuroraSpacing.space7,
-          ),
-          child: child,
-        ),
-      ),
+  void _onSaved(
+    BuildContext context,
+    WidgetRef ref,
+    DocumentUploadState? prev,
+    DocumentUploadState next,
+  ) {
+    if (prev?.phase == UploadPhase.success ||
+        next.phase != UploadPhase.success) {
+      return;
+    }
+    final id = next.uploadedDocument?.id;
+    HapticFeedback.mediumImpact();
+    SnackbarService.showSuccess(context, 'Document saved');
+    if (next.renewalMarkFailed) {
+      SnackbarService.showWarning(
+        context,
+        DocsCopy.renewalMarkFailed,
+        subtitle: DocsCopy.renewalMarkFailedHint,
+      );
+    }
+    ref.invalidate(documentUploadProvider);
+    if (id == null) {
+      context.pop();
+      return;
+    }
+    context.pushReplacement(
+      AppRoutes.documentDetail.replaceFirst(':documentId', id),
     );
+  }
+
+  void _onFailed(
+    BuildContext context,
+    WidgetRef ref,
+    DocumentUploadState? prev,
+    DocumentUploadState next,
+  ) {
+    final failure = next.failure;
+    if (failure == null || failure == prev?.failure) return;
+    ref.read(documentUploadProvider.notifier).clearFailure();
+    switch (failure) {
+      case UploadFailure.limitReached:
+        UpgradeSheet.show(context, config: _limitUpgrade);
+      case UploadFailure.generic:
+        SnackbarService.showError(
+          context,
+          'Upload failed',
+          subtitle: 'Your file is still here. Tap Save to try again.',
+        );
+    }
   }
 }

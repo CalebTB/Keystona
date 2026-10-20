@@ -4,64 +4,21 @@ import '../../../features/subscription/providers/subscription_provider.dart';
 import '../../../services/providers/service_providers.dart';
 import '../../../services/supabase_service.dart';
 import '../models/document.dart';
+import 'docs_tab_provider.dart';
+import 'document_categories_provider.dart';
 
 part 'documents_provider.g.dart';
 
-/// Provides a static map of `category_id → document count` for the current
-/// user's property, unaffected by any active category filter.
-///
-/// Used by the Documents screen filter row so counts don't zero out when a
-/// filter is active. Invalidated whenever [DocumentsNotifier] invalidates
-/// (both are keyed to the same property/user).
+/// Live document count per category id for the user's property, unaffected by
+/// any filter. Invalidated whenever documents or categories change.
 @riverpod
-Future<Map<String, int>> documentCategoryCounts(
-  Ref ref,
-) async {
-  final user = SupabaseService.client.auth.currentUser;
-  if (user == null) return {};
-
-  final profileRow = await SupabaseService.client
-      .from('properties')
-      .select('id')
-      .eq('user_id', user.id)
-      .isFilter('deleted_at', null)
-      .order('created_at', ascending: false)
-      .limit(1)
-      .maybeSingle();
-
-  if (profileRow == null) return {};
-  final propertyId = profileRow['id'] as String;
-
-  final rows = await SupabaseService.client
-      .from('documents')
-      .select('category_id')
-      .eq('property_id', propertyId)
-      .isFilter('deleted_at', null);
-
-  final counts = <String, int>{};
-  for (final row in rows) {
-    final id = row['category_id'] as String?;
-    if (id != null) counts[id] = (counts[id] ?? 0) + 1;
-  }
-  return counts;
-}
-
-/// Sort options available from the Documents screen overflow menu.
-enum DocumentSortOrder {
-  /// Newest first (default).
-  dateAddedDesc,
-
-  /// Alphabetical A to Z.
-  nameAsc,
-
-  /// By category sort order, then name.
-  categoryAsc,
-}
+Future<Map<String, int>> documentCategoryCounts(Ref ref) =>
+    ref.watch(documentCategoriesRepositoryProvider).documentCounts();
 
 /// Loads and manages the Document Vault list for the authenticated user.
 ///
 /// Filtering by category and search query is controlled via [setCategory] and
-/// [setSearchQuery]. Sort order is changed via [setSortOrder].
+/// [setSearchQuery]. The list is always newest first.
 ///
 /// Extension points for downstream issues:
 /// - [add]           — implemented by issue #21 (upload flow)
@@ -71,7 +28,6 @@ enum DocumentSortOrder {
 @riverpod
 class DocumentsNotifier extends _$DocumentsNotifier {
   String? _categoryId;
-  DocumentSortOrder _sortOrder = DocumentSortOrder.dateAddedDesc;
   String? _searchQuery;
 
   /// OCR search snippets keyed by document ID. Only populated for premium
@@ -121,19 +77,7 @@ class DocumentsNotifier extends _$DocumentsNotifier {
       filterQuery = filterQuery.eq('category_id', _categoryId!);
     }
 
-    // Apply sort. The filter query must be finalised before ordering because
-    // PostgrestFilterBuilder and PostgrestTransformBuilder are different types.
-    final List<Map<String, dynamic>> response;
-    switch (_sortOrder) {
-      case DocumentSortOrder.dateAddedDesc:
-        response = await filterQuery.order('created_at', ascending: false);
-      case DocumentSortOrder.nameAsc:
-        response = await filterQuery.order('name', ascending: true);
-      case DocumentSortOrder.categoryAsc:
-        response = await filterQuery
-            .order('category_id', ascending: true)
-            .order('name', ascending: true);
-    }
+    final response = await filterQuery.order('created_at', ascending: false);
 
     return response.map((json) {
       return Document.fromJson({
@@ -152,15 +96,6 @@ class DocumentsNotifier extends _$DocumentsNotifier {
   /// Pass null to clear the filter and show all categories.
   void setCategory(String? categoryId) {
     _categoryId = categoryId;
-    ref.invalidateSelf();
-  }
-
-  /// The active sort order — read by the UI to display the current label.
-  DocumentSortOrder get currentSortOrder => _sortOrder;
-
-  /// Changes the sort order of the document list.
-  void setSortOrder(DocumentSortOrder order) {
-    _sortOrder = order;
     ref.invalidateSelf();
   }
 
@@ -210,7 +145,7 @@ class DocumentsNotifier extends _$DocumentsNotifier {
     }
 
     ref.invalidateSelf();
-    ref.invalidate(documentCategoryCountsProvider);
+    _invalidateDerived();
     await future;
     final docs = state.value ?? [];
     if (docs.isEmpty) throw StateError('No documents after add');
@@ -218,6 +153,12 @@ class DocumentsNotifier extends _$DocumentsNotifier {
   }
 
   // ── Private helpers ──────────────────────────────────────────────────────────
+
+  /// Providers computed from the same documents; they refetch after a change.
+  void _invalidateDerived() {
+    ref.invalidate(documentCategoryCountsProvider);
+    ref.invalidate(docsTabProvider);
+  }
 
   Future<List<Document>> _performSearch(
     String propertyId,
@@ -336,6 +277,7 @@ class DocumentsNotifier extends _$DocumentsNotifier {
         .eq('id', id);
 
     ref.invalidateSelf();
+    ref.invalidate(docsTabProvider);
   }
 
   /// Soft-deletes a document by setting [deleted_at] to the current time.
@@ -350,7 +292,7 @@ class DocumentsNotifier extends _$DocumentsNotifier {
         .eq('id', id);
 
     ref.invalidateSelf();
-    ref.invalidate(documentCategoryCountsProvider);
+    _invalidateDerived();
   }
 
   /// Restores a soft-deleted document by clearing [deleted_at].
@@ -363,6 +305,6 @@ class DocumentsNotifier extends _$DocumentsNotifier {
         .eq('id', id);
 
     ref.invalidateSelf();
-    ref.invalidate(documentCategoryCountsProvider);
+    _invalidateDerived();
   }
 }

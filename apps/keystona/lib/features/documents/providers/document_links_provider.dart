@@ -1,118 +1,121 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../services/supabase_service.dart';
+import 'document_detail_provider.dart';
 
 part 'document_links_provider.g.dart';
 
-/// A single entry representing a reverse link to this document from another
-/// entity in the app.
+/// Which kind of thing a document is linked to.
+enum DocumentLinkType { project, appliance, system }
+
+/// One thing a document is linked to, in either direction.
 class DocumentLinkEntry {
   const DocumentLinkEntry({
     required this.type,
     required this.label,
     required this.id,
-    this.subtitle,
   });
 
-  /// Entity type: `'project'` | `'appliance'` | `'system'`
-  final String type;
+  final DocumentLinkType type;
 
-  /// Display name of the linked entity.
+  /// Display name of the linked item.
   final String label;
 
-  /// Entity ID used for navigation.
+  /// Item id, used for navigation.
   final String id;
-
-  /// Optional secondary label (e.g. project type).
-  final String? subtitle;
 }
 
-/// Fetches all reverse links for a document — projects, appliances, and systems
-/// that reference this document by ID.
+/// Everything a document is linked to: the system or appliance it points at,
+/// plus the projects, appliances and systems that point at it.
 ///
-/// Runs three queries in parallel and returns a combined flat list.
-/// Returns an empty list when no links exist.
+/// Runs the lookups in parallel and returns one de-duplicated list. An empty
+/// list means nothing is linked.
 @riverpod
 class DocumentLinksNotifier extends _$DocumentLinksNotifier {
   @override
   Future<List<DocumentLinkEntry>> build(String documentId) async {
+    final document = await ref.read(documentDetailProvider(documentId).future);
+
     final results = await Future.wait([
-      _fetchProjectLinks(documentId),
-      _fetchApplianceLinks(documentId),
-      _fetchSystemLinks(documentId),
+      _linkedItem(
+        table: 'systems',
+        id: document.linkedSystemId,
+        type: DocumentLinkType.system,
+      ),
+      _linkedItem(
+        table: 'appliances',
+        id: document.linkedApplianceId,
+        type: DocumentLinkType.appliance,
+      ),
+      _projectLinks(documentId),
+      _warrantyLinks('appliances', DocumentLinkType.appliance, documentId),
+      _warrantyLinks('systems', DocumentLinkType.system, documentId),
     ]);
 
+    final seen = <String>{};
     return [
-      ...results[0],
-      ...results[1],
-      ...results[2],
+      for (final list in results)
+        for (final entry in list)
+          if (seen.add('${entry.type.name}:${entry.id}')) entry,
     ];
   }
 
-  Future<List<DocumentLinkEntry>> _fetchProjectLinks(String documentId) async {
+  Future<List<DocumentLinkEntry>> _linkedItem({
+    required String table,
+    required String? id,
+    required DocumentLinkType type,
+  }) async {
+    if (id == null) return const [];
+    final row = await SupabaseService.client
+        .from(table)
+        .select('id, name')
+        .eq('id', id)
+        .isFilter('deleted_at', null)
+        .maybeSingle();
+    return _entries([?row], type);
+  }
+
+  Future<List<DocumentLinkEntry>> _projectLinks(String documentId) async {
     final rows = await SupabaseService.client
         .from('project_documents')
         .select('project_id, projects(name)')
         .eq('document_id', documentId);
-
-    return rows
-        .map((row) {
-          final projectId = row['project_id'] as String?;
-          final projects = row['projects'] as Map<String, dynamic>?;
-          final name = projects?['name'] as String?;
-          if (projectId == null || name == null || name.isEmpty) return null;
-          return DocumentLinkEntry(
-            type: 'project',
-            label: name,
-            id: projectId,
-          );
-        })
-        .whereType<DocumentLinkEntry>()
-        .toList();
+    return _entries([
+      for (final row in rows)
+        {
+          'id': row['project_id'],
+          'name': (row['projects'] as Map<String, dynamic>?)?['name'],
+        },
+    ], DocumentLinkType.project);
   }
 
-  Future<List<DocumentLinkEntry>> _fetchApplianceLinks(
-      String documentId) async {
+  Future<List<DocumentLinkEntry>> _warrantyLinks(
+    String table,
+    DocumentLinkType type,
+    String documentId,
+  ) async {
     final rows = await SupabaseService.client
-        .from('appliances')
+        .from(table)
         .select('id, name')
         .eq('linked_warranty_doc_id', documentId)
         .isFilter('deleted_at', null);
-
-    return rows
-        .map((row) {
-          final id = row['id'] as String?;
-          final name = row['name'] as String?;
-          if (id == null || name == null || name.isEmpty) return null;
-          return DocumentLinkEntry(
-            type: 'appliance',
-            label: name,
-            id: id,
-          );
-        })
-        .whereType<DocumentLinkEntry>()
-        .toList();
+    return _entries(rows, type);
   }
 
-  Future<List<DocumentLinkEntry>> _fetchSystemLinks(String documentId) async {
-    final rows = await SupabaseService.client
-        .from('systems')
-        .select('id, name')
-        .eq('linked_warranty_doc_id', documentId)
-        .isFilter('deleted_at', null);
-
-    return rows
-        .map((row) {
-          final id = row['id'] as String?;
-          final name = row['name'] as String?;
-          if (id == null || name == null || name.isEmpty) return null;
-          return DocumentLinkEntry(
-            type: 'system',
-            label: name,
-            id: id,
-          );
-        })
-        .whereType<DocumentLinkEntry>()
-        .toList();
+  List<DocumentLinkEntry> _entries(
+    List<Map<String, dynamic>> rows,
+    DocumentLinkType type,
+  ) {
+    return [
+      for (final row in rows)
+        if (row['id'] is String &&
+            row['name'] is String &&
+            (row['name'] as String).isNotEmpty)
+          DocumentLinkEntry(
+            type: type,
+            label: row['name'] as String,
+            id: row['id'] as String,
+          ),
+    ];
   }
 }

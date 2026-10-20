@@ -1,1835 +1,198 @@
-import 'dart:async';
-
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
-import 'package:pdfx/pdfx.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/aurora_colors.dart';
-import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_docs_c.dart';
+import '../../../core/theme/aurora_scale.dart';
 import '../../../core/theme/aurora_spacing.dart';
-import '../../../core/theme/aurora_typography.dart';
-import '../../../core/widgets/aurora/aurora.dart';
-import '../../../core/widgets/confirm_dialog.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/snackbar_service.dart';
-import '../../../services/supabase_service.dart';
 import '../models/document.dart';
-import '../models/document_category.dart';
 import '../providers/document_detail_provider.dart';
 import '../providers/document_links_provider.dart';
+import '../providers/document_repositories_provider.dart';
+import '../widgets/detail/document_delete_flow.dart';
+import '../widgets/detail/document_detail_body.dart';
+import '../widgets/detail/document_detail_top_bar.dart';
+import '../widgets/detail/document_file_viewer.dart';
+import '../widgets/docs_scroll_page.dart';
 import '../widgets/document_detail_skeleton.dart';
 import '../widgets/edit_metadata_sheet.dart';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-Color _catColor(DocumentCategory? category) {
-  final hex = category?.color;
-  if (hex == null || hex.isEmpty) return AuroraColors.cobalt;
-  try {
-    final cleaned = hex.replaceAll('#', '');
-    return Color(int.parse('FF$cleaned', radix: 16));
-  } catch (_) {
-    return AuroraColors.cobalt;
-  }
-}
-
-String _extFromMime(String? mime) {
-  if (mime == null || mime.isEmpty) return 'FILE';
-  if (mime.contains('pdf')) return 'PDF';
-  if (mime.contains('jpeg') || mime.contains('jpg')) return 'JPG';
-  if (mime.contains('png')) return 'PNG';
-  if (mime.contains('heic')) return 'HEIC';
-  if (mime.contains('gif')) return 'GIF';
-  if (mime.contains('webp')) return 'WEBP';
-  final ext = mime.split('/').last.toUpperCase();
-  return ext.length > 4 ? ext.substring(0, 4) : ext;
-}
-
-String _formatFileSize(int bytes) {
-  if (bytes < 1024) return '${bytes}B';
-  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-  return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-}
-
-// ─── Screen ───────────────────────────────────────────────────────────────────
-
-/// Card-stack document detail screen.
+/// Document detail: preview, coverage, what the document says, links, notes,
+/// file facts, and the edit / share / delete actions.
 ///
 /// Route: `/documents/:documentId`
-class DocumentDetailScreen extends ConsumerWidget {
+class DocumentDetailScreen extends ConsumerStatefulWidget {
   const DocumentDetailScreen({super.key, required this.documentId});
 
   final String documentId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final detailState = ref.watch(documentDetailProvider(documentId));
-    return Scaffold(
-      backgroundColor: AuroraColors.paper,
-      body: detailState.when(
-        loading: () => const DocumentDetailSkeleton(),
-        error: (e, _) => SafeArea(
-          child: Column(
-            children: [
-              _BackButton(onTap: () => context.pop()),
-              Expanded(
-                child: ErrorView(
-                  message: "Couldn't load document.",
-                  onRetry: () =>
-                      ref.invalidate(documentDetailProvider(documentId)),
-                ),
-              ),
-            ],
-          ),
-        ),
-        data: (doc) => _DetailBody(document: doc, documentId: documentId),
-      ),
-    );
-  }
+  ConsumerState<DocumentDetailScreen> createState() =>
+      _DocumentDetailScreenState();
 }
 
-// ─── Back button (error state) ────────────────────────────────────────────────
+class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
+  bool _deleting = false;
 
-class _BackButton extends StatelessWidget {
-  const _BackButton({required this.onTap});
+  DocumentDetailNotifier get _notifier =>
+      ref.read(documentDetailProvider(widget.documentId).notifier);
 
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AuroraSpacing.screenPadH, 12, 0, 0),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(CupertinoIcons.chevron_back,
-                color: AuroraColors.coral, size: 20),
-            const SizedBox(width: 2),
-            Text(
-              'Documents',
-              style: AuroraType.bodySm.copyWith(
-                color: AuroraColors.coral,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Detail Body ──────────────────────────────────────────────────────────────
-
-class _DetailBody extends ConsumerStatefulWidget {
-  const _DetailBody({required this.document, required this.documentId});
-
-  final Document document;
-  final String documentId;
-
-  @override
-  ConsumerState<_DetailBody> createState() => _DetailBodyState();
-}
-
-class _DetailBodyState extends ConsumerState<_DetailBody> {
-  bool _deletePending = false;
-  Timer? _deleteTimer;
-
-  @override
-  void dispose() {
-    _deleteTimer?.cancel();
-    super.dispose();
+  void _back() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(AppRoutes.documents);
+    }
   }
 
-  Future<void> _onShare() async {
+  Future<void> _refresh() async {
+    ref.invalidate(documentLinksProvider(widget.documentId));
+    ref.invalidate(documentDetailProvider(widget.documentId));
+    await ref.read(documentDetailProvider(widget.documentId).future);
+  }
+
+  Future<void> _share(Document document) async {
+    final actions = ref.read(documentFileActionsProvider);
     try {
-      final url = await ref
-          .read(documentDetailProvider(widget.documentId).notifier)
-          .getSignedUrl();
-      if (url == null) {
-        if (mounted) {
-          SnackbarService.showError(context, "Couldn't generate share link.");
-        }
-        return;
-      }
-      await SharePlus.instance.share(
-        ShareParams(uri: Uri.parse(url), text: widget.document.name),
-      );
+      final url = await _notifier.signedUrl();
+      if (url == null) throw StateError('no url');
+      await actions.share(url: url, title: document.name);
     } catch (_) {
       if (mounted) SnackbarService.showError(context, "Couldn't share document.");
     }
   }
 
-  Future<void> _onDownload() async {
+  Future<void> _download() async {
+    final actions = ref.read(documentFileActionsProvider);
     try {
-      final url = await ref
-          .read(documentDetailProvider(widget.documentId).notifier)
-          .getSignedUrl();
-      if (url == null) {
-        if (mounted) {
-          SnackbarService.showError(context, "Couldn't generate download link.");
-        }
-        return;
-      }
-      final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final url = await _notifier.signedUrl();
+      if (url == null || !await actions.open(Uri.parse(url))) {
+        throw StateError('cannot open');
       }
     } catch (_) {
       if (mounted) SnackbarService.showError(context, "Couldn't open download.");
     }
   }
 
-  Future<void> _onDelete() async {
-    await ConfirmDialog.show(
+  Future<void> _call(String phone) async {
+    final actions = ref.read(documentFileActionsProvider);
+    final opened = await actions.open(Uri(scheme: 'tel', path: phone));
+    if (!opened && mounted) {
+      SnackbarService.showError(context, "Couldn't start the call.");
+    }
+  }
+
+  Future<void> _replace() async {
+    try {
+      await _notifier.replaceFile();
+    } catch (_) {
+      if (mounted) {
+        SnackbarService.showInfo(context, "Replacing a file isn't available yet.");
+      }
+    }
+  }
+
+  Future<void> _edit(Document document) {
+    final notifier = _notifier;
+    return EditMetadataSheet.show(
       context,
-      title: 'Delete document?',
-      message:
-          'The document will be moved to trash. You can undo this within 5 seconds.',
-      confirmLabel: 'Delete',
-      onConfirm: _commitDelete,
+      document: document,
+      onSave: notifier.saveEdits,
     );
   }
 
-  Future<void> _commitDelete() async {
-    if (_deletePending) return;
-    setState(() => _deletePending = true);
-
-    try {
-      await ref
-          .read(documentDetailProvider(widget.documentId).notifier)
-          .softDelete();
-    } catch (_) {
-      if (mounted) {
-        setState(() => _deletePending = false);
-        SnackbarService.showError(
-            context, "Couldn't delete document. Try again.");
-      }
-      return;
-    }
-
-    if (!mounted) return;
-
-    final controller = ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Document moved to trash.',
-          style: AuroraType.body.copyWith(color: AuroraColors.paper),
-        ),
-        backgroundColor: AuroraColors.ink,
-        duration: const Duration(seconds: 5),
-        behavior: SnackBarBehavior.floating,
-        action: SnackBarAction(
-          label: 'UNDO',
-          textColor: AuroraColors.yellow,
-          onPressed: _undoDelete,
-        ),
-      ),
+  Future<void> _delete() async {
+    final notifier = _notifier;
+    final container = ProviderScope.containerOf(context);
+    final id = widget.documentId;
+    setState(() => _deleting = true);
+    await DocumentDeleteFlow.run(
+      context,
+      delete: notifier.softDelete,
+      restore: () => restoreDeletedDocument(container, id),
     );
-
-    _deleteTimer = Timer(const Duration(seconds: 5), () {
-      if (mounted && _deletePending) {
-        controller.close();
-        context.pop();
-      }
-    });
+    if (mounted) setState(() => _deleting = false);
   }
 
-  Future<void> _undoDelete() async {
-    _deleteTimer?.cancel();
-    _deleteTimer = null;
-    try {
-      await ref
-          .read(documentDetailProvider(widget.documentId).notifier)
-          .restore();
-      if (mounted) {
-        setState(() => _deletePending = false);
-        SnackbarService.showSuccess(context, 'Document restored.');
-      }
-    } catch (_) {
-      if (mounted) {
-        SnackbarService.showError(context, "Couldn't restore document.");
-      }
-    }
+  void _openLink(DocumentLinkEntry entry) {
+    final path = switch (entry.type) {
+      DocumentLinkType.project =>
+        AppRoutes.projectDetail.replaceFirst(':projectId', entry.id),
+      DocumentLinkType.appliance =>
+        AppRoutes.homeApplianceDetail.replaceFirst(':applianceId', entry.id),
+      DocumentLinkType.system =>
+        AppRoutes.homeSystemDetail.replaceFirst(':systemId', entry.id),
+    };
+    context.push(path);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final doc = ref.watch(documentDetailProvider(widget.documentId)).value ??
-        widget.document;
-    final catColor = _catColor(doc.category);
-    final daysLeft = doc.expirationDate?.difference(DateTime.now()).inDays;
-    final showExpiryCard = daysLeft != null && daysLeft < 90;
-    return Stack(
-      children: [
-        CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: SafeArea(
-                bottom: false,
-                child: _NavRow(documentId: widget.documentId, document: doc),
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AuroraSpacing.screenPadH,
-              ),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  const SizedBox(height: 14),
-                  _PreviewCard(document: doc, catColor: catColor),
-                  const SizedBox(height: 16),
-                  _TitleArea(
-                    document: doc,
-                    catColor: catColor,
-                    daysLeft: daysLeft,
-                  ),
-                  if (showExpiryCard) ...[
-                    const SizedBox(height: 12),
-                    _ExpiryCountdownCard(daysLeft: daysLeft),
-                  ],
-                  const SizedBox(height: AuroraSpacing.space5),
-                  _DetailsCard(document: doc),
-                  _LinkedToCard(document: doc),
-                  _UsedInCard(documentId: widget.documentId),
-                  const SizedBox(height: AuroraSpacing.space5),
-                  _NotesCard(document: doc),
-                  const SizedBox(height: AuroraSpacing.space5),
-                  _FileInfoCard(document: doc),
-                  const SizedBox(height: 120),
-                ]),
-              ),
-            ),
-          ],
-        ),
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: _BottomActionBar(
-            onShare: _onShare,
-            onDownload: _onDownload,
-            onDelete: _deletePending ? null : _onDelete,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Nav Row ──────────────────────────────────────────────────────────────────
-
-class _NavRow extends ConsumerWidget {
-  const _NavRow({required this.documentId, required this.document});
-
-  final String documentId;
-  final Document document;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AuroraSpacing.screenPadH, 8, AuroraSpacing.screenPadH, 0,
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => context.pop(),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(CupertinoIcons.chevron_back,
-                    color: AuroraColors.coral, size: 20),
-                const SizedBox(width: 2),
-                Text(
-                  'Documents',
-                  style: AuroraType.bodySm.copyWith(
-                    color: AuroraColors.coral,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Spacer(),
-          _NavIconButton(
-            icon: Icons.edit_outlined,
-            onTap: () => EditMetadataSheet.show(context, document),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NavIconButton extends StatelessWidget {
-  const _NavIconButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: AuroraColors.paper,
-          shape: BoxShape.circle,
-          border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: AuroraColors.ink.withValues(alpha: 0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        child: Icon(icon, size: 16, color: AuroraColors.inkSecondary),
-      ),
-    );
-  }
-}
-
-// ─── Preview Card ─────────────────────────────────────────────────────────────
-
-class _PreviewCard extends StatefulWidget {
-  const _PreviewCard({required this.document, required this.catColor});
-
-  final Document document;
-  final Color catColor;
-
-  @override
-  State<_PreviewCard> createState() => _PreviewCardState();
-}
-
-class _PreviewCardState extends State<_PreviewCard> {
-  String? _thumbnailUrl;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.document.thumbnailPath != null) {
-      _fetchThumbnail();
-    }
-  }
-
-  Future<void> _fetchThumbnail() async {
-    try {
-      final url = await SupabaseService.client.storage
-          .from('documents')
-          .createSignedUrl(widget.document.thumbnailPath!, 3600);
-      if (mounted) setState(() => _thumbnailUrl = url);
-    } catch (_) {
-      // Fall back to icon placeholder — no-op
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final document = widget.document;
-    final catColor = widget.catColor;
-    final ext = _extFromMime(document.mimeType);
-    final dimColor = catColor.withValues(alpha: 0.07);
-    final borderColor = catColor.withValues(alpha: 0.12);
-
-    return GestureDetector(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          fullscreenDialog: true,
-          builder: (_) => _FullscreenPreview(document: document),
-        ),
-      ),
-      child: Container(
-        height: 220,
-        decoration: BoxDecoration(
-          color: AuroraColors.paper,
-          borderRadius: AuroraRadius.xl,
-          border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: AuroraColors.ink.withValues(alpha: 0.08),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: AuroraRadius.xl,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // ── Background: thumbnail or gradient placeholder ──────────────
-              if (_thumbnailUrl != null)
-                CachedNetworkImage(
-                  imageUrl: _thumbnailUrl!,
-                  fit: BoxFit.cover,
-                  placeholder: (_, _) => _iconPlaceholder(
-                      dimColor, borderColor, catColor, ext, document),
-                  errorWidget: (_, _, _) => _iconPlaceholder(
-                      dimColor, borderColor, catColor, ext, document),
-                )
-              else
-                _iconPlaceholder(dimColor, borderColor, catColor, ext, document),
-
-              // ── Scrim for readability when thumbnail is shown ──────────────
-              if (_thumbnailUrl != null)
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          AuroraColors.ink.withValues(alpha: 0.35),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-              // ── "Tap to preview" hint ─────────────────────────────────────
-              Positioned(
-                bottom: 12,
-                left: 12,
-                child: Text(
-                  document.pageCount != null
-                      ? '${document.pageCount} page${document.pageCount == 1 ? '' : 's'} · Tap to preview'
-                      : 'Tap to preview',
-                  style: AuroraType.labelSm.copyWith(
-                    color: _thumbnailUrl != null
-                        ? AuroraColors.paper.withValues(alpha: 0.85)
-                        : AuroraColors.inkTertiary,
-                  ),
-                ),
-              ),
-
-              // ── Expand icon ───────────────────────────────────────────────
-              Positioned(
-                bottom: 12,
-                right: 12,
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: _thumbnailUrl != null
-                        ? AuroraColors.ink.withValues(alpha: 0.35)
-                        : AuroraColors.ink.withValues(alpha: 0.06),
-                    borderRadius: AuroraRadius.sm,
-                  ),
-                  child: Icon(
-                    Icons.open_in_full_rounded,
-                    size: 16,
-                    color: _thumbnailUrl != null
-                        ? AuroraColors.paper
-                        : AuroraColors.inkSecondary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _iconPlaceholder(Color dimColor, Color borderColor, Color catColor,
-      String ext, Document document) {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.center,
-                colors: [dimColor, AuroraColors.paper],
-              ),
-            ),
-          ),
-        ),
-        Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 64,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: dimColor,
-                  borderRadius: AuroraRadius.sm,
-                  border: Border.all(color: borderColor, width: 1.5),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.insert_drive_file_outlined,
-                        size: 28, color: catColor),
-                    const SizedBox(height: 4),
-                    Text(
-                      ext,
-                      style: AuroraType.labelSm.copyWith(
-                        color: catColor,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Fullscreen Preview ───────────────────────────────────────────────────────
-
-/// INTENTIONAL EXCEPTION: Colors.black / Colors.white are correct here.
-/// These are design-system-exempt — brand off-white looks wrong on
-/// a black media background.
-class _FullscreenPreview extends StatelessWidget {
-  const _FullscreenPreview({required this.document});
-
-  final Document document;
-
-  bool get _isPdf => (document.mimeType ?? '').contains('pdf');
-  bool get _isImage => (document.mimeType ?? '').startsWith('image/');
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        title: Text(
-          document.name,
-          style: AuroraType.body.copyWith(color: Colors.white),
-        ),
-        elevation: 0,
-      ),
-      body: _isPdf
-          ? _PdfPreview(filePath: document.filePath)
-          : _isImage
-              ? _ImagePreview(filePath: document.filePath)
-              : Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.insert_drive_file_outlined,
-                          size: 64, color: Colors.white54),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Preview not available',
-                        style: AuroraType.body.copyWith(color: Colors.white54),
-                      ),
-                    ],
-                  ),
-                ),
-    );
-  }
-}
-
-// ─── Title Area ───────────────────────────────────────────────────────────────
-
-class _TitleArea extends StatelessWidget {
-  const _TitleArea({
-    required this.document,
-    required this.catColor,
-    required this.daysLeft,
-  });
-
-  final Document document;
-  final Color catColor;
-  final int? daysLeft;
-
-  @override
-  Widget build(BuildContext context) {
-    final dimColor = catColor.withValues(alpha: 0.07);
-    final showExpiryBadge = daysLeft != null && daysLeft! < 90;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          document.name,
-          style: AuroraType.h1.copyWith(color: AuroraColors.ink),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 6,
-          children: [
-            if (document.category != null)
-              _TitleBadge(
-                backgroundColor: dimColor,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: catColor,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      document.category!.name,
-                      style: AuroraType.labelSm.copyWith(
-                        color: catColor,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            if (document.type != null)
-              _TitleBadge(
-                backgroundColor: AuroraColors.butter,
-                child: Text(
-                  document.type!.name,
-                  style: AuroraType.labelSm.copyWith(
-                    color: AuroraColors.inkTertiary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            if (showExpiryBadge)
-              _TitleBadge(
-                backgroundColor: AuroraColors.coralDim,
-                border: Border.all(
-                  color: AuroraColors.coral.withValues(alpha: 0.12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.access_time_rounded,
-                        size: 12, color: AuroraColors.coral),
-                    const SizedBox(width: 4),
-                    Text(
-                      daysLeft! < 0
-                          ? 'Expired'
-                          : daysLeft == 0
-                              ? 'Expires today'
-                              : 'Expires in ${daysLeft}d',
-                      style: AuroraType.labelSm.copyWith(
-                        color: AuroraColors.coral,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _TitleBadge extends StatelessWidget {
-  const _TitleBadge({
-    required this.child,
-    required this.backgroundColor,
-    this.border,
-  });
-
-  final Widget child;
-  final Color backgroundColor;
-  final Border? border;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: AuroraRadius.xs,
-        border: border,
-      ),
-      child: child,
-    );
-  }
-}
-
-// ─── Expiry Countdown Card ────────────────────────────────────────────────────
-
-class _ExpiryCountdownCard extends StatelessWidget {
-  const _ExpiryCountdownCard({required this.daysLeft});
-
-  final int daysLeft;
-
-  @override
-  Widget build(BuildContext context) {
-    final passedSegments = daysLeft >= 60
-        ? 1
-        : daysLeft >= 30
-            ? 2
-            : daysLeft >= 0
-                ? 3
-                : 4;
-
-    final displayDays = daysLeft < 0 ? 'Expired' : '${daysLeft}d';
-
-    return Container(
-      padding: const EdgeInsets.all(AuroraSpacing.space5),
-      decoration: BoxDecoration(
-        color: AuroraColors.coralDim,
-        border: Border.all(
-          color: AuroraColors.coral.withValues(alpha: 0.12),
-          width: 1.5,
-        ),
-        borderRadius: AuroraRadius.lg,
-      ),
+  Widget _page({required Widget topBar, required Widget child}) {
+    final a = context.aurora;
+    return DocsScrollPage(
+      onRefresh: _refresh,
+      topPadding: AuroraSpacing.screenPadTop,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.access_time_rounded,
-                  color: AuroraColors.coral, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                'Expiration Countdown',
-                style: AuroraType.bodySm.copyWith(
-                  color: AuroraColors.coral,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                displayDays,
-                style: AuroraType.number.copyWith(
-                  color: AuroraColors.coral,
-                  fontSize: 20,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: List.generate(4, (i) {
-              final isPassed = i < passedSegments;
-              final isCurrent = i == passedSegments - 1 && daysLeft >= 0;
-              return Expanded(
-                child: Container(
-                  margin: EdgeInsets.only(right: i < 3 ? 3 : 0),
-                  height: 4,
-                  decoration: BoxDecoration(
-                    borderRadius: AuroraRadius.xs,
-                    gradient: isCurrent
-                        ? LinearGradient(colors: [
-                            AuroraColors.coral,
-                            AuroraColors.coral.withValues(alpha: 0.15),
-                          ])
-                        : null,
-                    color: isCurrent
-                        ? null
-                        : isPassed
-                            ? AuroraColors.coral
-                            : AuroraColors.coral.withValues(alpha: 0.12),
-                  ),
-                ),
-              );
-            }),
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              _ExpiryLabel('90 days ✓',
-                  passed: passedSegments > 0, align: TextAlign.left),
-              _ExpiryLabel('60 days ✓', passed: passedSegments > 1),
-              _ExpiryLabel('30 days ✓', passed: passedSegments > 2),
-              _ExpiryLabel(
-                daysLeft < 0 ? 'Expired' : '$daysLeft days left',
-                passed: true,
-                isCurrent: true,
-                align: TextAlign.right,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ExpiryLabel extends StatelessWidget {
-  const _ExpiryLabel(
-    this.text, {
-    required this.passed,
-    this.isCurrent = false,
-    this.align = TextAlign.center,
-  });
-
-  final String text;
-  final bool passed;
-  final bool isCurrent;
-  final TextAlign align;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Text(
-        text,
-        style: AuroraType.labelSm.copyWith(
-          color: isCurrent
-              ? AuroraColors.coral
-              : passed
-                  ? AuroraColors.coral.withValues(alpha: 0.6)
-                  : AuroraColors.inkTertiary,
-          fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w600,
-        ),
-        textAlign: align,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-    );
-  }
-}
-
-// ─── Shared Card Shell ────────────────────────────────────────────────────────
-
-class _InfoCard extends StatelessWidget {
-  const _InfoCard({
-    required this.icon,
-    required this.label,
-    required this.child,
-    this.trailing,
-  });
-
-  final IconData icon;
-  final String label;
-  final Widget child;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AuroraColors.paper,
-        borderRadius: AuroraRadius.lg,
-        border: Border.fromBorderSide(
-          BorderSide(color: AuroraColors.inkBorder, width: 1),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-            decoration: BoxDecoration(
-              color: AuroraColors.butter,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(13),
-                topRight: Radius.circular(13),
-              ),
-            ),
-            child: Row(
-              children: [
-                // Small cobalt dot for info card section headers.
-                Container(
-                  width: 6,
-                  height: 6,
-                  margin: const EdgeInsets.only(right: 6),
-                  decoration: const BoxDecoration(
-                    color: AuroraColors.inkSecondary,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                Text(
-                  label.toUpperCase(),
-                  style: AuroraType.label.copyWith(
-                    color: AuroraColors.inkSecondary,
-                  ),
-                ),
-                if (trailing != null) ...[
-                  const Spacer(),
-                  trailing!,
-                ],
-              ],
-            ),
-          ),
+          topBar,
+          SizedBox(height: a.of(AuroraDocsCSizes.sectionGap)),
           child,
         ],
       ),
     );
   }
-}
-
-// ─── Details Card ─────────────────────────────────────────────────────────────
-
-class _DetailsCard extends StatelessWidget {
-  const _DetailsCard({required this.document});
-
-  final Document document;
 
   @override
   Widget build(BuildContext context) {
-    return _InfoCard(
-      icon: Icons.info_outline_rounded,
-      label: 'DETAILS',
-      trailing: _CardEditButton(
-        onTap: () => EditMetadataSheet.show(context, document),
-      ),
-      child: _DetailsGrid(document: document),
-    );
-  }
-}
-
-class _DetailsGrid extends StatelessWidget {
-  const _DetailsGrid({required this.document});
-
-  final Document document;
-
-  // snake_case → Title Case
-  static String _formatKey(String key) => key
-      .split('_')
-      .map((w) => w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1)}')
-      .join(' ');
-
-  // Detect values that deserve mono font: codes, money, phone numbers, pure numbers.
-  static bool _isMono(dynamic value) {
-    final s = value.toString();
-    if (s.startsWith(r'$')) return true;
-    if (RegExp(r'^\(?\d{3}\)?[\s\-]\d{3}[\s\-]\d{4}$').hasMatch(s)) {
-      return true;
-    }
-    if (RegExp(r'^[A-Z0-9][A-Z0-9\-]{2,}$').hasMatch(s)) return true;
-    if (RegExp(r'^\d+(\.\d+)?$').hasMatch(s)) return true;
-    return false;
-  }
-
-  // Phone numbers get cobalt color to match the design reference.
-  static Color? _valueColor(String key, dynamic value) {
-    final s = value?.toString() ?? '';
-    if (RegExp(r'^\(?\d{3}\)?[\s\-]\d{3}[\s\-]\d{4}$').hasMatch(s)) {
-      return AuroraColors.cobalt;
-    }
-    return null;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final hasMetadata = document.metadata.isNotEmpty;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-      child: AuroraTile(
-        padding: const EdgeInsets.all(AuroraSpacing.space5),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final itemWidth = (constraints.maxWidth - 20) / 2;
-            final items = <Widget>[];
-
-            if (hasMetadata) {
-              // Type-specific fields from the metadata JSONB column.
-              for (final entry in document.metadata.entries) {
-                final value = entry.value;
-                if (value == null || value.toString().isEmpty) continue;
-                items.add(SizedBox(
-                  width: itemWidth,
-                  child: _InfoItem(
-                    label: _formatKey(entry.key),
-                    value: value.toString(),
-                    mono: _isMono(value),
-                    valueColor: _valueColor(entry.key, value),
-                  ),
-                ));
-              }
-              if (document.expirationDate != null) {
-                items.add(SizedBox(
-                  width: itemWidth,
-                  child: _InfoItem(
-                    label: 'Expiration',
-                    value: DateFormat('MMM d, yyyy')
-                        .format(document.expirationDate!),
-                    valueColor: AuroraColors.coral,
-                  ),
-                ));
-              }
-            } else {
-              // Generic fallback when no type-specific metadata is set.
-              final uploadedDate =
-                  DateFormat('MMM d, yyyy').format(document.createdAt);
-              final updatedDate =
-                  DateFormat('MMM d, yyyy').format(document.updatedAt);
-              items.addAll([
-                SizedBox(
-                  width: itemWidth,
-                  child: _InfoItem(
-                      label: 'Category',
-                      value: document.category?.name ?? '—'),
-                ),
-                SizedBox(
-                  width: itemWidth,
-                  child: _InfoItem(
-                      label: 'Type', value: document.type?.name ?? '—'),
-                ),
-                SizedBox(
-                  width: itemWidth,
-                  child: _InfoItem(label: 'Uploaded', value: uploadedDate),
-                ),
-                SizedBox(
-                  width: itemWidth,
-                  child: _InfoItem(label: 'Updated', value: updatedDate),
-                ),
-                if (document.fileSizeBytes != null)
-                  SizedBox(
-                    width: itemWidth,
-                    child: _InfoItem(
-                      label: 'Size',
-                      value: _formatFileSize(document.fileSizeBytes!),
-                      mono: true,
-                    ),
-                  ),
-                if (document.pageCount != null)
-                  SizedBox(
-                    width: itemWidth,
-                    child: _InfoItem(
-                      label: 'Pages',
-                      value: '${document.pageCount}',
-                      mono: true,
-                    ),
-                  ),
-                if (document.expirationDate != null)
-                  SizedBox(
-                    width: itemWidth,
-                    child: _InfoItem(
-                      label: 'Expiration',
-                      value: DateFormat('MMM d, yyyy')
-                          .format(document.expirationDate!),
-                      valueColor: AuroraColors.coral,
-                    ),
-                  ),
-              ]);
-            }
-
-            return Wrap(spacing: 20, runSpacing: 14, children: items);
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoItem extends StatelessWidget {
-  const _InfoItem({
-    required this.label,
-    required this.value,
-    this.mono = false,
-    this.valueColor,
-  });
-
-  final String label;
-  final String value;
-  final bool mono;
-  final Color? valueColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label.toUpperCase(),
-          style: AuroraType.labelSm.copyWith(
-            color: AuroraColors.inkTertiary,
-            letterSpacing: 0.3,
+    final detail = ref.watch(documentDetailProvider(widget.documentId));
+    return Scaffold(
+      backgroundColor: AuroraColors.paper,
+      body: SafeArea(
+        bottom: false,
+        child: detail.when(
+          loading: () => _page(
+            topBar: DocumentDetailTopBar(onBack: _back),
+            child: const DocumentDetailSkeleton(),
           ),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          value,
-          style: (mono ? AuroraType.label : AuroraType.bodySm).copyWith(
-            color: valueColor ?? AuroraColors.ink,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _CardEditButton extends StatelessWidget {
-  const _CardEditButton({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Text(
-        'Edit',
-        style: AuroraType.labelSm.copyWith(color: AuroraColors.coral),
-      ),
-    );
-  }
-}
-
-// ─── Linked To Card ───────────────────────────────────────────────────────────
-
-class _LinkedToCard extends StatefulWidget {
-  const _LinkedToCard({required this.document});
-
-  final Document document;
-
-  @override
-  State<_LinkedToCard> createState() => _LinkedToCardState();
-}
-
-class _LinkedToCardState extends State<_LinkedToCard> {
-  String? _linkedName;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchLinkedName();
-  }
-
-  Future<void> _fetchLinkedName() async {
-    final systemId = widget.document.linkedSystemId;
-    final applianceId = widget.document.linkedApplianceId;
-    if (systemId == null && applianceId == null) return;
-
-    try {
-      final Map<String, dynamic>? row;
-      if (systemId != null) {
-        row = await SupabaseService.client
-            .from('systems')
-            .select('name')
-            .eq('id', systemId)
-            .maybeSingle();
-      } else {
-        row = await SupabaseService.client
-            .from('appliances')
-            .select('name')
-            .eq('id', applianceId!)
-            .maybeSingle();
-      }
-      if (mounted && row != null) {
-        setState(() => _linkedName = row!['name'] as String?);
-      }
-    } catch (_) {
-      // Name lookup is best-effort — subtitle falls back to type label.
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final doc = widget.document;
-    final hasLinkedItem =
-        doc.linkedSystemId != null || doc.linkedApplianceId != null;
-
-    if (!hasLinkedItem) return const SizedBox.shrink();
-
-    final isSystem = doc.linkedSystemId != null;
-    final linkedId = (doc.linkedSystemId ?? doc.linkedApplianceId)!;
-
-    return Padding(
-      padding: const EdgeInsets.only(top: AuroraSpacing.space5),
-      child: _InfoCard(
-        icon: Icons.link_rounded,
-        label: 'LINKED TO',
-        child: _LinkedItemRow(
-          icon: isSystem ? Icons.settings_outlined : Icons.kitchen_outlined,
-          iconColor: AuroraColors.cobalt,
-          iconBg: AuroraColors.cobaltDim,
-          title:
-              _linkedName ?? (isSystem ? 'Linked System' : 'Linked Appliance'),
-          subtitle: isSystem ? 'System' : 'Appliance',
-          onTap: () {
-            final path = isSystem
-                ? AppRoutes.homeSystemDetail
-                    .replaceFirst(':systemId', linkedId)
-                : AppRoutes.homeApplianceDetail
-                    .replaceFirst(':applianceId', linkedId);
-            context.push(path);
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class _LinkedItemRow extends StatelessWidget {
-  const _LinkedItemRow({
-    required this.icon,
-    required this.iconColor,
-    required this.iconBg,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final Color iconColor;
-  final Color iconBg;
-  final String title;
-  final String subtitle;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: AuroraRadius.lg,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: iconBg,
-                borderRadius: AuroraRadius.md,
-              ),
-              child: Icon(icon, size: 16, color: iconColor),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: AuroraType.bodySm.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: AuroraType.bodySm.copyWith(
-                      color: AuroraColors.inkTertiary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (onTap != null)
-              const Icon(Icons.chevron_right,
-                  size: 14, color: AuroraColors.inkSecondary),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Used In Card (reverse links) ─────────────────────────────────────────────
-
-class _UsedInCard extends ConsumerWidget {
-  const _UsedInCard({required this.documentId});
-
-  final String documentId;
-
-  static IconData _iconFor(String type) => switch (type) {
-        'project' => Icons.folder_outlined,
-        'appliance' => Icons.kitchen_outlined,
-        _ => Icons.settings_outlined,
-      };
-
-  static String _typeLabel(String type) => switch (type) {
-        'project' => 'Project',
-        'appliance' => 'Appliance',
-        _ => 'System',
-      };
-
-  void _navigate(BuildContext context, DocumentLinkEntry entry) {
-    final path = switch (entry.type) {
-      'project' =>
-        AppRoutes.projectDetail.replaceFirst(':projectId', entry.id),
-      'appliance' =>
-        AppRoutes.homeApplianceDetail.replaceFirst(':applianceId', entry.id),
-      _ => AppRoutes.homeSystemDetail.replaceFirst(':systemId', entry.id),
-    };
-    context.push(path);
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final linksState = ref.watch(documentLinksProvider(documentId));
-    return linksState.maybeWhen(
-      data: (links) {
-        if (links.isEmpty) return const SizedBox.shrink();
-        return Column(
-          children: [
-            const SizedBox(height: AuroraSpacing.space5),
-            _InfoCard(
-              icon: Icons.folder_open_outlined,
-              label: 'USED IN',
-              child: Column(
-                children: [
-                  for (int i = 0; i < links.length; i++) ...[
-                    if (i > 0)
-                      const Divider(
-                        height: 1,
-                        color: AuroraColors.butter,
-                        indent: 16,
-                        endIndent: 16,
-                      ),
-                    _LinkedItemRow(
-                      icon: _iconFor(links[i].type),
-                      iconColor: AuroraColors.cobalt,
-                      iconBg: AuroraColors.cobaltDim,
-                      title: links[i].label,
-                      subtitle:
-                          links[i].subtitle ?? _typeLabel(links[i].type),
-                      onTap: () => _navigate(context, links[i]),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-      orElse: () => const SizedBox.shrink(),
-    );
-  }
-}
-
-// ─── Notes Card ───────────────────────────────────────────────────────────────
-
-class _NotesCard extends StatelessWidget {
-  const _NotesCard({required this.document});
-
-  final Document document;
-
-  bool get _hasNotes => document.notes != null && document.notes!.isNotEmpty;
-
-  @override
-  Widget build(BuildContext context) {
-    return _InfoCard(
-      icon: Icons.notes_rounded,
-      label: 'NOTES',
-      trailing: _hasNotes
-          ? _CardEditButton(
-              onTap: () => EditMetadataSheet.show(context, document),
-            )
-          : null,
-      child: _hasNotes
-          ? Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-              child: Text(
-                document.notes!,
-                style: AuroraType.bodySm.copyWith(
-                  color: AuroraColors.inkSecondary,
-                  height: 1.6,
-                ),
-              ),
-            )
-          : GestureDetector(
-              onTap: () => EditMetadataSheet.show(context, document),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-                child: Row(
-                  children: [
-                    const Icon(Icons.add_rounded,
-                        size: 16, color: AuroraColors.inkSecondary),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Add a note…',
-                      style: AuroraType.bodySm.copyWith(
-                        color: AuroraColors.inkSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-    );
-  }
-}
-
-// ─── File Info Card ───────────────────────────────────────────────────────────
-
-class _FileInfoCard extends StatelessWidget {
-  const _FileInfoCard({required this.document});
-
-  final Document document;
-
-  @override
-  Widget build(BuildContext context) {
-    final ext = _extFromMime(document.mimeType);
-    final addedDate = DateFormat('MMM d, yyyy').format(document.createdAt);
-    final ocrStatus = document.ocrStatus;
-    final ocrLabel = switch (ocrStatus) {
-      'complete' => 'Complete',
-      'processing' => 'Processing',
-      'pending' => 'Pending',
-      'failed' => 'Failed',
-      _ => 'Not run',
-    };
-    final ocrColor = switch (ocrStatus) {
-      'complete' => AuroraColors.limeDeep,
-      'processing' => AuroraColors.yellow,
-      'failed' => AuroraColors.coral,
-      _ => AuroraColors.inkTertiary,
-    };
-
-    return _InfoCard(
-      icon: Icons.insert_drive_file_outlined,
-      label: 'FILE INFO',
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-        child: Wrap(
-          spacing: 16,
-          runSpacing: 10,
-          children: [
-            _FileMeta(icon: Icons.insert_drive_file_outlined, value: ext),
-            if (document.fileSizeBytes != null)
-              _FileMeta(
-                icon: Icons.download_outlined,
-                value: _formatFileSize(document.fileSizeBytes!),
-              ),
-            _FileMeta(
-              icon: Icons.calendar_today_outlined,
-              prefix: 'Added ',
-              value: addedDate,
-            ),
-            if (ocrStatus != 'pending')
-              _FileMeta(
-                icon: Icons.access_time_rounded,
-                prefix: 'OCR ',
-                value: ocrLabel,
-                valueColor: ocrColor,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FileMeta extends StatelessWidget {
-  const _FileMeta({
-    required this.icon,
-    required this.value,
-    this.prefix,
-    this.valueColor,
-  });
-
-  final IconData icon;
-  final String value;
-  final String? prefix;
-  final Color? valueColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: AuroraColors.inkTertiary),
-        const SizedBox(width: 6),
-        RichText(
-          text: TextSpan(
-            style: AuroraType.bodySm.copyWith(color: AuroraColors.inkTertiary),
+          error: (_, _) => Column(
             children: [
-              if (prefix != null) TextSpan(text: prefix),
-              TextSpan(
-                text: value,
-                style: AuroraType.bodySm.copyWith(
-                  color: valueColor ?? AuroraColors.inkSecondary,
-                  fontWeight: FontWeight.w600,
+              Padding(
+                padding: context.aurora.symmetric(
+                  horizontal: AuroraSpacing.screenPadH,
+                  vertical: AuroraSpacing.screenPadTop,
+                ),
+                child: DocumentDetailTopBar(onBack: _back),
+              ),
+              Expanded(
+                child: ErrorView(
+                  message: "Couldn't load this document.",
+                  onRetry: () =>
+                      ref.invalidate(documentDetailProvider(widget.documentId)),
                 ),
               ),
             ],
           ),
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Bottom Action Bar ────────────────────────────────────────────────────────
-
-class _BottomActionBar extends StatelessWidget {
-  const _BottomActionBar({
-    required this.onShare,
-    required this.onDownload,
-    required this.onDelete,
-  });
-
-  final VoidCallback onShare;
-  final VoidCallback onDownload;
-  final VoidCallback? onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AuroraColors.paper,
-        border: Border(top: BorderSide(color: AuroraColors.inkBorder)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 12, 22, 12),
-          child: SizedBox(
-            height: 52,
-            child: Row(
-              children: [
-                _BarButton(
-                  icon: Icons.ios_share_rounded,
-                  style: _BarButtonStyle.secondary,
-                  onTap: onShare,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _BarButton(
-                    icon: Icons.download_outlined,
-                    label: 'Download',
-                    style: _BarButtonStyle.primary,
-                    onTap: onDownload,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                _BarButton(
-                  icon: Icons.delete_outline_rounded,
-                  style: _BarButtonStyle.danger,
-                  onTap: onDelete,
-                ),
-              ],
+          data: (document) => _page(
+            topBar: DocumentDetailTopBar(
+              onBack: _back,
+              onShare: () => _share(document),
+              onEdit: () => _edit(document),
+            ),
+            child: DocumentDetailBody(
+              document: document,
+              onOpenFile: () => DocumentFileViewer.open(context, document),
+              onClaim: _call,
+              onOpenLink: _openLink,
+              onEdit: () => _edit(document),
+              onDownload: _download,
+              onReplace: _replace,
+              onDelete: _deleting ? null : _delete,
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-enum _BarButtonStyle { primary, secondary, danger }
-
-class _BarButton extends StatelessWidget {
-  const _BarButton({
-    required this.icon,
-    required this.style,
-    required this.onTap,
-    this.label,
-  });
-
-  final IconData icon;
-  final _BarButtonStyle style;
-  final VoidCallback? onTap;
-  final String? label;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDisabled = onTap == null;
-    final bg = isDisabled
-        ? AuroraColors.butter
-        : switch (style) {
-            _BarButtonStyle.primary => AuroraColors.ink,
-            _BarButtonStyle.secondary => AuroraColors.paper,
-            _BarButtonStyle.danger => AuroraColors.coralDim,
-          };
-    final fg = isDisabled
-        ? AuroraColors.inkTertiary
-        : switch (style) {
-            _BarButtonStyle.primary => AuroraColors.paper,
-            _BarButtonStyle.secondary => AuroraColors.inkSecondary,
-            _BarButtonStyle.danger => AuroraColors.coral,
-          };
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 52,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: AuroraRadius.md,
-          border: style == _BarButtonStyle.secondary
-              ? Border.all(color: AuroraColors.inkBorder, width: 1.5)
-              : null,
-          boxShadow: style == _BarButtonStyle.secondary
-              ? [
-                  BoxShadow(
-                    color: AuroraColors.ink.withValues(alpha: 0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
-                ]
-              : null,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: fg),
-            if (label != null) ...[
-              const SizedBox(width: 6),
-              Text(
-                label!,
-                style: AuroraType.bodySm.copyWith(
-                  color: fg,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── PDF Preview (fullscreen) ─────────────────────────────────────────────────
-
-/// INTENTIONAL EXCEPTION: Colors.white54 used here — black fullscreen bg.
-class _PdfPreview extends StatefulWidget {
-  const _PdfPreview({required this.filePath});
-
-  final String filePath;
-
-  @override
-  State<_PdfPreview> createState() => _PdfPreviewState();
-}
-
-class _PdfPreviewState extends State<_PdfPreview> {
-  late final PdfController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = PdfController(
-      document: PdfDocument.openData(
-        SupabaseService.client.storage
-            .from('documents')
-            .download(widget.filePath),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return PdfView(
-      controller: _controller,
-      scrollDirection: Axis.vertical,
-      builders: PdfViewBuilders<DefaultBuilderOptions>(
-        options: const DefaultBuilderOptions(),
-        documentLoaderBuilder: (_) => const Center(
-          child: CircularProgressIndicator(
-              strokeWidth: 2, color: Colors.white54),
-        ),
-        pageLoaderBuilder: (_) => const Center(
-          child: CircularProgressIndicator(
-              strokeWidth: 2, color: Colors.white54),
-        ),
-        errorBuilder: (_, error) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.error_outline,
-                  size: 32, color: Colors.white54),
-              const SizedBox(height: AuroraSpacing.space3),
-              Text(
-                'PDF preview unavailable',
-                style: AuroraType.body.copyWith(color: Colors.white54),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Image Preview (fullscreen) ───────────────────────────────────────────────
-
-/// INTENTIONAL EXCEPTION: Colors.white used here — black fullscreen bg.
-class _ImagePreview extends StatefulWidget {
-  const _ImagePreview({required this.filePath});
-
-  final String filePath;
-
-  @override
-  State<_ImagePreview> createState() => _ImagePreviewState();
-}
-
-class _ImagePreviewState extends State<_ImagePreview> {
-  String? _signedUrl;
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSignedUrl();
-  }
-
-  Future<void> _loadSignedUrl() async {
-    try {
-      final url = await SupabaseService.client.storage
-          .from('documents')
-          .createSignedUrl(widget.filePath, 3600);
-      if (mounted) {
-        setState(() {
-          _signedUrl = url;
-          _loading = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_loading) {
-      return const Center(
-        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-      );
-    }
-    if (_signedUrl == null) {
-      return Center(
-        child: Text(
-          'Preview unavailable',
-          style: AuroraType.body.copyWith(color: Colors.white54),
-        ),
-      );
-    }
-    return PhotoView(
-      imageProvider: NetworkImage(_signedUrl!),
-      minScale: PhotoViewComputedScale.contained,
-      maxScale: PhotoViewComputedScale.covered * 4,
-      backgroundDecoration: const BoxDecoration(color: Colors.black),
-      loadingBuilder: (_, event) => Center(
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          color: Colors.white,
-          value: event == null
-              ? null
-              : event.cumulativeBytesLoaded /
-                  (event.expectedTotalBytes ?? 1),
         ),
       ),
     );

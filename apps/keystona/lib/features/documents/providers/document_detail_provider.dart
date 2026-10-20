@@ -1,75 +1,88 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../services/supabase_service.dart';
 import '../models/document.dart';
+import '../models/document_edit.dart';
+import 'document_repositories_provider.dart';
+import 'document_search_provider.dart';
 import 'documents_provider.dart';
+import 'expiring_documents_provider.dart';
 
 part 'document_detail_provider.g.dart';
 
-/// Manages the state for the Document Detail screen.
-///
-/// Keyed by document [id] and auto-disposed when the screen is popped. All
-/// write operations delegate to [DocumentsNotifier] so the list screen stays
-/// in sync automatically.
+/// State for the Document Detail screen, keyed by document [id] and
+/// auto-disposed when the screen is popped. Writes go through
+/// [DocumentsNotifier] so the list stays in sync, and the sibling search and
+/// expiring providers are invalidated alongside it.
 @riverpod
 class DocumentDetailNotifier extends _$DocumentDetailNotifier {
   @override
-  Future<Document> build(String id) async {
-    return ref.read(documentsProvider.notifier).getById(id);
+  Future<Document> build(String id) =>
+      ref.read(documentsProvider.notifier).getById(id);
+
+  /// A signed URL for the file, valid for an hour. Null when there is no file
+  /// or the URL cannot be created.
+  Future<String?> signedUrl() async {
+    final document = state.value;
+    if (document == null) return null;
+    return ref.read(documentFilesRepositoryProvider).signedUrl(document.filePath);
   }
 
-  // ── Signed URL ──────────────────────────────────────────────────────────────
+  /// Saves edits. The screen shows them immediately; they are rolled back
+  /// (and the error rethrown) if the write fails.
+  Future<void> saveEdits(DocumentEdit edit) async {
+    final current = state.value;
+    if (current == null) return;
+    final documents = ref.read(documentsProvider.notifier);
 
-  /// Generates a signed URL for the document file valid for 1 hour.
-  ///
-  /// Returns null when [Document.filePath] is empty or the storage call fails.
-  Future<String?> getSignedUrl() async {
-    final document = state.value;
-    if (document == null || document.filePath.isEmpty) return null;
+    state = AsyncData(
+      current.copyWith(
+        name: edit.name,
+        categoryId: edit.categoryId,
+        expirationDate: edit.expirationDate,
+        notes: edit.notes,
+      ),
+    );
 
-    final response = await SupabaseService.client.storage
-        .from('documents')
-        .createSignedUrl(document.filePath, 3600);
+    try {
+      await documents.updateDocument(current.id, edit.toChanges());
+    } catch (_) {
+      if (ref.mounted) state = AsyncData(current);
+      rethrow;
+    }
 
-    return response;
-  }
-
-  // ── Mutations ───────────────────────────────────────────────────────────────
-
-  /// Updates mutable metadata fields and refreshes the detail state.
-  Future<void> updateDocument(Map<String, dynamic> changes) async {
-    final document = state.value;
-    if (document == null) return;
-
-    await ref.read(documentsProvider.notifier).updateDocument(document.id, changes);
-
-    // Re-fetch so the detail screen shows the persisted values.
+    if (!ref.mounted) return;
+    _invalidateSiblings();
+    // Re-fetch so the joined category and timestamps are the persisted ones.
     ref.invalidateSelf();
     await future;
   }
 
-  /// Soft-deletes the document (sets deleted_at).
-  ///
-  /// Does NOT navigate back — the caller is responsible for popping after
-  /// this completes. The list provider is invalidated by [DocumentsNotifier].
+  /// Soft-deletes the document. Does not navigate: the caller pops and offers
+  /// Undo.
   Future<void> softDelete() async {
     final document = state.value;
     if (document == null) return;
-
     await ref.read(documentsProvider.notifier).softDelete(document.id);
+    if (ref.mounted) _invalidateSiblings();
   }
 
-  /// Restores a soft-deleted document (clears deleted_at).
+  /// Placeholder for swapping the stored file.
   ///
-  /// Used by the undo-delete flow when the user taps UNDO within 5 seconds.
-  Future<void> restore() async {
-    final document = state.value;
-    if (document == null) return;
-
-    await ref.read(documentsProvider.notifier).restore(document.id);
-
-    // Re-fetch to confirm the restored state.
-    ref.invalidateSelf();
-    await future;
+  /// [#N] backend: needs a storage upload + `documents.file_path` update.
+  Future<void> replaceFile() async {
+    throw UnimplementedError('replaceFile() implemented by issue #N');
   }
+
+  void _invalidateSiblings() {
+    ref.invalidate(expiringDocumentsProvider);
+    ref.invalidate(documentSearchProvider);
+  }
+}
+
+/// Undoes a delete after the detail screen (and its notifier) is gone, so it
+/// runs on the app container.
+Future<void> restoreDeletedDocument(ProviderContainer container, String id) async {
+  await container.read(documentsProvider.notifier).restore(id);
+  container.invalidate(expiringDocumentsProvider);
+  container.invalidate(documentSearchProvider);
 }

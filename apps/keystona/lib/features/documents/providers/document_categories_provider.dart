@@ -1,120 +1,109 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../services/supabase_service.dart';
+import '../models/category_icons.dart';
+import '../models/category_lists.dart';
+import '../models/deleted_category.dart';
 import '../models/document_category.dart';
+import '../repositories/document_categories_repository.dart';
 
 part 'document_categories_provider.g.dart';
 
-/// Loads all document categories visible to the current user.
-///
-/// Returns both system categories (is_system = true) and any custom categories
-/// created by this user, sorted by [DocumentCategory.sortOrder].
-///
-/// Extension points for issue #25:
-/// - [create] — add a user-defined category
-/// - [updateCategory] — rename or recolor an existing category
-/// - [deleteCategory] — remove a user-defined category
+/// The repository behind the category providers. Tests override this with a
+/// fake so nothing reaches Supabase.
+@riverpod
+DocumentCategoriesRepository documentCategoriesRepository(Ref ref) =>
+    const SupabaseDocumentCategoriesRepository();
+
+/// Loads all document categories visible to the current user, sorted by
+/// [DocumentCategory.sortOrder], and applies edits optimistically.
 @riverpod
 class DocumentCategoriesNotifier extends _$DocumentCategoriesNotifier {
+  DocumentCategoriesRepository get _repo =>
+      ref.read(documentCategoriesRepositoryProvider);
+
   @override
-  Future<List<DocumentCategory>> build() async {
-    final user = SupabaseService.client.auth.currentUser;
-    if (user == null) return [];
+  Future<List<DocumentCategory>> build() =>
+      ref.watch(documentCategoriesRepositoryProvider).fetchAll();
 
-    final response = await SupabaseService.client
-        .from('document_categories')
-        .select('id, name, icon, color, is_system, sort_order, created_at, user_id')
-        .or('is_system.eq.true,user_id.eq.${user.id}')
-        .order('sort_order');
+  List<DocumentCategory> get _current => state.value ?? const [];
 
-    return response.map((json) => DocumentCategory.fromJson(json)).toList();
-  }
-
-  // ── Mutations (issue #25) ───────────────────────────────────────────────────
-
-  /// Creates a user-defined category with the given [name], [icon], and [color].
-  ///
-  /// [icon] must be one of the keys in [CategoryIcons.all].
-  /// [color] is a hex string, e.g. '#0097A7'.
+  /// Creates a user-defined category after the existing ones.
   Future<DocumentCategory> create({
     required String name,
     required String icon,
-    required String color,
+    String color = kCustomCategoryColor,
   }) async {
-    final user = SupabaseService.client.auth.currentUser;
-    if (user == null) throw StateError('User not authenticated');
-
-    // Sort the new category after any existing custom categories.
-    final existing = state.value ?? [];
-    final maxOrder = existing.fold<int>(
-      0,
-      (max, c) => c.sortOrder > max ? c.sortOrder : max,
+    final category = await _repo.create(
+      name: name,
+      icon: icon,
+      color: color,
+      sortOrder: CategoryLists(_current).nextSortOrder,
     );
-
-    final row = await SupabaseService.client
-        .from('document_categories')
-        .insert({
-          'user_id': user.id,
-          'name': name,
-          'icon': icon,
-          'color': color,
-          'is_system': false,
-          'sort_order': maxOrder + 1,
-        })
-        .select('id, name, icon, color, is_system, sort_order, created_at, user_id')
-        .single();
-
-    final category = DocumentCategory.fromJson(row);
-    ref.invalidateSelf();
+    state = AsyncData([..._current, category]);
     return category;
   }
 
-  /// Updates the [name], [icon], and [color] of an existing user-defined category.
+  /// Renames (and re-icons) a user-defined category.
   Future<void> updateCategory(
     String id, {
     required String name,
     required String icon,
     required String color,
   }) async {
-    await SupabaseService.client
-        .from('document_categories')
-        .update({'name': name, 'icon': icon, 'color': color})
-        .eq('id', id);
-
-    ref.invalidateSelf();
+    final before = _current;
+    state = AsyncData([
+      for (final c in before)
+        if (c.id == id) c.copyWith(name: name, icon: icon, color: color) else c,
+    ]);
+    try {
+      await _repo.update(id, name: name, icon: icon, color: color);
+    } catch (_) {
+      state = AsyncData(before);
+      rethrow;
+    }
   }
 
-  /// Deletes a user-defined category.
-  ///
-  /// All documents currently assigned to [id] are moved to the system
-  /// "Uncategorized" category (lowest sort_order system category) before
-  /// the category row is deleted. This prevents orphaned documents.
-  Future<void> deleteCategory(String id) async {
-    // Find the fallback category. The spec calls this "Uncategorized";
-    // we use the lowest sort_order system category as a safe default
-    // when a dedicated "Uncategorized" row is not yet seeded.
-    final fallbackRow = await SupabaseService.client
-        .from('document_categories')
-        .select('id')
-        .eq('is_system', true)
-        .order('sort_order')
-        .limit(1)
-        .single();
-    final fallbackId = fallbackRow['id'] as String;
+  /// Deletes a user-defined category. Its documents are moved to [moveToId]
+  /// (default: the first of Other, Manual, Receipt) and are never deleted.
+  /// Returns what moved so the caller can offer Undo.
+  Future<DeletedCategory> deleteCategory(String id, {String? moveToId}) async {
+    final before = _current;
+    final category = before.firstWhere((c) => c.id == id);
+    final target = moveToId ?? CategoryLists(before).defaultMoveTarget?.id;
+    if (target == null) throw StateError('No category to move documents to');
 
-    // Move all non-deleted documents in this category to the fallback.
-    await SupabaseService.client
-        .from('documents')
-        .update({'category_id': fallbackId})
-        .eq('category_id', id)
-        .isFilter('deleted_at', null);
+    state = AsyncData([
+      for (final c in before)
+        if (c.id != id) c,
+    ]);
+    try {
+      final deleted = await _repo.delete(category, moveToId: target);
+      return deleted;
+    } catch (_) {
+      state = AsyncData(before);
+      rethrow;
+    }
+  }
 
-    // Delete the category row (RLS prevents deleting system categories).
-    await SupabaseService.client
-        .from('document_categories')
-        .delete()
-        .eq('id', id);
+  /// Undoes [deleteCategory].
+  Future<void> restoreCategory(DeletedCategory deleted) async {
+    await _repo.restore(deleted);
+    state = AsyncData([..._current, deleted.category]);
+  }
 
-    ref.invalidateSelf();
+  /// Persists a drag of custom category [oldIndex] to [newIndex].
+  Future<void> reorderCustom(int oldIndex, int newIndex) async {
+    final before = _current;
+    final order = CategoryLists(before).reorder(oldIndex, newIndex);
+    state = AsyncData([
+      for (final c in before)
+        if (order.containsKey(c.id)) c.copyWith(sortOrder: order[c.id]!) else c,
+    ]);
+    try {
+      await _repo.reorder(order);
+    } catch (_) {
+      state = AsyncData(before);
+      rethrow;
+    }
   }
 }

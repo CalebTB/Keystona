@@ -1,260 +1,354 @@
 import 'dart:io';
 
-import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
-import 'package:uuid/uuid.dart';
 
-import '../../../services/supabase_service.dart';
-import '../models/document.dart';
+import '../../../core/theme/aurora_docs_b.dart';
+import '../../../services/providers/service_providers.dart';
+import '../models/document_category.dart';
+import '../models/document_ocr.dart';
+import '../models/document_scan.dart';
 import '../models/document_upload_state.dart';
+import '../models/renewal_source.dart';
+import '../../subscription/providers/subscription_provider.dart';
+import '../services/document_renewal_repository.dart';
+import '../services/document_upload_repository.dart';
+import 'document_categories_provider.dart';
+import 'document_detail_provider.dart';
+import 'document_renewal_provider.dart';
+import 'document_search_provider.dart';
+import 'docs_tab_provider.dart';
+import 'document_upload_services_provider.dart';
+import 'expiring_documents_provider.dart';
 import 'documents_provider.dart';
+import 'scan_reading_provider.dart';
 
 part 'document_upload_provider.g.dart';
 
-const _freeDocumentLimit = 25;
-
-/// Manages the document upload wizard state and the actual upload operation.
+/// State of the add-a-document flow: the picked file, the form, and the save.
 ///
-/// Lifecycle: created when the upload screen opens, disposed on pop.
-/// The [DocumentsNotifier] list is invalidated after a successful upload.
-///
-/// Step flow:
-///   category → metadata → uploading → success
-@riverpod
+/// Kept alive so the file picked in the add-from sheet is still here when the
+/// form opens a moment later. The Docs tab invalidates it when a new add
+/// starts, and the form invalidates it when it closes.
+@Riverpod(keepAlive: true)
 class DocumentUploadNotifier extends _$DocumentUploadNotifier {
   @override
-  DocumentUploadState build() => const DocumentUploadState();
+  DocumentUploadState build() {
+    // Smart scan told to keep going in the background: fill the form in when
+    // it lands, unless the user got there first.
+    ref.listen(scanReadingProvider, (previous, next) {
+      final landed = next.isDone && !(previous?.isDone ?? false);
+      if (landed && state.hasFile && state.scanFilled.isEmpty) {
+        applyScanResult(next.result);
+      }
+    });
+    return const DocumentUploadState();
+  }
 
-  // ── File ─────────────────────────────────────────────────────────────────
+  // ── File ───────────────────────────────────────────────────────────────────
 
-  /// Called from the upload screen after the user picks a file.
-  ///
-  /// Stores the file and derived metadata, then starts at [DocumentUploadStep.category].
-  void setFile(File file, String mimeType, String suggestedName) {
-    state = DocumentUploadState(
+  /// A file from the library or the Files app.
+  void setPickedFile({
+    required File file,
+    required String mimeType,
+    required int sizeBytes,
+    required String name,
+    File? previewFile,
+  }) {
+    // A renewal keeps the name it started with; the file's name is not it.
+    state = _withoutFile().copyWith(
       file: file,
       mimeType: mimeType,
-      suggestedName: suggestedName,
-      name: suggestedName,
+      fileSizeBytes: sizeBytes,
+      fileLabel: name,
+      previewFile: previewFile,
+      name: state.isRenewal ? state.name : name,
     );
   }
 
-  // ── Step 1 ───────────────────────────────────────────────────────────────
+  /// The pages from the camera, combined into one file.
+  void setScan(ScanOutcome scan, {required String label}) {
+    state = _withoutFile().copyWith(
+      file: scan.file,
+      mimeType: scan.mimeType,
+      fileSizeBytes: scan.sizeBytes,
+      pageCount: scan.pageCount,
+      fileLabel: label,
+      previewFile: scan.previewFile,
+    );
+  }
 
-  /// Stores the selected category and advances to metadata step.
-  void selectCategory(String categoryId, {String? documentTypeId}) {
+  /// "Remove file": back to an empty form. A renewal keeps what it carried
+  /// over from the old document.
+  void removeFile() => state = _withoutFile();
+
+  /// The form with no file. An ordinary add starts over; a renewal keeps its
+  /// fields so picking a file never wipes them.
+  DocumentUploadState _withoutFile() {
+    if (!state.isRenewal) return const DocumentUploadState();
+    return state.copyWith(
+      file: null,
+      mimeType: null,
+      fileSizeBytes: null,
+      pageCount: 1,
+      fileLabel: '',
+      previewFile: null,
+      expirationFoundOnPage: null,
+      scanFilled: const {},
+      scanDetailCount: 0,
+    );
+  }
+
+  /// Starts the form as a renewal of [source]: name, category, tags and link
+  /// come from the old document, the new end date is left empty and required,
+  /// notes stay empty. Smart scan never overwrites what was carried over.
+  /// Does nothing when this renewal is already applied.
+  void applyRenewal(RenewalSource source) {
+    if (state.renewal?.id == source.id) return;
     state = state.copyWith(
-      categoryId: categoryId,
-      documentTypeId: documentTypeId,
+      renewal: source,
+      name: source.name,
+      categoryId: source.categoryId,
+      categoryName: source.categoryName,
+      tags: source.tags,
+      link: source.link,
+      notes: '',
+      expiresChoice: true,
+      expirationDate: null,
+      edited: {
+        ...state.edited,
+        UploadField.name,
+        UploadField.category,
+        UploadField.link,
+      },
     );
   }
 
-  void advanceToMetadata() {
-    state = state.copyWith(step: DocumentUploadStep.metadata);
-  }
-
-  // ── Step 2 ───────────────────────────────────────────────────────────────
-
-  void setName(String value) => state = state.copyWith(name: value);
-  void setExpirationDate(DateTime? value) =>
-      state = state.copyWith(expirationDate: value);
-  void setNotes(String? value) => state = state.copyWith(notes: value);
-
-  // ── Navigation ───────────────────────────────────────────────────────────
-
-  void goBack() {
-    switch (state.step) {
-      case DocumentUploadStep.metadata:
-        state = state.copyWith(step: DocumentUploadStep.category);
-      case DocumentUploadStep.uploading:
-      case DocumentUploadStep.success:
-      case DocumentUploadStep.category:
-        break;
-    }
-  }
-
-  // ── Upload ───────────────────────────────────────────────────────────────
-
-  /// Validates metadata, checks the free tier limit, then uploads the file.
-  ///
-  /// On success, invalidates [DocumentsNotifier] so the list refreshes.
-  /// On failure, sets [DocumentUploadState.errorMessage] and stays on the
-  /// progress step so the user can retry.
-  Future<void> upload() async {
-    final file = state.file;
-    if (file == null) return;
-
-    state = state.copyWith(
-      step: DocumentUploadStep.uploading,
-      errorMessage: null,
-      uploadProgress: 0.0,
-    );
-
+  /// Fills the form from what smart scan found, leaving anything the user has
+  /// already changed alone.
+  Future<void> applyScanResult(OcrResult result) async {
+    List<DocumentCategory> categories = const [];
     try {
-      final client = SupabaseService.client;
-      final user = client.auth.currentUser;
-      if (user == null) throw Exception('Not signed in');
+      categories = await ref.read(documentCategoriesProvider.future);
+    } catch (_) {
+      // No categories: the category is simply not filled in.
+    }
+    if (!ref.mounted) return;
+    var next = state;
+    final filled = <UploadField>{...next.scanFilled};
+    bool open(UploadField f) => !next.edited.contains(f);
 
-      // ── 1. Resolve property ──────────────────────────────────────────────
-      state = state.copyWith(uploadProgress: 0.05);
-      final propertyRow = await client
-          .from('properties')
-          .select('id')
-          .eq('user_id', user.id)
-          .isFilter('deleted_at', null)
-          .order('created_at', ascending: false)
-          .limit(1)
-          .maybeSingle();
+    if (result.name != null && open(UploadField.name)) {
+      next = next.copyWith(name: result.name!);
+      filled.add(UploadField.name);
+    }
+    final category = _match(categories, result.categoryName);
+    if (category != null && open(UploadField.category)) {
+      next = next.copyWith(
+        categoryId: category.id,
+        categoryName: category.name,
+      );
+      filled.add(UploadField.category);
+    }
+    if (result.expirationDate != null && open(UploadField.expiration)) {
+      next = next.copyWith(
+        expirationDate: result.expirationDate,
+        expirationFoundOnPage: result.expirationPage,
+        expiresChoice: true,
+      );
+      filled.add(UploadField.expiration);
+    }
+    final link = result.link;
+    if (link != null && open(UploadField.link)) {
+      next = next.copyWith(
+        link: (
+          id: link.id,
+          isAppliance: link.isAppliance,
+          name: link.name,
+          detail: link.matchedOn == null ? null : 'Matched ${link.matchedOn}',
+        ),
+      );
+      filled.add(UploadField.link);
+    }
+    state = next.copyWith(
+      scanFilled: filled,
+      scanDetailCount: result.detailCount,
+    );
+  }
 
-      if (propertyRow == null) throw Exception('No property found');
-      final propertyId = propertyRow['id'] as String;
+  DocumentCategory? _match(List<DocumentCategory> all, String? name) {
+    if (name == null) return null;
+    final wanted = name.trim().toLowerCase();
+    for (final c in all) {
+      if (c.name.toLowerCase() == wanted) return c;
+    }
+    return null;
+  }
 
-      // ── 2. Free-tier gate ─────────────────────────────────────────────────
-      state = state.copyWith(uploadProgress: 0.1);
-      final countResponse = await client
-          .from('documents')
-          .select('id')
-          .eq('property_id', propertyId)
-          .isFilter('deleted_at', null);
+  // ── Fields ─────────────────────────────────────────────────────────────────
 
-      if (countResponse.length >= _freeDocumentLimit) {
-        throw _FreeTierException();
-      }
+  /// Picks the category the form starts on once categories are known.
+  void useDefaultCategory(List<DocumentCategory> categories) {
+    if (state.categoryId != null || categories.isEmpty) return;
+    final fallback = categories.firstWhere(
+      (c) => c.name.toLowerCase() == 'other',
+      orElse: () => categories.first,
+    );
+    state = state.copyWith(
+      categoryId: fallback.id,
+      categoryName: fallback.name,
+    );
+  }
 
-      // ── 3. Compress image if needed ──────────────────────────────────────
-      state = state.copyWith(uploadProgress: 0.2);
-      final uploadFile = await _prepareFile(file, state.mimeType);
+  void setName(String value) =>
+      state = _touch(state.copyWith(name: value), UploadField.name);
 
-      // ── 4. Upload to Supabase Storage ────────────────────────────────────
-      state = state.copyWith(uploadProgress: 0.4);
-      final ext = _extensionFromMime(state.mimeType);
-      final storagePath =
-          '${user.id}/$propertyId/${const Uuid().v4()}$ext';
+  void selectCategory(DocumentCategory category) => state = _touch(
+    state.copyWith(categoryId: category.id, categoryName: category.name),
+    UploadField.category,
+  );
 
-      final bytes = await uploadFile.readAsBytes();
-      await client.storage
-          .from('documents')
-          .uploadBinary(
-            storagePath,
-            bytes,
-            fileOptions: FileOptions(contentType: state.mimeType ?? 'application/octet-stream'),
-          );
+  void setExpires(bool value) => state = _touch(
+    state.copyWith(
+      expiresChoice: value,
+      expirationDate: value ? state.expirationDate : null,
+    ),
+    UploadField.expiration,
+  );
 
-      // ── 5. Insert document row ────────────────────────────────────────────
-      state = state.copyWith(uploadProgress: 0.8);
-      final trimmedNotes =
-          state.notes?.trim().isEmpty == true ? null : state.notes?.trim();
+  void setExpirationDate(DateTime value) => state = _touch(
+    state.copyWith(expirationDate: value),
+    UploadField.expiration,
+  );
 
-      final response = await client
-          .from('documents')
-          .insert({
-            'property_id': propertyId,
-            'user_id': user.id,
-            'name': state.name.trim(),
-            'category_id': state.categoryId,
-            'document_type_id': state.documentTypeId,
-            'file_path': storagePath,
-            'file_size_bytes': await file.length(),
-            'mime_type': state.mimeType,
-            'expiration_date': state.expirationDate?.toIso8601String(),
-            'notes': trimmedNotes,
-            'ocr_status': 'pending',
-          })
-          .select(
-            'id, name, category_id, document_type_id, created_at, updated_at, '
-            'expiration_date, thumbnail_path, file_path, file_size_bytes, '
-            'mime_type, page_count, ocr_status, notes, linked_system_id, '
-            'linked_appliance_id',
-          )
-          .single();
+  void setLink(UploadLink? link) =>
+      state = _touch(state.copyWith(link: link), UploadField.link);
 
-      // ── 6. Trigger OCR (fire-and-forget) ─────────────────────────────────
-      _triggerOcr(response['id'] as String);
+  void setNotes(String value) => state = state.copyWith(notes: value);
 
-      // ── 7. Success ────────────────────────────────────────────────────────
-      state = state.copyWith(uploadProgress: 1.0);
+  /// Adds a tag: trimmed, not empty, not a repeat, within the limits.
+  /// Returns false when it was not added.
+  bool addTag(String raw) {
+    final tag = raw.replaceAll(',', ' ').trim();
+    final tooMany = state.tags.length >= AuroraUploadRules.maxTags;
+    final duplicate = state.tags.any(
+      (t) => t.toLowerCase() == tag.toLowerCase(),
+    );
+    if (tag.isEmpty ||
+        tag.length > AuroraUploadRules.maxTagLength ||
+        tooMany ||
+        duplicate) {
+      return false;
+    }
+    state = state.copyWith(tags: [...state.tags, tag]);
+    return true;
+  }
 
-      final doc = Document.fromJson({
-        ...response,
-        'user_id': user.id,
-        'property_id': propertyId,
-        'metadata': <String, dynamic>{},
-      });
+  void removeTag(String tag) =>
+      state = state.copyWith(tags: [...state.tags]..remove(tag));
 
-      state = state.copyWith(
-        step: DocumentUploadStep.success,
-        uploadedDocument: doc,
+  /// A change by the user: the field no longer shows smart scan's value.
+  DocumentUploadState _touch(DocumentUploadState next, UploadField field) =>
+      next.copyWith(
+        edited: {...next.edited, field},
+        scanFilled: {...next.scanFilled}..remove(field),
       );
 
-      // Refresh the documents list.
-      ref.invalidate(documentsProvider);
-    } on _FreeTierException {
+  // ── Save ───────────────────────────────────────────────────────────────────
+
+  /// Uploads the file and creates the document. On failure the form stays as
+  /// it was, with [DocumentUploadState.failure] set, so Save can be tried again.
+  Future<void> submit() async {
+    final file = state.file;
+    final categoryId = state.categoryId;
+    if (!state.canSave ||
+        state.isSaving ||
+        file == null ||
+        categoryId == null) {
+      return;
+    }
+    final repository = ref.read(documentUploadRepositoryProvider);
+    final enforceLimit = !ref.read(isPremiumProvider);
+    final link = state.link;
+    final renewal = state.renewal;
+    final renewals = ref.read(documentRenewalRepositoryProvider);
+
+    state = state.copyWith(
+      phase: UploadPhase.uploading,
+      progress: 0,
+      failure: null,
+    );
+    try {
+      final saved = await repository.upload(
+        DocumentUploadRequest(
+          file: file,
+          mimeType: state.mimeType ?? 'application/octet-stream',
+          name: state.name,
+          categoryId: categoryId,
+          pageCount: state.pageCount,
+          tags: state.tags,
+          expirationDate: state.expires ? state.expirationDate : null,
+          notes: state.notes,
+          linkedSystemId: link != null && !link.isAppliance ? link.id : null,
+          linkedApplianceId: link != null && link.isAppliance ? link.id : null,
+        ),
+        enforceFreeLimit: enforceLimit,
+        onProgress: (progress) {
+          if (ref.mounted) state = state.copyWith(progress: progress);
+        },
+      );
+      if (!ref.mounted) return;
+      final markFailed =
+          renewal != null &&
+          !await _markReplaced(renewals, renewal.id, saved.id);
+      if (!ref.mounted) return;
       state = state.copyWith(
-        step: DocumentUploadStep.metadata,
-        errorMessage: 'free_tier',
+        phase: UploadPhase.success,
+        progress: 1,
+        uploadedDocument: saved,
+        renewalMarkFailed: markFailed,
+      );
+      ref.invalidate(documentsProvider);
+      ref.invalidate(documentCategoryCountsProvider);
+      ref.invalidate(docsTabProvider);
+      ref.invalidate(expiringDocumentsProvider);
+      if (renewal != null) {
+        ref.invalidate(documentDetailProvider(renewal.id));
+        ref.invalidate(documentSearchProvider);
+      }
+    } on DocumentLimitException {
+      if (!ref.mounted) return;
+      state = state.copyWith(
+        phase: UploadPhase.editing,
+        failure: UploadFailure.limitReached,
       );
     } catch (_) {
+      if (!ref.mounted) return;
       state = state.copyWith(
-        step: DocumentUploadStep.uploading,
-        errorMessage: 'Upload failed. Please try again.',
+        phase: UploadPhase.editing,
+        failure: UploadFailure.generic,
       );
     }
   }
 
-  /// Retries a failed upload. Resets progress and re-runs [upload].
-  Future<void> retryUpload() async {
-    state = state.copyWith(errorMessage: null, uploadProgress: 0.0);
-    await upload();
-  }
-
-  // ── Helpers ──────────────────────────────────────────────────────────────
-
-  /// Compresses HEIC/JPEG images. Returns original file for PDFs.
-  Future<File> _prepareFile(File file, String? mimeType) async {
-    if (mimeType == null || mimeType.startsWith('application/')) return file;
-
-    final bytes = await file.length();
-    const maxBytes = 2 * 1024 * 1024; // 2 MB
-    if (bytes <= maxBytes) return file;
-
-    final dir = await getTemporaryDirectory();
-    final targetPath =
-        '${dir.path}/upload_${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-    final xFile = await FlutterImageCompress.compressAndGetFile(
-      file.absolute.path,
-      targetPath,
-      quality: 80,
-      minWidth: 1920,
-      minHeight: 1920,
-    );
-
-    return xFile != null ? File(xFile.path) : file;
-  }
-
-  String _extensionFromMime(String? mime) {
-    switch (mime) {
-      case 'application/pdf':
-        return '.pdf';
-      case 'image/jpeg':
-        return '.jpg';
-      case 'image/png':
-        return '.png';
-      case 'image/heic':
-        return '.heic';
-      default:
-        return '';
+  /// Marks the renewed document replaced. A secondary write: the new document
+  /// is already saved, so a failure is reported as false, never thrown.
+  Future<bool> _markReplaced(
+    DocumentRenewalRepository renewals,
+    String oldId,
+    String newId,
+  ) async {
+    try {
+      await renewals.markReplaced(
+        documentId: oldId,
+        replacedById: newId,
+        on: DateTime.now(),
+      );
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 
-  /// Fire-and-forget OCR trigger via Supabase Edge Function.
-  void _triggerOcr(String documentId) {
-    SupabaseService.client.functions
-        .invoke('process-document-ocr', body: {'document_id': documentId})
-        .ignore();
-  }
+  /// Clears a shown failure so it is not reported twice.
+  void clearFailure() => state = state.copyWith(failure: null);
 }
-
-class _FreeTierException implements Exception {}

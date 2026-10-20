@@ -1,354 +1,300 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/router/app_router.dart';
 import '../../../core/theme/aurora_colors.dart';
-import '../../../core/theme/aurora_radius.dart';
+import '../../../core/theme/aurora_docs_a.dart';
+import '../../../core/theme/aurora_scale.dart';
+import '../../../core/theme/aurora_sizes.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
-import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/aurora/aurora_pressable.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/snackbar_service.dart';
+import '../../../core/widgets/upgrade_sheet.dart';
+import '../../../services/providers/service_providers.dart';
+import '../categories_copy.dart';
+import '../models/category_icons.dart';
+import '../models/category_lists.dart';
 import '../models/document_category.dart';
+import '../providers/docs_tab_provider.dart';
 import '../providers/document_categories_provider.dart';
-import '../widgets/category_form_sheet.dart';
-import '../widgets/category_list_skeleton.dart';
+import '../providers/documents_provider.dart';
+import '../widgets/category_form_sheet.dart' show CategoryFormSheet;
+import '../widgets/categories/categories_skeleton.dart';
+import '../widgets/categories/category_add_section.dart';
+import '../widgets/categories/category_list_card.dart';
+import '../widgets/categories/premium_badge.dart';
+import '../widgets/categories/standard_categories_card.dart';
+import '../widgets/docs_scroll_page.dart';
 
-/// Screen for managing document categories.
-///
-/// Accessible from the Documents overflow menu. Displays read-only system
-/// categories and editable custom categories.
-class DocumentCategoriesScreen extends ConsumerWidget {
+/// "Your categories" (kit: DocCategories): make, rename, reorder and delete
+/// custom document categories. Deleting never deletes documents; they move to
+/// a standard category.
+class DocumentCategoriesScreen extends ConsumerStatefulWidget {
   const DocumentCategoriesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    return isIOS
-        ? const _IOSCategoriesLayout()
-        : const _AndroidCategoriesLayout();
-  }
+  ConsumerState<DocumentCategoriesScreen> createState() =>
+      _DocumentCategoriesScreenState();
 }
 
-// ── iOS layout ────────────────────────────────────────────────────────────────
+class _DocumentCategoriesScreenState
+    extends ConsumerState<DocumentCategoriesScreen> {
+  final TextEditingController _name = TextEditingController();
+  String _icon = CategoryIcons.defaultKey;
 
-class _IOSCategoriesLayout extends ConsumerWidget {
-  const _IOSCategoriesLayout();
+  /// The category whose delete panel is open, and where its documents go.
+  String? _confirmingId;
+  String? _moveToId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final categoriesState = ref.watch(documentCategoriesProvider);
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
 
-    return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: const Text('Categories'),
-        trailing: CupertinoButton(
-          padding: EdgeInsets.zero,
-          onPressed: () => _openCreate(context),
-          child: const Icon(CupertinoIcons.add),
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            CupertinoSliverRefreshControl(
-              onRefresh: () async => ref.invalidate(documentCategoriesProvider),
-            ),
-            if (categoriesState.isLoading)
-              const SliverFillRemaining(child: CategoryListSkeleton())
-            else if (categoriesState.hasError)
-              SliverFillRemaining(
-                child: ErrorView(
-                  message: "Couldn't load categories.",
-                  onRetry: () => ref.invalidate(documentCategoriesProvider),
-                ),
-              )
-            else
-              SliverToBoxAdapter(
-                child: _CategoryList(categories: categoriesState.value ?? []),
-              ),
-          ],
-        ),
-      ),
+  bool get _hasName => _name.text.trim().isNotEmpty;
+
+  /// Other views show category names and counts; they refetch after a change.
+  void _refreshDocumentViews() {
+    ref.invalidate(documentCategoryCountsProvider);
+    ref.invalidate(docsTabProvider);
+    ref.invalidate(documentsProvider);
+  }
+
+  Future<void> _refresh() async {
+    ref.invalidate(documentCategoriesProvider);
+    ref.invalidate(documentCategoryCountsProvider);
+    try {
+      await ref.read(documentCategoriesProvider.future);
+    } catch (_) {
+      // The error state is shown by build().
+    }
+  }
+
+  void _back() =>
+      context.canPop() ? context.pop() : context.go(AppRoutes.documents);
+
+  Future<void> _add(CategoryLists lists) async {
+    if (!ref.read(isPremiumProvider)) {
+      await UpgradeSheet.show(context, config: CategoriesCopy.premiumSheet);
+      return;
+    }
+    final name = _name.text.trim();
+    if (name.isEmpty || !lists.canAddMore) return;
+    final notifier = ref.read(documentCategoriesProvider.notifier);
+    try {
+      await notifier.create(name: name, icon: _icon);
+      if (!mounted) return;
+      setState(_name.clear);
+    } catch (_) {
+      if (mounted) SnackbarService.showError(context, CategoriesCopy.addFailed);
+    }
+  }
+
+  void _toggleDelete(DocumentCategory category, CategoryLists lists) {
+    setState(() {
+      final open = _confirmingId == category.id;
+      _confirmingId = open ? null : category.id;
+      _moveToId = lists.defaultMoveTarget?.id;
+    });
+  }
+
+  Future<void> _confirmDelete(DocumentCategory category) async {
+    final notifier = ref.read(documentCategoriesProvider.notifier);
+    final moveToId = _moveToId;
+    setState(() => _confirmingId = null);
+    try {
+      final deleted = await notifier.deleteCategory(
+        category.id,
+        moveToId: moveToId,
+      );
+      _refreshDocumentViews();
+      if (!mounted) return;
+      SnackbarService.showUndo(
+        context,
+        message: CategoriesCopy.deleted,
+        subtitle: category.name,
+        onUndo: () async {
+          try {
+            await notifier.restoreCategory(deleted);
+            _refreshDocumentViews();
+          } catch (_) {
+            // The screen may have closed; the next refresh shows the truth.
+          }
+        },
+      );
+    } catch (_) {
+      if (mounted) {
+        SnackbarService.showError(context, CategoriesCopy.deleteFailed);
+      }
+    }
+  }
+
+  Future<void> _edit(DocumentCategory category) {
+    final notifier = ref.read(documentCategoriesProvider.notifier);
+    return CategoryFormSheet.show(
+      context,
+      category: category,
+      onSave: (name, icon) async {
+        await notifier.updateCategory(
+          category.id,
+          name: name,
+          icon: icon,
+          color: category.color,
+        );
+        _refreshDocumentViews();
+      },
     );
   }
 
-  void _openCreate(BuildContext context) => showCategoryFormSheet(context);
-}
-
-// ── Android layout ────────────────────────────────────────────────────────────
-
-class _AndroidCategoriesLayout extends ConsumerWidget {
-  const _AndroidCategoriesLayout();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final categoriesState = ref.watch(documentCategoriesProvider);
-
-    return Scaffold(
-      backgroundColor: AuroraColors.paper,
-      appBar: AppBar(
-        title: Text('Categories', style: AuroraType.h3),
-        backgroundColor: AuroraColors.paper,
-        scrolledUnderElevation: 0,
-        elevation: 0,
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AuroraColors.coral,
-        foregroundColor: AuroraColors.paper,
-        onPressed: () => showCategoryFormSheet(context),
-        child: const Icon(Icons.add),
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async => ref.invalidate(documentCategoriesProvider),
-        child: categoriesState.when(
-          loading: () => const CategoryListSkeleton(),
-          error: (e, _) => ErrorView(
-            message: "Couldn't load categories.",
-            onRetry: () => ref.invalidate(documentCategoriesProvider),
-          ),
-          data: (categories) => _CategoryList(categories: categories),
-        ),
-      ),
-    );
+  Future<void> _reorder(int oldIndex, int newIndex) async {
+    final notifier = ref.read(documentCategoriesProvider.notifier);
+    try {
+      await notifier.reorderCustom(oldIndex, newIndex);
+    } catch (_) {
+      if (mounted) {
+        SnackbarService.showError(context, CategoriesCopy.reorderFailed);
+      }
+    }
   }
-}
-
-// ── Category list ─────────────────────────────────────────────────────────────
-
-class _CategoryList extends StatelessWidget {
-  const _CategoryList({required this.categories});
-
-  final List<DocumentCategory> categories;
 
   @override
   Widget build(BuildContext context) {
-    final system = categories.where((c) => c.isSystem).toList();
-    final custom = categories.where((c) => !c.isSystem).toList();
+    final categories = ref.watch(documentCategoriesProvider);
+    final data = categories.value;
 
-    return ListView(
-      padding: const EdgeInsets.all(AuroraSpacing.screenPadH),
-      physics: const AlwaysScrollableScrollPhysics(),
+    return Scaffold(
+      backgroundColor: AuroraColors.paper,
+      body: DocsScrollPage(
+        onRefresh: _refresh,
+        topPadding: AuroraSpacing.screenPadTop,
+        fillRemaining: data == null,
+        child: data != null
+            ? _body(context, CategoryLists(data))
+            : categories.hasError
+            ? ErrorView(
+                message: CategoriesCopy.loadError,
+                onRetry: () => ref.invalidate(documentCategoriesProvider),
+              )
+            : const CategoriesSkeleton(),
+      ),
+    );
+  }
+
+  Widget _body(BuildContext context, CategoryLists lists) {
+    final a = context.aurora;
+    final isPremium = ref.watch(isPremiumProvider);
+    final counts = ref.watch(documentCategoryCountsProvider).value ?? const {};
+    final gap = SizedBox(height: a.of(AuroraSpacing.space9));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SectionHeader(label: 'System'),
-        ...system.map((cat) => _CategoryRow(category: cat)),
-        const SizedBox(height: AuroraSpacing.space7),
-        _SectionHeader(label: 'Custom'),
-        if (custom.isEmpty)
-          const EmptyState(
-            icon: CupertinoIcons.folder,
-            title: 'No custom categories',
-            subtitle:
-                'Create your own categories to organize documents.',
+        _BackLink(onTap: _back),
+        SizedBox(height: a.of(AuroraSpacing.space1)),
+        const _Header(),
+        SizedBox(height: a.of(AuroraSpacing.space6)),
+        Text(CategoriesCopy.intro, style: AuroraDocsAType.intro),
+        gap,
+        Text(
+          CategoriesCopy.yours(lists.custom.length, CategoryLists.maxCustom),
+          style: AuroraType.label,
+        ),
+        if (lists.custom.isNotEmpty) ...[
+          SizedBox(height: a.of(AuroraSpacing.space3)),
+          CategoryListCard(
+            categories: lists.custom,
+            counts: counts,
+            confirmingId: _confirmingId,
+            moveTargets: [
+              for (final c in lists.moveTargets) (id: c.id, name: c.name),
+            ],
+            selectedMoveId: _moveToId,
+            onReorder: _reorder,
+            onEdit: _edit,
+            onDelete: (c) => _toggleDelete(c, lists),
+            onPickMove: (id) => setState(() => _moveToId = id),
+            onKeep: () => setState(() => _confirmingId = null),
+            onConfirmDelete: _confirmDelete,
           ),
-        ...custom.map((cat) => _CategoryRow(category: cat)),
+        ],
+        gap,
+        CategoryAddSection(
+          controller: _name,
+          icon: _icon,
+          canAdd: !isPremium || (_hasName && lists.canAddMore),
+          onNameChanged: (_) => setState(() {}),
+          onIconSelected: (key) => setState(() => _icon = key),
+          onAdd: () => _add(lists),
+        ),
+        gap,
+        StandardCategoriesCard(names: [for (final c in lists.standard) c.name]),
       ],
     );
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.label});
+class _BackLink extends StatelessWidget {
+  const _BackLink({required this.onTap});
 
-  final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AuroraSpacing.space5),
-      child: Row(
-        children: [
-          // Small cobalt dot — categories is an action surface.
-          Container(
-            width: 7,
-            height: 7,
-            margin: const EdgeInsets.only(right: 6),
-            decoration: const BoxDecoration(
-              color: AuroraColors.cobalt,
-              shape: BoxShape.circle,
+    final a = context.aurora;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: AuroraPressable(
+        onTap: onTap,
+        semanticLabel: CategoriesCopy.back,
+        enforceTouchTarget: true,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.chevron_left,
+              size: a.of(AuroraIconSizes.xl),
+              color: AuroraColors.ink,
             ),
-          ),
-          Text(
-            label.toUpperCase(),
-            style: AuroraType.label.copyWith(
-              color: AuroraColors.inkSecondary,
+            Flexible(
+              child: Text(
+                CategoriesCopy.back,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AuroraDocsAType.back,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-// ── Category row ──────────────────────────────────────────────────────────────
-
-class _CategoryRow extends ConsumerWidget {
-  const _CategoryRow({required this.category});
-
-  final DocumentCategory category;
-
-  static Color _fromHex(String hex) {
-    final clean = hex.replaceFirst('#', '');
-    return Color(int.parse('FF$clean', radix: 16));
-  }
+class _Header extends StatelessWidget {
+  const _Header();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 56),
-        decoration: BoxDecoration(
-          color: AuroraColors.butter,
-          borderRadius: AuroraRadius.lg,
-        ),
-        child: Row(
+  Widget build(BuildContext context) {
+    final a = context.aurora;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: a.of(AuroraSpacing.space2),
+          runSpacing: a.of(AuroraSpacing.space1),
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            const SizedBox(width: AuroraSpacing.space5),
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: _fromHex(category.color),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                CategoryIcons.forKey(category.icon),
-                size: 16,
-                color: AuroraColors.paper,
-              ),
-            ),
-            const SizedBox(width: AuroraSpacing.space5),
-            Expanded(
-              child: Text(
-                category.name,
-                style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            if (!category.isSystem) ...[
-              if (isIOS) ...[
-                CupertinoButton(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AuroraSpacing.space3,
-                  ),
-                  onPressed: () => _openEdit(context),
-                  child: const Icon(
-                    CupertinoIcons.pencil,
-                    size: 20,
-                    color: AuroraColors.ink,
-                  ),
-                ),
-                CupertinoButton(
-                  padding: EdgeInsets.only(
-                    left: AuroraSpacing.space1,
-                    right: AuroraSpacing.space5,
-                  ),
-                  onPressed: () => _confirmDelete(context, ref),
-                  child: const Icon(
-                    CupertinoIcons.trash,
-                    size: 20,
-                    color: AuroraColors.coral,
-                  ),
-                ),
-              ] else ...[
-                IconButton(
-                  onPressed: () => _openEdit(context),
-                  icon: const Icon(Icons.edit_outlined),
-                  color: AuroraColors.ink,
-                  iconSize: 20,
-                ),
-                IconButton(
-                  onPressed: () => _confirmDelete(context, ref),
-                  icon: const Icon(Icons.delete_outline),
-                  color: AuroraColors.coral,
-                  iconSize: 20,
-                  padding: const EdgeInsets.only(right: AuroraSpacing.space5),
-                ),
-              ],
-            ] else
-              const SizedBox(width: AuroraSpacing.space5),
+            Text(CategoriesCopy.eyebrow, style: AuroraType.label),
+            const PremiumBadge(),
           ],
         ),
-      ),
+        SizedBox(height: a.of(AuroraSpacing.space2)),
+        Text(CategoriesCopy.title, style: AuroraDocsAType.pageTitle),
+      ],
     );
-  }
-
-  void _openEdit(BuildContext context) =>
-      showCategoryFormSheet(context, existing: category);
-
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    bool confirmed = false;
-
-    if (isIOS) {
-      await showCupertinoDialog<void>(
-        context: context,
-        builder: (ctx) => CupertinoAlertDialog(
-          title: const Text('Delete Category'),
-          content: const Text(
-            'Documents in this category will be moved to Uncategorized. Continue?',
-          ),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cancel'),
-            ),
-            CupertinoDialogAction(
-              isDestructiveAction: true,
-              onPressed: () {
-                confirmed = true;
-                Navigator.of(ctx).pop();
-              },
-              child: const Text('Delete'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      await showDialog<void>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Delete Category'),
-          content: const Text(
-            'Documents in this category will be moved to Uncategorized. Continue?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                confirmed = true;
-                Navigator.of(ctx).pop();
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: AuroraColors.coral,
-              ),
-              child: const Text('Delete'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (!confirmed) return;
-    if (!context.mounted) return;
-
-    try {
-      await ref
-          .read(documentCategoriesProvider.notifier)
-          .deleteCategory(category.id);
-    } catch (_) {
-      if (context.mounted) {
-        SnackbarService.showError(
-            context, 'Failed to delete category. Please try again.');
-      }
-    }
   }
 }
