@@ -9,8 +9,8 @@ import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_typography.dart';
 import '../../../core/widgets/aurora/aurora.dart';
 import '../../../core/widgets/trial_banner.dart';
-import '../../../features/maintenance/widgets/overdue_banner.dart';
-import '../../../features/maintenance/widgets/task_card.dart';
+import '../../../features/maintenance/widgets/tasks_tab/task_list_card.dart';
+import '../../../features/maintenance/widgets/tasks_tab/task_row_tile.dart';
 import '../providers/dashboard_provider.dart';
 
 /// Home tab root screen — Aurora Design System v2.0.
@@ -102,7 +102,13 @@ class HomeScreen extends ConsumerWidget {
                     AuroraSpacing.screenPadH,
                     0,
                   ),
-                  child: OverdueBanner(overdueTasks: data.overdueTasks),
+                  child: TaskListCard(
+                    overdue: true,
+                    children: [
+                      for (final task in data.overdueTasks)
+                        TaskRowTile(key: ValueKey(task.id), task: task),
+                    ],
+                  ),
                 ),
               ),
 
@@ -512,14 +518,11 @@ class _ComingUpSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AuroraSpacing.space3),
-        ListView.separated(
-          shrinkWrap: true,
-          padding: EdgeInsets.zero,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: data.upcomingTasks.length,
-          separatorBuilder: (_, _) =>
-              const SizedBox(height: AuroraSpacing.space2),
-          itemBuilder: (_, index) => TaskCard(task: data.upcomingTasks[index]),
+        TaskListCard(
+          children: [
+            for (final task in data.upcomingTasks)
+              TaskRowTile(key: ValueKey(task.id), task: task),
+          ],
         ),
       ],
     );

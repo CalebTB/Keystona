@@ -15,6 +15,8 @@ import '../../../core/theme/aurora_typography.dart';
 import '../../../services/supabase_service.dart';
 import '../../maintenance/models/maintenance_task.dart';
 import '../../maintenance/providers/maintenance_tasks_provider.dart';
+import '../../maintenance/repositories/task_rows.dart';
+import '../../maintenance/services/reminder_switch.dart';
 
 /// Displays and manages maintenance tasks linked to a specific system or
 /// appliance. Accessible from the Tasks quick-action cell on detail screens.
@@ -78,7 +80,7 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
   Future<void> _toggleTask(MaintenanceTask task, bool enabled) async {
     await ref.read(maintenanceTasksProvider.notifier).updateTask(
       task.id,
-      {'notifications_enabled': enabled},
+      ReminderSwitch.columns(enabled: enabled),
     );
   }
 
@@ -139,10 +141,10 @@ class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
     if (!confirmed || !mounted) return;
 
     try {
-      await SupabaseService.client
-          .from('maintenance_tasks')
-          .update({'deleted_at': DateTime.now().toIso8601String()})
-          .eq('id', task.id);
+      await SupabaseService.client.rpc(
+        TaskRpc.softDelete,
+        params: TaskRpc.args(task.id),
+      );
       if (!mounted) return;
       ref.invalidate(maintenanceTasksProvider);
     } catch (_) {

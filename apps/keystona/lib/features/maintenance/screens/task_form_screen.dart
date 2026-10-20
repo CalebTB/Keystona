@@ -1,1193 +1,248 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/theme/aurora_colors.dart';
-import '../../../core/theme/aurora_radius.dart';
-import '../../../core/theme/aurora_spacing.dart';
-import '../../../core/theme/aurora_typography.dart';
-import '../../../core/widgets/aurora/aurora.dart';
+import '../../../core/theme/aurora_scale.dart';
+import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/snackbar_service.dart';
-import '../../../services/supabase_service.dart';
 import '../models/maintenance_task.dart';
+import '../models/task_draft.dart';
+import '../models/task_form_options.dart';
+import '../models/task_link_option.dart';
+import '../providers/reminders_providers.dart';
 import '../providers/maintenance_tasks_provider.dart';
 import '../providers/task_detail_provider.dart';
 import '../providers/task_form_providers.dart';
+import '../repositories/task_form_repository.dart';
+import '../task_form_copy.dart';
+import '../widgets/form/task_form_body.dart';
+import '../widgets/form/task_form_header.dart';
+import '../widgets/form/task_form_skeleton.dart';
 
-// ── Task category catalog ─────────────────────────────────────────────────────
-
-/// Predefined task category values stored in the `category` TEXT column.
+/// Add a task (kit: AddTask), and the same form to edit one.
 ///
-/// Matches the values used in maintenance templates and the DB schema comment.
-abstract final class TaskCategories {
-  static const all = [
-    (value: 'hvac', label: 'HVAC'),
-    (value: 'plumbing', label: 'Plumbing'),
-    (value: 'exterior', label: 'Exterior'),
-    (value: 'interior', label: 'Interior'),
-    (value: 'safety', label: 'Safety'),
-    (value: 'seasonal', label: 'Seasonal'),
-    (value: 'electrical', label: 'Electrical'),
-    (value: 'landscaping', label: 'Landscaping'),
-    (value: 'appliance', label: 'Appliance'),
-    (value: 'other', label: 'Other'),
-  ];
-
-  static String labelFor(String value) =>
-      all.firstWhere((c) => c.value == value, orElse: () => (value: value, label: value)).label;
-}
-
-// ── Main screen ───────────────────────────────────────────────────────────────
-
-/// Full-screen form for creating or editing a custom maintenance task.
-///
-/// - Create mode: pass [existingTask] = null. The form starts blank with
-///   sensible defaults and inserts a new row on save.
-/// - Edit mode: pass [existingTask]. All fields are pre-populated and the
-///   existing row is updated on save.
+/// - Create: nothing passed; saves a new task for the home.
+/// - Edit: pass [existingTask], or only its [taskId] to load it.
 class TaskFormScreen extends ConsumerStatefulWidget {
-  const TaskFormScreen({super.key, this.existingTask});
+  const TaskFormScreen({super.key, this.existingTask, this.taskId, this.today});
 
-  /// The task to edit, or null when creating a new task.
+  /// The task to edit, when the caller already has it.
   final MaintenanceTask? existingTask;
+
+  /// The task to edit, when only its id is known (loaded on open).
+  final String? taskId;
+
+  /// Today's date; tests pass a fixed one.
+  final DateTime? today;
 
   @override
   ConsumerState<TaskFormScreen> createState() => _TaskFormScreenState();
 }
 
 class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final _name = TextEditingController();
+  final _notes = TextEditingController();
+  final _cost = TextEditingController();
+  final _supplies = TextEditingController();
 
-  // ── Controllers ───────────────────────────────────────────────────────────
+  late final DateTime _today = TaskDraft.dateOnly(
+    widget.today ?? DateTime.now(),
+  );
 
-  late final TextEditingController _titleController;
-  late final TextEditingController _descriptionController;
-  late final TextEditingController _toolsController;
-  late final TextEditingController _suppliesController;
-  late final TextEditingController _estHoursController;
+  /// The form's answers; null until the person changes something.
+  TaskDraft? _edited;
 
-  // ── Local state ───────────────────────────────────────────────────────────
-
-  late String _category;
-  late DateTime _dueDate;
-  late RecurrenceType _recurrence;
-  late TaskPriority _priority;
-  late TaskDifficulty _difficulty;
-  late DiyOrPro _diyOrPro;
-  String? _linkedSystemId;
-  String? _linkedApplianceId;
-  String? _propertyId;
-
+  /// True once the controllers hold the first answers.
+  bool _seeded = false;
   bool _saving = false;
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
-
-  bool get _isEditing => widget.existingTask != null;
-
-  @override
-  void initState() {
-    super.initState();
-    final t = widget.existingTask;
-    _titleController = TextEditingController(text: t?.name ?? '');
-    _descriptionController = TextEditingController(text: t?.description ?? '');
-    _toolsController = TextEditingController(
-      text: t != null && t.toolsNeeded.isNotEmpty ? t.toolsNeeded.join('\n') : '',
-    );
-    _suppliesController = TextEditingController(
-      text: t != null && t.suppliesNeeded.isNotEmpty ? t.suppliesNeeded.join('\n') : '',
-    );
-    final estHours = t?.estimatedMinutes != null ? (t!.estimatedMinutes! / 60.0) : null;
-    _estHoursController = TextEditingController(
-      text: estHours != null
-          ? (estHours == estHours.truncateToDouble()
-              ? estHours.toInt().toString()
-              : estHours.toStringAsFixed(1))
-          : '',
-    );
-
-    _category = t?.category ?? 'hvac';
-    _dueDate = t?.dueDate ?? DateTime.now().add(const Duration(days: 7));
-    _recurrence = t?.recurrence ?? RecurrenceType.none;
-    _priority = t?.priority ?? TaskPriority.medium;
-    _difficulty = t?.difficulty ?? TaskDifficulty.easy;
-    _diyOrPro = t?.diyOrPro ?? DiyOrPro.diy;
-    _linkedSystemId = t?.linkedSystemId;
-    _linkedApplianceId = t?.linkedApplianceId;
-
-    // Resolve property ID for picker providers.
-    _resolvePropertyId();
-  }
-
-  Future<void> _resolvePropertyId() async {
-    final user = SupabaseService.client.auth.currentUser;
-    if (user == null) return;
-    final row = await SupabaseService.client
-        .from('properties')
-        .select('id')
-        .eq('user_id', user.id)
-        .isFilter('deleted_at', null)
-        .order('created_at', ascending: false)
-        .limit(1)
-        .maybeSingle();
-    if (mounted && row != null) {
-      setState(() => _propertyId = row['id'] as String);
-    }
-  }
+  String? get _editId => widget.existingTask?.id ?? widget.taskId;
+  bool get _isEditing => _editId != null;
 
   @override
   void dispose() {
-    _titleController.dispose();
-    _descriptionController.dispose();
-    _toolsController.dispose();
-    _suppliesController.dispose();
-    _estHoursController.dispose();
+    _name.dispose();
+    _notes.dispose();
+    _cost.dispose();
+    _supplies.dispose();
     super.dispose();
   }
 
-  // ── Save ──────────────────────────────────────────────────────────────────
-
-  Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _saving = true);
-
-    // Parse estimated hours → minutes.
-    int? estMinutes;
-    final hoursText = _estHoursController.text.trim();
-    if (hoursText.isNotEmpty) {
-      final hours = double.tryParse(hoursText);
-      if (hours != null && hours > 0) {
-        estMinutes = (hours * 60).round();
-      }
-    }
-
-    // Parse tools/supplies: split by newline, trim, drop blanks.
-    final tools = _toolsController.text
-        .split('\n')
-        .map((s) => s.trim())
-        .where((s) => s.isNotEmpty)
-        .toList();
-    final supplies = _suppliesController.text
-        .split('\n')
-        .map((s) => s.trim())
-        .where((s) => s.isNotEmpty)
-        .toList();
-
-    try {
-      final notifier = ref.read(maintenanceTasksProvider.notifier);
-
-      if (_isEditing) {
-        await notifier.updateTask(widget.existingTask!.id, {
-          'name': _titleController.text.trim(),
-          'description': _descriptionController.text.trim().isEmpty
-              ? null
-              : _descriptionController.text.trim(),
-          'category': _category,
-          'due_date': DateFormat('yyyy-MM-dd').format(_dueDate),
-          'recurrence': _recurrence.value,
-          'priority': _priority.value,
-          'difficulty': _difficulty.value,
-          'diy_or_pro': _diyOrPro.value,
-          'estimated_minutes': estMinutes,
-          'tools_needed': tools,
-          'supplies_needed': supplies,
-          'linked_system_id': _linkedSystemId,
-          'linked_appliance_id': _linkedApplianceId,
-        });
-        // Invalidate the detail provider so the task detail screen
-        // re-fetches immediately when this form pops back to it.
-        ref.invalidate(taskDetailProvider(widget.existingTask!.id));
-      } else {
-        final user = SupabaseService.client.auth.currentUser!;
-        await notifier.addTask({
-          'property_id': _propertyId,
-          'user_id': user.id,
-          'task_origin': 'custom',
-          'name': _titleController.text.trim(),
-          'description': _descriptionController.text.trim().isEmpty
-              ? null
-              : _descriptionController.text.trim(),
-          'category': _category,
-          'due_date': DateFormat('yyyy-MM-dd').format(_dueDate),
-          'recurrence': _recurrence.value,
-          'priority': _priority.value,
-          'difficulty': _difficulty.value,
-          'diy_or_pro': _diyOrPro.value,
-          'estimated_minutes': estMinutes,
-          'tools_needed': tools,
-          'supplies_needed': supplies,
-          'linked_system_id': _linkedSystemId,
-          'linked_appliance_id': _linkedApplianceId,
-        });
-      }
-
-      if (mounted) context.pop();
-    } catch (e) {
-      if (mounted) {
-        setState(() => _saving = false);
-        SnackbarService.showError(context, "Couldn't save task. Try again.");
-      }
-    }
+  void _seed(TaskDraft draft) {
+    _name.text = draft.name;
+    _notes.text = draft.notes;
+    _cost.text = draft.cost;
+    _supplies.text = draft.supplies;
+    _seeded = true;
   }
 
-  // ── Date picker ───────────────────────────────────────────────────────────
-
-  Future<void> _pickDueDate() async {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    if (isIOS) {
-      await _pickDateIOS();
-    } else {
-      await _pickDateAndroid();
-    }
+  /// Keeps the text fields in step with answers that change from elsewhere
+  /// (a tapped suggestion).
+  void _sync(TaskDraft draft) {
+    if (_name.text != draft.name) _name.text = draft.name;
+    if (_notes.text != draft.notes) _notes.text = draft.notes;
+    if (_cost.text != draft.cost) _cost.text = draft.cost;
+    if (_supplies.text != draft.supplies) _supplies.text = draft.supplies;
   }
 
-  Future<void> _pickDateIOS() async {
-    DateTime picked = _dueDate;
-    await showCupertinoModalPopup<void>(
-      context: context,
-      builder: (_) => Container(
-        height: 300,
-        color: AuroraColors.paper,
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                CupertinoButton(
-                  child: const Text('Cancel'),
-                  onPressed: () =>
-                      Navigator.of(context, rootNavigator: true).pop(),
-                ),
-                CupertinoButton(
-                  child: const Text('Done'),
-                  onPressed: () {
-                    setState(() => _dueDate = picked);
-                    Navigator.of(context, rootNavigator: true).pop();
-                  },
-                ),
-              ],
-            ),
-            Expanded(
-              child: CupertinoDatePicker(
-                mode: CupertinoDatePickerMode.date,
-                initialDateTime: _dueDate,
-                onDateTimeChanged: (d) => picked = d,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  void _change(TaskDraft draft) {
+    _sync(draft);
+    setState(() => _edited = draft);
   }
 
-  Future<void> _pickDateAndroid() async {
+  TaskLinkOption? _linkFor(MaintenanceTask task, List<TaskLinkOption> options) {
+    final id = task.linkedSystemId ?? task.linkedApplianceId;
+    if (id == null) return null;
+    return options.where((o) => o.id == id).firstOrNull;
+  }
+
+  Future<void> _pickDate(TaskDraft draft) async {
+    final current = draft.dueDate(_today);
+    final first = current.isBefore(_today) ? current : _today;
     final picked = await showDatePicker(
       context: context,
-      initialDate: _dueDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+      initialDate: current,
+      firstDate: first,
+      lastDate: DateTime(
+        _today.year + TaskDraft.maxYearsAhead,
+        _today.month,
+        _today.day,
+      ),
     );
-    if (picked != null && mounted) setState(() => _dueDate = picked);
-  }
-
-  // ── Entity pickers ────────────────────────────────────────────────────────
-
-  Future<void> _pickLinkedSystem(List<PickerOption> options) async {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    await _showEntityPicker(
-      title: 'Link to System',
-      options: options,
-      currentId: _linkedSystemId,
-      isIOS: isIOS,
-      onSelected: (id) => setState(() => _linkedSystemId = id),
+    if (picked == null || !mounted) return;
+    _change(
+      draft.copyWith(
+        due: DueChoice.other,
+        customDate: TaskDraft.dateOnly(picked),
+      ),
     );
   }
 
-  Future<void> _pickLinkedAppliance(List<PickerOption> options) async {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    await _showEntityPicker(
-      title: 'Link to Appliance',
-      options: options,
-      currentId: _linkedApplianceId,
-      isIOS: isIOS,
-      onSelected: (id) => setState(() => _linkedApplianceId = id),
-    );
-  }
-
-  Future<void> _showEntityPicker({
-    required String title,
-    required List<PickerOption> options,
-    required String? currentId,
-    required bool isIOS,
-    required void Function(String? id) onSelected,
-  }) async {
-    if (isIOS) {
-      await showCupertinoModalPopup<void>(
-        context: context,
-        builder: (_) => CupertinoActionSheet(
-          title: Text(title),
-          actions: [
-            CupertinoActionSheetAction(
-              onPressed: () {
-                onSelected(null);
-                Navigator.of(context, rootNavigator: true).pop();
-              },
-              child: const Text('None'),
-            ),
-            ...options.map(
-              (opt) => CupertinoActionSheetAction(
-                isDefaultAction: opt.id == currentId,
-                onPressed: () {
-                  onSelected(opt.id);
-                  Navigator.of(context, rootNavigator: true).pop();
-                },
-                child: Text(opt.name),
-              ),
-            ),
-          ],
-          cancelButton: CupertinoActionSheetAction(
-            onPressed: () =>
-                Navigator.of(context, rootNavigator: true).pop(),
-            child: const Text('Cancel'),
-          ),
-        ),
-      );
-    } else {
-      await showModalBottomSheet<void>(
-        context: context,
-        backgroundColor: AuroraColors.paper,
-        shape: RoundedRectangleBorder(
-          borderRadius: AuroraSheet.topRadius(context),
-        ),
-        builder: (_) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(14),
-                child: Text(title, style: AuroraType.h3),
-              ),
-              ListTile(
-                title: const Text('None'),
-                onTap: () {
-                  onSelected(null);
-                  Navigator.of(context).pop();
-                },
-              ),
-              ...options.map(
-                (opt) => ListTile(
-                  title: Text(opt.name),
-                  trailing: opt.id == currentId
-                      ? Icon(Icons.check, color: AuroraColors.ink)
-                      : null,
-                  onTap: () {
-                    onSelected(opt.id);
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+  Future<void> _save(
+    TaskDraft draft,
+    String? propertyId,
+    MaintenanceTask? existing,
+  ) async {
+    if (_saving || !draft.isReady) return;
+    final repository = ref.read(taskFormRepositoryProvider);
+    final container = ProviderScope.containerOf(context);
+    setState(() => _saving = true);
+    try {
+      final id = _editId;
+      if (id != null) {
+        await repository.update(
+          id,
+          draft,
+          category: existing?.category ?? draft.link!.category,
+          today: _today,
+        );
+        container.invalidate(taskDetailProvider(id));
+      } else {
+        await repository.create(draft, propertyId: propertyId!, today: _today);
+      }
+      container
+        ..invalidate(maintenanceTasksProvider)
+        ..invalidate(remindersProvider);
+      if (mounted) context.pop();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      SnackbarService.showError(context, TaskFormCopy.saveError);
     }
   }
 
-  // ── Enum pickers (iOS) ────────────────────────────────────────────────────
-
-  Future<void> _pickEnumIOS<T>({
-    required String title,
-    required List<(T value, String label)> options,
-    required T current,
-    required void Function(T) onSelected,
-  }) async {
-    await showCupertinoModalPopup<void>(
-      context: context,
-      builder: (_) => CupertinoActionSheet(
-        title: Text(title),
-        actions: options
-            .map(
-              (opt) => CupertinoActionSheetAction(
-                isDefaultAction: opt.$1 == current,
-                onPressed: () {
-                  onSelected(opt.$1);
-                  Navigator.of(context, rootNavigator: true).pop();
-                },
-                child: Text(opt.$2),
-              ),
-            )
-            .toList(),
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () =>
-              Navigator.of(context, rootNavigator: true).pop(),
-          child: const Text('Cancel'),
-        ),
-      ),
-    );
-  }
-
-  // ── Build ─────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    return isIOS ? _buildIOS() : _buildAndroid();
-  }
+    final formContext = ref.watch(taskFormContextProvider);
+    final id = _editId;
+    final loadedTask =
+        widget.existingTask ??
+        (widget.taskId == null
+            ? null
+            : ref.watch(editableTaskProvider(widget.taskId!)).value);
+    final waitingForTask = _isEditing && loadedTask == null;
+    final data = formContext.value;
+    final propertyId = data?.propertyId;
 
-  // ── iOS layout ────────────────────────────────────────────────────────────
+    TaskDraft? draft = _edited;
+    if (draft == null && data != null && !waitingForTask) {
+      draft = loadedTask == null
+          ? const TaskDraft()
+          : TaskDraft.fromTask(
+              loadedTask,
+              link: _linkFor(loadedTask, data.options),
+            );
+      if (!_seeded) _seed(draft);
+    }
 
-  Widget _buildIOS() {
-    return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: Text(_isEditing ? 'Edit Task' : 'New Task'),
-        leading: CupertinoButton(
-          padding: EdgeInsets.zero,
-          onPressed: _saving ? null : () => context.pop(),
-          child: const Text('Cancel'),
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            Expanded(
-              child: _FormBody(
-                formKey: _formKey,
-                isIOS: true,
-                saving: _saving,
-                titleController: _titleController,
-                descriptionController: _descriptionController,
-                toolsController: _toolsController,
-                suppliesController: _suppliesController,
-                estHoursController: _estHoursController,
-                category: _category,
-                dueDate: _dueDate,
-                recurrence: _recurrence,
-                priority: _priority,
-                difficulty: _difficulty,
-                diyOrPro: _diyOrPro,
-                linkedSystemId: _linkedSystemId,
-                linkedApplianceId: _linkedApplianceId,
-                propertyId: _propertyId,
-                onCategoryTap: () => _pickEnumIOS(
-                  title: 'Category',
-                  options: TaskCategories.all
-                      .map((c) => (c.value, c.label))
-                      .toList(),
-                  current: _category,
-                  onSelected: (v) => setState(() => _category = v),
-                ),
-                onDueDateTap: _pickDueDate,
-                onRecurrenceTap: () => _pickEnumIOS(
-                  title: 'Recurrence',
-                  options: RecurrenceType.values
-                      .map((r) => (r, r.label))
-                      .toList(),
-                  current: _recurrence,
-                  onSelected: (v) => setState(() => _recurrence = v),
-                ),
-                onPriorityTap: () => _pickEnumIOS(
-                  title: 'Priority',
-                  options: [
-                    (TaskPriority.low, 'Low'),
-                    (TaskPriority.medium, 'Medium'),
-                    (TaskPriority.high, 'High'),
-                  ],
-                  current: _priority,
-                  onSelected: (v) => setState(() => _priority = v),
-                ),
-                onDifficultyTap: () => _pickEnumIOS(
-                  title: 'Difficulty',
-                  options: [
-                    (TaskDifficulty.easy, 'Easy'),
-                    (TaskDifficulty.moderate, 'Moderate'),
-                    (TaskDifficulty.involved, 'Involved'),
-                    (TaskDifficulty.professional, 'Professional'),
-                  ],
-                  current: _difficulty,
-                  onSelected: (v) => setState(() => _difficulty = v),
-                ),
-                onDiyOrProTap: () => _pickEnumIOS(
-                  title: 'Recommendation',
-                  options: [
-                    (DiyOrPro.diy, 'DIY'),
-                    (DiyOrPro.either, 'Either'),
-                    (DiyOrPro.professional, 'Professional'),
-                  ],
-                  current: _diyOrPro,
-                  onSelected: (v) => setState(() => _diyOrPro = v),
-                ),
-                onSystemTap: (options) => _pickLinkedSystem(options),
-                onApplianceTap: (options) => _pickLinkedAppliance(options),
-              ),
-            ),
-            _FormBottomBar(saving: _saving, onSave: _save, onCancel: () => context.pop()),
-          ],
-        ),
-      ),
-    );
-  }
+    final canSave =
+        draft != null &&
+        draft.isReady &&
+        !_saving &&
+        (_isEditing || propertyId != null);
 
-  // ── Android layout ────────────────────────────────────────────────────────
-
-  Widget _buildAndroid() {
-    return Scaffold(
-      backgroundColor: AuroraColors.paper,
-      appBar: AppBar(
+    return PopScope(
+      canPop: !_saving,
+      child: Scaffold(
         backgroundColor: AuroraColors.paper,
-        scrolledUnderElevation: 0,
-        elevation: 0,
-        title: Text(
-          _isEditing ? 'Edit Task' : 'New Task',
-          style: AuroraType.h3,
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: _saving ? null : () => context.pop(),
-        ),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: _FormBody(
-              formKey: _formKey,
-              isIOS: false,
-              saving: _saving,
-              titleController: _titleController,
-              descriptionController: _descriptionController,
-              toolsController: _toolsController,
-              suppliesController: _suppliesController,
-              estHoursController: _estHoursController,
-              category: _category,
-              dueDate: _dueDate,
-              recurrence: _recurrence,
-              priority: _priority,
-              difficulty: _difficulty,
-              diyOrPro: _diyOrPro,
-              linkedSystemId: _linkedSystemId,
-              linkedApplianceId: _linkedApplianceId,
-              propertyId: _propertyId,
-              onCategoryTap: () async {
-                final result = await showModalBottomSheet<String>(
-                  context: context,
-                  backgroundColor: AuroraColors.paper,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AuroraSheet.topRadius(context),
+        body: SafeArea(
+          bottom: false,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: context.aurora.contentMaxWidth,
+              ),
+              child: Column(
+                children: [
+                  TaskFormHeader(
+                    title: id == null
+                        ? TaskFormCopy.title
+                        : TaskFormCopy.editTitle,
+                    onCancel: _saving ? null : () => context.pop(),
+                    onSave: canSave
+                        ? () => _save(draft!, propertyId, loadedTask)
+                        : null,
+                    saving: _saving,
                   ),
-                  builder: (_) => _CategoryPicker(current: _category),
-                );
-                if (result != null && mounted) setState(() => _category = result);
-              },
-              onDueDateTap: _pickDueDate,
-              onRecurrenceTap: () async {
-                final result = await showModalBottomSheet<RecurrenceType>(
-                  context: context,
-                  backgroundColor: AuroraColors.paper,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AuroraSheet.topRadius(context),
-                  ),
-                  builder: (_) => _EnumPicker<RecurrenceType>(
-                    title: 'Recurrence',
-                    options: RecurrenceType.values.map((r) => (r, r.label)).toList(),
-                    current: _recurrence,
-                  ),
-                );
-                if (result != null && mounted) setState(() => _recurrence = result);
-              },
-              onPriorityTap: () async {
-                final result = await showModalBottomSheet<TaskPriority>(
-                  context: context,
-                  backgroundColor: AuroraColors.paper,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AuroraSheet.topRadius(context),
-                  ),
-                  builder: (_) => _EnumPicker<TaskPriority>(
-                    title: 'Priority',
-                    options: [
-                      (TaskPriority.low, 'Low'),
-                      (TaskPriority.medium, 'Medium'),
-                      (TaskPriority.high, 'High'),
-                    ],
-                    current: _priority,
-                  ),
-                );
-                if (result != null && mounted) setState(() => _priority = result);
-              },
-              onDifficultyTap: () async {
-                final result = await showModalBottomSheet<TaskDifficulty>(
-                  context: context,
-                  backgroundColor: AuroraColors.paper,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AuroraSheet.topRadius(context),
-                  ),
-                  builder: (_) => _EnumPicker<TaskDifficulty>(
-                    title: 'Difficulty',
-                    options: [
-                      (TaskDifficulty.easy, 'Easy'),
-                      (TaskDifficulty.moderate, 'Moderate'),
-                      (TaskDifficulty.involved, 'Involved'),
-                      (TaskDifficulty.professional, 'Professional'),
-                    ],
-                    current: _difficulty,
-                  ),
-                );
-                if (result != null && mounted) setState(() => _difficulty = result);
-              },
-              onDiyOrProTap: () async {
-                final result = await showModalBottomSheet<DiyOrPro>(
-                  context: context,
-                  backgroundColor: AuroraColors.paper,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AuroraSheet.topRadius(context),
-                  ),
-                  builder: (_) => _EnumPicker<DiyOrPro>(
-                    title: 'Recommendation',
-                    options: [
-                      (DiyOrPro.diy, 'DIY'),
-                      (DiyOrPro.either, 'Either'),
-                      (DiyOrPro.professional, 'Professional'),
-                    ],
-                    current: _diyOrPro,
-                  ),
-                );
-                if (result != null && mounted) setState(() => _diyOrPro = result);
-              },
-              onSystemTap: (options) => _pickLinkedSystem(options),
-              onApplianceTap: (options) => _pickLinkedAppliance(options),
-            ),
-          ),
-          _FormBottomBar(saving: _saving, onSave: _save, onCancel: () => context.pop()),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Shared form body ──────────────────────────────────────────────────────────
-
-/// Platform-agnostic form fields. Platform-specific wrappers own the scaffold
-/// and Save/Cancel — they both render this widget as the scrollable body.
-class _FormBody extends ConsumerWidget {
-  const _FormBody({
-    required this.formKey,
-    required this.isIOS,
-    required this.saving,
-    required this.titleController,
-    required this.descriptionController,
-    required this.toolsController,
-    required this.suppliesController,
-    required this.estHoursController,
-    required this.category,
-    required this.dueDate,
-    required this.recurrence,
-    required this.priority,
-    required this.difficulty,
-    required this.diyOrPro,
-    required this.linkedSystemId,
-    required this.linkedApplianceId,
-    required this.propertyId,
-    required this.onCategoryTap,
-    required this.onDueDateTap,
-    required this.onRecurrenceTap,
-    required this.onPriorityTap,
-    required this.onDifficultyTap,
-    required this.onDiyOrProTap,
-    required this.onSystemTap,
-    required this.onApplianceTap,
-  });
-
-  final GlobalKey<FormState> formKey;
-  final bool isIOS;
-  final bool saving;
-  final TextEditingController titleController;
-  final TextEditingController descriptionController;
-  final TextEditingController toolsController;
-  final TextEditingController suppliesController;
-  final TextEditingController estHoursController;
-  final String category;
-  final DateTime dueDate;
-  final RecurrenceType recurrence;
-  final TaskPriority priority;
-  final TaskDifficulty difficulty;
-  final DiyOrPro diyOrPro;
-  final String? linkedSystemId;
-  final String? linkedApplianceId;
-  final String? propertyId;
-  final VoidCallback onCategoryTap;
-  final VoidCallback onDueDateTap;
-  final VoidCallback onRecurrenceTap;
-  final VoidCallback onPriorityTap;
-  final VoidCallback onDifficultyTap;
-  final VoidCallback onDiyOrProTap;
-  final void Function(List<PickerOption>) onSystemTap;
-  final void Function(List<PickerOption>) onApplianceTap;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final systemsAsync = propertyId != null
-        ? ref.watch(systemPickerOptionsProvider(propertyId!))
-        : const AsyncData(<PickerOption>[]);
-    final appliancesAsync = propertyId != null
-        ? ref.watch(appliancePickerOptionsProvider(propertyId!))
-        : const AsyncData(<PickerOption>[]);
-
-    final systems = systemsAsync.value ?? [];
-    final appliances = appliancesAsync.value ?? [];
-
-    return Form(
-      key: formKey,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 48),
-        children: [
-          // ── Section: Task info ─────────────────────────────────────────
-          _SectionHeader(label: 'Task Info'),
-          _FormField(
-            label: 'Title *',
-            child: TextFormField(
-              controller: titleController,
-              enabled: !saving,
-              maxLength: 200,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: _inputDecoration('e.g. Replace air filter'),
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Title is required';
-                return null;
-              },
-            ),
-          ),
-          _FormField(
-            label: 'Description',
-            child: TextFormField(
-              controller: descriptionController,
-              enabled: !saving,
-              maxLength: 5000,
-              maxLines: 3,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: _inputDecoration('Optional details about this task'),
-            ),
-          ),
-          _FormField(
-            label: 'Category',
-            child: _TapRow(
-              value: TaskCategories.labelFor(category),
-              onTap: saving ? null : onCategoryTap,
-            ),
-          ),
-
-          // ── Section: Scheduling ────────────────────────────────────────
-          _SectionHeader(label: 'Scheduling'),
-          _FormField(
-            label: 'Due Date *',
-            child: _TapRow(
-              value: DateFormat('MMM d, yyyy').format(dueDate),
-              onTap: saving ? null : onDueDateTap,
-            ),
-          ),
-          _FormField(
-            label: 'Recurrence',
-            child: _TapRow(
-              value: recurrence.label,
-              onTap: saving ? null : onRecurrenceTap,
-            ),
-          ),
-
-          // ── Section: Task details ──────────────────────────────────────
-          _SectionHeader(label: 'Task Details'),
-          _FormField(
-            label: 'Priority',
-            child: _TapRow(
-              value: _priorityLabel(priority),
-              onTap: saving ? null : onPriorityTap,
-            ),
-          ),
-          _FormField(
-            label: 'Difficulty',
-            child: _TapRow(
-              value: _difficultyLabel(difficulty),
-              onTap: saving ? null : onDifficultyTap,
-            ),
-          ),
-          _FormField(
-            label: 'Recommendation',
-            child: _TapRow(
-              value: _diyOrProLabel(diyOrPro),
-              onTap: saving ? null : onDiyOrProTap,
-            ),
-          ),
-          _FormField(
-            label: 'Estimated Time (hours)',
-            child: TextFormField(
-              controller: estHoursController,
-              enabled: !saving,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: _inputDecoration('e.g. 1.5'),
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return null;
-                final hours = double.tryParse(v.trim());
-                if (hours == null || hours <= 0 || hours > 9999) {
-                  return 'Enter a number between 0.1 and 9999';
-                }
-                return null;
-              },
-            ),
-          ),
-
-          // ── Section: Materials ─────────────────────────────────────────
-          _SectionHeader(label: 'Materials'),
-          _FormField(
-            label: 'Tools Needed',
-            child: TextFormField(
-              controller: toolsController,
-              enabled: !saving,
-              maxLines: 3,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: _inputDecoration('One per line\ne.g. Screwdriver'),
-            ),
-          ),
-          _FormField(
-            label: 'Supplies Needed',
-            child: TextFormField(
-              controller: suppliesController,
-              enabled: !saving,
-              maxLines: 3,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: _inputDecoration('One per line\ne.g. Air filter'),
-            ),
-          ),
-
-          // ── Section: Links ─────────────────────────────────────────────
-          _SectionHeader(label: 'Links'),
-          _FormField(
-            label: 'Linked System',
-            child: _TapRow(
-              value: systems.isEmpty
-                  ? 'No systems added yet'
-                  : linkedSystemId != null
-                      ? systems
-                          .firstWhere(
-                            (s) => s.id == linkedSystemId,
-                            orElse: () => (id: '', name: 'Unknown'),
-                          )
-                          .name
-                      : 'None',
-              onTap: (saving || systems.isEmpty)
-                  ? null
-                  : () => onSystemTap(systems),
-            ),
-          ),
-          _FormField(
-            label: 'Linked Appliance',
-            child: _TapRow(
-              value: appliances.isEmpty
-                  ? 'No appliances added yet'
-                  : linkedApplianceId != null
-                      ? appliances
-                          .firstWhere(
-                            (a) => a.id == linkedApplianceId,
-                            orElse: () => (id: '', name: 'Unknown'),
-                          )
-                          .name
-                      : 'None',
-              onTap: (saving || appliances.isEmpty)
-                  ? null
-                  : () => onApplianceTap(appliances),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static InputDecoration _inputDecoration(String hint) => InputDecoration(
-        hintText: hint,
-        hintStyle: AuroraType.body.copyWith(color: AuroraColors.inkTertiary),
-        filled: true,
-        fillColor: AuroraColors.paper,
-        counterStyle: AuroraType.labelSm.copyWith(color: AuroraColors.inkSecondary),
-        border: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: BorderSide(color: AuroraColors.inkBorder),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: BorderSide(color: AuroraColors.inkBorder),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: const BorderSide(color: AuroraColors.coral, width: 2.0),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: BorderSide(color: AuroraColors.coral),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: BorderSide(color: AuroraColors.coral),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 8,
-        ),
-      );
-
-  static String _priorityLabel(TaskPriority p) => switch (p) {
-        TaskPriority.low => 'Low',
-        TaskPriority.medium => 'Medium',
-        TaskPriority.high => 'High',
-        TaskPriority.critical => 'Critical',
-      };
-
-  static String _difficultyLabel(TaskDifficulty d) => switch (d) {
-        TaskDifficulty.easy => 'Easy',
-        TaskDifficulty.moderate => 'Moderate',
-        TaskDifficulty.involved => 'Involved',
-        TaskDifficulty.professional => 'Professional',
-      };
-
-  static String _diyOrProLabel(DiyOrPro d) => switch (d) {
-        DiyOrPro.diy => 'DIY',
-        DiyOrPro.either => 'Either',
-        DiyOrPro.professional => 'Professional',
-      };
-}
-
-// ── Supporting widgets ────────────────────────────────────────────────────────
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.label});
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: AuroraSpacing.space5, bottom: AuroraSpacing.space2),
-      child: Row(
-        children: [
-          Container(
-            width: 7,
-            height: 7,
-            decoration: const BoxDecoration(
-              color: AuroraColors.cobalt,
-              borderRadius: AuroraRadius.xs,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            label.toUpperCase(),
-            style: AuroraType.label.copyWith(
-              color: AuroraColors.inkSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FormField extends StatelessWidget {
-  const _FormField({required this.label, required this.child});
-  final String label;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final isRequired = label.endsWith(' *');
-    final baseLabel = isRequired ? label.substring(0, label.length - 2) : label;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: AuroraSpacing.space1),
-            child: Row(
-              children: [
-                Text(
-                  baseLabel.toUpperCase(),
-                  style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
-                ),
-                if (isRequired)
-                  Text(
-                    ' *',
-                    style: AuroraType.label.copyWith(color: AuroraColors.coral),
-                  ),
-              ],
-            ),
-          ),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-/// A tappable row that mimics a form field but opens a picker.
-class _TapRow extends StatelessWidget {
-  const _TapRow({required this.value, required this.onTap});
-  final String value;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 10,
-        ),
-        decoration: BoxDecoration(
-          color: AuroraColors.paper,
-          borderRadius: AuroraRadius.md,
-          border: Border.all(color: AuroraColors.inkBorder),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                value,
-                style: AuroraType.body.copyWith(
-                  color: onTap == null
-                      ? AuroraColors.inkSecondary
-                      : AuroraColors.ink,
-                ),
+                  Expanded(child: _content(formContext, data, draft)),
+                ],
               ),
             ),
-            Icon(
-              Icons.chevron_right,
-              size: 18,
-              color: AuroraColors.inkSecondary,
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
-}
 
-// ── Android-specific pickers ──────────────────────────────────────────────────
-
-class _CategoryPicker extends StatelessWidget {
-  const _CategoryPicker({required this.current});
-  final String current;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Text('Category', style: AuroraType.h3),
-          ),
-          ...TaskCategories.all.map(
-            (c) => ListTile(
-              title: Text(c.label),
-              trailing: c.value == current
-                  ? Icon(Icons.check, color: AuroraColors.ink)
-                  : null,
-              onTap: () => Navigator.of(context).pop(c.value),
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-      ),
-    );
-  }
-}
-
-class _EnumPicker<T> extends StatelessWidget {
-  const _EnumPicker({
-    required this.title,
-    required this.options,
-    required this.current,
-  });
-
-  final String title;
-  final List<(T, String)> options;
-  final T current;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Text(title, style: AuroraType.h3),
-          ),
-          ...options.map(
-            (opt) => ListTile(
-              title: Text(opt.$2),
-              trailing: opt.$1 == current
-                  ? Icon(Icons.check, color: AuroraColors.ink)
-                  : null,
-              onTap: () => Navigator.of(context).pop(opt.$1),
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Form bottom action bar ────────────────────────────────────────────────────
-
-/// Sticky bottom bar with SaveButton (cobalt) and SecondaryButton (cancel).
-/// Used on both iOS and Android form layouts.
-class _FormBottomBar extends StatelessWidget {
-  const _FormBottomBar({
-    required this.saving,
-    required this.onSave,
-    required this.onCancel,
-  });
-
-  final bool saving;
-  final VoidCallback onSave;
-  final VoidCallback onCancel;
-
-  @override
-  Widget build(BuildContext context) {
-    final bottomPad = MediaQuery.of(context).padding.bottom;
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        AuroraSpacing.screenPadH,
-        AuroraSpacing.space4,
-        AuroraSpacing.screenPadH,
-        AuroraSpacing.space4 + bottomPad,
-      ),
-      decoration: BoxDecoration(
-        color: AuroraColors.paper,
-        border: Border(
-          top: BorderSide(color: AuroraColors.inkBorder),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: SecondaryButton(
-              label: 'Cancel',
-              expand: true,
-              onPressed: saving ? null : onCancel,
-            ),
-          ),
-          const SizedBox(width: AuroraSpacing.space3),
-          Expanded(
-            flex: 2,
-            child: SaveButton(
-              label: 'Save Task',
-              loading: saving,
-              expand: true,
-              onPressed: saving ? null : onSave,
-            ),
-          ),
-        ],
-      ),
+  Widget _content(
+    AsyncValue<TaskFormContext> formContext,
+    TaskFormContext? data,
+    TaskDraft? draft,
+  ) {
+    if (formContext.hasError && data == null) {
+      return ErrorView(
+        message: TaskFormCopy.loadError,
+        onRetry: () => ref.invalidate(taskFormContextProvider),
+      );
+    }
+    if (data == null || draft == null) return const TaskFormSkeleton();
+    if (data.propertyId == null && !_isEditing) {
+      return ErrorView(
+        message: TaskFormCopy.loadError,
+        onRetry: () => ref.invalidate(taskFormContextProvider),
+      );
+    }
+    return TaskFormBody(
+      draft: draft,
+      options: data.options,
+      today: _today,
+      nameController: _name,
+      notesController: _notes,
+      costController: _cost,
+      suppliesController: _supplies,
+      onChanged: _change,
+      onPickDate: () => _pickDate(draft),
     );
   }
 }

@@ -18,9 +18,13 @@ import '../../features/documents/screens/documents_expiring_screen.dart';
 import '../../features/documents/screens/documents_screen.dart';
 import '../../features/maintenance/models/maintenance_task.dart';
 import '../../features/maintenance/screens/maintenance_screen.dart';
-import '../../features/maintenance/screens/task_completion_form_screen.dart';
 import '../../features/maintenance/screens/task_detail_screen.dart';
+import '../../features/maintenance/screens/task_history_screen.dart';
+import '../../features/maintenance/screens/task_log_screen.dart';
+import '../../features/maintenance/screens/home_reminders_screen.dart';
 import '../../features/maintenance/screens/task_form_screen.dart';
+import '../../features/maintenance/screens/task_review_screen.dart';
+import '../../features/maintenance/screens/tasks_all_year_screen.dart';
 import '../../features/emergency/models/emergency_contact.dart';
 import '../../features/emergency/models/insurance_policy.dart';
 import '../../features/emergency/screens/contact_form_screen.dart';
@@ -69,6 +73,7 @@ import '../../features/settings/screens/settings_profile_screen.dart';
 import '../../features/settings/screens/settings_notifications_screen.dart';
 import '../../features/settings/screens/settings_household_screen.dart';
 import '../../features/settings/screens/settings_export_screen.dart';
+import '../../features/settings/screens/settings_reminders_screen.dart';
 import '../../features/settings/screens/settings_delete_account_screen.dart';
 import '../../features/subscription/screens/paywall_screen.dart';
 import '../../features/subscription/screens/subscription_screen.dart';
@@ -113,6 +118,7 @@ abstract final class AppRoutes {
   static const homeApplianceTasks = '/home/appliances/:applianceId/tasks';
   static const homeEdit = '/home/edit';
   static const homeLifespan = '/home/lifespan';
+  static const homeReminders = '/home/reminders';
   static const emergency = '/emergency';
   static const emergencyShutoffDetail = '/emergency/shutoffs/:type';
   static const emergencyContacts = '/emergency/contacts';
@@ -132,9 +138,12 @@ abstract final class AppRoutes {
   // Tab 2 — Tasks
   static const maintenance = '/maintenance';
   static const maintenanceCreate = '/maintenance/create';
+  static const maintenanceReview = '/maintenance/review';
+  static const maintenanceAll = '/maintenance/all';
   static const maintenanceEditTask = '/maintenance/edit/:taskId';
   static const maintenanceTaskDetail = '/maintenance/:taskId';
   static const maintenanceCompleteTask = '/maintenance/complete/:taskId';
+  static const maintenanceTaskHistory = '/maintenance/:taskId/history';
 
   // Tab 3 — Projects
   static const projects = '/projects';
@@ -163,6 +172,7 @@ abstract final class AppRoutes {
   static const settingsPaywall = '/settings/subscription/paywall';
   static const settingsHousehold = '/settings/household';
   static const settingsExport = '/settings/export';
+  static const settingsReminders = '/settings/reminders';
   static const settingsDeleteAccount = '/settings/delete-account';
 
   /// Routes that do not require an authenticated session.
@@ -439,6 +449,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                     ),
                   ),
                   GoRoute(
+                    path: 'reminders',
+                    pageBuilder: (_, state) =>
+                        _buildPage(state, const HomeRemindersScreen()),
+                  ),
+                  GoRoute(
                     path: 'lifespan',
                     pageBuilder: (_, state) =>
                         _buildPage(state, const LifespanScreen()),
@@ -579,10 +594,23 @@ final routerProvider = Provider<GoRouter>((ref) {
                     ),
                   ),
                   GoRoute(
+                    path: 'all',
+                    pageBuilder: (_, state) =>
+                        _buildPage(state, const TasksAllYearScreen()),
+                  ),
+                  GoRoute(
+                    path: 'review',
+                    pageBuilder: (_, state) =>
+                        _buildPage(state, const TaskReviewScreen()),
+                  ),
+                  GoRoute(
                     path: 'edit/:taskId',
                     pageBuilder: (_, state) => _buildPage(
                       state,
-                      TaskFormScreen(existingTask: state.extra as MaintenanceTask),
+                      TaskFormScreen(
+                        existingTask: state.extra as MaintenanceTask?,
+                        taskId: state.pathParameters['taskId'],
+                      ),
                       fullscreenDialog: true,
                     ),
                   ),
@@ -590,7 +618,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: 'complete/:taskId',
                     pageBuilder: (_, state) => _buildPage(
                       state,
-                      TaskCompletionFormScreen(
+                      TaskLogScreen(
                         taskId: state.pathParameters['taskId']!,
                       ),
                       fullscreenDialog: true,
@@ -604,6 +632,17 @@ final routerProvider = Provider<GoRouter>((ref) {
                         taskId: state.pathParameters['taskId']!,
                       ),
                     ),
+                    routes: [
+                      GoRoute(
+                        path: 'history',
+                        pageBuilder: (_, state) => _buildPage(
+                          state,
+                          TaskHistoryScreen(
+                            taskId: state.pathParameters['taskId']!,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -831,6 +870,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                       state,
                       const SettingsHouseholdScreen(),
                     ),
+                  ),
+                  GoRoute(
+                    path: 'reminders',
+                    pageBuilder: (_, state) =>
+                        _buildPage(state, const SettingsRemindersScreen()),
                   ),
                   GoRoute(
                     path: 'export',

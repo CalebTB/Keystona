@@ -1,419 +1,241 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../services/supabase_service.dart';
 import '../models/maintenance_task.dart';
-import 'task_filter_provider.dart';
+import '../models/quick_completion.dart';
+import '../models/task_schedule.dart';
+import '../models/task_undo.dart';
+import '../services/reminder_switch.dart';
+import 'home_health_score_provider.dart';
+import 'maintenance_repository_provider.dart';
+import 'task_detail_provider.dart';
+import 'task_progress_provider.dart';
 
 part 'maintenance_tasks_provider.g.dart';
 
-// ── Main data provider ────────────────────────────────────────────────────────
-
-/// Loads all non-deleted maintenance tasks for the authenticated user's property.
+/// The property's maintenance tasks, plus every change the Tasks tab makes to
+/// them.
 ///
-/// The provider fetches tasks with nested system names to avoid N+1 queries.
-/// Filtering, sorting, and section grouping are all performed client-side by
-/// [filteredTasksProvider].
-///
-/// Extension points for downstream issues:
-/// - [completeTask] — stub, implemented by issue #32 (Complete Task)
-/// - [skipTask]     — stub, implemented by issue #32 (Skip Task)
-/// - [softDelete]   — stub, implemented by issue #33 (Delete Task)
+/// Changes are optimistic: the local list updates first and the write follows,
+/// the state never goes to loading around a write. A change that can be taken
+/// back returns a [TaskUndo]; pass it to [undo].
 @riverpod
 class MaintenanceTasksNotifier extends _$MaintenanceTasksNotifier {
   @override
-  Future<List<MaintenanceTask>> build() => _fetchTasks();
+  Future<List<MaintenanceTask>> build() =>
+      ref.read(maintenanceTasksRepositoryProvider).fetchTasks();
 
-  // ── Public interface ──────────────────────────────────────────────────────
+  List<MaintenanceTask> get _tasks => state.value ?? const [];
 
-  /// Refetches tasks from Supabase and replaces the current list.
+  /// The task with [taskId], if loaded.
+  MaintenanceTask? taskById(String taskId) =>
+      _tasks.where((t) => t.id == taskId).firstOrNull;
+
+  /// Refetches the list. Keeps showing the current list while it loads.
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchTasks);
-  }
-
-  /// Marks a task as completed with a quick completion record.
-  ///
-  /// Recurring tasks are rolled forward (same row, new due_date + status reset)
-  /// so history stays centralised and the system dropdown stays clean.
-  /// One-off tasks are marked completed.
-  Future<void> completeTask(String taskId) async {
-    final user = SupabaseService.client.auth.currentUser;
-    if (user == null) return;
-
-    final tasks = state.value ?? [];
-    final task = tasks.where((t) => t.id == taskId).firstOrNull;
-    if (task == null) return;
-
-    final now = DateTime.now();
-    final today = _dateStr(now);
-    final isRecurring = task.recurrence != RecurrenceType.none;
-    final nextDate = isRecurring ? _nextDate(task, base: now) : null;
-
-    // Optimistic update — recurring tasks roll forward in local state so the
-    // agenda (which filters by due_date) reflects the new schedule instantly.
-    state = AsyncData(tasks.map((t) {
-      if (t.id != taskId) return t;
-      if (isRecurring && nextDate != null) {
-        return t.copyWith(status: TaskStatus.scheduled, dueDate: nextDate);
-      }
-      return t.copyWith(status: TaskStatus.completed);
-    }).toList());
-
-    await SupabaseService.client.from('task_completions').insert({
-      'task_id': taskId,
-      'user_id': user.id,
-      'property_id': task.propertyId,
-      'completed_date': today,
-      'completed_by': 'diy',
-    });
-
-    if (isRecurring && nextDate != null) {
-      await SupabaseService.client.from('maintenance_tasks').update({
-        'due_date': _dateStr(nextDate),
-        'status': 'scheduled',
-      }).eq('id', taskId);
-    } else {
-      await SupabaseService.client
-          .from('maintenance_tasks')
-          .update({'status': 'completed'})
-          .eq('id', taskId);
-    }
-  }
-
-  /// Skips a task. Recurring tasks roll forward; one-off tasks are marked skipped.
-  Future<void> skipTask(String taskId, {String? reason}) async {
-    final tasks = state.value ?? [];
-    final task = tasks.where((t) => t.id == taskId).firstOrNull;
-    if (task == null) return;
-
-    final isRecurring = task.recurrence != RecurrenceType.none;
-    final nextDate = isRecurring ? _nextDate(task) : null;
-
-    state = AsyncData(tasks.map((t) {
-      if (t.id != taskId) return t;
-      if (isRecurring && nextDate != null) {
-        return t.copyWith(status: TaskStatus.scheduled, dueDate: nextDate);
-      }
-      return t.copyWith(status: TaskStatus.skipped);
-    }).toList());
-
-    if (isRecurring && nextDate != null) {
-      await SupabaseService.client.from('maintenance_tasks').update({
-        'due_date': _dateStr(nextDate),
-        'status': 'scheduled',
-        if (reason != null && reason.isNotEmpty) 'skip_reason': reason,
-      }).eq('id', taskId);
-    } else {
-      await SupabaseService.client.from('maintenance_tasks').update({
-        'status': 'skipped',
-        if (reason != null && reason.isNotEmpty) 'skip_reason': reason,
-      }).eq('id', taskId);
-    }
-  }
-
-  static DateTime _nextDate(MaintenanceTask task, {DateTime? base}) {
-    final b = (base ?? task.dueDate).toLocal();
-    return switch (task.recurrence) {
-      RecurrenceType.none => b,
-      RecurrenceType.weekly => b.add(const Duration(days: 7)),
-      RecurrenceType.biweekly => b.add(const Duration(days: 14)),
-      RecurrenceType.monthly => DateTime(b.year, b.month + 1, b.day),
-      RecurrenceType.quarterly => DateTime(b.year, b.month + 3, b.day),
-      RecurrenceType.biannual => DateTime(b.year, b.month + 6, b.day),
-      RecurrenceType.annual => DateTime(b.year + 1, b.month, b.day),
-    };
-  }
-
-  static String _dateStr(DateTime dt) {
-    final d = dt.toLocal();
-    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-  }
-
-  /// Creates a new custom task for the user's property.
-  ///
-  /// [fields] must include all required columns: `name`, `category`,
-  /// `due_date`, `task_origin`, `property_id`, `user_id`.
-  /// Optional columns: `description`, `recurrence`, `priority`,
-  /// `difficulty`, `diy_or_pro`, `estimated_minutes`, `tools_needed`,
-  /// `supplies_needed`, `linked_system_id`, `linked_appliance_id`.
-  Future<void> addTask(Map<String, dynamic> fields) async {
-    await SupabaseService.client.from('maintenance_tasks').insert(fields);
-    await refresh();
-  }
-
-  /// Updates mutable fields on an existing task.
-  ///
-  /// Only pass the fields that have changed. The `updated_at` trigger
-  /// on the DB handles the timestamp automatically.
-  Future<void> updateTask(String taskId, Map<String, dynamic> fields) async {
-    await SupabaseService.client
-        .from('maintenance_tasks')
-        .update(fields)
-        .eq('id', taskId);
-    await refresh();
-  }
-
-  /// [#33] Soft-deletes a task (sets deleted_at).
-  Future<void> softDelete(String taskId) async {
-    throw UnimplementedError('softDelete() implemented by issue #33');
-  }
-
-  /// Generates maintenance tasks from templates directly via DB queries.
-  ///
-  /// Mirrors the logic of the `generate-maintenance-tasks` Edge Function but
-  /// runs client-side using the authenticated Supabase client — no JWT
-  /// gateway required. Idempotent: no-ops if template tasks already exist.
-  Future<void> generateFromTemplates() async {
-    final user = SupabaseService.client.auth.currentUser;
-    if (user == null) return;
-
-    // Fetch property.
-    final propertyRow = await SupabaseService.client
-        .from('properties')
-        .select('id, climate_zone')
-        .eq('user_id', user.id)
-        .isFilter('deleted_at', null)
-        .order('created_at', ascending: false)
-        .limit(1)
-        .maybeSingle();
-    if (propertyRow == null) return;
-
-    final propertyId = propertyRow['id'] as String;
-    final climateZone = propertyRow['climate_zone'] as int?;
-
-    // Idempotency: skip if template tasks already exist.
-    final existing = await SupabaseService.client
-        .from('maintenance_tasks')
-        .select('id')
-        .eq('property_id', propertyId)
-        .not('template_id', 'is', null)
-        .isFilter('deleted_at', null);
-    if (existing.isNotEmpty) return;
-
-    // Fetch active templates.
-    final templates = await SupabaseService.client
-        .from('maintenance_task_templates')
-        .select(
-          'id, name, description, instructions, category, season, recurrence, '
-          'default_month, difficulty, diy_or_pro, priority, estimated_minutes, '
-          'tools_needed, supplies_needed, climate_zones',
-        )
-        .eq('is_active', true);
-
-    // Filter by climate zone (null zones = applies to all).
-    final filtered = climateZone != null
-        ? templates.where((t) {
-            final zones = t['climate_zones'] as List?;
-            return zones == null || zones.contains(climateZone);
-          }).toList()
-        : templates;
-
-    if (filtered.isEmpty) return;
-
-    // Build task rows with computed due dates.
-    final now = DateTime.now().toUtc();
-    final taskRows = filtered.map<Map<String, dynamic>>((t) {
-      return {
-        'property_id': propertyId,
-        'user_id': user.id,
-        'template_id': t['id'],
-        'task_origin': 'system_generated',
-        'name': t['name'],
-        'description': t['description'],
-        'instructions': t['instructions'],
-        'category': t['category'],
-        'linked_system_id': null,
-        'linked_appliance_id': null,
-        'due_date': _computeDueDate(t, now),
-        'recurrence': t['recurrence'],
-        'season': t['season'],
-        'climate_adjusted': climateZone != null,
-        'status': 'scheduled',
-        'difficulty': t['difficulty'],
-        'diy_or_pro': t['diy_or_pro'],
-        'priority': t['priority'],
-        'estimated_minutes': t['estimated_minutes'],
-        'tools_needed': t['tools_needed'] ?? <dynamic>[],
-        'supplies_needed': t['supplies_needed'] ?? <dynamic>[],
-        'reminder_days_before': 7,
-        'notifications_enabled': true,
-      };
-    }).toList();
-
-    await SupabaseService.client.from('maintenance_tasks').insert(taskRows);
-    await refresh();
-  }
-
-  /// Computes the initial due date for a template task, matching the
-  /// TypeScript logic in the `generate-maintenance-tasks` Edge Function.
-  String _computeDueDate(Map<String, dynamic> template, DateTime now) {
-    final currentMonth = now.month;
-    final currentYear = now.year;
-    final recurrence = template['recurrence'] as String? ?? 'none';
-    final season = template['season'] as String?;
-    final defaultMonth = template['default_month'] as int?;
-
-    // Monthly with no season → due the 1st of next month.
-    if (recurrence == 'monthly' && season == null) {
-      final next = DateTime.utc(currentYear, currentMonth + 1, 1);
-      return '${next.year}-${next.month.toString().padLeft(2, '0')}-01';
-    }
-
-    const seasonMonths = {
-      'spring': 4,
-      'summer': 7,
-      'fall': 10,
-      'winter': 12,
-    };
-
-    final targetMonth = defaultMonth ??
-        (season != null ? seasonMonths[season] : null) ??
-        currentMonth;
-
-    final targetYear =
-        targetMonth < currentMonth ? currentYear + 1 : currentYear;
-
-    return '$targetYear-${targetMonth.toString().padLeft(2, '0')}-01';
-  }
-
-  // ── Private fetch ─────────────────────────────────────────────────────────
-
-  Future<List<MaintenanceTask>> _fetchTasks() async {
-    final user = SupabaseService.client.auth.currentUser;
-    if (user == null) return [];
-
-    // Fetch the user's primary property.
-    final propertyRow = await SupabaseService.client
-        .from('properties')
-        .select('id')
-        .eq('user_id', user.id)
-        .isFilter('deleted_at', null)
-        .order('created_at', ascending: false)
-        .limit(1)
-        .maybeSingle();
-
-    if (propertyRow == null) return [];
-    final propertyId = propertyRow['id'] as String;
-
-    // Fetch tasks with nested system name to avoid N+1.
-    // Includes tools_needed and supplies_needed for edit pre-population (#34)
-    // and detail display (#32).
-    final rows = await SupabaseService.client
-        .from('maintenance_tasks')
-        .select(
-          'id, property_id, user_id, template_id, task_origin, name, '
-          'description, instructions, category, due_date, recurrence, season, '
-          'climate_adjusted, status, difficulty, diy_or_pro, priority, '
-          'estimated_minutes, tools_needed, supplies_needed, '
-          'linked_system_id, linked_appliance_id, '
-          'notifications_enabled, skip_reason, '
-          'created_at, updated_at, '
-          'systems(id, name)',
-        )
-        .eq('property_id', propertyId)
-        .isFilter('deleted_at', null)
-        .order('due_date', ascending: true);
-
-    return rows.map(_rowToTask).toList();
-  }
-
-  MaintenanceTask _rowToTask(Map<String, dynamic> row) {
-    // Extract nested system name before parsing the model.
-    final systemRow = row['systems'] as Map<String, dynamic>?;
-    final systemName = systemRow?['name'] as String?;
-
-    // Remove the nested object so fromJson doesn't choke on it.
-    final cleaned = Map<String, dynamic>.from(row)..remove('systems');
-
-    return MaintenanceTask.fromJson(cleaned).copyWith(
-      linkedSystemName: systemName,
+    state = await AsyncValue.guard(
+      ref.read(maintenanceTasksRepositoryProvider).fetchTasks,
     );
   }
-}
 
-// ── Derived — filtered + sorted task list ─────────────────────────────────────
+  // ─── Local state ────────────────────────────────────────────────────────────
 
-/// Returns the filtered and sorted task list by combining
-/// [maintenanceTasksProvider] data with [taskFilterProvider] state.
-///
-/// This is a synchronous derived provider — it never triggers a network call.
-/// The Maintenance screen watches this provider for its display list.
-@riverpod
-List<MaintenanceTask> filteredTasks(Ref ref) {
-  final tasksAsync = ref.watch(maintenanceTasksProvider);
-  final filter = ref.watch(taskFilterProvider);
-
-  // Exclude tasks explicitly disabled from the main Tasks tab.
-  final tasks = (tasksAsync.value ?? [])
-      .where((t) => t.notificationsEnabled)
-      .toList();
-
-  final now = DateTime.now().toLocal();
-  final todayMidnight = DateTime(now.year, now.month, now.day);
-  final weekEnd = todayMidnight.add(const Duration(days: 7));
-
-  // Explicit typing avoids dynamic inference when Ref is unparameterized.
-  final TaskStatusFilter? statusFilter = filter.statusFilter;
-  final TaskSortOrder sortOrder = filter.sortOrder;
-
-  final List<MaintenanceTask> filtered;
-  if (statusFilter == TaskStatusFilter.overdue) {
-    filtered = tasks.where((t) => _isOverdue(t, todayMidnight)).toList();
-  } else if (statusFilter == TaskStatusFilter.dueSoon) {
-    filtered = tasks.where((t) => _isDueSoon(t, todayMidnight, weekEnd)).toList();
-  } else if (statusFilter == TaskStatusFilter.upcoming) {
-    filtered = tasks.where((t) => _isUpcoming(t, weekEnd)).toList();
-  } else if (statusFilter == TaskStatusFilter.completed) {
-    filtered = tasks
-        .where(
-          (t) =>
-              t.status == TaskStatus.completed ||
-              t.status == TaskStatus.skipped,
-        )
-        .toList();
-  } else {
-    // null → All
-    filtered = tasks.where((t) => t.status != TaskStatus.skipped).toList();
+  void _replace(MaintenanceTask updated) {
+    state = AsyncData([
+      for (final t in _tasks) t.id == updated.id ? updated : t,
+    ]);
   }
 
-  filtered.sort((a, b) {
-    if (sortOrder == TaskSortOrder.priorityDesc) {
-      return b.priority.sortOrder.compareTo(a.priority.sortOrder);
-    } else if (sortOrder == TaskSortOrder.nameAsc) {
-      return a.name.compareTo(b.name);
+  /// [task] as it looks once done on [completedOn]: a recurring task rolls
+  /// forward to its next date, a one-time task is completed.
+  static MaintenanceTask rolledForward(
+    MaintenanceTask task,
+    DateTime completedOn,
+  ) {
+    if (task.recurrence == RecurrenceType.none) {
+      return task.copyWith(status: TaskStatus.completed);
     }
-    return a.dueDate.compareTo(b.dueDate); // dueDateAsc (default)
-  });
-
-  return filtered;
-}
-
-// ── Date helpers (module-private) ─────────────────────────────────────────────
-
-bool _isOverdue(MaintenanceTask t, DateTime todayMidnight) {
-  if (t.status == TaskStatus.completed || t.status == TaskStatus.skipped) {
-    return false;
+    return task.copyWith(
+      status: TaskStatus.scheduled,
+      dueDate: TaskSchedule.nextDate(task, base: completedOn),
+    );
   }
-  return t.status == TaskStatus.overdue ||
-      t.dueDate.toLocal().isBefore(todayMidnight);
-}
 
-bool _isDueSoon(
-  MaintenanceTask t,
-  DateTime todayMidnight,
-  DateTime weekEnd,
-) {
-  if (t.status == TaskStatus.completed || t.status == TaskStatus.skipped) {
-    return false;
-  }
-  if (_isOverdue(t, todayMidnight)) return false;
-  final due = t.dueDate.toLocal();
-  return !due.isBefore(todayMidnight) && due.isBefore(weekEnd);
-}
+  // ─── Done ───────────────────────────────────────────────────────────────────
 
-bool _isUpcoming(MaintenanceTask t, DateTime weekEnd) {
-  if (t.status == TaskStatus.completed || t.status == TaskStatus.skipped) {
-    return false;
+  /// Marks [taskId] done in the local list only, so the row reacts at once.
+  /// Returns the task as it was, or null when it is not loaded. Nothing is
+  /// written until [commitDone].
+  MaintenanceTask? markDoneLocally(String taskId, {DateTime? on}) {
+    final task = taskById(taskId);
+    if (task == null) return null;
+    _replace(rolledForward(task, on ?? TaskSchedule.dayOf(DateTime.now())));
+    return task;
   }
-  return !t.dueDate.toLocal().isBefore(weekEnd);
+
+  /// Puts [previous] back in the local list without writing anything.
+  void revertLocally(MaintenanceTask previous) => _replace(previous);
+
+  /// Writes the completion of [previous] (the task before [markDoneLocally])
+  /// and schedules its next occurrence.
+  Future<TaskUndo> commitDone(
+    MaintenanceTask previous,
+    QuickCompletion completion,
+  ) async {
+    _replace(rolledForward(previous, completion.completedOn));
+    final repository = ref.read(maintenanceTasksRepositoryProvider);
+    // The completion answers the occurrence the task was on before it rolled.
+    final completionId = await repository.insertCompletion(
+      previous,
+      completion.withDueDate(previous.dueDate),
+    );
+    final rolled = rolledForward(previous, completion.completedOn);
+    await repository.updateTask(previous.id, {
+      'due_date': TaskSchedule.dateColumn(rolled.dueDate),
+      'status': rolled.status.value,
+    });
+    _afterWrite();
+    return TaskUndo(previous: previous, completionId: completionId);
+  }
+
+  // ─── Other actions ──────────────────────────────────────────────────────────
+
+  /// Skips a task. A recurring task rolls forward; a one-time task is marked
+  /// skipped. The skipped occurrence is logged in `task_skips` ([reason]
+  /// says why, when known).
+  Future<TaskUndo?> skipTask(String taskId, {String? reason}) async {
+    final previous = taskById(taskId);
+    if (previous == null) return null;
+    final isRecurring = previous.recurrence != RecurrenceType.none;
+    final next = isRecurring
+        ? previous.copyWith(
+            status: TaskStatus.scheduled,
+            dueDate: TaskSchedule.nextDate(previous),
+            skipReason: reason,
+          )
+        : previous.copyWith(status: TaskStatus.skipped, skipReason: reason);
+    _replace(next);
+    final repository = ref.read(maintenanceTasksRepositoryProvider);
+    final skipId = await repository.insertSkip(
+      previous,
+      dueDate: previous.dueDate,
+      skippedOn: TaskSchedule.dayOf(DateTime.now()),
+      reason: reason,
+    );
+    try {
+      await repository.updateTask(previous.id, _columns(next));
+    } catch (_) {
+      // Do not leave a skip in the history for a schedule that never moved.
+      try {
+        await repository.deleteSkip(skipId);
+      } catch (_) {}
+      rethrow;
+    }
+    _afterWrite();
+    return TaskUndo(previous: previous, skipId: skipId);
+  }
+
+  /// Pushes a task's due date to [dueDate]; it stays on the list.
+  Future<TaskUndo?> pushBack(String taskId, DateTime dueDate) async {
+    final previous = taskById(taskId);
+    if (previous == null) return null;
+    return _apply(
+      previous,
+      previous.copyWith(status: TaskStatus.scheduled, dueDate: dueDate),
+    );
+  }
+
+  /// Turns the reminder off. It is hidden everywhere and no longer counts
+  /// toward Home Health. Records when, and [reason] when there is one.
+  Future<TaskUndo?> stopReminders(String taskId, {String? reason}) async {
+    final previous = taskById(taskId);
+    if (previous == null) return null;
+    final why = reason?.trim();
+    return _apply(
+      previous,
+      previous.copyWith(
+        notificationsEnabled: false,
+        notificationsOffAt: DateTime.now().toUtc(),
+        notificationsOffReason: why == null || why.isEmpty ? null : why,
+      ),
+    );
+  }
+
+  /// Changes how often a task repeats. The choices are plain recurrences, so
+  /// any "every N years" interval is dropped (the database only allows one on
+  /// an annual task).
+  Future<TaskUndo?> changeFrequency(
+    String taskId,
+    RecurrenceType recurrence,
+  ) async {
+    final previous = taskById(taskId);
+    if (previous == null) return null;
+    return _apply(
+      previous,
+      previous.copyWith(recurrence: recurrence, recurrenceIntervalYears: null),
+    );
+  }
+
+  Future<TaskUndo> _apply(
+    MaintenanceTask previous,
+    MaintenanceTask next,
+  ) async {
+    _replace(next);
+    await ref
+        .read(maintenanceTasksRepositoryProvider)
+        .updateTask(previous.id, _columns(next));
+    _afterWrite();
+    return TaskUndo(previous: previous);
+  }
+
+  /// Takes an action back: removes its completion or skip (if any) and
+  /// restores the task as it was.
+  Future<void> undo(TaskUndo undo) async {
+    _replace(undo.previous);
+    final repository = ref.read(maintenanceTasksRepositoryProvider);
+    if (undo.completionId != null) {
+      await repository.deleteCompletion(undo.completionId!);
+    }
+    if (undo.skipId != null) await repository.deleteSkip(undo.skipId!);
+    await repository.updateTask(undo.previous.id, _columns(undo.previous));
+    _afterWrite();
+    // The task's detail screen may be open behind the snackbar: refetch it so
+    // it doesn't keep showing the action that was just taken back.
+    ref.invalidate(taskDetailProvider(undo.previous.id));
+  }
+
+  /// The columns an action can change, written back as one update.
+  static Map<String, dynamic> _columns(MaintenanceTask task) => {
+    'due_date': TaskSchedule.dateColumn(task.dueDate),
+    'status': task.status.value,
+    'skip_reason': task.skipReason,
+    ...ReminderSwitch.columns(
+      enabled: task.notificationsEnabled,
+      reason: task.notificationsOffReason,
+      now: task.notificationsOffAt,
+    ),
+    'recurrence': task.recurrence.value,
+    'recurrence_interval_years': task.recurrenceIntervalYears,
+  };
+
+  void _afterWrite() {
+    ref.invalidate(taskProgressProvider);
+    ref.invalidate(homeHealthScoreProvider);
+  }
+
+  // ─── Create and edit ────────────────────────────────────────────────────────
+
+  /// Creates a new task. [fields] must include `name`, `category`, `due_date`,
+  /// `task_origin`, `property_id` and `user_id`.
+  Future<void> addTask(Map<String, dynamic> fields) async {
+    await ref.read(maintenanceTasksRepositoryProvider).insertTask(fields);
+    await refresh();
+  }
+
+  /// Updates the changed columns of an existing task.
+  Future<void> updateTask(String taskId, Map<String, dynamic> fields) async {
+    await ref
+        .read(maintenanceTasksRepositoryProvider)
+        .updateTask(taskId, fields);
+    await refresh();
+  }
 }

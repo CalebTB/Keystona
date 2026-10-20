@@ -1,50 +1,23 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../services/supabase_service.dart';
+import '../models/maintenance_task.dart';
+import '../repositories/task_form_repository.dart';
 
 part 'task_form_providers.g.dart';
 
-/// A simple name + id pair for picker dropdowns.
-typedef PickerOption = ({String id, String name});
-
-/// Fetches all non-deleted systems for the given property.
-///
-/// Used by [TaskFormScreen] to populate the "Link to system" picker.
-/// Auto-disposed when the form is closed.
+/// Data-access seam for the Add a task form. Tests override it with a fake.
 @riverpod
-Future<List<PickerOption>> systemPickerOptions(
-  Ref ref,
-  String propertyId,
-) async {
-  final rows = await SupabaseService.client
-      .from('systems')
-      .select('id, name')
-      .eq('property_id', propertyId)
-      .isFilter('deleted_at', null)
-      .order('name', ascending: true);
+TaskFormRepository taskFormRepository(Ref ref) =>
+    SupabaseTaskFormRepository(SupabaseService.client);
 
-  return rows
-      .map<PickerOption>((r) => (id: r['id'] as String, name: r['name'] as String))
-      .toList();
-}
-
-/// Fetches all non-deleted appliances for the given property.
-///
-/// Used by [TaskFormScreen] to populate the "Link to appliance" picker.
-/// Auto-disposed when the form is closed.
+/// The home and the systems and appliances a task can belong to. Auto-disposed
+/// when the form closes.
 @riverpod
-Future<List<PickerOption>> appliancePickerOptions(
-  Ref ref,
-  String propertyId,
-) async {
-  final rows = await SupabaseService.client
-      .from('appliances')
-      .select('id, name')
-      .eq('property_id', propertyId)
-      .isFilter('deleted_at', null)
-      .order('name', ascending: true);
+Future<TaskFormContext> taskFormContext(Ref ref) =>
+    ref.watch(taskFormRepositoryProvider).loadContext();
 
-  return rows
-      .map<PickerOption>((r) => (id: r['id'] as String, name: r['name'] as String))
-      .toList();
-}
+/// A saved task, for editing when the route carries only its id.
+@riverpod
+Future<MaintenanceTask?> editableTask(Ref ref, String taskId) =>
+    ref.watch(taskFormRepositoryProvider).loadTask(taskId);

@@ -31,11 +31,11 @@ enum TaskPriority {
 
   /// Higher number = higher priority. Used for priority-descending sort.
   int get sortOrder => switch (this) {
-        TaskPriority.critical => 3,
-        TaskPriority.high => 2,
-        TaskPriority.medium => 1,
-        TaskPriority.low => 0,
-      };
+    TaskPriority.critical => 3,
+    TaskPriority.high => 2,
+    TaskPriority.medium => 1,
+    TaskPriority.low => 0,
+  };
 }
 
 /// Maps exactly to Postgres `task_difficulty` enum.
@@ -77,14 +77,14 @@ enum RecurrenceType {
 
   /// Human-readable label for display in UI.
   String get label => switch (this) {
-        RecurrenceType.none => 'One-time',
-        RecurrenceType.weekly => 'Weekly',
-        RecurrenceType.biweekly => 'Every 2 weeks',
-        RecurrenceType.monthly => 'Monthly',
-        RecurrenceType.quarterly => 'Quarterly',
-        RecurrenceType.biannual => 'Twice a year',
-        RecurrenceType.annual => 'Annually',
-      };
+    RecurrenceType.none => 'One-time',
+    RecurrenceType.weekly => 'Weekly',
+    RecurrenceType.biweekly => 'Every 2 weeks',
+    RecurrenceType.monthly => 'Monthly',
+    RecurrenceType.quarterly => 'Quarterly',
+    RecurrenceType.biannual => 'Twice a year',
+    RecurrenceType.annual => 'Annually',
+  };
 }
 
 /// Maps exactly to Postgres `task_origin` enum.
@@ -146,6 +146,11 @@ abstract class MaintenanceTask with _$MaintenanceTask {
     /// Season tag (e.g. "spring"). [#33] form, [#34] filter.
     String? season,
 
+    /// "Every N years" for an annual task (`recurrence_interval_years`,
+    /// 2..10). Null means every year. Only ever set when [recurrence] is
+    /// [RecurrenceType.annual].
+    int? recurrenceIntervalYears,
+
     /// Whether this task is climate-adjusted. [#32] detail badge.
     @Default(false) bool climateAdjusted,
 
@@ -167,6 +172,15 @@ abstract class MaintenanceTask with _$MaintenanceTask {
 
     /// Estimated time in minutes. [#31] card, [#32] detail screen.
     int? estimatedMinutes,
+
+    /// What the task should cost, in dollars (`estimated_cost`). Shown as the
+    /// COST tile on the detail screen; set by the "Estimate" field.
+    double? estimatedCost,
+
+    /// The homeowner's own notes (`notes`): "Your notes" on the detail screen
+    /// and the NOTES field of the task form. Not the system-written
+    /// [description].
+    String? notes,
 
     // ── Task details (extended) ───────────────────────────────────────────────
 
@@ -196,6 +210,16 @@ abstract class MaintenanceTask with _$MaintenanceTask {
     /// When false the task is hidden from the main Tasks tab views.
     /// Toggled from the item tasks management screen per system/appliance.
     @Default(true) bool notificationsEnabled,
+
+    /// When the reminder was switched off (`notifications_off_at`). Null while
+    /// it is on, and for rows turned off before this column existed.
+    DateTime? notificationsOffAt,
+
+    /// Why it was switched off (`notifications_off_reason`), when known.
+    String? notificationsOffReason,
+
+    /// Why a reminder exists for this home: FREEZE, HUMID, STORMS...
+    @Default(<String>[]) List<String> tags,
 
     // ── Audit ─────────────────────────────────────────────────────────────────
 

@@ -7,9 +7,7 @@ part 'task_completion.g.dart';
 ///
 /// Maps to the `task_completions` table.
 ///
-/// [#33] agents building the Completion Flow: create new rows using
-/// `TaskDetailNotifier.completeTaskDetailed()`. The [linkedDocumentIds] field
-/// is already wired here — the form just needs to populate it.
+/// Created by `TaskDetailNotifier.logCompletion()` from the Log screen.
 @freezed
 abstract class TaskCompletion with _$TaskCompletion {
   const factory TaskCompletion({
@@ -27,26 +25,34 @@ abstract class TaskCompletion with _$TaskCompletion {
     @Default('diy') String completedBy,
 
     // ── Contractor info ──────────────────────────────────────────────────────
-
     String? contractorName,
     String? contractorCompany,
     String? contractorPhone,
 
     // ── Costs ────────────────────────────────────────────────────────────────
-
     double? serviceCost,
     double? materialsCost,
 
     // ── Details ──────────────────────────────────────────────────────────────
-
     int? timeSpentMinutes,
     String? notes,
 
-    /// [#33] Receipt / document IDs from Document Vault, linked at completion.
+    /// Receipt / document IDs from Document Vault, linked at completion.
     @Default(<String>[]) List<String> linkedDocumentIds,
 
-    // ── Audit ────────────────────────────────────────────────────────────────
+    /// What was found, by the `TaskFinding.value`s (`findings`).
+    @Default(<String>[]) List<String> findings,
 
+    /// The Log screen's "Add to the item's history" switch
+    /// (`log_to_item_history`).
+    @Default(false) bool logToItemHistory,
+
+    /// The due date this completion answered (`due_date`, a DATE). Null for
+    /// rows logged before the column existed and for past entries that
+    /// answered no open due date.
+    DateTime? dueDate,
+
+    // ── Audit ────────────────────────────────────────────────────────────────
     required DateTime createdAt,
   }) = _TaskCompletion;
 
