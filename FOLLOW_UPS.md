@@ -99,18 +99,18 @@ Built 2026-10-20/21: HomeProfile, HomeEdit, HomeLifespan; HomeSystems, ScanFlow,
 
 Open:
 
-- [ ] **Scan-label Edge Function** (needs approval to change): the kit wants auto-detect ("Label found · hold still"), per-field confidence, structured specs (FUEL/OUTPUT/FILTER for systems; type/capacity/Energy Star for appliances) and an install date, none of which it returns. Today the camera is the native picker (no live viewfinder, flash or edge detection; same package gap as the document camera).
-- [ ] `get_system_lifespan_overview` (systems-only RPC) is no longer called; drop it if nothing else uses it.
-- [ ] Item history rows are not tappable: `LogServiceSheet(editing:)` and remove-with-Undo exist and are tested but have no trigger in the timeline.
-- [ ] ItemTasks "Done" tab shows task completions only, not `item_service_log` entries (the kit's "Replaced the igniter" row).
-- [ ] `ItemNextUpList` (shared) has no `onLongPress`, so SystemDetail and ApplianceDetail compose `AuroraTaskRow` directly (`SystemNextUp`, `ApplianceNextUp`); add it to the shared list and delete both.
-- [ ] Hand-added appliances get an invented default lifespan by type (`lifespan/appliance_lifespan.dart`); real values needed.
-- [ ] Changing "year built" shows the kit's note but nothing recomputes reminders or lifespans.
-- [ ] Climate stores only the zone number; "4A · mixed-humid" is derived at runtime from the stand-in lookup. `garage_type` is free text.
-- [ ] Omitted for lack of a source: Records/Emergency rings, "up N since Sep", Project and Recently cards on the profile (History Report card waits for Sprint 9).
-- [ ] The "What to set aside" table carries a Premium tag but is not gated.
-- [ ] The first full `dart run build_runner build` after big changes takes ~16 minutes; later runs are fast.
-- [ ] Three near-identical page frames (`ItemPage`, `RemindersPage`, `home_common`) and two form-photo models (`FormPhoto`, `models/form_photo.dart`): consolidate when core widgets are approved.
+- [Y] **Scan-label Edge Function** (needs approval to change): the kit wants auto-detect ("Label found · hold still"), per-field confidence, structured specs (FUEL/OUTPUT/FILTER for systems; type/capacity/Energy Star for appliances) and an install date, none of which it returns. Today the camera is the native picker (no live viewfinder, flash or edge detection; same package gap as the document camera).
+- [Y] `get_system_lifespan_overview` (systems-only RPC) is no longer called; drop it if nothing else uses it.
+- [Y] Item history rows are not tappable: `LogServiceSheet(editing:)` and remove-with-Undo exist and are tested but have no trigger in the timeline.
+- [let me know the difference] ItemTasks "Done" tab shows task completions only, not `item_service_log` entries (the kit's "Replaced the igniter" row).
+- [need more depth to know `ItemNextUpList` (shared) has no `onLongPress`, so SystemDetail and ApplianceDetail compose `AuroraTaskRow` directly (`SystemNextUp`, `ApplianceNextUp`); add it to the shared list and delete both.
+- [Im fine with that, unless we want to have a feature that deals with an AI prompt going and finding the default lifespan, idk yet] Hand-added appliances get an invented default lifespan by type (`lifespan/appliance_lifespan.dart`); real values needed.
+- [So is this dependent on install date then?] Changing "year built" shows the kit's note but nothing recomputes reminders or lifespans.
+- [Fine with mew, Y] Climate stores only the zone number; "4A · mixed-humid" is derived at runtime from the stand-in lookup. `garage_type` is free text.
+- [Y] Omitted for lack of a source: Records/Emergency rings, "up N since Sep", Project and Recently cards on the profile (History Report card waits for Sprint 9).
+- [Y, gate it from free users] The "What to set aside" table carries a Premium tag but is not gated.
+- [Maybe we can find a way to reduce? If not thats okay] The first full `dart run build_runner build` after big changes takes ~16 minutes; later runs are fast.
+- [Y] Three near-identical page frames (`ItemPage`, `RemindersPage`, `home_common`) and two form-photo models (`FormPhoto`, `models/form_photo.dart`): consolidate when core widgets are approved.
 
 Decisions still open (Sprint 3): should the callout on the profile also show at "aging" (75-90%) or only 90%+? Where should "no home yet" send people (today onboarding's property step)? Several photos on Edit Home (today one)? "Add by hand" from the scan chooser: which kind? Should HomeSystems "+ Add" show the chooser first (today it opens the system camera)? Photo limit during the trial? Should an item screen allow deleting a task (kit has no delete UI)? "HEALTHY" = status + lifespan band (as built).
 

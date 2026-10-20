@@ -1,6 +1,20 @@
 targets:
   $default:
     builders:
+      # Nothing under test/ carries a generator annotation, so keep the three
+      # generators out of it: it halves what they have to resolve, and a test
+      # file the older parser chokes on can no longer fail code generation.
+      freezed:
+        generate_for:
+          include:
+            - lib/**
+      riverpod_generator:
+        generate_for:
+          include:
+            - lib/**
       json_serializable:
+        generate_for:
+          include:
+            - lib/**
         options:
           field_rename: snake
