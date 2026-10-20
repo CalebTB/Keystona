@@ -37,6 +37,7 @@ class TaskDraft {
         years: _clampYears(task.recurrenceIntervalYears),
         due: DueChoice.other,
         customDate: dateOnly(task.dueDate),
+        remindDays: task.reminderDaysBefore ?? RemindOptions.defaultDays,
         notes: task.notes ?? '',
         minutes: task.estimatedMinutes,
         effort: TaskEffort.fromDifficulty(task.difficulty),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:keystona/core/theme/aurora_motion.dart';
 import 'package:keystona/core/widgets/aurora/aurora_toggle_row.dart';
 import 'package:keystona/features/maintenance/models/maintenance_task.dart';
 import 'package:keystona/features/maintenance/models/task_finding.dart';
@@ -189,6 +190,16 @@ void main() {
       expect(find.text('TASKS TAB'), findsOneWidget);
       expect(find.text('Task deleted'), findsOneWidget);
       expect(find.text('Undo'), findsOneWidget);
+    });
+
+    testWidgets('the delete Undo lasts 10 seconds, not the everyday 5', (
+      t,
+    ) async {
+      await deleteIt(t);
+      final bar = t.widget<SnackBar>(find.byType(SnackBar));
+      expect(bar.duration, AuroraDurations.undoDelete);
+      expect(bar.duration, const Duration(seconds: 10));
+      expect(bar.duration, isNot(AuroraDurations.undo));
     });
 
     testWidgets('the snackbar Undo sits to the right of its message', (

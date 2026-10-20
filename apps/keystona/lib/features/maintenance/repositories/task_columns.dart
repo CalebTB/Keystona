@@ -6,7 +6,7 @@ abstract final class TaskColumns {
   static const String task =
       'id, property_id, user_id, template_id, task_origin, name, '
       'description, instructions, category, due_date, recurrence, '
-      'recurrence_interval_years, season, climate_adjusted, status, '
+      'recurrence_interval_years, reminder_days_before, season, climate_adjusted, status, '
       'difficulty, diy_or_pro, priority, estimated_minutes, estimated_cost, '
       'notes, tools_needed, supplies_needed, linked_system_id, '
       'linked_appliance_id, notifications_enabled, notifications_off_at, '
@@ -18,6 +18,10 @@ abstract final class TaskColumns {
       'contractor_name, contractor_company, contractor_phone, service_cost, '
       'materials_cost, time_spent_minutes, notes, linked_document_ids, '
       'findings, log_to_item_history, due_date, created_at';
+
+  /// The columns read from `completion_photos`.
+  static const String completionPhoto =
+      'id, completion_id, file_path, caption, kind, created_at';
 
   /// The columns of [TaskSkip].
   static const String skip = 'id, task_id, skipped_on, due_date, reason';

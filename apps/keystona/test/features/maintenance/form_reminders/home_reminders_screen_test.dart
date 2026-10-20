@@ -3,15 +3,19 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
+import 'package:keystona/core/theme/aurora_motion.dart';
 import 'package:keystona/core/widgets/aurora/aurora_toggle_row.dart';
 import 'package:keystona/core/widgets/error_view.dart';
 import 'package:keystona/features/maintenance/models/maintenance_task.dart';
 import 'package:keystona/features/maintenance/models/reminder_item.dart';
+import 'package:keystona/features/maintenance/providers/task_repositories_provider.dart';
 import 'package:keystona/features/maintenance/reminders_copy.dart';
 import 'package:keystona/features/maintenance/screens/home_reminders_screen.dart';
 import 'package:keystona/features/maintenance/widgets/reminders/reminder_frequency_row.dart';
 import 'package:keystona/features/maintenance/widgets/reminders/reminders_skeleton.dart';
 
+import '../detail/task_detail_test_support.dart'
+    show FakeTaskDetailRepository, fixtureDetail;
 import 'form_reminders_support.dart';
 
 Future<FakeRemindersRepository> _open(
@@ -213,6 +217,51 @@ void main() {
       await settle(tester);
       expect(repo.deleted, ['m1']);
       expect(find.text('Clean the window wells'), findsNothing);
+    });
+
+    testWidgets('a deleted reminder offers a 10 second Undo that restores it', (
+      tester,
+    ) async {
+      final repo = FakeRemindersRepository(kReminders());
+      final tasks = FakeTaskDetailRepository(fixtureDetail());
+      await pumpRouted(
+        tester,
+        const HomeRemindersScreen(),
+        overrides: [
+          ...reminderOverrides(repo),
+          taskDetailRepositoryProvider.overrideWithValue(tasks),
+        ],
+      );
+      await reveal(tester, find.byIcon(Icons.delete_outline));
+      await tester.tap(find.byIcon(Icons.delete_outline));
+      await settle(tester);
+      await tester.tap(find.text(RemindersCopy.deleteConfirm));
+      await settle(tester);
+
+      expect(find.text(RemindersCopy.deleted), findsOneWidget);
+      final bar = tester.widget<SnackBar>(find.byType(SnackBar));
+      expect(bar.duration, AuroraDurations.undoDelete);
+      // Undo at the right of its message.
+      expect(
+        tester.getRect(find.text('Undo')).left,
+        greaterThan(tester.getRect(find.text(RemindersCopy.deleted)).right),
+      );
+
+      await tester.tap(find.text('Undo'));
+      await settle(tester);
+      expect(tasks.restoredTasks, ['m1']);
+    });
+
+    testWidgets('a failed delete shows no Undo', (tester) async {
+      final repo = FakeRemindersRepository(kReminders());
+      await _open(tester, repo: repo);
+      repo.writeError = StateError('offline');
+      await reveal(tester, find.byIcon(Icons.delete_outline));
+      await tester.tap(find.byIcon(Icons.delete_outline));
+      await settle(tester);
+      await tester.tap(find.text(RemindersCopy.deleteConfirm));
+      await settle(tester);
+      expect(find.text('Undo'), findsNothing);
     });
 
     testWidgets('Cancel on the delete dialog keeps it', (tester) async {

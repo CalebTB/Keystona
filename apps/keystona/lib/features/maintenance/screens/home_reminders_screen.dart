@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
+import '../../../core/theme/aurora_motion.dart';
 import '../../../core/theme/aurora_scale.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/widgets/aurora/aurora_sheet.dart';
@@ -12,6 +13,7 @@ import '../../../core/widgets/snackbar_service.dart';
 import '../models/reminder_frequency.dart';
 import '../models/reminder_item.dart';
 import '../providers/reminders_providers.dart';
+import '../providers/task_deletion.dart';
 import '../reminders_copy.dart';
 import '../widgets/reminders/home_reminders_body.dart';
 import '../widgets/reminders/reminders_back_link.dart';
@@ -38,16 +40,18 @@ class HomeRemindersScreen extends ConsumerWidget {
     await ref.read(remindersProvider.future);
   }
 
-  /// Runs a change; says so when it could not be saved.
-  Future<void> _change(
+  /// Runs a change; says so when it could not be saved. True when it was.
+  Future<bool> _change(
     BuildContext context,
     Future<void> Function() change, {
     String error = RemindersCopy.changeError,
   }) async {
     try {
       await change();
+      return true;
     } catch (_) {
       if (context.mounted) SnackbarService.showError(context, error);
+      return false;
     }
   }
 
@@ -77,6 +81,8 @@ class HomeRemindersScreen extends ConsumerWidget {
     ReminderItem item,
   ) async {
     final notifier = ref.read(remindersProvider.notifier);
+    // Undo outlives this screen's providers' listeners: keep the container.
+    final container = ProviderScope.containerOf(context);
     final confirmed = await ConfirmDialog.show(
       context,
       title: RemindersCopy.deleteTitle,
@@ -85,11 +91,33 @@ class HomeRemindersScreen extends ConsumerWidget {
       onConfirm: () {},
     );
     if (confirmed != true || !context.mounted) return;
-    await _change(
+    final deleted = await _change(
       context,
       () => notifier.delete(item.id),
       error: RemindersCopy.deleteError,
     );
+    if (!deleted || !context.mounted) return;
+    SnackbarService.showUndo(
+      context,
+      message: RemindersCopy.deleted,
+      duration: AuroraDurations.undoDelete,
+      onUndo: () => _restore(context, container, item.id),
+    );
+  }
+
+  /// Undo for [_delete]: brings the reminder back and refreshes every list.
+  Future<void> _restore(
+    BuildContext context,
+    ProviderContainer container,
+    String id,
+  ) async {
+    try {
+      await TaskDeletion.restore(container, id);
+    } catch (_) {
+      if (context.mounted) {
+        SnackbarService.showError(context, RemindersCopy.changeError);
+      }
+    }
   }
 
   void _edit(BuildContext context, ReminderItem item) => context.push(

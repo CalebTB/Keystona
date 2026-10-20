@@ -70,7 +70,7 @@ class TaskDetailView {
 
     return TaskDetailView._(
       phase: phase,
-      due: phase == TaskPhase.open ? TaskDue.of(task.dueDate, today) : null,
+      due: phase == TaskPhase.open ? TaskDue.of(task, today) : null,
       doneTitle: doneTitle,
       nextLine: phase == TaskPhase.done && recurring
           ? 'Next one is due ${TaskFormat.dateShort(task.dueDate)}'

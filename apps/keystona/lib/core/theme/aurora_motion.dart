@@ -18,9 +18,13 @@ abstract final class AuroraDurations {
   /// Sheet and modal transition.
   static const Duration sheet = Duration(milliseconds: 300);
 
-  /// Undo snackbar visibility. Kit notes say 5 s; the ConfirmDelete storyboard
-  /// says 10 s — see the open item in the plan before changing.
+  /// Undo snackbar for everyday actions: mark done, skip, push back, stop
+  /// reminders. (The kit notes say 5 s.)
   static const Duration undo = Duration(seconds: 5);
+
+  /// Undo snackbar after a DELETE: longer, because a delete reads as final
+  /// (the ConfirmDelete storyboard says 10 s). Decided 2026-10-20.
+  static const Duration undoDelete = Duration(seconds: 10);
 
   /// Debounce for search input.
   static const Duration searchDebounce = Duration(milliseconds: 300);

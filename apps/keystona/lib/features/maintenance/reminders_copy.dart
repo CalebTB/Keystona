@@ -67,6 +67,7 @@ abstract final class RemindersCopy {
   static const String edit = 'Edit';
   static const String deleteTitle = 'Delete this reminder?';
   static const String deleteConfirm = 'Delete';
+  static const String deleted = 'Reminder deleted';
   static const String deleteError = "Couldn't delete that reminder. Try again.";
 
   static String homeEyebrow(String? address) =>

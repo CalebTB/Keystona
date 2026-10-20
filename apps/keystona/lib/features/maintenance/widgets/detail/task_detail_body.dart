@@ -175,7 +175,7 @@ class TaskDetailBody extends StatelessWidget {
   }
 
   String _dueSubtitle(TaskDue due) {
-    final days = detail.reminderDaysBefore;
+    final days = detail.task.reminderDaysBefore;
     final reminder = days == null
         ? null
         : TaskDates.addDays(detail.task.dueDate, -days);
@@ -243,7 +243,7 @@ class TaskDetailBody extends StatelessWidget {
 
   List<TaskFact> _scheduleFacts(MaintenanceTask task) {
     final next = view.nextAfterThis;
-    final days = detail.reminderDaysBefore;
+    final days = detail.task.reminderDaysBefore;
     return [
       TaskFact(
         'Repeats',

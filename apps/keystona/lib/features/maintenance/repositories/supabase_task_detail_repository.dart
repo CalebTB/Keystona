@@ -26,7 +26,7 @@ class SupabaseTaskDetailRepository implements TaskDetailRepository {
   static const int signedUrlSeconds = 3600;
 
   static const String _detailColumns =
-      '${TaskColumns.task}, reminder_days_before, '
+      '${TaskColumns.task}, '
       '''
     system:systems(id, name, model, location, installation_date,
       expected_lifespan_min, expected_lifespan_max, lifespan_override),
@@ -65,8 +65,7 @@ class SupabaseTaskDetailRepository implements TaskDetailRepository {
       ..remove('appliance')
       ..remove('completions')
       ..remove('skips')
-      ..remove('template')
-      ..remove('reminder_days_before');
+      ..remove('template');
 
     var task = MaintenanceTask.fromJson(cleaned).copyWith(
       linkedSystemName: system?['name'] as String?,
@@ -89,7 +88,6 @@ class SupabaseTaskDetailRepository implements TaskDetailRepository {
       completions: completions,
       skips: skips,
       parent: _parentOf(task, system, appliance, now),
-      reminderDaysBefore: (row['reminder_days_before'] as num?)?.toInt(),
     );
   }
 
@@ -159,7 +157,7 @@ class SupabaseTaskDetailRepository implements TaskDetailRepository {
     if (completionIds.isEmpty) return const {};
     final rows = await _client
         .from('completion_photos')
-        .select('id, completion_id, file_path, caption, created_at')
+        .select(TaskColumns.completionPhoto)
         .inFilter('completion_id', completionIds)
         .order('created_at');
     final photos = await Future.wait([
@@ -182,14 +180,24 @@ class SupabaseTaskDetailRepository implements TaskDetailRepository {
     } catch (_) {
       url = null;
     }
-    return CompletionPhoto(
-      id: r['id'] as String,
-      completionId: r['completion_id'] as String,
-      path: path,
-      url: url,
-      caption: r['caption'] as String?,
-    );
+    return photoFromRow(r, url: url);
   }
+
+  /// A [CompletionPhoto] from a `completion_photos` row. Its role is the
+  /// `kind` column; a caption of 'before' or 'after' counts only on a row
+  /// whose kind is NULL. Public for tests.
+  static CompletionPhoto photoFromRow(Map<String, dynamic> r, {String? url}) =>
+      CompletionPhoto(
+        id: r['id'] as String,
+        completionId: r['completion_id'] as String,
+        path: r['file_path'] as String,
+        url: url,
+        kind: PhotoKind.resolve(
+          kind: r['kind'] as String?,
+          caption: r['caption'] as String?,
+        ),
+        caption: r['caption'] as String?,
+      );
 
   @override
   Future<String> insertCompletion({
@@ -244,12 +252,14 @@ class SupabaseTaskDetailRepository implements TaskDetailRepository {
             bytes,
             fileOptions: FileOptions(contentType: _mimeType(ext)),
           );
-      rows.add({
-        'completion_id': completionId,
-        'user_id': userId,
-        'file_path': path,
-        'caption': ?photo.caption,
-      });
+      rows.add(
+        TaskRows.completionPhoto(
+          completionId: completionId,
+          userId: userId,
+          path: path,
+          photo: photo,
+        ),
+      );
     }
     await _client.from('completion_photos').insert(rows);
   }

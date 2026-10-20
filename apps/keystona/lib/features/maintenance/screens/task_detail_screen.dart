@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/aurora_colors.dart';
+import '../../../core/theme/aurora_motion.dart';
 import '../../../core/theme/aurora_scale.dart';
 import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/theme/aurora_tasks_b.dart';
@@ -172,6 +173,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
     SnackbarService.showUndo(
       toast,
       message: 'Task deleted',
+      duration: AuroraDurations.undoDelete,
       onUndo: () => _restore(container, toast, taskId),
     );
   }

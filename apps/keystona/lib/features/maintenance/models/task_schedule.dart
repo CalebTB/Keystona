@@ -1,4 +1,5 @@
 import 'maintenance_task.dart';
+import 'task_form_options.dart';
 
 /// Pure date rules for maintenance tasks: what is open, what is overdue and
 /// when a recurring task comes back. No Flutter, no Supabase.
@@ -29,6 +30,20 @@ abstract final class TaskSchedule {
   /// Whole days from [today] until the task is due.
   static int daysUntil(MaintenanceTask task, DateTime today) =>
       dayOf(task.dueDate).difference(today).inDays;
+
+  /// How many days before its due date [task] counts as "soon" (amber): the
+  /// task's own reminder window (`reminder_days_before`), or the default
+  /// lead time when the column is empty.
+  static int soonWindowDays(MaintenanceTask task) =>
+      task.reminderDaysBefore ?? RemindOptions.defaultDays;
+
+  /// Due within its own reminder window and not overdue. The one rule for
+  /// amber: overdue (coral) is checked first by every caller, and a task due
+  /// today is soon even with a window of 0.
+  static bool isSoon(MaintenanceTask task, DateTime today) {
+    final days = daysUntil(task, today);
+    return days >= 0 && days <= soonWindowDays(task);
+  }
 
   /// When a recurring [task] comes back after [base] (defaults to its due
   /// date). A one-time task has no next date and returns [base]. An annual

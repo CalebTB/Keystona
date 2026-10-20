@@ -20,6 +20,7 @@ Also check once built: pushing `maintenance` routes from the Home branch ("Add" 
 
 Applied to the live project on 2026-10-19 (files in `supabase/migrations/`, tests in `supabase/tests/data_gaps_test.sql`):
 
+- 2026-10-20: `completion_photos.kind` ('before'/'after', CHECK-enforced; test in `supabase/tests/completion_photo_kind_test.sql`).
 - New columns: `maintenance_tasks` (estimated_cost, notes, recurrence_interval_years, notifications_off_at/_reason, tags), `task_completions` (findings, log_to_item_history, due_date), `documents.tags`.
 - New table `task_skips`; new RPCs `soft_delete_task`, `restore_task`, `soft_delete_document`, `restore_document`, `search_documents`.
 - Found and fixed: a plain `UPDATE ... SET deleted_at` is blocked by RLS (42501) for tasks and documents, so deleting them never worked from the client, and Undo-delete matched zero rows. New functions fix both.
@@ -38,7 +39,6 @@ Still open:
 - [ ] `get_home_health_score` should exclude turned-off reminders (2.6a).
 - [ ] **Household members** table (Settings → Household, Sprint 7) — the Log screen's "Who did it" has only Me / A pro / Someone else until it exists.
 - [ ] Cost-at-risk, per-completion score delta ("MAINT +3"), per-month completion history: no data source yet.
-- [ ] Before/after photos use `completion_photos.caption` ('before'/'after') — a convention, not a column.
 - [ ] `completed_by` stores 'diy' for "someone else" and 'contractor' for a pro.
 - [ ] Reminder for document renewals (`scheduleRenewalReminder`) and the "We'll remind you 30 days before" promise on the add-document form: nothing schedules it.
 - [ ] Replace-file on document detail is a stub.
@@ -57,17 +57,23 @@ Still open:
 - [ ] Live edge detection for the document camera: pick a package, add `android.permission.CAMERA`.
 - [ ] `supabase/migrations/20260117010953_create_documents.sql` is 0 bytes locally (the schema exists only remotely); local `supabase db reset` cannot rebuild documents.
 
-## Product decisions still open
+## Product decisions
 
-- Undo duration: 5 s (kit notes, used in code) vs 10 s (ConfirmDelete storyboard).
-- Free-plan limit is 25 documents (kit PNGs say 50). Should renewals be exempt from the limit?
-- "A pro" in the Log screen: pre-fill from the last pro who did the task?
-- "Before/after" photo order convention vs an explicit picker.
-- Amber "soon" window: 14 days?
-- Tasks tab: should "By date" switch grouping (currently a "By date / By area" sheet)? Search is a live field (kit draws a button).
-- Bring back the 3-stage completion animation (kit's quick-done sheet replaced it)?
-- Should the old Tasks views that the kit does not draw (by system, seasonal, plan, week strip) stay deleted?
-- `ScanBadge` option for "from scan" is unchosen in the kit; Home History Report scope (launch or v2.0); shopping path in or out of launch.
+Decided 2026-10-20 (applied in code):
+
+- Undo lasts 10 s after a DELETE (`AuroraDurations.undoDelete`) and 5 s for everyday actions (`AuroraDurations.undo`).
+- Replaced (renewed) documents do not count toward the 25-document free limit; a renewal is allowed even at the limit.
+- Log screen "A pro" pre-fills from the last pro who did the task.
+- Before/after photos have a real column: `completion_photos.kind` ('before' / 'after').
+- Amber "soon" uses each task's own reminder window (`reminder_days_before`, default 7).
+- The old Tasks views the kit does not draw (by system, seasonal, plan, week strip) stay deleted.
+
+Left open on purpose (decide later):
+
+- Tasks tab: should "By date" switch grouping (today a "By date / By area" sheet), and what the kit's search button opens (today a live search field).
+- Bring back the 3-stage completion animation (the kit's quick-done sheet replaced it)?
+- `ScanBadge` option for "from scan" (unchosen in the kit); Home History Report scope (launch or v2.0); shopping path in or out of launch.
+- Free-plan limit is 25 documents; the kit PNGs say 50 (code wins for now).
 
 ## Copy to review
 

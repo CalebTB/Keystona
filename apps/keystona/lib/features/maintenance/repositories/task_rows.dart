@@ -67,6 +67,20 @@ abstract final class TaskRows {
     };
   }
 
+  /// A `completion_photos` row. The before/after role goes in `kind`;
+  /// `caption` is left alone (no caption is entered on the Log screen).
+  static Map<String, dynamic> completionPhoto({
+    required String completionId,
+    required String userId,
+    required String path,
+    required LogPhoto photo,
+  }) => {
+    'completion_id': completionId,
+    'user_id': userId,
+    'file_path': path,
+    'kind': photo.kind?.value,
+  };
+
   /// A `task_skips` row. [dueDate] is the occurrence skipped.
   static Map<String, dynamic> skip({
     required MaintenanceTask task,

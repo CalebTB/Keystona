@@ -1,3 +1,5 @@
+import '../models/maintenance_task.dart';
+import '../models/task_schedule.dart';
 import 'task_dates.dart';
 
 /// How urgent an open task is. Overdue is coral, soon is amber.
@@ -8,9 +10,6 @@ enum TaskDueTone { overdue, soon, later }
 class TaskDue {
   const TaskDue._(this.tone, this.days);
 
-  /// Tasks due within this many days are "soon".
-  static const int soonWindowDays = 14;
-
   /// Beyond this many days the pill counts months instead of days.
   static const int monthsAfterDays = 45;
   static const int _daysPerMonth = 30;
@@ -20,11 +19,13 @@ class TaskDue {
   /// Days until due (negative when overdue).
   final int days;
 
-  factory TaskDue.of(DateTime due, DateTime today) {
-    final d = TaskDates.daysBetween(today, due);
+  /// Overdue wins; then "soon" is the task's own reminder window
+  /// ([TaskSchedule.isSoon]); everything else is later.
+  factory TaskDue.of(MaintenanceTask task, DateTime today) {
+    final d = TaskDates.daysBetween(today, task.dueDate);
     final tone = d < 0
         ? TaskDueTone.overdue
-        : d <= soonWindowDays
+        : TaskSchedule.isSoon(task, today)
         ? TaskDueTone.soon
         : TaskDueTone.later;
     return TaskDue._(tone, d);

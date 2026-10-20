@@ -15,12 +15,14 @@ class TaskLogWhoSection extends StatelessWidget {
     required this.pro,
     required this.onDoer,
     required this.onPickPro,
+    required this.onClearPro,
   });
 
   final TaskDoer doer;
   final TaskPro? pro;
   final ValueChanged<TaskDoer> onDoer;
   final VoidCallback onPickPro;
+  final VoidCallback onClearPro;
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +50,7 @@ class TaskLogWhoSection extends StatelessWidget {
         ),
         if (doer == TaskDoer.pro) ...[
           SizedBox(height: a.of(AuroraSpacing.space5)),
-          TaskLogProCard(pro: pro, onTap: onPickPro),
+          TaskLogProCard(pro: pro, onTap: onPickPro, onClear: onClearPro),
         ],
       ],
     );

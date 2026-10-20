@@ -12,12 +12,19 @@ import '../../models/task_log_draft.dart';
 import '../../services/task_format.dart';
 
 /// The pro who did the work, from Who to call. Tapping it (the "Change"
-/// link) opens the picker; with nobody chosen yet it invites the choice.
+/// link) opens the picker; the close control clears it. With nobody chosen
+/// it invites the choice.
 class TaskLogProCard extends StatelessWidget {
-  const TaskLogProCard({super.key, required this.pro, required this.onTap});
+  const TaskLogProCard({
+    super.key,
+    required this.pro,
+    required this.onTap,
+    required this.onClear,
+  });
 
   final TaskPro? pro;
   final VoidCallback onTap;
+  final VoidCallback onClear;
 
   @override
   Widget build(BuildContext context) {
@@ -84,6 +91,17 @@ class TaskLogProCard extends StatelessWidget {
               chosen == null ? 'Choose' : 'Change',
               style: AuroraTasksBType.change,
             ),
+            if (chosen != null)
+              AuroraPressable(
+                onTap: onClear,
+                semanticLabel: 'Clear who did it',
+                enforceTouchTarget: true,
+                child: Icon(
+                  Icons.close,
+                  size: a.of(AuroraTasksB.photoRemoveGlyph),
+                  color: AuroraColors.ink,
+                ),
+              ),
           ],
         ),
       ),

@@ -142,13 +142,13 @@ void main() {
               id: 'p1',
               completionId: 'c4',
               path: 'u/p/c4/a.jpg',
-              caption: 'before',
+              kind: PhotoKind.before,
             ),
             const CompletionPhoto(
               id: 'p2',
               completionId: 'c4',
               path: 'u/p/c4/b.jpg',
-              caption: 'after',
+              kind: PhotoKind.after,
             ),
           ],
         },
@@ -156,6 +156,32 @@ void main() {
       await pumpTasks(t, repo, location: _historyPath);
       expect(find.bySemanticsLabel('before photo'), findsOneWidget);
       expect(find.bySemanticsLabel('after photo'), findsOneWidget);
+    }, semanticsEnabled: true);
+
+    testWidgets('the label comes from kind, not from the caption', (t) async {
+      final repo = _repo(
+        photos: {
+          'c4': [
+            const CompletionPhoto(
+              id: 'p1',
+              completionId: 'c4',
+              path: 'u/p/c4/a.jpg',
+              kind: PhotoKind.after,
+              caption: 'New filter in place',
+            ),
+            const CompletionPhoto(
+              id: 'p2',
+              completionId: 'c4',
+              path: 'u/p/c4/b.jpg',
+              caption: 'Dusty vent',
+            ),
+          ],
+        },
+      );
+      await pumpTasks(t, repo, location: _historyPath);
+      expect(find.bySemanticsLabel('after photo'), findsOneWidget);
+      expect(find.bySemanticsLabel('Photo'), findsOneWidget);
+      expect(find.bySemanticsLabel('New filter in place photo'), findsNothing);
     }, semanticsEnabled: true);
   });
 

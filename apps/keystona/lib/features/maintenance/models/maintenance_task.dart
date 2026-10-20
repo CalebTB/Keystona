@@ -151,6 +151,11 @@ abstract class MaintenanceTask with _$MaintenanceTask {
     /// [RecurrenceType.annual].
     int? recurrenceIntervalYears,
 
+    /// Days before the due date the reminder goes out
+    /// (`reminder_days_before`, default 7 in the database, nullable). It is
+    /// also the task's "soon" window: see `TaskSchedule.soonWindowDays`.
+    int? reminderDaysBefore,
+
     /// Whether this task is climate-adjusted. [#32] detail badge.
     @Default(false) bool climateAdjusted,
 

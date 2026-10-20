@@ -1,14 +1,16 @@
+import 'completion_photo.dart';
 import 'task_finding.dart';
 
 /// A photo picked on the Log screen, by local path.
 class LogPhoto {
-  const LogPhoto({required this.path, required this.name, this.caption});
+  const LogPhoto({required this.path, required this.name, this.kind});
 
   final String path;
   final String name;
 
-  /// 'before' or 'after' on the first two photos, otherwise null.
-  final String? caption;
+  /// The role it is saved with: before for the first photo, after for the
+  /// second, otherwise null.
+  final PhotoKind? kind;
 }
 
 /// Who did the work: the homeowner ('diy') or a pro ('contractor').
@@ -24,6 +26,10 @@ enum TaskDoer {
 
 /// A pro from Who to call.
 class TaskPro {
+  /// The id of a pro that is not in Who to call: built from the contractor
+  /// fields of an earlier completion, shown read-only.
+  static const String storedId = '';
+
   const TaskPro({
     required this.id,
     required this.name,

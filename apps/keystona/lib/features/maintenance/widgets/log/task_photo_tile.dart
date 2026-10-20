@@ -9,20 +9,7 @@ import '../../../../core/theme/aurora_sizes.dart';
 import '../../../../core/theme/aurora_spacing.dart';
 import '../../../../core/theme/aurora_tasks_b.dart';
 import '../../../../core/widgets/aurora/aurora_pressable.dart';
-
-/// Which picture of the job a photo is: the first is the before, the second
-/// the after.
-enum TaskPhotoBadge {
-  before,
-  after;
-
-  /// The badge for the photo at [index], or null from the third on.
-  static TaskPhotoBadge? forIndex(int index) => switch (index) {
-    0 => TaskPhotoBadge.before,
-    1 => TaskPhotoBadge.after,
-    _ => null,
-  };
-}
+import '../../models/completion_photo.dart';
 
 /// A picked photo in the grid, with its Before / After badge and a remove
 /// control. Fills the square its parent gives it.
@@ -31,12 +18,12 @@ class TaskPhotoTile extends StatelessWidget {
     super.key,
     required this.path,
     required this.onRemove,
-    this.badge,
+    this.kind,
   });
 
   /// Local file path of the picked photo.
   final String path;
-  final TaskPhotoBadge? badge;
+  final PhotoKind? kind;
   final VoidCallback onRemove;
 
   @override
@@ -59,11 +46,11 @@ class TaskPhotoTile extends StatelessWidget {
             ),
           ),
         ),
-        if (badge != null)
+        if (kind != null)
           Positioned(
             left: a.of(AuroraSpacing.space1),
             bottom: a.of(AuroraSpacing.space1),
-            child: _Badge(badge: badge!),
+            child: _Badge(kind: kind!),
           ),
         Positioned(
           top: 0,
@@ -92,14 +79,14 @@ class TaskPhotoTile extends StatelessWidget {
 }
 
 class _Badge extends StatelessWidget {
-  const _Badge({required this.badge});
+  const _Badge({required this.kind});
 
-  final TaskPhotoBadge badge;
+  final PhotoKind kind;
 
   @override
   Widget build(BuildContext context) {
     final a = context.aurora;
-    final after = badge == TaskPhotoBadge.after;
+    final after = kind == PhotoKind.after;
     final fg = after ? AuroraColors.olive : AuroraColors.inkBody;
     return Container(
       padding: a.symmetric(

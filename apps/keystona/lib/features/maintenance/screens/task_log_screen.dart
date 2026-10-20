@@ -17,6 +17,7 @@ import '../../../core/widgets/snackbar_service.dart';
 import '../models/task_detail.dart';
 import '../models/task_log_draft.dart';
 import '../providers/task_detail_provider.dart';
+import '../providers/task_repositories_provider.dart';
 import '../services/task_dates.dart';
 import '../services/task_format.dart';
 import '../services/task_log_form_state.dart';
@@ -58,6 +59,17 @@ class _TaskLogScreenState extends ConsumerState<TaskLogScreen> {
   TaskLogFormState? _form;
   TaskDetail? _detail;
   bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Keeps Who to call loading while the screen is open, and tells the form
+    // when it arrives so a pre-filled pro can be matched to an entry.
+    ref.listenManual(taskProsProvider, (_, next) {
+      final pros = next.value;
+      if (pros != null) _form?.setKnownPros(pros);
+    });
+  }
 
   @override
   void dispose() {
@@ -125,6 +137,7 @@ class _TaskLogScreenState extends ConsumerState<TaskLogScreen> {
       _form ??= TaskLogFormState(
         detail: loaded,
         today: TaskDates.dateOnly(DateTime.now()),
+        pros: ref.read(taskProsProvider).value ?? const [],
       );
     }
     final form = _form;
@@ -232,6 +245,7 @@ class _TaskLogScreenState extends ConsumerState<TaskLogScreen> {
           pro: form.pro,
           onDoer: form.setDoer,
           onPickPro: _pickPro,
+          onClearPro: form.clearPro,
         ),
         gap,
         TaskLogCostSection(

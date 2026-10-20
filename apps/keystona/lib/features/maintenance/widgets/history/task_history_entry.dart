@@ -83,7 +83,7 @@ class TaskHistoryEntryView extends StatelessWidget {
               runSpacing: a.of(AuroraSpacing.space3),
               children: [
                 for (final p in entry.photos)
-                  _Thumb(url: p.url, label: p.caption),
+                  _Thumb(url: p.url, label: p.kind?.value),
               ],
             ),
           ],

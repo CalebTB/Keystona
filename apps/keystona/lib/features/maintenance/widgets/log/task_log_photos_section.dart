@@ -5,6 +5,7 @@ import '../../../../core/theme/aurora_scale.dart';
 import '../../../../core/theme/aurora_spacing.dart';
 import '../../../../core/theme/aurora_tasks_b.dart';
 import '../../../../core/theme/aurora_typography.dart';
+import '../../models/completion_photo.dart';
 import '../../models/task_log_draft.dart';
 import '../shared/task_section_label.dart';
 import 'task_photo_slot.dart';
@@ -57,7 +58,7 @@ class TaskLogPhotosSection extends StatelessWidget {
                     child: i < photos.length
                         ? TaskPhotoTile(
                             path: photos[i].path,
-                            badge: TaskPhotoBadge.forIndex(i),
+                            kind: PhotoKind.forSlot(i),
                             onRemove: () => onRemove(i),
                           )
                         : TaskPhotoSlot(onTap: onAdd),

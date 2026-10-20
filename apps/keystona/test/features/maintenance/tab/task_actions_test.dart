@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:keystona/core/theme/aurora_motion.dart';
 import 'package:keystona/features/maintenance/screens/maintenance_screen.dart';
 import 'package:keystona/features/maintenance/widgets/actions/done/quick_done_body.dart';
 import 'package:keystona/features/maintenance/widgets/tasks_tab/task_check_button.dart';
@@ -117,6 +118,15 @@ void main() {
       expect(find.text('Replace HVAC air filter'), findsOneWidget);
     });
 
+    testWidgets('the everyday Undo stays at 5 seconds', (tester) async {
+      await _load(tester);
+      await tapAndSettle(tester, _checkOf('hvac'));
+      await tapAndSettle(tester, find.text('Save'));
+      final bar = tester.widget<SnackBar>(find.byType(SnackBar));
+      expect(bar.duration, AuroraDurations.undo);
+      expect(bar.duration, const Duration(seconds: 5));
+    });
+
     testWidgets('finishing the overdue task shows "nothing overdue" + Undo', (
       tester,
     ) async {
@@ -203,6 +213,16 @@ void main() {
       );
       await tapAndSettle(tester, find.text('Undo'));
       expect(repo.updates.last['due_date'], '2026-10-07');
+    });
+
+    testWidgets('skipping keeps the 5 second Undo', (tester) async {
+      await _load(tester);
+      await _longPress(tester, 'Replace HVAC air filter');
+      await tapAndSettle(tester, find.text('Skip this time'));
+      expect(
+        tester.widget<SnackBar>(find.byType(SnackBar)).duration,
+        AuroraDurations.undo,
+      );
     });
 
     testWidgets('Change how often shows three chips and applies one', (

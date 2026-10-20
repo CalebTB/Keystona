@@ -46,6 +46,7 @@ MaintenanceTask fixtureTask({
   double? estimatedCost,
   String? notes,
   int? intervalYears,
+  int? reminderDays = 7,
 }) => MaintenanceTask(
   id: id,
   propertyId: 'p1',
@@ -66,6 +67,7 @@ MaintenanceTask fixtureTask({
   estimatedCost: estimatedCost,
   notes: notes,
   recurrenceIntervalYears: intervalYears,
+  reminderDaysBefore: reminderDays,
   createdAt: DateTime(2026),
   updatedAt: DateTime(2026),
 );
@@ -79,6 +81,8 @@ TaskCompletion fixtureCompletion(
   int? minutes = 10,
   String? notes,
   String? company,
+  String? contractorName,
+  String? phone,
   List<String> findings = const [],
   DateTime? dueDate,
 }) => TaskCompletion(
@@ -88,7 +92,9 @@ TaskCompletion fixtureCompletion(
   propertyId: 'p1',
   completedDate: date,
   completedBy: by,
+  contractorName: contractorName,
   contractorCompany: company,
+  contractorPhone: phone,
   serviceCost: labor,
   materialsCost: parts,
   timeSpentMinutes: minutes,
@@ -142,13 +148,11 @@ TaskDetail fixtureDetail({
   MaintenanceTask? task,
   List<TaskCompletion>? completions,
   TaskParent? parent = kFurnace,
-  int? reminderDays = 7,
   List<TaskSkip> skips = const [],
 }) => TaskDetail(
   task: task ?? fixtureTask(),
   completions: completions ?? fixtureCompletions().take(3).toList(),
   parent: parent,
-  reminderDaysBefore: reminderDays,
   skips: skips,
 );
 

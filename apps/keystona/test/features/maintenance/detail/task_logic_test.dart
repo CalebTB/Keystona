@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:keystona/features/maintenance/models/completion_photo.dart';
 import 'package:keystona/features/maintenance/models/maintenance_task.dart';
 import 'package:keystona/features/maintenance/models/task_finding.dart';
 import 'package:keystona/features/maintenance/models/task_history.dart';
@@ -73,13 +74,20 @@ void main() {
   group('TaskDue', () {
     test('overdue, soon and later', () {
       final t = DateTime(2026, 10, 4);
-      expect(TaskDue.of(DateTime(2026, 10, 1), t).tone, TaskDueTone.overdue);
-      expect(TaskDue.of(DateTime(2026, 10, 1), t).pill, '3 days overdue');
-      expect(TaskDue.of(DateTime(2026, 10, 7), t).tone, TaskDueTone.soon);
-      expect(TaskDue.of(DateTime(2026, 10, 7), t).pill, 'Due in 3 days');
-      expect(TaskDue.of(DateTime(2026, 10, 7), t).relative, 'In 3 days');
-      expect(TaskDue.of(DateTime(2026, 12, 25), t).tone, TaskDueTone.later);
-      expect(TaskDue.of(t, t).pill, 'Due today');
+      MaintenanceTask due(DateTime d) => fixtureTask(due: d);
+      expect(
+        TaskDue.of(due(DateTime(2026, 10, 1)), t).tone,
+        TaskDueTone.overdue,
+      );
+      expect(TaskDue.of(due(DateTime(2026, 10, 1)), t).pill, '3 days overdue');
+      expect(TaskDue.of(due(DateTime(2026, 10, 7)), t).tone, TaskDueTone.soon);
+      expect(TaskDue.of(due(DateTime(2026, 10, 7)), t).pill, 'Due in 3 days');
+      expect(TaskDue.of(due(DateTime(2026, 10, 7)), t).relative, 'In 3 days');
+      expect(
+        TaskDue.of(due(DateTime(2026, 12, 25)), t).tone,
+        TaskDueTone.later,
+      );
+      expect(TaskDue.of(due(t), t).pill, 'Due today');
     });
   });
 
@@ -346,7 +354,11 @@ void main() {
       expect(d.minutes, 70);
       expect(d.laborCost, 129);
       expect(d.receiptIds, ['d1']);
-      expect(d.photos.map((p) => p.caption), ['before', 'after', null]);
+      expect(d.photos.map((p) => p.kind), [
+        PhotoKind.before,
+        PhotoKind.after,
+        null,
+      ]);
       f.dispose();
     });
 

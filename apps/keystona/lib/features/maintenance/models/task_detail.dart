@@ -22,9 +22,6 @@ abstract class TaskDetail with _$TaskDetail {
     /// The system, appliance or area this task belongs to.
     TaskParent? parent,
 
-    /// `maintenance_tasks.reminder_days_before`.
-    int? reminderDaysBefore,
-
     /// Skipped occurrences (`task_skips`), newest first.
     @Default(<TaskSkip>[]) List<TaskSkip> skips,
   }) = _TaskDetail;

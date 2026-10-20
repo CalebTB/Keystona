@@ -29,7 +29,7 @@ class TaskMenuPreview extends StatelessWidget {
         ? StatusChip.overdue(
             label: TasksCopy.overdueBadge(TaskSchedule.daysLate(task, today)),
           )
-        : days <= 7
+        : TaskSchedule.isSoon(task, today)
         ? StatusChip.dueSoon(label: TasksCopy.dueBadge(days))
         : StatusChip.scheduled(label: TasksCopy.dueBadge(days));
 

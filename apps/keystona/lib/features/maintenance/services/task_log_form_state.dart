@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../models/completion_photo.dart';
 import '../models/maintenance_task.dart';
 import '../models/task_detail.dart';
 import '../models/task_finding.dart';
@@ -7,18 +8,24 @@ import '../models/task_log_draft.dart';
 import 'task_dates.dart';
 import 'task_format.dart';
 import 'task_log_input.dart';
+import 'task_pro_prefill.dart';
 import 'task_timing.dart';
 
 /// Field state and validation for the Log screen. It owns the text
 /// controllers, so the screen disposes it.
 class TaskLogFormState extends ChangeNotifier {
-  TaskLogFormState({required TaskDetail detail, required DateTime today})
-    : _today = today,
-      _task = detail.task,
-      _parentName = detail.parent?.name,
-      _latestDone = detail.completions.isEmpty
-          ? null
-          : detail.completions.first.completedDate {
+  TaskLogFormState({
+    required TaskDetail detail,
+    required DateTime today,
+    List<TaskPro> pros = const [],
+  }) : _today = today,
+       _knownPros = pros,
+       _task = detail.task,
+       _parentName = detail.parent?.name,
+       _latestDone = detail.completions.isEmpty
+           ? null
+           : detail.completions.first.completedDate,
+       _lastPro = TaskProPrefill.lastPro(detail.completions) {
     date = TextEditingController(text: TaskLogInput.formatDate(today));
     time = TextEditingController();
     labor = TextEditingController();
@@ -34,6 +41,9 @@ class TaskLogFormState extends ChangeNotifier {
   final String? _parentName;
   final DateTime? _latestDone;
 
+  /// The pro of the latest earlier completion done by a pro, as saved.
+  final TaskPro? _lastPro;
+
   late final TextEditingController date;
   late final TextEditingController time;
   late final TextEditingController labor;
@@ -42,6 +52,15 @@ class TaskLogFormState extends ChangeNotifier {
 
   TaskDoer _doer = TaskDoer.me;
   TaskPro? _pro;
+
+  /// Pros from Who to call, as far as they have loaded.
+  List<TaskPro> _knownPros;
+
+  /// "A pro" has had its one chance to start on [_lastPro].
+  bool _proPrefilled = false;
+
+  /// [_pro] is the untouched pre-fill, not something the user chose.
+  bool _proIsPrefill = false;
   final Set<TaskFinding> _findings = {TaskFinding.ok};
   final List<LogPhoto> _photos = [];
   final List<ReceiptOption> _receipts = [];
@@ -54,14 +73,46 @@ class TaskLogFormState extends ChangeNotifier {
   List<ReceiptOption> get receipts => List.unmodifiable(_receipts);
   bool get addToHistory => _addToHistory;
 
+  /// Picks who did it. The first time "A pro" is chosen with nobody picked
+  /// yet, it starts on the pro of the latest earlier completion done by a
+  /// pro (once; never for "Me", never over a pro the user chose). Nothing is
+  /// saved until Save.
   void setDoer(TaskDoer value) {
     _doer = value;
+    if (value == TaskDoer.pro && !_proPrefilled) {
+      _proPrefilled = true;
+      final last = _lastPro;
+      if (_pro == null && last != null) {
+        _pro = TaskProPrefill.resolve(last, _knownPros);
+        _proIsPrefill = true;
+      }
+    }
     notifyListeners();
   }
 
+  /// The user picked [value].
   void setPro(TaskPro value) {
     _pro = value;
+    _proIsPrefill = false;
     notifyListeners();
+  }
+
+  /// The user cleared the pro. It is not filled in again.
+  void clearPro() {
+    _pro = null;
+    _proIsPrefill = false;
+    notifyListeners();
+  }
+
+  /// Pros from Who to call have loaded. A pre-fill the user has not touched
+  /// is swapped for its entry in [pros] when it matches one.
+  void setKnownPros(List<TaskPro> pros) {
+    _knownPros = pros;
+    final last = _lastPro;
+    if (_proIsPrefill && last != null) {
+      _pro = TaskProPrefill.resolve(last, pros);
+      notifyListeners();
+    }
   }
 
   void toggleFinding(TaskFinding f) {
@@ -153,7 +204,7 @@ class TaskLogFormState extends ChangeNotifier {
         LogPhoto(
           path: _photos[i].path,
           name: _photos[i].name,
-          caption: i == 0 ? 'before' : (i == 1 ? 'after' : null),
+          kind: PhotoKind.forSlot(i),
         ),
     ];
     return TaskLogDraft(
