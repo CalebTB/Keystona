@@ -19,6 +19,36 @@ const List<TestViewport> kViewports = [
 
 const List<double> kTextScales = [1.0, 1.5, 2.0];
 
+/// Run the FULL 5 viewports x 3 text scales matrix (15 cases per screen):
+///   flutter test --dart-define=FULL_MATRIX=true
+/// Do this before a release. Day to day, the curated set below runs instead.
+const bool kFullMatrix = bool.fromEnvironment('FULL_MATRIX');
+
+/// The viewports responsive tests loop over by default.
+///
+/// Chosen as the worst cases rather than every combination: the smallest
+/// phone (width pressure), a landscape phone (height pressure), the reference
+/// phone, and a tablet (content width cap). Together with [scalesFor] this is
+/// 5 cases per screen instead of 15, and it still catches the overflows the
+/// full matrix found in practice.
+List<TestViewport> get activeViewports => kFullMatrix
+    ? kViewports
+    : [kViewports[0], kViewports[1], kViewports[3], kViewports[4]];
+
+/// The text scales to run at [viewport] by default.
+///   - 320x568 at 2.0: the strictest width case.
+///   - 390x844 at 1.0 and 1.5: the reference phone, plus the scale at which
+///     layouts start to stack.
+///   - 844x390 landscape at 1.5: height pressure.
+///   - 834x1194 tablet at 1.0.
+List<double> scalesFor(TestViewport viewport) {
+  if (kFullMatrix) return kTextScales;
+  if (viewport.size == kViewports[0].size) return const [2.0];
+  if (viewport.size == kViewports[1].size) return const [1.0, 1.5];
+  if (viewport.size == kViewports[3].size) return const [1.5];
+  return const [1.0];
+}
+
 /// Pumps [build] in a [MaterialApp] at [viewport] and [textScale].
 Future<void> pumpScreen(
   WidgetTester tester,
@@ -50,8 +80,8 @@ void testResponsive(
   Widget Function() build, {
   Widget Function(Widget child)? wrap,
 }) {
-  for (final viewport in kViewports) {
-    for (final scale in kTextScales) {
+  for (final viewport in activeViewports) {
+    for (final scale in scalesFor(viewport)) {
       testWidgets('$description @ ${viewport.name}, text x$scale', (tester) async {
         await pumpScreen(
           tester,

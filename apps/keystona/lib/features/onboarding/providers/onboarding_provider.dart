@@ -92,7 +92,13 @@ class OnboardingProgressNotifier extends _$OnboardingProgressNotifier {
 @Riverpod(keepAlive: true)
 class OnbPropertyDraftNotifier extends _$OnbPropertyDraftNotifier {
   @override
-  OnbPropertyDraft? build() => null;
+  OnbPropertyDraft? build() {
+    // Kept alive across the onboarding screens, so it must belong to the
+    // signed-in user: a sign-out / sign-in rebuilds it empty instead of
+    // showing the previous account's address on the next account's checklist.
+    ref.watch(onboardingUserIdProvider);
+    return null;
+  }
 
   void set(OnbPropertyDraft draft) => state = draft;
 }

@@ -1,0 +1,22 @@
+# Every provider kept alive across screens, reviewed on purpose.
+#
+# A kept-alive provider outlives the screen that uses it, so anything it holds
+# can reappear on a later screen (a renewal that reopened as the next "new
+# document"). Cached DATA is fine. Per-flow STATE (a form, a draft, a scan) is
+# only acceptable if it is reset on every exit and every entry of the flow, and
+# a test proves it.
+#
+# tool/check_state_leaks.sh fails when a file gains a keepAlive that is not
+# counted here. To add one: say why, and for flow state name the reset + test.
+#
+# path (under lib/) | number of keepAlive declarations | why it is safe
+
+features/home/providers/dashboard_provider.dart | 1 | cached data; refetched on refresh
+features/home_profile/providers/appliances_provider.dart | 1 | cached list watched across features
+features/home_profile/providers/home_profile_provider.dart | 1 | cached overview; avoids refetch on every tab switch
+features/home_profile/providers/systems_provider.dart | 1 | cached list watched across features
+features/documents/providers/document_upload_provider.dart | 1 | FLOW STATE (add-document form). Reset by DocumentFlow.reset at flow start and end; test/features/documents/upload/document_flow_test.dart and renewal_form_test.dart
+features/documents/providers/scan_reading_provider.dart | 1 | FLOW STATE (smart-scan reading, may finish after the camera closes). Reset by DocumentFlow.reset; same tests
+features/documents/providers/document_upload_services_provider.dart | 4 | service singletons, no per-flow state
+features/documents/providers/document_renewal_provider.dart | 1 | stateless repository
+features/onboarding/providers/onboarding_provider.dart | 10 | stateless dependencies + progress persisted per user + property draft scoped to the user (test/features/onboarding/onboarding_draft_scope_test.dart)

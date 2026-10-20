@@ -8,6 +8,7 @@ import 'core/config.dart';
 import 'core/observability/sentry_init.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/providers/provider_retry.dart';
 
 Future<void> main() async {
   // Everything else starts inside SentryInit.run's appRunner. Sentry only
@@ -39,6 +40,9 @@ Future<void> main() async {
     runApp(
       // Not const: SentryWidget has no const constructor.
       ProviderScope(
+        // Surface failures at once (error view + "Try again") instead of
+        // holding the skeleton through Riverpod's automatic backoff retries.
+        retry: noAutomaticRetry,
         child: SentryWidget(
           child: const KeystonaApp(),
         ),

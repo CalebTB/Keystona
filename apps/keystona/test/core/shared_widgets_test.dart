@@ -173,8 +173,8 @@ void main() {
 
   testResponsive('Snackbar launcher', _Snack.new);
 
-  for (final viewport in kViewports) {
-    for (final scale in kTextScales) {
+  for (final viewport in activeViewports) {
+    for (final scale in scalesFor(viewport)) {
       testWidgets('Snackbar with Undo @ ${viewport.name}, text x$scale',
           (tester) async {
         await pumpScreen(tester, _Snack.new, viewport: viewport, textScale: scale);

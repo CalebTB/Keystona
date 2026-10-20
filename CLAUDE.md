@@ -1,438 +1,130 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code in this repository. The previous, much longer version is in `CLAUDE_ARCHIVE.md` (not loaded; many of its entries describe the retired Navy/Gold design system).
 
-## Project Overview
+## Project
 
-**Keystona** is a Flutter mobile app for home management. It helps homeowners organize documents, track maintenance, manage emergencies, and monitor home health through a composite score.
+**Keystona**: a Flutter mobile app for home management. It helps homeowners organize documents, track maintenance, manage emergencies and monitor home health through a composite score.
 
-**Stack:** Flutter (mobile) · Supabase (backend) · RevenueCat + Stripe (payments) · Firebase (FCM) · Sentry (errors) · PostHog (analytics)
+**Stack:** Flutter · Supabase (backend) · RevenueCat + Stripe · Firebase (FCM) · Sentry · PostHog
 
-**Brand:** Keystona — "The smart way to manage your home"
-- Design system: **Aurora**, defined by the kit in `design/` (see "Design Source of Truth" below). Tokens live in `apps/keystona/lib/core/theme/aurora_*.dart`.
-- Palette: Ink #071238 · Cobalt #2540D8 (actions) · Coral #FF3B62 (act-now) · Olive/Lime (done) · Amber (soon)
-- Typography: platform system font (SF Pro on iOS, Roboto on Android) — never bundle fonts
+**Layout:** app in `apps/keystona/` · SQL in `supabase/` (migrations, tests, Edge Functions) · specs in `keystona-project-files/` · design kit in `design/` · agents in `.claude/agents/` · open items in `FOLLOW_UPS.md`.
 
-## Design Source of Truth
+**Navigation:** 5 tabs: Home · Docs · Tasks · Projects · Settings. Emergency Hub is a quick action on Home (not a tab).
 
-The Aurora design kit in `design/` is the source of truth for every screen. It **wins over** `Keystona_Aurora_Design_System.md`, `Keystona_Aurora_Component_Library.md` and any older `AppColors`/Navy-Gold/Outfit guidance in this file (entries marked SUPERSEDED).
+## Design source of truth
 
-- Screens: `design/screens/` (PNG, 390 pt wide) and `design/source/*.dc.html` (exact copy, sizes, states, links).
-- Build order: `design/BUILD_ORDER.md`. Work one commit at a time and use its commit messages.
-- Behaviour rules: `design/Keystona_Implementation_Notes.md` (long-press menus, Undo snackbars, offline, reminders).
-- Treat the HTML as a spec, never transpile it. px values are logical pixels at the 390 pt reference width; they become tokens, scaled by the responsive layer.
-- Build every screen from `lib/core/widgets/aurora/` and the `Aurora*` tokens. No hex values or numeric literals in feature code.
-- New shared widgets, router changes and migrations need Caleb's OK first.
-- Every screen ships with a golden test compared against its PNG, loading/empty/error states, overflow tests at small/large/tablet sizes and text scale 2.0, and 44 pt minimum touch targets.
-- Font: platform system font. Never bundle SF Pro.
-- Aurora rules: one coral surface per screen; coral means "act now"; cobalt for actions and save; lime only for wins; amber for "soon"; no tinted fills; words always accompany status color.
-- UI work is done by the `storyboard-to-flutter` agent, which replaces screens in place and deletes the superseded UI.
+The Aurora kit in `design/` is the source of truth for every screen. It wins over `Keystona_Aurora_Design_System.md`, `Keystona_Aurora_Component_Library.md` and anything older.
 
-## Navigation
+- `design/screens/` (PNG, 390 pt wide), `design/source/*.dc.html` (exact copy, sizes, states, links), `design/BUILD_ORDER.md` (sprints and commits), `design/Keystona_Implementation_Notes.md` (behaviour: long-press, Undo, offline, reminders).
+- The HTML is a spec, never transpile it. px values are logical pixels at the 390 pt reference width.
+- **Where a PNG and a written rule conflict, follow the PNG.** Copy text exactly. Words always accompany status color.
+- Tokens: `apps/keystona/lib/core/theme/aurora_*.dart` (`AuroraColors/Type/Spacing/Radius/Shadows/Sizes/...`), scaled by `context.aurora` (`AuroraScale`). Platform system font, never bundled. Legacy tokens (`butter`, `*Dim`, `inkTertiary`) stay only until their last caller is rebuilt.
+- **No hard-coded values in feature code** (colors, sizes, radii, durations, opacities, fixed widths/heights). Check: `apps/keystona/tool/check_hardcoded.sh <paths>`.
+- Aurora rules: one coral surface per screen; coral = act now; cobalt = actions and save; lime = wins; amber = soon; no tinted fills; 44 pt touch targets; no ⋯ buttons on task rows (long-press instead).
+- New shared widgets in `lib/core/widgets`, router changes and migrations need Caleb's OK first.
+- UI work is done by the `storyboard-to-flutter` agent, which replaces screens in place and deletes the superseded UI. Its file holds the working rules (layout, navigation, tests, parallel-track etiquette).
 
-5 permanent tabs: **Home · Docs · Tasks · Projects · Settings**
-Emergency Hub accessible via quick-action button on Home tab (not a tab).
+## Commands
 
-## Development Commands
-
-This repository contains specifications and documentation for Keystona. The actual Flutter/Supabase code will be in a separate repository once foundation work begins.
-
-Current structure:
-- `keystona-project-files/` — Complete technical specifications
-- `.claude/agents/` — Specialized AI agents for different development tasks
-- `.claude/skills/` — Reusable skills for common workflows
-
-## Agents
-
-Use specialized agents for different aspects of development:
-
-| Agent | Use For | File |
-|-------|---------|------|
-| `flutter-keystona-dev` | Screens, widgets, forms, navigation, UI | `.claude/agents/flutter-keystona-dev.md` |
-| `supabase-backend-specialist` | Queries, RLS, Edge Functions, storage, RPCs | `.claude/agents/supabase-backend-specialist.md` |
-| `integration-wiring` | Cross-feature wiring, routing, shared state | `.claude/agents/integration-wiring.md` |
-| `keystona-qa-specialist` | Tests, verification, security boundary checks | `.claude/agents/keystona-qa-specialist.md` |
-| `dashboard-home-builder` | Home tab (complex — 8 states, 7 sections) | `.claude/agents/dashboard-home-builder.md` |
-| `storyboard-to-flutter` | Convert a Claude HTML storyboard/mockup into Flutter screens | `.claude/agents/storyboard-to-flutter.md` |
-
-Invoke agents from CLI:
 ```bash
-claude "Build the Document Vault list screen" --agent flutter-keystona-dev
-claude "Create the check-overdue-tasks Edge Function" --agent supabase-backend-specialist
-claude "Wire up cross-feature navigation" --agent integration-wiring
-claude "Write tests for task completion flow" --agent keystona-qa-specialist
-claude "Build the Home tab dashboard" --agent dashboard-home-builder
-claude "Convert storyboards/paywall.html to Flutter" --agent storyboard-to-flutter
+cd apps/keystona
+flutter analyze
+flutter test                                   # curated responsive matrix (fast)
+flutter test --dart-define=FULL_MATRIX=true    # full 5 viewports x 3 text scales; run before a release
+dart run build_runner build --delete-conflicting-outputs   # after touching @riverpod / @freezed files
+tool/check_hardcoded.sh lib/features/<feature>             # hard-coded value guard
+tool/check_state_leaks.sh                                   # state that could outlive a screen
 ```
 
-## Skills
+SQL tests (safe: BEGIN ... ROLLBACK, run against any database): `supabase/tests/*.sql`. Via the Supabase MCP `execute_sql`, only the LAST statement's result comes back, so end a script with `rollback;` then a `select 'PASS'`, or raise an exception to carry a message.
 
-Use skills for common workflows:
+## Agents and skills
 
-| Skill | Use For |
-|-------|---------|
-| `plan-and-build` | **Start here for any issue** — plans with look-ahead at dependent issues, then builds |
-| `feature-agent` | Build complete features from start to finish (used inside plan-and-build) |
-| `flutter-agent` | Flutter/Dart coding with iOS-first adaptive widgets |
-| `supabase-agent` | Supabase queries, RLS policies, Edge Functions |
-| `migration-writer` | Database migrations with RLS policies |
-| `code-review` | Comprehensive code review checklist |
-| `compound` | Full learning extraction (patterns, decisions, lessons) |
-| `quick-compound` | Fast learning extraction after tasks |
+| Agent | Use for |
+|---|---|
+| `storyboard-to-flutter` | Rebuilding screens from the Aurora kit (all kit UI work) |
+| `flutter-keystona-dev` | Non-visual Flutter work: providers, services, performance |
+| `supabase-backend-specialist` | Queries, RLS, Edge Functions, storage, RPCs |
+| `integration-wiring` | Cross-feature routing and shared state |
+| `keystona-qa-specialist` | Tests and security-boundary checks |
+| `dashboard-home-builder` | Home tab (8 states, 7 sections) |
 
-Invoke skills from CLI:
-```bash
-/feature-agent
-/flutter-agent
-/supabase-agent
-/migration-writer
-/code-review
-/compound
-/quick-compound
-```
+Skills: `plan-and-build`, `feature-agent`, `flutter-agent`, `supabase-agent`, `migration-writer`, `code-review`, `compound`, `quick-compound` (see `.claude/skills/`).
+
+## Sprint workflow
+
+1. **Pre-flight (before any agent):** read the sprint in `design/BUILD_ORDER.md`; list the legacy files it replaces (`wc -l`); check the live schema for every column the screens need (information_schema) and list gaps; ask for decisions that block a screen. This avoids a rework wave at the end.
+2. **Split by disjoint file sets** (one agent per track; each owns its legacy files exclusively; shared contracts fixed by path and signature in the briefs; each track adds tokens only in its own NEW `aurora_*.dart` file). Briefs list screens, files, contracts and gaps only: the standing rules live in the agent file.
+3. **Verify the combined tree yourself:** analyze, full test, hard-coded guard, state-leak guard (`tool/check_state_leaks.sh`), duplicate router paths (`grep -o "path: AppRoutes\.[A-Za-z]*" ... | sort | uniq -d`), file sizes. Run the app's checks against the live DB where an agent could not.
+4. Record leftovers in `FOLLOW_UPS.md`; commit in logical commits when asked.
 
 ## Architecture
 
-### Feature Structure
 ```
-lib/features/[feature_name]/
-├── models/       # Freezed data classes
-├── providers/    # Riverpod AsyncNotifierProvider
-├── screens/      # Full page widgets
-├── widgets/      # Feature-specific components
-└── services/     # Feature business logic (rare)
+lib/features/<feature>/{models,providers,repositories,screens,widgets,services}/
 ```
+- **Riverpod:** `@riverpod` codegen only (never hand-written `AsyncNotifierProvider`); `ref.watch` in `build`, `ref.read` in handlers; `autoDispose` for screen providers; `.select()` for fields; `ref.keepAlive()` on lists watched across tabs; `.value` (not `.valueOrNull`; Riverpod 3); `StateProvider` only from `flutter_riverpod/legacy.dart`, prefer `NotifierProvider`. Feature methods must not be named `update()` (shadows `AsyncNotifier.update`). Failed providers are not retried automatically (`noAutomaticRetry` in `main.dart`).
+- **Mutations:** optimistic UI (never set `AsyncLoading` before a write; update local data, write after, roll back on failure). After a write invalidate the sibling providers too. Capture `ref.read(x.notifier)` before an async gap; `if (!mounted) return` after every await. `ref.invalidate` is safe on a disposed provider; calling a notifier method on one is not.
+- **State belongs to the screen.** A form, draft or scan must not outlive its flow or reappear on another screen. Prefer `autoDispose`. If state must exist before the screen does (a file picked in a sheet) or after it closes (a scan still reading), keep it alive deliberately: reset it on EVERY exit (pop, save) and on every entry (first step of the flow) through one helper (`DocumentFlow.reset`), list it in `tool/keepalive_allowlist.txt` with the test that proves it, and scope per-user data to the signed-in user. **Never write into a provider from `build()` or from a post-frame callback that `build()` schedules** (it re-applies on every rebuild, including the rebuild a reset causes): apply input once from `initState` (`ref.listenManual` + one post-frame read). This is the bug where closing a renewal reopened it as the next "new document".
+- **Data access behind a repository interface**, exposed through a provider so tests override it with a fake. Widgets take narrow inputs (values or callbacks), not whole models or `WidgetRef`.
+- **Models:** `@freezed abstract class` (Freezed v3). Supabase is snake_case (`build.yaml` `field_rename: snake`; `@JsonKey(name:)` for names like `is_24x7` or a clash with a Freezed member). JSON numbers: `(x as num?)?.toInt()`. DATE columns are `YYYY-MM-DD` (`toIso8601String().split('T')[0]`). `'key': ?value` omits null map entries. Re-run build_runner after merges.
+- **Services:** pure logic as `abstract final class` with static methods; services throw, the UI catches and shows a snackbar. Stub unbuilt backends with `throw UnimplementedError('x() implemented by issue #N')` and list them in `FOLLOW_UPS.md`. Use `// note:` for deferred work (a `TODO(...)` trips the lint). Every model field used only by a future issue gets a `/// [#N] used for ...` comment.
+- **Every screen:** skeleton that mirrors the layout, error with retry, empty state per the Empty States Catalog or the kit, pull-to-refresh on scrollable lists.
+- **Performance:** every interaction under 1 s; `const` where possible; `CachedNetworkImage` only (never `Image.network`); `.builder()` lists; search debounced 300 ms.
 
-### Key Patterns
+## Router (`lib/core/router/app_router.dart`)
 
-**State Management:** Riverpod with AsyncNotifier
-- `ref.watch()` in `build()` methods only
-- `ref.read()` in event handlers (`onTap`, `onPressed`)
-- `autoDispose` for screen-specific providers
-- `.select()` to watch specific fields, not entire objects
+- All paths are `AppRoutes` constants. Static segments before param routes (`/documents/upload` before `/documents/:documentId`).
+- `routerProvider` watches auth; after sign-in/up never call `context.go()`, let the redirect fire. Auth and onboarding routes stay in the public list.
+- `StatefulShellRoute.indexedStack`: the first route of a branch is the tab default; `goBranch(i, initialLocation: i == current)`; `context.go` to switch tabs, `context.push` for sub-screens of the current branch.
+- `initialLocation` must exist; after any router merge grep for duplicate `path:` (the first match silently shadows the rest). A pushed (non-tab) screen needs a reachable entry point.
 
-**Screen Requirements:** Every screen MUST have
-- Skeleton loading state (matching content layout)
-- Error state with retry
-- Empty state matching the **Empty States Catalog** exactly
-- Pull-to-refresh (if scrollable list)
+## Navigation, sheets and layout pitfalls
 
-**Platform UI:** Aurora is a custom look shared by iOS and Android
-- Build screens from `lib/core/widgets/aurora/` and the Aurora tokens; no Material ripple
-- Use native pickers/sheets only where the kit's screens call for them
-- Never write raw platform checks in feature code
-- No hard-coded values in widgets: sizes, radii, colors, durations and opacities come from tokens, scaled by the responsive layer (`AuroraBreakpoints`); layouts must not overflow on small screens or large text scale
+- **Dismiss a sheet or dialog with its own context.** `AuroraSheet` and `showModalBottomSheet` live on the nearest navigator; `Navigator.of(context, rootNavigator: true).pop()` on them pops the router's last page and crashes ("popped the last page"). `showCupertinoModalPopup` and `showDialog` use the root navigator. Use the builder's context, not the opener's.
+- Show a post-save sheet before `context.pop()` (popping first locks the navigator). Wrap `TextField`s inside Cupertino popups in `Material(type: transparency)`. Pass `context.pop(value)` back to callers with `context.push<T>()`.
+- **Never put an `Expanded` next to a loose `Flexible` in a `Row`**: they split the free space evenly and the `Flexible`'s unused share stays empty, so trailing widgets float mid-row. Use `Flexible` + `Flexible` with `mainAxisAlignment: spaceBetween`, or `Expanded` + a plain trailing child. Label/value rows: label natural width, value `Expanded`.
+- Size from content with `minHeight` constraints, not fixed heights (`Border.all` draws inward). Non-scrolling `ListView` inside a `CustomScrollView` needs `padding: EdgeInsets.zero`. `ListView`/`LayoutBuilder` crash inside `SliverFillRemaining(hasScrollBody: false)`. Bare `FractionallySizedBox` in a `Row` crashes (wrap in `Expanded`). Own `TextEditingController`s in `State`, never in `build()`. Skeleton animations start in `addPostFrameCallback`. Use `(_, _)` for discarded callback params.
 
-**Database Queries:**
-- Always filter by `property_id` first
-- Always check `deleted_at IS NULL` for soft-delete tables
-- Select only needed columns (never `SELECT *` on lists)
-- Use nested selects to avoid N+1 queries
-- RLS is the auth layer — all tables have policies
+## Supabase
 
-**Performance:**
-- Every interaction under 1 second
-- All `const` opportunities used
-- `CachedNetworkImage` only (never `Image.network`)
-- Lists use `.builder()` constructors
-- Search is debounced (300ms)
+- RLS is the auth layer on every user-data table (`auth.uid()`; never trust a client `user_id`). Filter by `property_id` first and `deleted_at IS NULL`; never `SELECT *` on lists; nested selects over N+1; signed URLs for private buckets.
+- **Verify before writing a query or insert:** every selected column exists (`information_schema.columns`), NOT NULL columns without a default (e.g. `user_id`) are in the insert, nested-select FKs/RLS exist, enum values match (`enum_range`). A bad column is a 400 that leaves the screen on its skeleton. Use `.maybeSingle()` when 0 rows is valid.
+- **Soft delete and restore go through `SECURITY DEFINER` RPCs** (`soft_delete_*`, `restore_*`): a plain `UPDATE ... SET deleted_at` fails with 42501 because the SELECT policy hides the written row, and a plain restore matches 0 rows. Each RPC checks ownership with `auth.uid()`. Join tables with no history hard-delete.
+- **New public functions get an explicit `anon` grant** on Supabase; `REVOKE ... FROM PUBLIC` alone does not remove it. Always `REVOKE ... FROM PUBLIC, anon`, then grant to `authenticated`/`service_role`. Prefer `SECURITY INVOKER` unless RLS must be bypassed.
+- Migrations are additive, sequential, applied in dependency order, with a rollback block and an SQL test in `supabase/tests/`. After applying, run the advisors. Create storage buckets before writing upload code.
+- RPC aggregates must mirror the client's logic (`due_date < today AND status NOT IN (completed, skipped)`, not `status = 'overdue'`).
+- Edge Functions: verify the token first (`auth.getUser`); `functions.invoke` needs an explicit `Authorization` header; wrap secondary calls in `try/catch` so the primary write never blocks. Claude Vision responses: parse numbers with `num`.
+- Seed a property before testing document/task flows; there is a single remote project (`hmvsiiicjwygayekwaor`).
 
-**Security:**
-- Never log PII (no names, emails, OCR text, addresses)
-- Auth: email + Apple + Google, 7-day sessions, biometric unlock
-- Input validation at client AND server
-- See Security Guide §8 checklist before every PR
+## Security
 
-## Documentation Index
+Never log PII (names, emails, OCR text, addresses). Auth: email + Apple + Google, 7-day sessions, biometric unlock. Validate input on the client AND the server. See `HomeTrack_Security_Guide.md` §8 before every PR.
 
-Comprehensive specifications in `keystona-project-files/`:
+## Testing
 
-| Document | What It Covers |
-|----------|---------------|
-| **HomeTrack_SRS.md** | Requirements, design system, non-functional requirements |
-| **HomeTrack_Database_Schema.md** | All migrations (001–011), RLS policies, storage buckets |
-| **HomeTrack_API_Contract.md** | All endpoints, Edge Functions, rate limits |
-| **HomeTrack_Sprint_Plan.md** | Phases 0–9, agent assignments, acceptance criteria |
-| **HomeTrack_Platform_UI_Guide.md** | Component matrix, adaptive widgets, iOS patterns |
-| **HomeTrack_Performance_Guide.md** | Time budgets, caching, widget optimization |
-| **HomeTrack_Error_Handling.md** | Loading, errors, offline, forms, empty states |
-| **HomeTrack_Environment_Setup.md** | Dev toolchain, project structure, parallel dev guide |
-| **HomeTrack_Dashboard_Spec.md** | Home tab layout, hero, insights, urgent banner, onboarding |
-| **HomeTrack_Health_Score_Algorithm.md** | Three-pillar scoring, formulas, worked examples |
-| **HomeTrack_Empty_States_Catalog.md** | 25 screen empty states with exact copy and patterns |
-| **HomeTrack_Dashboard_States.md** | 8 states, visibility matrix, transitions |
-| **HomeTrack_Notification_Priority.md** | P1/P2/P3 tiers, digest, back-off, quiet hours |
-| **HomeTrack_Security_Guide.md** | Auth, validation, PII handling, Sentry config, checklist |
+- Responsive tests use `testResponsive` / `activeViewports` / `scalesFor` from `test/support/responsive_harness.dart`: a curated 5 cases per screen by default, the full 5x3 matrix with `--dart-define=FULL_MATRIX=true`. Override providers with fakes; never hit Supabase.
+- **Test position, not only overflow:** assert where key elements land (actions at the right edge, labels at the left, primary buttons, stacked menu items). Overflow-only tests missed real layout bugs.
+- A regression test for a bug must fail without the fix (revert the fix to check).
+- Golden tests against the kit PNGs do not exist yet.
 
-## Key Conventions
+## Documentation index (`keystona-project-files/`)
 
-### Flutter
-- iOS-first adaptive widgets (Cupertino on iOS, Material on Android)
-- Every screen: skeleton → error → empty → content
-- Empty states must match Empty States Catalog exactly
-- Performance: under 1 second for all interactions
-- `const` everywhere possible
-
-### Supabase
-- RLS on every user-data table — this IS the auth layer
-- Filter by `property_id` first, check `deleted_at IS NULL`
-- Never `SELECT *` on lists, never N+1 queries
-- Signed URLs for all file access (never public)
-- Edge Functions verify auth token before anything else
-
-### Security
-- Never log PII (no names, emails, OCR text, addresses)
-- Input validation at client AND server
-- Auth: `auth.uid()` in RLS policies, never trust client-supplied `user_id`
-- See Security Guide §8 checklist before every PR
-
-## Patterns
-
-<!-- Format:
-- **[Pattern Name]**: [Brief description] → See `[file path]`
--->
-- **[SUPERSEDED by Aurora kit — see Design Source of Truth] Semantic Color Palette**: All colors in `AppColors` as `abstract final class` constants — no hex values in widgets or theme → `lib/core/theme/app_colors.dart`
-- **[SUPERSEDED] Pre-built TextStyles as getters**: `AppTextStyles` uses `static TextStyle get` (not `const`) because `GoogleFonts.*` constructs at runtime → `lib/core/theme/app_text_styles.dart`
-- **[SUPERSEDED] 4px Spacing Grid**: All spacing, radii, padding via `AppSizes`, `AppRadius`, `AppPadding` — never hardcoded → `lib/core/theme/app_sizes.dart`
-- **Theme references design tokens only**: `app_theme.dart` contains no raw Colors, TextStyles, or numbers — always `AuroraColors.*`, `AuroraType.*`, `AuroraSpacing.*`, `AuroraRadius.*`
-- **Static Service Pattern**: Pure logic classes use `abstract final class` with static methods — no instantiation, no state (SnackbarService, PhotoPicker, AppDateUtils, CurrencyFormatter, Validators)
-- **Services throw, UI catches**: AuthService/StorageService throw on failure with no UI concerns — callers catch and route to SnackbarService
-- **Riverpod providers co-located**: All service providers in `lib/services/providers/service_providers.dart`, not scattered across features
-- **AppRoutes constants class**: All route strings as `static const` in `abstract final class AppRoutes` — never hardcode path strings in features → `lib/core/router/app_router.dart`
-- **Static routes before param routes**: `/documents/upload` declared before `/documents/:documentId` — prevents static segments being swallowed by param matcher
-- **routerProvider watches auth**: `Provider<GoRouter>` watches `isAuthenticatedProvider` — router rebuilds automatically on sign-in/out, redirect fires on every navigation
-- **PlaceholderScreen pattern**: Single reusable widget for all unbuilt routes keeps route tree complete without stub files per feature → `lib/core/widgets/placeholder_screen.dart`
-- **goBranch with initialLocation**: `goBranch(index, initialLocation: index == currentIndex)` — active tab tap pops to root, other tabs preserve state
-- **ConsumerStatefulWidget for forms**: Forms need both Riverpod ref (services) and local state (loading, controllers) → `ConsumerStatefulWidget` is the correct base
-- **Loading state on submit button**: Disable button + swap label for `CircularProgressIndicator` during async call — prevents double-submit
-- **AsyncNotifier for DB writes**: Feature data mutations use `AsyncNotifier` + `AsyncValue.guard` — caller inspects state after notifier call completes
-- **Router-driven auth navigation**: After sign-in/sign-up never call `context.go()` — let `routerProvider` redirect automatically when `isAuthenticatedProvider` updates → `lib/core/router/app_router.dart`
-- **Onboarding routes in publicRoutes**: Onboarding screens must be in `_publicRoutes` so the auth guard doesn't intercept during the auth-stream update window → `lib/core/router/app_router.dart`
-- **Freezed v3 `abstract class` pattern**: Must use `@freezed abstract class Foo with _$Foo` — Freezed v3 generates abstract getters in the mixin so `class` (non-abstract) fails to compile → `lib/features/documents/models/document.dart`
-- **`@riverpod` codegen for all feature providers**: Use `@riverpod` annotation + `class FooNotifier extends _$FooNotifier` — codegen generates `fooProvider` and `fooProvider.notifier`; never write manual `AsyncNotifierProvider` → `lib/features/documents/providers/documents_provider.dart`
-- **Downstream-annotated model fields**: Every model field used only by a future issue gets a `/// [#N] used for {purpose}` doc comment — guides agents building dependent issues without reading multiple files → `lib/features/documents/models/document.dart`
-- **UnimplementedError stubs for downstream provider methods**: `throw UnimplementedError('method() implemented by issue #N')` in provider stubs — agents know exactly which method to fill in and why → `lib/features/documents/providers/documents_provider.dart`
-- **Shimmer skeleton matches card layout exactly**: Skeleton mirrors card height and internal layout — seamless loading→content transition with no layout jump → `lib/features/documents/widgets/document_list_skeleton.dart`
-- **`.maybeSingle()` for optional single-row queries**: Returns `null` on 0 rows instead of throwing `PGRST116` — always use for queries where 0 rows is valid (e.g. user has no property yet); guard with `if (row == null) return []`
-- **Capture notifier before async gap**: Store `ref.read(provider.notifier)` in a local variable before any `await` — the widget may unmount during the gap, invalidating `ref` → `lib/features/documents/widgets/upload_source_sheet.dart`
-- **Completer to outlast modal dismissal**: `showCupertinoModalPopup` resolves on sheet dismiss, before async picker completes — use a `Completer<void>` inside `show()` so the method awaits actual picker completion → `lib/features/documents/widgets/upload_source_sheet.dart`
-- **`build.yaml` for Supabase snake_case**: `json_serializable` defaults to camelCase but Supabase returns snake_case — add `build.yaml` with `field_rename: snake` so generated `fromJson` matches Supabase keys → `apps/keystona/build.yaml`
-- **Wizard state as ephemeral Freezed model**: Multi-step wizard state uses `@freezed abstract class` without `fromJson`/`toJson` — only needs `.freezed.dart`, no `.g.dart` → `lib/features/documents/models/document_upload_state.dart`
-- **Re-run build_runner after cross-worktree merge**: Merging a branch with new `@riverpod`/`@freezed` files means `.g.dart` files won't exist in the target worktree — always run `dart run build_runner build --delete-conflicting-outputs` after merging main into a feature branch
-- **`_save()` no-param method uses `this.context`**: Avoids `use_build_context_synchronously` warning after `await` — linter recognizes `this.context` as guarded by `mounted` → `lib/features/maintenance/screens/task_completion_form_screen.dart`
-- **`context.pop(value)` to return typed result to caller**: Form screens pop with the created record's ID — caller uses `context.push<String>(route)`; no shared state or callback needed → `lib/features/maintenance/screens/task_completion_form_screen.dart`
-- **`Image.file(File(photo.path))` for local picker thumbnails**: Use `dart:io` `File(xFile.path)` + `Image.file()` for locally-picked photos — `Image.network()` and `Image.memory()` don't apply to local file paths → `lib/features/maintenance/screens/task_completion_form_screen.dart`
-- **Conditional spread in form data map**: `if (condition) ...{'key': value}` in a `Map<String, dynamic>` literal — cleaner than `addAll` for optional fields → `lib/features/maintenance/screens/task_completion_form_screen.dart`
-- **`static show()` with `WidgetRef ref` parameter**: When a picker sheet needs to watch a Riverpod provider internally, pass `WidgetRef ref` as a named param to `static show()` → `lib/features/maintenance/screens/task_completion_form_screen.dart`
-- **`CustomPaint` arc gauge with score-based color**: `_ArcPainter` uses `startAngle = 135°`, `sweepTotal = 270°`; active sweep = `total * (score / 100)`; color from `AppColors.healthGood/Fair/Poor` → `lib/features/maintenance/widgets/health_score_widget.dart`
-- **`fromRpc()` factory on plain model**: RPC responses use a named `fromRpc(Map<String, dynamic>)` factory — avoids `build.yaml` `field_rename` ambiguity; model stays free of `.g.dart` → `lib/features/maintenance/models/home_health_score.dart`
-- **`empty()` factory as RPC null guard**: When RPC returns null, `Model.empty()` returns safe defaults — prevents null propagation into UI → `lib/features/maintenance/models/home_health_score.dart`
-- **Keyed family provider for detail screens**: `@riverpod class FooDetailNotifier extends _$FooDetailNotifier` with `build(String id)` — generates `fooDetailProvider(id)` keyed by ID, auto-disposed on pop → `lib/features/documents/providers/document_detail_provider.dart`
-- **`static show()` on bottom sheets**: Edit/confirm sheets expose `static Future<T?> show(BuildContext context, ...)` — callers never instantiate the widget directly → `lib/features/documents/widgets/edit_metadata_sheet.dart`
-- **`Theme.of(context).platform` for adaptive check**: `Theme.of(context).platform == TargetPlatform.iOS` — avoids importing `dart:io` just for `Platform.isIOS` → `lib/features/documents/screens/document_detail_screen.dart`
-- **`ref.invalidateSelf()` + `await future` for post-mutation refresh**: After a write, call `ref.invalidateSelf()` then `await future` — blocks until re-fetched, detail screen shows persisted data not stale state → `lib/features/documents/providers/document_detail_provider.dart`
-- **Debounced search bar as isolated ConsumerStatefulWidget**: Search bar owns its own `Timer` debounce + `TextEditingController` — parent passes `onChanged(String?)`; 300ms debounce → `lib/features/documents/widgets/document_search_bar.dart`
-- **Adaptive search split into private platform widgets**: `_IOSSearchBar` / `_AndroidSearchBar` are private `StatelessWidget` classes in the same file — isolates platform logic from public API → `lib/features/documents/widgets/document_search_bar.dart`
-- **Freemium gate at widget level with PRO badge**: Show gold PRO badge inline on gated features — gates awareness at point of use, not at navigation → `lib/features/documents/widgets/document_search_bar.dart`
-- **`isPremiumProvider` stub in service_providers.dart**: `Provider<bool>((ref) => false)` — replace with RevenueCat stream in Phase 8; all widgets already gate on it → `lib/services/providers/service_providers.dart`
-- **Icon catalog as `abstract final class` with string keys**: Store icon name strings in DB, map to `IconData` in a const Map — add new icons in one place, fallback via `forKey(key)` → `lib/features/documents/widgets/category_form_sheet.dart`
-- **Color catalog as `const List<String>` of hex strings**: Preset color options stored as hex strings, parsed to `Color` at render time — hex stored in DB, `Color` never persisted → `lib/features/documents/widgets/category_form_sheet.dart`
-- **Top-level `showCategoryFormSheet()` function**: Use a top-level function (not `static show()`) when the presenter needs to branch between `showCupertinoModalPopup` and `showModalBottomSheet` → `lib/features/documents/widgets/category_form_sheet.dart`
-- **`TaskDetail` composite model for detail screens**: Separate `@freezed abstract class` combining primary model + related list — no `fromJson` since never persisted; omit `.g.dart` part declaration → `lib/features/maintenance/models/task_detail.dart`
-- **Undo snackbar with returned record ID**: Write methods return the new row's ID (`Future<String>`) — caller captures it before the snackbar, passes to undo handler; no state needed → `lib/features/maintenance/screens/task_detail_screen.dart`
-- **`ref.invalidate(sibling) + ref.invalidateSelf()` for cross-provider sync**: After a write in a detail provider, invalidate BOTH detail + sibling list so list screen reflects the change without pull-to-refresh → `lib/features/maintenance/providers/task_detail_provider.dart`
-- **DATE column serialized as split ISO string**: Supabase DATE columns require `"YYYY-MM-DD"` — use `DateTime.now().toIso8601String().split('T')[0]`; full timestamp is rejected → `lib/features/maintenance/providers/task_detail_provider.dart`
-- **`typedef PickerOption = ({String id, String name})`**: Dart 3 record typedef for id+name picker pairs — no model class needed when data never leaves the form → `lib/features/maintenance/providers/task_form_providers.dart`
-- **Newline-delimited textarea for `List<String>` fields**: JSONB array edited as multiline `TextFormField` — join with `'\n'` in `initState`, split + trim + filter blanks on save → `lib/features/maintenance/screens/task_form_screen.dart`
-- **Generic `_pickEnumIOS<T>()` for all adaptive enum pickers**: Single generic method wraps `CupertinoActionSheet` with `options`, `labelOf`, `onSelected` — one implementation handles all enum pickers → `lib/features/maintenance/screens/task_form_screen.dart`
-- **iOS FAB via `Stack` + `Positioned` on `CupertinoPageScaffold`**: `CupertinoPageScaffold` has no `floatingActionButton` slot — `Stack + Positioned(bottom: 16, right: 16)` for iOS; `Scaffold.floatingActionButton` for Android → `lib/features/maintenance/screens/maintenance_screen.dart`
-- **`bool get _isEditing => widget.existingTask != null`**: Simple getter in `ConsumerState` to branch create vs edit mode — drives title, save method, and controller pre-population in `initState` → `lib/features/maintenance/screens/task_form_screen.dart`
-- **Property ID fetched once in `initState`, stored as nullable field**: Async property lookup stored as `String? _propertyId` — pickers use `AsyncData([])` when null and switch to real data once resolved; never blocks the first frame → `lib/features/maintenance/screens/task_form_screen.dart`
-- **`NoPropertyException` sentinel via typedef**: Private exception exported via `typedef` — screen catches the public alias without coupling to the private symbol → `lib/features/home_profile/providers/home_profile_provider.dart`
-- **Parallel Supabase queries with `Future.wait`**: Independent data fetches run concurrently — single await for all results; total latency = slowest query, not sum → `lib/features/home_profile/providers/home_profile_provider.dart`
-- **Nearing-EOL count in Dart over RPC**: Classify lightweight rows in Dart using `(ageYears / avgLifespan) >= 0.75` — avoids extra RPC, uses same formula as lifespan screen → `lib/features/home_profile/providers/home_profile_provider.dart`
-- **`FractionallySizedBox` for proportional skeleton bars**: Use inside `Expanded` for percentage-width shimmer bars — `LayoutBuilder` crashes inside `SliverFillRemaining(hasScrollBody: false)` → `lib/features/home_profile/widgets/home_profile_skeleton.dart`
-- **Extension methods on `String` for enum display labels**: `extension FooLabel on String` — label lookup works on any raw DB value without a Dart enum or widget-local switch → `lib/features/emergency/models/utility_shutoff.dart`
-- **Plain class for composite overview models**: Non-persisted multi-source models use a plain Dart `class const` constructor — never Freezed; assembled in-memory from parallel queries → `lib/features/emergency/models/emergency_hub_overview.dart`
-- **Quick-action button for non-tab pushed screens**: Non-tab screens need an explicit entry point on an existing tab — always verify a new pushed-route screen has a reachable button before closing the issue → `lib/features/home_profile/screens/home_profile_screen.dart`
-- **`showDocumentLinkPicker()` returning typed record**: Cross-feature picker as a top-level function returning `({String id, String name})?` — caller gets both ID and display name without a secondary lookup → `lib/features/emergency/widgets/document_link_picker.dart`
-- **`Flexible(child: ListView.separated(shrinkWrap: true))` inside modal Column**: Lets a list in a constrained modal take remaining space and scroll — `Flexible` shrinks with few items, `shrinkWrap: true` prevents unconstrained height → `lib/features/emergency/widgets/document_link_picker.dart`
-- **Computed display getters on plain RPC model**: RPC result models carry UI logic as instance getters (`healthColor`, `healthLabel`, `barFraction`) — single source of truth for data + display → `lib/features/home_profile/models/system_lifespan_entry.dart`
-- **Fixed-width `Container`s for bare skeleton bars in `Row`**: Use `Container(width: N)` for shimmer bars not inside `Expanded` — `FractionallySizedBox` requires finite parent width and crashes in unconstrained `Row` → `lib/features/home_profile/widgets/lifespan_skeleton.dart`
-- **Pattern B Showcase empty state with ghosted example cards**: Two example cards at `Opacity(opacity: 0.5)` — non-interactive; CTA below; use when examples are more compelling than a plain illustration → `lib/features/projects/widgets/project_empty_state.dart`
-- **`String? _activeFilter` with toggle-to-clear filter chips**: `null` = show all; tapping active chip calls `onFilterChanged(null)`, inactive calls `onFilterChanged(s.value)` — driven from `ConsumerStatefulWidget` state → `lib/features/projects/screens/projects_screen.dart`
-- **Budget progress bar with overflow color**: `value: (spent / estimated).clamp(0.0, 1.0)`; color switches to `AppColors.error` at `pct >= 1.0` on both bar and label — over-budget alert without separate state → `lib/features/projects/widgets/project_card.dart`
-- **`ProjectStatusTransitions` allowlist class**: `static const Map<String, List<String>> allowed` maps current status → permitted next statuses; UI only offers valid transitions; `nextFor()` method handles unknown current status gracefully → `lib/features/projects/models/project.dart`
-- **Cover photo upload after create (two-step)**: In create mode, insert row first to get project ID, then upload photo using ID as path segment; update row with `cover_photo_path`; avoids needing a pre-generated ID and keeps photo path scoped to the project → `lib/features/projects/screens/project_form_screen.dart`
-- **`null`-aware map entry operator `?`**: Dart 3 syntax `'key': ?value` omits the map entry when value is null — replaces `if (value != null) 'key': value` in map literals; cleaner for optional Supabase insert/update fields
-- **Join table model with denormalized display fields**: Carry display fields from the related entity (`contactName`, `contactPhone`) alongside join-table fields in one Freezed model — avoids a secondary lookup at display time; populated via nested select in the provider → `lib/features/projects/models/project_contractor.dart`
-- **`_fromRow()` private factory on the notifier**: When a nested select returns JSON that doesn't map directly to Freezed `fromJson`, add a private `_fromRow(Map<String, dynamic> row)` method on the notifier to manually extract and flatten fields — cleaner than patching `fromJson` → `lib/features/projects/providers/project_contractors_provider.dart`
-- **`createAndLink()` two-step insert for join tables**: Insert primary entity first to get its ID, then insert the join row with both IDs — sequential awaits give clear error propagation and the call site sees a single atomic method → `lib/features/projects/providers/project_contractors_provider.dart`
-- **`abstract final class` catalog with color records for type badges**: Store per-type badge colors as `({Color background, Color foreground})` records returned from a `switch` in the catalog — single source of truth for label + color; call `PhotoTypes.colorFor(type)` in any widget → `lib/features/projects/models/project_photo.dart`
-- **`ClipRect + Align(widthFactor:)` for draggable before/after divider**: Layer the after photo as a base, then `ClipRect(child: Align(widthFactor: _divider, child: SizedBox(width: fullWidth, child: beforePhoto)))` reveals before proportionally — no custom painter needed; `GestureDetector` on a `Positioned` 40px hit area updates `_divider` via `onHorizontalDragUpdate` → `lib/features/projects/screens/photo_comparison_screen.dart`
-- **Signed-URL list fetched in one `Future.wait` parallel batch**: After fetching rows, call `Future.wait(rows.map(r => storage.getSignedUrl(...)))` — one `await` for all N URLs; total latency = slowest single call → `lib/features/projects/providers/project_photos_provider.dart`
-- **`uploadPhoto` returns new photo ID for immediate auto-pairing**: Provider method returns `Future<String>` (the inserted row's ID) — caller captures it and immediately calls `pairPhotos(beforeId, newId)` without any secondary query → `lib/features/projects/providers/project_photos_provider.dart`
-- **Mode-toggle chip pair for link-existing vs create-new in a form sheet**: `_ModeChip` widgets switch `_isCreatingNew` bool — "Link existing" shows an inline scrollable contact list loaded in `initState`; "Create new" shows name/phone fields; shared join-table fields (`_buildJoinFields()`) render in both paths → `lib/features/projects/widgets/contractor_form_sheet.dart`
-- **Inline contact picker via `getContactsForPicker()` on a cross-feature notifier**: Form sheet calls `ref.read(emergencyHubProvider.notifier).getContactsForPicker()` in `initState` — re-uses existing auth + property resolution, no duplicate query, already stubbed by the Emergency Hub issue for downstream use → `lib/features/projects/widgets/contractor_form_sheet.dart`
-- **`AnimatedSwitcher.layoutBuilder` with `Alignment.topCenter` for tab content**: Default `Alignment.center` makes incoming tab content appear vertically centered inside the taller outgoing tab's layout box, causing "appears below tabs" visual glitch — override with `Stack(alignment: Alignment.topCenter, ...)` → `lib/features/maintenance/screens/maintenance_screen.dart`
-- **Scroll to 0 before `setState` for tab switches**: `jumpTo(0)` in `addPostFrameCallback` fires one frame late causing content to appear at wrong scroll position — call `_scrollController.jumpTo(0)` synchronously before `setState` to avoid the jump → `lib/features/maintenance/screens/maintenance_screen.dart`
-- **`SECURITY DEFINER` RPC for soft deletes when RLS UPDATE WITH CHECK blocks**: RLS UPDATE policy without explicit `WITH CHECK` defaults to same as `USING` (e.g. `deleted_at IS NULL`) — after setting `deleted_at = NOW()` the row fails its own check with 42501. Fix: `CREATE FUNCTION soft_delete_X() ... SECURITY DEFINER` and verify ownership manually inside → Supabase DB
-- **Claude Vision label scanner with `formType` context**: Pass `formType: 'system' | 'appliance'` to edge function so Claude uses the correct category list (system: hvac/plumbing/etc, appliance: kitchen/laundry/etc) → `supabase/functions/scan-label/`
-- **Prefetch AI generation while user reviews form**: Start `prefetchItemTasks()` the moment user confirms scan ("Fill Form") — by the time they tap Save the future is usually resolved; `showTaskGenerationSheet` awaits the pre-flight future instead of starting fresh, eliminating perceived latency → `lib/core/widgets/task_generation_sheet.dart`
-- **Batch insert via Supabase directly when notifier may be disposed**: Using `ref.read(autoDisposeProvider.notifier).addTask()` → `refresh()` throws if the provider disposed (e.g. Tasks tab not active). Fix: call `SupabaseService.client.from(...).insert(rows)` directly then `ref.invalidate(provider)` — invalidate is safe even on disposed providers → `lib/core/widgets/task_generation_sheet.dart`
-- **Show modal sheets BEFORE `context.pop()` to prevent Navigator lock**: Calling `showCupertinoDialog` with the form's context AFTER `context.pop()` triggers `!_debugLocked` crash because the Navigator is mid-dispose. Always show any post-save sheet before popping → `lib/features/home_profile/screens/system_form_screen.dart`
-- **Signed URL batch generation in detail providers**: Private storage buckets require signed URLs — generate them in parallel with `Future.wait(photos.map(...createSignedUrl(path, 3600)...))` in `_fetchDetail`, store in `Map<String, String> photoUrls` on the detail model, pass as `photoUrlBuilder` to `SystemPhotoStrip` → `lib/features/home_profile/providers/system_detail_provider.dart`
-- **`appliancesProvider` watched alongside `systemsProvider` in Systems tab**: Appliances with linked tasks group into `_ApplianceCard` via a separate `applianceGrouped` map; "General Tasks" only shows tasks with no system AND no appliance link; `_AllClearCard` accepts both systems and appliances → `lib/features/maintenance/widgets/by_system_view.dart`
-- **`ref.keepAlive()` on list providers watched in non-primary tabs**: `appliancesProvider` without `keepAlive` disposes when Home Profile screen is off-screen, causing Systems tab to see empty appliance list on first render → add `ref.keepAlive()` to any provider watched across multiple features
-- **`CupertinoSliverRefreshControl` as first sliver in `CustomScrollView` for iOS PTR**: Replaces `RefreshIndicator` on iOS — gives native spinning indicator instead of Material spinner; content goes in `SliverToBoxAdapter` or `SliverList`; `AlwaysScrollableScrollPhysics()` required so PTR triggers even when list doesn't fill the viewport → `lib/features/documents/screens/document_categories_screen.dart`
-- **`AlwaysScrollableScrollPhysics()` on ListView for PTR on short lists**: Without this, PTR gesture doesn't register when list content doesn't exceed viewport height — always add when list may be empty or have few items
-- **Intentional `Colors.black` / `Colors.white` in full-screen media viewers**: Design system exemption for photo comparison and photo detail screens — warm off-white (#FAF8F5) looks wrong on black media backgrounds; keep raw `Colors.black` / `Colors.white` in `_PhotoViewer` and `photo_comparison_screen.dart` only
-- **New AppColors shadow tokens**: `shadowXs` (0x0A2A2420), `shadowSm` (0x0D2A2420), `shadowMd`, `fabShadow` (0x331A2B4A) — use these instead of inline `Color(0x0A...)` literals for elevation; consistent opacity across all cards → `lib/core/theme/app_colors.dart`
-- **`AppColors.textInverse` over `Colors.white` on brand-colored surfaces**: Keystona's background is warm off-white (#F3F0EB), not pure white — icons/labels on navy/gold/accent backgrounds should use `AppColors.textInverse`, never `Colors.white`
-- **`VoidCallback onTap` on shared action widgets instead of `String route`**: When sibling widgets in a row need different nav strategies (`go` vs `push`), give the widget an `onTap: VoidCallback` parameter — caller decides the nav; widget stays nav-agnostic → `lib/features/home/screens/home_screen.dart _QuickAction`
-
-## Decisions
-
-<!-- Format:
-- **[Decision]**: Chose [X] over [Y] because [reason]
--->
-- **`abstract final class` for design tokens**: Chose over plain `class` — prevents instantiation, signals pure namespace intent
-- **`get` over `const` for TextStyles**: `GoogleFonts.*` returns runtime instances — TextStyle constants must be getters, not `const` fields
-- **`context.go()` for auth transitions**: Auth nav uses `go()` not `push()` — replaces stack so no back button returns to auth after sign-in
-- **`ref.read()` for one-shot service calls**: Fire-and-forget service calls don't need a notifier — call `ref.read(service).method()` directly
-- **`StatefulShellRoute.indexedStack` over `ShellRoute`**: Preserves scroll/state per tab — `ShellRoute` rebuilds on every tab switch
-- **`BottomNavigationBar` over `NavigationBar`**: Material 2 bar matches iOS feel better for MVP — upgrade to `NavigationBar` in polish phase
-- **Auth providers separate from router**: Router watches auth providers, doesn't own auth logic — cleaner separation of concerns
-- **`StateProvider` from legacy import**: Riverpod v3 moved `StateProvider` to `legacy.dart` — use `NotifierProvider` for all new state going forward
-- **`initialValue` over `value` on dropdowns**: `DropdownButtonFormField.value` deprecated in Flutter 3.33+ — always use `initialValue`
-- **`String.fromEnvironment` needs `defaultValue` for dev**: No default = empty string at runtime when `--dart-define-from-file` is omitted → always add `defaultValue` for dev credentials
-- **Supabase `external_email_enabled` off by default**: New projects ship with email/password auth disabled — enable via Dashboard → Auth → Providers
-- **`updateDocument()` not `update()` for provider methods**: `AsyncNotifier` has a built-in `update()` — feature methods named `update()` silently shadow it; use descriptive names like `updateDocument()`, `updateTask()`
-- **Two-client Edge Function pattern**: One admin client (`SUPABASE_SERVICE_ROLE_KEY`) for DB ops; verify identity via `supabase.auth.getUser(token)` — never trust client-supplied `user_id`
-- **`SliverToBoxAdapter` over `SliverPersistentHeader` inside `CupertinoPageScaffold`**: Pinned headers conflict with `CupertinoSliverNavigationBar` geometry — use `SliverToBoxAdapter`; sticky via `NestedScrollView` later
-- **`@riverpod` codegen naming convention**: Codegen generates `fooProvider` and `fooProvider.notifier` — match these exactly; never write manual `AsyncNotifierProvider`
-- **Shared `_FormBody` between iOS and Android sheet variants**: Platform wrappers render the same `_FormBody` — differences (header style, save button) isolated to wrappers → `lib/features/documents/widgets/category_form_sheet.dart`
-- **Single icon catalog via `CategoryIcons.forKey()`**: All icon-string → `IconData` lookups through one map — add new keys to `CategoryIcons.all`, call `forKey()` everywhere
-- **`quickCompleteTask()` returns ID over void**: `Future<String>` lets callers pass the ID to the undo handler without extra state — enables robust undo in the same interaction
-- **Composite detail model over fat primary model**: Separate `TaskDetail(task, completions)` keeps the list model lean — assembled only when the detail screen opens
-- **`PickerOption` record typedef over a model class**: `typedef PickerOption = ({String id, String name})` — zero overhead, no file needed; sufficient when data never leaves the form
-- **Newline textarea over chip-add-remove for list fields**: Multiline textarea for `List<String>` fields — simpler; join with `'\n'` on init, split + trim + filter on save
-- **`context.push<String>()` typed return over callback/shared state**: Typed push/pop relays form result back to caller — cleaner than a provider field or callback closure
-- **`SECURITY DEFINER` RPC with immediate ownership check**: RPC verifies `properties.user_id = auth.uid()` before any data read — client-supplied `p_property_id` validated against session, not trusted
-- **`due_date < CURRENT_DATE AND NOT IN (completed, skipped)` over `status = 'overdue'` in RPCs**: Status column lags reality — date-based predicates always accurate; cross-check SQL against Flutter display code
-- **`FractionallySizedBox` over `LayoutBuilder` for skeleton width fractions**: `LayoutBuilder` cannot respond to intrinsic dimension queries from `SliverFillRemaining(hasScrollBody: false)` — same result, no crash
-- **`Future.wait([q1, q2, q3, q4])` for hub overview fetch**: Parallel fetches reduce total latency to slowest single query instead of sum of all
-- **`typedef NoEmergencyPropertyException = _NoPropertyException`**: Private exception exported via `typedef` — sentinel type; downstream screens catch the public alias without coupling to private symbol
-- **Top-level `show*Picker()` for cross-feature pickers**: When a picker needs platform-branching AND returns cross-feature data, a top-level function is cleaner than `static show()` → `lib/features/emergency/widgets/document_link_picker.dart`
-- **`CupertinoDatePicker` in fixed-height `Container` inside `showCupertinoModalPopup`**: 300px `Container` with header Row (Cancel/Done) + `Expanded(CupertinoDatePicker)`; `Material(type: transparency)` ancestor prevents assertion errors → `lib/features/emergency/screens/insurance_form_screen.dart`
-- **`@JsonKey(name:)` to avoid Freezed mixin naming conflict**: When a DB column name conflicts with a Freezed-generated mixin property (e.g. `model`), give Dart field a different name + `@JsonKey(name: 'db_column')` → `lib/features/home_profile/models/system.dart`
-- **`@JsonEnum(valueField:)` with `get label` on Dart enums**: Map Postgres enum strings with `@JsonEnum(valueField: 'value')` + explicit `final String value` + `String get label` — cleaner than String extensions when you own the enum → `lib/features/home_profile/models/system.dart`
-- **Non-fatal Edge Function call after insert**: Wrap secondary Edge Function calls in `try {} catch (_) {}` — primary DB write must never block on downstream function failures
-- **`BoxConstraints(minHeight:)` for bordered cards**: `Border.all(width: 1)` draws inward consuming 2px — use `minHeight` constraint instead of fixed `height` so the card expands rather than clips
-- **`abstract final class` picker catalog with `(value:, label:)` records**: `static const all = [(value: 'x', label: 'X'), ...]` drives pickers from one list; `labelFor(value)` for display — documents all DB enum values in one place → `lib/features/emergency/models/emergency_contact.dart`
-- **Status picker gated to `ProjectStatusTransitions.nextFor()`**: Edit form only shows valid next statuses; if transitions list is empty (e.g. completed), `onTap` returns early without showing a picker → `lib/features/projects/screens/project_form_screen.dart`
-- **`work_type` as TEXT + CHECK constraint over Postgres enum**: Avoids `ALTER TYPE` for future value additions — use TEXT CHECK for small, stable sets that may grow; Postgres enum preferred only when DB-level type guarantees are required
-- **Hard delete over soft delete for join table rows**: Join table rows (e.g. `project_contractors`) use `.delete()` not soft-delete — no history requirement; hard delete keeps table clean and eliminates `isFilter('deleted_at', null)` on every query
-- **`reorderPhases()` with sequential batch updates**: Iterates `orderedIds` and `update({'sort_order': i})` per phase; no bulk-update API needed; always invalidate sibling `projectDetailProvider` after reorder so `phase_count` stays current → `lib/features/projects/providers/project_phases_provider.dart`
-- **`loadTemplatesAndCreate()` batch insert from template table**: Fetch templates filtered by `project_type`, map to insert rows with `project_id`/`user_id` injected, single `insert(rows)` call — one round-trip for N phases → `lib/features/projects/providers/project_phases_provider.dart`
-- **Dark summary header + `LinearProgressIndicator` for budget overview**: `deepNavy` container at top of `CustomScrollView` via `SliverToBoxAdapter`; bar uses `goldAccent` normally, switches to `AppColors.error` when `isOverBudget`; over-budget warning row below the bar → `lib/features/projects/screens/project_budget_screen.dart`
-- **Dual provider for budget screen (items + summary)**: `projectBudgetProvider` for line items, `projectBudgetSummaryProvider` for aggregated totals — watch both independently; `RefreshIndicator` invalidates both on pull-to-refresh → `lib/features/projects/screens/project_budget_screen.dart`
-- **Three-mode contractor form sheet (link / create / edit)**: `bool _isCreatingNew` toggle + `_isEditing` getter drives UI branching; `_buildJoinFields()` shared across all three modes; `_loadContacts()` called in `initState` only for non-edit mode → `lib/features/projects/widgets/contractor_form_sheet.dart`
-- **`ConsumerStatefulWidget` for modal sheets that `ref.watch` providers**: Plain `StatefulWidget` with an external `WidgetRef` causes provider updates to rebuild the *parent*, not the sheet — spinner never clears; always make picker/form sheets `ConsumerStatefulWidget` so they own their ref → `lib/features/projects/widgets/document_link_picker_sheet.dart`
-- **Journal notes ordered by `note_date` then `created_at`**: Two-column order `order('note_date').order('created_at')` — user-specified date primary, creation time tiebreaker within same day → `lib/features/projects/providers/project_journal_provider.dart`
-- **`propertyDocumentPickerList` as a standalone top-level provider**: Document picker list is a separate `@riverpod Future<List<...>>` (not a family) — fetches all documents for the authenticated user's property; reusable across any feature needing a document picker → `lib/features/projects/providers/project_documents_provider.dart`
-- **"Add after" opens ImagePicker directly rather than picking from existing photos**: Chose direct ImagePicker flow over showing a picker of existing unpaired after photos — simpler UX (one tap to shoot/pick), immediately uploads as 'after' type, then auto-pairs; eliminates the need to scroll through a secondary list and removes a class of edge cases where an "after" photo is already paired → `lib/features/projects/screens/project_photos_screen.dart`
-- **`uploadPhoto` returns `Future<String>` (photo ID) over `Future<void>`**: Chose returning the new row ID so the auto-pair call (`pairPhotos(beforeId, newId)`) can happen in the same interaction without any extra state or secondary query; non-fire-and-forget but enables atomic upload+pair flow
-- **`MaterialPageRoute` with `fullscreenDialog: true` for single-photo viewer**: Chose over GoRouter push for inline detail views inside a feature screen — no named route needed; `fullscreenDialog` gives a bottom-up iOS sheet transition appropriate for a media viewer → `lib/features/projects/screens/project_photos_screen.dart`
-- **`pairId` UUID shared across exactly two photos over a separate join table**: Chose a shared UUID column on both photo rows over a `photo_pairs` join table — simpler schema, lookup is `where(p.pairId == photo.pairId && p.id != photo.id)`, no extra query or join needed
-- **`CupertinoSliverRefreshControl` over `RefreshIndicator` on iOS list screens**: Native iOS PTR feel; `RefreshIndicator` (Material spinner) acceptable only for form/settings screens where PTR is rare and restructuring to CustomScrollView carries more risk than it's worth
-- **`RefreshIndicator` (both platforms) for complex form screens**: `property_edit_screen.dart` has 300+ lines of nested form body — restructuring to CustomScrollView risks layout regressions; Material spinner on iOS is an acceptable tradeoff for rarely-refreshed form screens
-- **`Colors.black`/`Colors.white` intentional exceptions in design audit**: Photo viewer and comparison screens legitimately need pure black backgrounds with white controls — flag these as intentional before running any future color sweep so they aren't converted to brand tokens
-- **AppColors tokens added per-domain during audit**: Added contractor (6 tokens), photo badge (8 tokens), shadow (4 tokens), nav bar (2 tokens), trial banner, upload success, paywall gradient tokens — group new tokens by domain in `app_colors.dart` comments for discoverability
-
-## Lessons
-
-<!-- Format:
-- **[Issue]**: [What happened] → [How to prevent]
--->
-- **`TODO(...)` triggers dart lint**: The `todo` lint rule flags `TODO(name):` comments → Use plain `// note:` style for deferred work
-- **Riverpod 3.x removed `.valueOrNull`**: Use `.value` directly on `AsyncValue` — `.valueOrNull` no longer exists
-- **`StateProvider` requires legacy import in Riverpod v3**: `package:flutter_riverpod/legacy.dart` needed — prefer `NotifierProvider` to avoid this
-- **`DropdownButtonFormField.value` deprecated**: Flutter 3.33+ → always use `initialValue`; add `ValueKey` if value is set programmatically
-- **`FileOptions` needs explicit import**: Requires `import 'package:supabase_flutter/supabase_flutter.dart'` — not resolved through transitive imports
-- **Email regex in single-quoted strings**: Regex containing `'` inside a single-quoted Dart string causes parse errors → Use double-quoted or raw strings (`r"..."`)
-- **Router race condition on auth navigation**: `context.go('/dashboard')` fires before `isAuthenticatedProvider` updates — router redirects back to login → remove manual `context.go` after auth calls, let router self-redirect
-- **`SliverPersistentHeader(pinned: true)` crashes inside `CupertinoPageScaffold`**: `layoutExtent > paintExtent` geometry error from `CupertinoSliverNavigationBar` — replace with `SliverToBoxAdapter`
-- **Supabase `.single()` throws `PGRST116` on 0 rows**: Use `.maybeSingle()` and guard with `if (row == null) return []` for any query where the user may not have data yet
-- **`showCupertinoModalPopup` requires `rootNavigator: true` to dismiss**: Always dismiss with `Navigator.of(context, rootNavigator: true).pop()` — inner navigator pop empties GoRouter stack and crashes
-- **Freezed v3 requires `abstract class`**: `@freezed class Foo with _$Foo` fails — always use `@freezed abstract class Foo with _$Foo`
-- **`WidgetRef` invalid after modal dismissal + async**: Capture `ref.read(provider.notifier)` before the `.pop()` call — widget unmounts during async picker, `ref` throws "Used Ref after disposed"
-- **`showCupertinoModalPopup` resolves on dismiss, not picker completion**: Wrap the full picker flow in a `Completer` and await it — `show()` returns before picker completes otherwise
-- **`json_serializable` camelCase vs Supabase snake_case**: Without `build.yaml`, `fromJson` has camelCase keys — silently returns nulls for multi-word fields → always add `build.yaml` with `field_rename: snake`
-- **Dev testing requires seeded property**: Upload and document queries resolve `property_id` first — if no property row exists, throws "No property found" → seed via `INSERT INTO properties (...)` in Supabase dashboard
-- **Nested select must include all required model fields**: Missing fields cause `TypeError: null is not X` in `fromJson` — always check every `required` model field against the nested select column list
-- **`TextField` inside `showCupertinoModalPopup` crashes with "No Material widget found"**: Wrap sheet root in `Material(type: MaterialType.transparency)` to provide the ancestor without visual change
-- **Missing Supabase migration = provider stuck in loading**: PostgREST returns an error that AsyncNotifier never surfaces clearly — screen stays on skeleton; always apply migrations and verify with `execute_sql SELECT table_name FROM information_schema.tables`
-- **Apply migrations in dependency order**: Foreign key tables must exist before referencing tables — apply migrations sequentially (005 → 006 → 007...)
-- **`showCupertinoModalPopup` content overflows without height constraint**: Wrap content in `ConstrainedBox(maxHeight: MediaQuery.of(context).size.height * 0.85)` + `SingleChildScrollView`
-- **Expand arrow on custom categories implies subcategories**: Gate `keyboard_arrow_down` and expansion on `category.isSystem` — custom categories should tap-to-select immediately
-- **`Navigator.of(context, rootNavigator: true)` bypasses GoRouter on regular routes**: Only valid inside `showCupertinoModalPopup` — always use `context.pop()` for GoRouter navigation
-- **`CupertinoPageScaffold` nav bar overlaps child at y=0**: Wrap content in `SafeArea(bottom: false)` — without this, first widget in `CustomScrollView` renders behind the nav bar
-- **Duplicate icon switches silently diverge from DB values**: Consolidate to `CategoryIcons.forKey()` and verify keys against DB before shipping
-- **`if (!mounted) return` after every async gap in State**: Always check `if (!mounted) return` after any `await` before calling `setState`, `ScaffoldMessenger`, or `context.push`
-- **Worktree merge with new `@riverpod`/`@freezed` files requires `build_runner` re-run**: Any merge that introduces new annotated files (main → feature, conflict resolution, or fresh merge) will have stale/missing `.g.dart`/`.freezed.dart` — always run `dart run build_runner build --delete-conflicting-outputs` before quality gate
-- **DATE vs TIMESTAMP Supabase columns**: Sending a full ISO timestamp to a Postgres DATE column is silently truncated/rejected — always check column type; use `split('T')[0]` for DATE columns
-- **`String? _propertyId` must be nullable in form `initState`**: Property ID is fetched async — guard provider watches with `if (_propertyId != null)` or use `AsyncData([])` as fallback
-- **Edge Function `verify_jwt: true` is a gateway-level guard**: Gateway rejects requests before function code runs — function's `auth.getUser()` is defense-in-depth, not the primary gate
-- **`functions.invoke()` requires explicit `Authorization` header in supabase_flutter v2**: Always pass `headers: {'Authorization': 'Bearer ${session.accessToken}'}` explicitly; guard with `if (session == null) return;` first
-- **Edge Function `verify_jwt: true` gateway may reject valid Flutter JWTs**: Bypass by implementing the same logic as a provider method using the standard DB client — re-enable once project JWT config is confirmed
-- **`(_, __)` triggers `unnecessary_underscores` lint in Dart 3**: Use `(_, _)` instead — Dart 3 allows repeated `_` wildcards for multi-arg discards
-- **RPC aggregate queries must mirror Flutter client classification logic**: If Flutter classifies by `due_date < today`, SQL must use the same predicate — `status = 'overdue'` alone misses tasks whose status hasn't been flipped yet
-- **`GoRouter initialLocation` must match an existing route**: Removing a route without updating `initialLocation` causes "GoException: no routes for location" on cold start — update `initialLocation`, root redirect, auth redirect, and all `context.go()` call sites together
-- **`StatefulShellBranch` first route = tab default**: Always put the primary screen first — a placeholder as the first route means tapping the tab never shows the real screen
-- **Skeleton `AnimationController` must use `addPostFrameCallback`**: Calling `.repeat()` directly in `initState` crashes with `debugFrameWasSentToEngine` on pushed routes and some startup paths — always use `WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _ctrl.repeat(reverse: true); })`; also: `LayoutBuilder` and `ListView` both crash inside `SliverFillRemaining(hasScrollBody: false)` — use `FractionallySizedBox` (inside `Expanded`) and `Column` respectively
-- **Non-tab pushed-route screens must have a reachable entry point**: Always verify a new pushed-route screen has a visible button on an existing tab screen before closing the issue
-- **Controllers in data model for inline editable rows**: Own `TextEditingController`s in the row's data class with a `dispose()` method — parent state disposes on removal, controllers survive parent rebuilds → `lib/features/emergency/widgets/circuit_directory_editor.dart`
-- **`Border.all()` draws inward, stealing 2px of content height**: Use `constraints: BoxConstraints(minHeight:)` so the card expands rather than clips
-- **`ListView` inside `SliverFillRemaining(hasScrollBody: false)` crashes**: `RenderViewport` throws "does not support intrinsic dimensions" — replace skeleton's `ListView` with a `Column`
-- **DB enum values don't match model enum values**: Always verify actual DB enum values with `SELECT unnest(enum_range(NULL::your_enum))` before writing model enum code
-- **Same wrong column name in multiple providers**: When a column is renamed, `grep -r "old_column_name" lib/` — fixing one provider doesn't fix all others
-- **NOT NULL column missing from insert payload**: Always check `SELECT column_name FROM information_schema.columns WHERE table_name = 'X' AND is_nullable = 'NO'` before writing insert code
-- **`TextEditingController` created in `build()` resets cursor to 0 on every rebuild**: Own controllers in `StatefulWidget` state or data model class — `build()` creates a fresh controller each rebuild → `lib/features/emergency/widgets/circuit_directory_editor.dart`
-- **`field_rename: snake` doesn't convert no-uppercase field names; use `@JsonKey` + lint suppression**: `is24x7` stays `is24x7` in JSON but DB column is `is_24x7` — fix with `@JsonKey(name: 'is_24x7')`; suppress resulting `invalid_annotation_target` lint with `// ignore_for_file: invalid_annotation_target` at top of file → `lib/features/emergency/models/emergency_contact.dart`
-- **`ref.invalidateSelf(); await future` propagates refetch failures as write failures**: If the post-insert refetch queries multiple tables and any fail, the exception propagates back to the caller — verify the overview fetch succeeds independently before debugging the insert itself
-- **`FractionallySizedBox` bare in a `Row` crashes with infinite width**: `Row` gives unconstrained width to direct children — wrap in `Expanded` (proportional sizing) or use `Container(width: N)` (fixed skeleton bars)
-- **iOS `Stack + Positioned` FAB must be gated when empty state has its own CTA**: Gate with `if (contentCount > 0)` so FAB only appears with real content — prevents two competing tap targets → `lib/features/projects/screens/projects_screen.dart`
-- **`AppColors.textTertiary` doesn't exist — use `AppColors.gray400`**: The color palette has no `textTertiary` alias; for subdued icon and hint colors use `AppColors.gray400` (same value as `textDisabled`) → verify against `app_colors.dart` before using any color name not seen elsewhere in the codebase
-- **Nested select across feature boundaries requires FK + RLS**: `emergency_contacts(name, phone, email)` nested inside `project_contractors` query only works if the FK constraint exists and RLS allows the join — always test that the nested select actually returns data before writing display logic that depends on it
-- **Hard-delete join tables must not include `deleted_at` in `_kColumns` or `.isFilter()`**: `project_contractors` uses hard-delete — selecting or filtering on `deleted_at` causes a 400 on every fetch; always check `information_schema.columns` before assuming a table uses soft-delete
-- **Nested select column names must match exact DB column names**: `emergency_contacts(name, phone, email)` fails with 400 if the column is `phone_primary` — PostgREST returns an error for unknown columns in nested selects; always verify nested select column names against the actual table schema
-- **`property_id` in `_kColumns` for a table that lacks the column causes 400 on every fetch**: Screen never leaves skeleton; always verify every column in `_kColumns` against `information_schema.columns` before writing the provider
-- **`user_id` NOT NULL with no DB default must be explicitly included in insert payload**: Omitting it causes a DB constraint violation and silent upload failure; always check `is_nullable = 'NO'` + `column_default IS NULL` before writing insert code
-- **Duplicate `path:` in router from merge conflict silently shadows real screen**: After resolving any router conflict, `grep` for duplicate path strings — GoRouter matches the first declaration; the real screen is unreachable without any error
-- **`StatefulWidget` with external `WidgetRef` never rebuilds when provider resolves**: Provider updates trigger a rebuild on the widget that owns the ref, not the modal sheet — convert modal picker/form sheets to `ConsumerStatefulWidget` so they own their ref and rebuild on provider state changes
-- **`property_id` in `_kColumns` for a table that has no such column causes 400 on every fetch**: `project_photos` has no `property_id` column (it's on `projects`) — including it in the select list causes a PostgREST 400 on the first load; screen never leaves skeleton state; always verify column list against `SELECT column_name FROM information_schema.columns WHERE table_name = 'X'` before writing `_kColumns`
-- **`user_id` NOT NULL with no DB default must be in insert payload**: `project_photos.user_id` is `NOT NULL` with no server default — omitting it from the `insert({})` map causes a constraint violation and silent upload failure; always check `is_nullable = 'NO'` and `column_default IS NULL` columns before writing insert code
-- **Auto-pair "Add after →" flow: upload first, pair second**: Upload returns the new photo's ID; immediately call `pairPhotos(beforeId, newId)` — both mutations invalidate and re-fetch once via `ref.invalidateSelf(); await future`; the grid reflects the paired state in the same refresh cycle without a second screen reload
-- **`as int?` on JSON numbers throws if Claude returns `13.0` (double)**: Use `(json['field'] as num?)?.toInt()` for all numeric fields from Claude API — JSON numbers without decimal points parse as int but Claude sometimes returns `13.0` which fails `as int?` cast silently, making entire `fromJson` null
-- **`supabase_flutter` UPDATE with RLS `WITH CHECK` missing = 42501 even after policy fix**: PostgREST validates WITH CHECK server-side; direct UPDATE still fails after RLS fix — use `SECURITY DEFINER` RPC with manual ownership check as the reliable workaround
-- **Storage bucket must be created before photo uploads — bucket absence = silent failure**: `item-photos` bucket didn't exist; uploads always failed. Always verify bucket in `storage.buckets` before writing upload code. Create with explicit `allowed_mime_types` and `file_size_limit`
-- **Autodipose provider `ref` used after dispose in modal sheet**: `_TaskSelectionSheetState` held `WidgetRef` from parent; when Tasks tab went inactive `maintenanceTasksProvider` disposed; calling `notifier.addTask()` → `refresh()` threw. Fix: insert directly via Supabase client and `ref.invalidate()` which is safe on disposed providers
-- **`const BoxDecoration` breaks when field uses `.withValues()`**: `.withValues(alpha:)` is a method call — cannot be `const`; change `const BoxDecoration _kDecoration` to `final BoxDecoration _kDecoration` and keep inner `BorderRadius.circular(N)` as `const` → `lib/features/home_profile/screens/property_edit_screen.dart`
-- **Import path depth for deeply nested widget files**: `lib/features/projects/widgets/photos/shared/` is 5 directories below `lib/` — needs `'../../../../../core/theme/app_colors.dart'`; getting this wrong causes a "Target of URI doesn't exist" error that's hard to spot; count levels from the file, not the feature root → `lib/features/projects/widgets/photos/shared/photo_camera_fab.dart`
-- **Batch `sed` color replacements lose the AppColors import**: After replacing `Colors.white` with `AppColors.textInverse` via grep/sed, the `flutter/material.dart` import may no longer be needed but `app_colors.dart` isn't added automatically — always grep for missing `app_colors.dart` imports after a batch replacement pass
-- **`WebSearch*` wildcard not valid in `.claude/settings.local.json` allow rules**: Built-in tool permission rules don't support glob wildcards — use exact tool names (`WebSearch`, not `WebSearch*`); wildcard causes the rule to be silently skipped on startup → `.claude/settings.local.json`
-- **`AppColors.textTertiary` doesn't exist — use `AppColors.gray400`**: No `textTertiary` alias in the palette; subdued hint/icon colors use `AppColors.gray400` (same value as `textDisabled`) — always verify color names against `app_colors.dart` before using
-- **`ListView` without `padding: EdgeInsets.zero` inside `CustomScrollView` adds safe area top inset**: On iPhone with notch/Dynamic Island, a `ListView` (or `ListView.separated`) not given explicit `padding: EdgeInsets.zero` inherits `MediaQuery.padding`, which adds ~47px as top padding — creates a huge visual gap between the section header and the first list item even though the `SizedBox` above it is tiny. Always set `padding: EdgeInsets.zero` on any non-scrollable `ListView` used inside a `CustomScrollView`
-- **`CupertinoButton` minimum touch target bloats section header rows**: Even with `padding: EdgeInsets.zero`, `CupertinoButton` enforces a 44px minimum height — inflates header rows and creates false visual gaps below them. Use `GestureDetector` + `Text` for inline text buttons in section headers where vertical compactness matters
-- **`context.push()` vs `context.go()` for tab vs sub-screen navigation**: In a `StatefulShellRoute` app, `context.push(tabRoute)` stacks a new page on the current branch instead of switching tabs — always use `context.go(route)` to switch to a different tab's root. Reserve `context.push()` for routes that are sub-screens within the current branch (e.g. Emergency Hub pushed from Home branch)
+| Document | Covers |
+|---|---|
+| HomeTrack_SRS.md | Requirements, non-functional requirements |
+| HomeTrack_Database_Schema.md | Migrations, RLS policies, storage buckets |
+| HomeTrack_API_Contract.md | Endpoints, Edge Functions, rate limits |
+| HomeTrack_Sprint_Plan.md | Phases 0 to 9, acceptance criteria |
+| HomeTrack_Performance_Guide.md | Time budgets, caching |
+| HomeTrack_Error_Handling.md | Loading, errors, offline, forms, empty states |
+| HomeTrack_Empty_States_Catalog.md | 25 empty states (the kit wins where it draws one) |
+| HomeTrack_Dashboard_Spec.md / _States.md | Home tab layout and 8 states |
+| HomeTrack_Health_Score_Algorithm.md | Three-pillar scoring |
+| HomeTrack_Notification_Priority.md | P1/P2/P3 tiers, digest, quiet hours |
+| HomeTrack_Security_Guide.md | Auth, validation, PII, Sentry, checklist |
 
 ## Philosophy
 
-**Ship complete** — When Keystona launches, all 5 feature pillars will be fully polished and ready for the App Store. No soft launch, no partial feature set.
-
-**Feature-first development** — Work through the Sprint Plan phases in order. Each phase has clear acceptance criteria. Some phases can be parallelized across agents.
-
-**Document everything** — Use `/compound` or `/quick-compound` after completing work to extract learnings, patterns, decisions, and lessons into this CLAUDE.md file.
-
-**Agent-native architecture** — Agents are first-class citizens. Any action a user can take, an agent can take. Anything a user can see, an agent can see.
+**Ship complete:** all 5 pillars polished before launch, no soft launch. **Feature-first:** work through the sprints in `design/BUILD_ORDER.md`. **Agent-native:** anything a user can do or see, an agent can. **Document as you go:** record leftovers in `FOLLOW_UPS.md`, learnings here (keep this file short; move retired material to the archive).

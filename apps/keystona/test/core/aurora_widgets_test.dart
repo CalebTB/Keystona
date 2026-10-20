@@ -102,8 +102,8 @@ void main() {
   });
 
   group('responsive: sheet', () {
-    for (final viewport in kViewports) {
-      for (final scale in kTextScales) {
+    for (final viewport in activeViewports) {
+      for (final scale in scalesFor(viewport)) {
         testWidgets('sheet + action sheet @ ${viewport.name}, text x$scale',
             (tester) async {
           await pumpScreen(

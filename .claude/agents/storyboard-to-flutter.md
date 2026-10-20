@@ -49,7 +49,7 @@ Static design tokens alone do not adapt. Build and use a responsive layer:
 - Cap content width on large screens (tablets/landscape) with a centered `ConstrainedBox(maxWidth: <token>)` rather than stretching edge to edge.
 
 ### Overflow-proof by default
-For every screen and widget, mentally (and with tests) run it at: a small phone (~320x568 logical), a normal phone (~390x844), a large phone, a tablet, landscape, and text scale 1.0 / 1.5 / 2.0.
+Every screen and widget must hold up on a small phone (320x568), a normal phone (390x844), a landscape phone (844x390), a tablet (834x1194), and text scale up to 2.0. Tests cover this with `testResponsive` (see "Standing rules" below), not by hand-written loops.
 - Every `Text` that can be long has a deliberate policy: `maxLines` + `overflow: TextOverflow.ellipsis`, or it wraps inside an `Expanded`/`Flexible`. Never place unbounded `Text` in a `Row` without `Expanded`/`Flexible`.
 - Scrollable by default: a screen's body is a `CustomScrollView`/`ListView`/`SingleChildScrollView` so small screens and big text scroll instead of overflowing. Use `SliverFillRemaining(hasScrollBody: false)` for content that should center when short but scroll when tall.
 - Rows with multiple children must have a story for narrow widths: `Wrap`, `Flexible` children, or a stacked layout below a breakpoint.
@@ -95,6 +95,40 @@ The codebase already has screens of 1,000-1,900 lines. Rebuilding a screen is th
 6. Forms: a form widget per section, a controller/state class for field state and validation (pure Dart, tested), and a thin screen that composes them.
 - Reuse before you create: search `lib/core/widgets/` and the feature's `widgets/` for an existing widget; do not copy-paste a block that appears twice, extract it. Cross-feature widgets still need the user's approval (list them in the report).
 - Don't over-engineer: no abstract class with a single caller and no foreseeable second, no generic base classes "just in case". The split is for readability and testability, not ceremony.
+
+## Standing Rules (every task; briefs do not repeat these)
+
+A brief only names the screens, the files you own, shared contracts and known gaps. Everything below always applies. Project-wide rules are in `CLAUDE.md`; these are the ones that cost rework when missed.
+
+### Layout and navigation (bugs this project already had)
+- **Never put an `Expanded` next to a loose `Flexible` in a `Row`.** They split the free space evenly and the `Flexible`'s unused share stays empty, so trailing widgets float mid-row (Open pill, "22 DAYS LEFT" chips, Share/Edit). Use `Flexible` + `Flexible` with `mainAxisAlignment: spaceBetween`, or `Expanded` + a plain trailing child. Label/value rows: label natural width, value `Expanded`.
+- **Dismiss a sheet or dialog with its OWN context.** `AuroraSheet` and `showModalBottomSheet` use the nearest navigator, not the root: `Navigator.of(context, rootNavigator: true).pop()` on them pops the router's last page and crashes the app. Use the builder's context. Show a post-save sheet before `context.pop()`.
+- Paint borders over content (`DecorationPosition.foreground`) when a child can cover them. Size controls with `minHeight`, never fixed heights.
+
+### State must not outlive the screen
+- Flow state (a form, a draft, a scan, a wizard) belongs to the screen. Prefer `autoDispose`. Keep a provider alive only when the state must exist before the screen does or after it closes, and then: reset it on EVERY exit (pop, save, failure paths) AND on every entry (the first step of the flow) through one helper, scope per-user data to the signed-in user, add it to `tool/keepalive_allowlist.txt` with the reason and the test, and write a test that opens the flow, closes it, and asserts the state is pristine.
+- **Never write into a provider from `build()`, or from a post-frame callback that `build()` schedules.** It re-applies on every rebuild, including the rebuild that a reset causes, so closed state comes back (a closed renewal reopened as the next "new document"). Apply input ONCE from `initState`: `ref.listenManual(provider, ...)` for later changes plus a single `addPostFrameCallback` read for the value already cached. Make the screen a `ConsumerStatefulWidget` when it needs this.
+- `tool/check_state_leaks.sh` enforces both rules; run it with the other guards.
+
+### Tests
+- Responsive tests: `testResponsive` / `activeViewports` / `scalesFor` from `test/support/responsive_harness.dart`. The default is 5 curated cases (320@2.0, 390@1.0 and 1.5, 844x390@1.5, 834@1.0); never write your own 5x3 loops. Override providers with fakes; never reach Supabase.
+- **Test position, not only overflow.** Assert where key elements land: actions and trailing values at the right edge, labels at the left, primary buttons, stacked menu items, sheet Undo/Save at the edges. Overflow-only tests missed real bugs.
+- A regression test must fail without the fix: revert the fix once to prove it.
+- Run scoped tests while working; the whole suite once at the end (twice at most). Do not run `dart format` on whole directories: it reformats other agents' in-progress files.
+
+### Backend discipline
+- No migrations, Edge Functions or pubspec changes: list the gap instead. Never write a column or RPC name you have not seen in the code or the schema.
+- Soft delete and restore go through the `soft_delete_*` / `restore_*` RPCs. A plain `UPDATE ... SET deleted_at` fails with 42501 and a plain restore matches zero rows. Every selected column must exist (a bad one is a 400 that leaves the screen on its skeleton). NOT NULL columns without a default, such as `user_id`, go in every insert.
+- Stub an unbuilt backend with `throw UnimplementedError('x() implemented by issue #N')`. Wrap secondary writes in `try/catch` so the primary write never blocks on them.
+
+### Working in parallel with other agents
+- Edit only the files your brief gives you. Add tokens only in your own NEW `lib/core/theme/aurora_*.dart` file (never edit or reorder the existing token files; if you must append to one, re-read it right before).
+- Router edits are tiny and local: re-read `app_router.dart` immediately before editing, add only your constants and routes, never duplicate a `path:`, and re-run analyze after.
+- Shared contracts (a file path and signature in the brief) are stable: code against them; if one is missing at your final check, wait for it (sleep 60 in a loop, up to about 15 minutes) and never create or edit it yourself.
+- No new widgets in `lib/core/widgets`. List core-worthy patterns in your report instead. Never commit.
+
+### Report (always this shape)
+Files created, changed and DELETED with line counts (before and after); screen-to-file map; deleted symbols with the grep that proves nothing dangles; routes added and missing entry points; token additions; backend gaps and stubs; deviations from the PNGs and why; copy you had to invent (list all of it); product questions; test results; and plainly what you could not verify without a simulator or a live database.
 
 ## Workflow
 
@@ -153,7 +187,7 @@ Follow the project CLAUDE.md and the `flutter-agent` skill. In particular:
 - Run `flutter analyze` and fix everything you introduced, including anything left dangling by deletions.
 - **File-size check.** For every file you created or rewrote run `wc -l` and confirm no file reaches 1,000 lines, main screens are under about 600, and widgets under about 300. List any file over its "aim for" size with the reason; a file at or over 1,000 must be split before you finish. Confirm each widget file has a single public widget and that no widget file contains data-access code.
 - **Hard-coded value sweep.** Grep the files you touched for literals and eliminate them: `EdgeInsets\.(all|symmetric|only|fromLTRB)\(\s*[0-9]`, `SizedBox\((width|height):\s*[0-9]`, `BorderRadius\.circular\(\s*[0-9]`, `fontSize:\s*[0-9]`, `size:\s*[0-9]`, `Color\(0x`, `Colors\.`, `Duration\(`, `height:\s*[0-9]`, `width:\s*[0-9]`. Intentional exceptions in CLAUDE.md (full-screen media viewers) are the only allowed `Colors.black/white`.
-- **Responsive check.** Write or update widget tests (or run on simulators) at small phone, large phone, tablet, landscape, and text scale 2.0; assert no `RenderFlex overflowed` errors and no clipped/overlapping content. Fix any overflow by changing the layout, not by shrinking values.
+- **Responsive check.** Use `testResponsive` (curated worst cases by default; the full matrix runs with `--dart-define=FULL_MATRIX=true`) and add POSITION assertions for key elements. Fix any overflow by changing the layout, not by shrinking values.
 - Walk the storyboard inventory from step 1 and confirm every frame, state, string, and interaction is implemented or explicitly called out as deferred.
 - If a simulator/screenshot is available, compare against the storyboard visually (spacing, hierarchy, truncation, safe-area behavior on notched iPhones).
 
