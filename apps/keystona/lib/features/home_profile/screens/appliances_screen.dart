@@ -1,102 +1,142 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/aurora_colors.dart';
-import '../../../core/theme/aurora_radius.dart';
-import '../../../core/theme/aurora_spacing.dart';
-import '../../../core/theme/aurora_typography.dart';
 
 import '../../../core/router/app_router.dart';
-
-
-
+import '../../../core/theme/aurora_scale.dart';
+import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/widgets/error_view.dart';
-import '../../../services/providers/service_providers.dart';
+import '../appliance_copy.dart';
 import '../models/appliance.dart';
+import '../models/appliance_list.dart';
+import '../models/appliance_suggestion.dart';
+import '../models/item_ref.dart';
 import '../providers/appliances_provider.dart';
-import '../widgets/appliance_card.dart';
-import '../widgets/appliance_list_skeleton.dart';
-import '../widgets/appliances_empty_state.dart';
+import '../providers/item_task_counts_provider.dart';
+import '../widgets/appliances/appliance_rows.dart';
+import '../widgets/appliances/appliance_suggestions.dart';
+import '../widgets/appliances/appliances_empty_state.dart';
+import '../widgets/item/item_header.dart';
+import '../widgets/item/item_page.dart';
+import '../widgets/item/item_skeleton.dart';
+import '../widgets/item/item_top_bar.dart';
+import '../widgets/item/item_top_bar_action.dart';
+import '../widgets/shared/dashed_action_button.dart';
+import '../widgets/shared/item_filter_bar.dart';
+import '../../../core/theme/aurora_home_c.dart';
 
-const _kFreeLimitWarningAt = 8;
+/// Every appliance in the home with its lifespan (kit: HomeAppliances).
+/// Route: `/home/appliances`.
+class AppliancesScreen extends ConsumerStatefulWidget {
+  const AppliancesScreen({super.key, this.today});
 
-class AppliancesScreen extends ConsumerWidget {
-  const AppliancesScreen({super.key});
+  /// Today's date; tests pass a fixed one.
+  final DateTime? today;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    return isIOS ? const _IOSLayout() : const _AndroidLayout();
-  }
+  ConsumerState<AppliancesScreen> createState() => _AppliancesScreenState();
 }
 
-class _IOSLayout extends ConsumerWidget {
-  const _IOSLayout();
+class _AppliancesScreenState extends ConsumerState<AppliancesScreen> {
+  ApplianceCategory? _category;
+  ApplianceSort _sort = ApplianceSort.oldestFirst;
+
+  void _back() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(AppRoutes.home);
+    }
+  }
+
+  void _scan() => context.push(AppRoutes.homeScan, extra: ItemKind.appliance);
+
+  void _add() => context.push(AppRoutes.homeAppliancesAdd);
+
+  void _suggest(ApplianceSuggestion s) =>
+      context.push(AppRoutes.homeAppliancesAdd, extra: s);
+
+  void _open(String id) => context.push(
+    AppRoutes.homeApplianceDetail.replaceFirst(':applianceId', id),
+  );
+
+  Future<void> _refresh() async {
+    await ref.read(appliancesProvider.notifier).refresh();
+  }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return CupertinoPageScaffold(
-      child: Stack(
-        children: [
-          CustomScrollView(
-            slivers: [
-              const CupertinoSliverNavigationBar(
-                largeTitle: Text('Appliances'),
-                previousPageTitle: 'Home',
-              ),
-              CupertinoSliverRefreshControl(
-                onRefresh: () =>
-                    ref.read(appliancesProvider.notifier).refresh(),
-              ),
-              const _ContentSliver(),
-              const SliverToBoxAdapter(child: SizedBox(height: 88)),
-            ],
-          ),
-          Positioned(
-            right: AuroraSpacing.space7,
-            bottom: AuroraSpacing.space8,
-            child: FloatingActionButton(
-              onPressed: () => context.push(AppRoutes.homeAppliancesAdd),
-              backgroundColor: AuroraColors.coral,
-              foregroundColor: AuroraColors.paper,
-              elevation: 3,
-              child: const Icon(Icons.add),
-            ),
-          ),
-        ],
+  Widget build(BuildContext context) {
+    final appliances = ref.watch(appliancesProvider);
+    final topBar = ItemTopBar(
+      backLabel: ApplianceCopy.listBack,
+      onBack: _back,
+      trailing: ItemTopBarAction(
+        label: ApplianceCopy.add,
+        style: ItemTopBarStyle.outline,
+        onTap: _scan,
       ),
     );
-  }
-}
+    final gap = SizedBox(height: context.aurora.of(AuroraSpacing.space7));
 
-class _AndroidLayout extends ConsumerWidget {
-  const _AndroidLayout();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      backgroundColor: AuroraColors.paper,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(AppRoutes.homeAppliancesAdd),
-        backgroundColor: AuroraColors.coral,
-        foregroundColor: AuroraColors.paper,
-        child: const Icon(Icons.add),
-      ),
-      body: RefreshIndicator(
-        color: AuroraColors.ink,
-        onRefresh: () => ref.read(appliancesProvider.notifier).refresh(),
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              title: Text('Appliances', style: AuroraType.h3),
-              floating: true,
-              backgroundColor: AuroraColors.paper,
-              scrolledUnderElevation: 0,
-              elevation: 0,
+    return appliances.when(
+      loading: () => ItemPage(
+        onRefresh: _refresh,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            topBar,
+            gap,
+            const ItemHeader(
+              eyebrow: ApplianceCopy.listTitle,
+              title: ApplianceCopy.listTitle,
             ),
-            const _ContentSliver(),
-            const SliverToBoxAdapter(child: SizedBox(height: AuroraSpacing.space8)),
+            gap,
+            const ItemSkeleton(
+              heights: [
+                AuroraHomeCSizes.skeletonRow,
+                AuroraHomeCSizes.skeletonRow,
+                AuroraHomeCSizes.skeletonRow,
+              ],
+            ),
+          ],
+        ),
+      ),
+      error: (_, _) => ItemPage(
+        onRefresh: _refresh,
+        fill: ErrorView(
+          message: ApplianceCopy.listLoadError,
+          onRetry: () => ref.invalidate(appliancesProvider),
+        ),
+        child: topBar,
+      ),
+      data: (all) => ItemPage(
+        onRefresh: _refresh,
+        fill: all.isEmpty
+            ? AppliancesEmptyState(onAdd: _add, onScan: _scan)
+            : null,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            topBar,
+            gap,
+            if (all.isEmpty)
+              const ItemHeader(
+                eyebrow: ApplianceCopy.listTitle,
+                title: ApplianceCopy.listTitle,
+              )
+            else
+              _Content(
+                all: all,
+                category: _category,
+                sort: _sort,
+                today: widget.today,
+                onCategory: (c) => setState(() => _category = c),
+                onSort: (i) =>
+                    setState(() => _sort = ApplianceSort.values[i]),
+                onOpen: _open,
+                onSuggest: _suggest,
+                onScan: _scan,
+              ),
           ],
         ),
       ),
@@ -104,159 +144,87 @@ class _AndroidLayout extends ConsumerWidget {
   }
 }
 
-class _ContentSliver extends ConsumerWidget {
-  const _ContentSliver();
+/// The populated list: header, filter bar, rows, suggestions, scan button.
+class _Content extends ConsumerWidget {
+  const _Content({
+    required this.all,
+    required this.category,
+    required this.sort,
+    required this.today,
+    required this.onCategory,
+    required this.onSort,
+    required this.onOpen,
+    required this.onSuggest,
+    required this.onScan,
+  });
+
+  final List<Appliance> all;
+  final ApplianceCategory? category;
+  final ApplianceSort sort;
+  final DateTime? today;
+  final ValueChanged<ApplianceCategory?> onCategory;
+  final ValueChanged<int> onSort;
+  final ValueChanged<String> onOpen;
+  final ValueChanged<ApplianceSuggestion> onSuggest;
+  final VoidCallback onScan;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final appliancesAsync = ref.watch(appliancesProvider);
-    final isPremium = ref.watch(isPremiumProvider);
-
-    return appliancesAsync.when(
-      loading: () => const SliverFillRemaining(
-        hasScrollBody: false,
-        child: ApplianceListSkeleton(),
-      ),
-      error: (e, _) => SliverFillRemaining(
-        hasScrollBody: false,
-        child: ErrorView(
-          message: "Couldn't load your appliances.",
-          onRetry: () => ref.read(appliancesProvider.notifier).refresh(),
-        ),
-      ),
-      data: (appliances) {
-        if (appliances.isEmpty) {
-          return SliverFillRemaining(
-            hasScrollBody: false,
-            child: AppliancesEmptyState(
-              onAdd: () => context.push(AppRoutes.homeAppliancesAdd),
-            ),
-          );
-        }
-        // Group by category.
-        final grouped = <ApplianceCategory, List<Appliance>>{};
-        for (final a in appliances) {
-          grouped.putIfAbsent(a.category, () => []).add(a);
-        }
-        final items = <_ListItem>[];
-        for (final entry in grouped.entries) {
-          items.add(_SectionHeader(entry.key.label));
-          for (final a in entry.value) {
-            items.add(_ApplianceItem(a));
-          }
-        }
-        final showBanner =
-            !isPremium && appliances.length >= _kFreeLimitWarningAt;
-        return SliverPadding(
-          padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
-          sliver: SliverList.builder(
-            itemCount: items.length + (showBanner ? 1 : 0),
-            itemBuilder: (context, index) {
-              if (showBanner && index == 0) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
-                  child: _LimitBanner(count: appliances.length),
-                );
-              }
-              final i = showBanner ? index - 1 : index;
-              final item = items[i];
-              if (item is _SectionHeader) {
-                return Padding(
-                  padding: const EdgeInsets.only(
-                    top: AuroraSpacing.space5,
-                    bottom: AuroraSpacing.space1,
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: const BoxDecoration(
-                          color: AuroraColors.inkSecondary,
-                          borderRadius: AuroraRadius.xs,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        item.title.toUpperCase(),
-                        style: AuroraType.label
-                            .copyWith(color: AuroraColors.inkSecondary),
-                      ),
-                    ],
-                  ),
-                );
-              }
-              if (item is _ApplianceItem) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
-                  child: ApplianceCard(appliance: item.appliance),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-        );
-      },
+    final a = context.aurora;
+    final now = today ?? DateTime.now();
+    final address = ref.watch(homeAddressLineProvider).value;
+    final counts = ref.watch(itemTaskCountsProvider);
+    final shown = ApplianceList.shown(
+      all,
+      category: category,
+      sort: sort,
+      now: now,
     );
-  }
-}
-
-abstract class _ListItem {}
-
-class _SectionHeader extends _ListItem {
-  _SectionHeader(this.title);
-  final String title;
-}
-
-class _ApplianceItem extends _ListItem {
-  _ApplianceItem(this.appliance);
-  final Appliance appliance;
-}
-
-class _LimitBanner extends StatelessWidget {
-  const _LimitBanner({required this.count});
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AuroraSpacing.space5,
-        vertical: AuroraSpacing.space3,
-      ),
-      decoration: BoxDecoration(
-        color: AuroraColors.yellowDim,
-        borderRadius: AuroraRadius.lg,
-        border: Border.all(color: AuroraColors.yellow.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.lock_outline, size: 18, color: AuroraColors.yellow),
-          const SizedBox(width: AuroraSpacing.space3),
-          Expanded(
-            child: Text(
-              "You're using $count of 10 free appliances. Upgrade to PRO for unlimited.",
-              style:
-                  AuroraType.bodySm.copyWith(color: AuroraColors.yellow),
+    final gap = SizedBox(height: a.of(AuroraSpacing.space8));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ItemHeader(
+          eyebrow: ApplianceList.eyebrow(address, all, now: now),
+          title: ApplianceCopy.listTitle,
+        ),
+        gap,
+        ItemFilterBar<ApplianceCategory?>(
+          horizontalInset: 0,
+          options: [
+            ItemFilterOption(
+              value: null,
+              label: ApplianceCopy.allChip(all.length),
             ),
-          ),
-          TextButton(
-            onPressed: () {},
-            style: TextButton.styleFrom(
-              foregroundColor: AuroraColors.yellow,
-              padding: EdgeInsets.zero,
-              minimumSize: Size.zero,
-            ),
-            child: Text(
-              'Upgrade',
-              style: AuroraType.label.copyWith(
-                color: AuroraColors.yellow,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
-      ),
+            for (final c in ApplianceList.categories(all))
+              ItemFilterOption(value: c, label: c.label),
+          ],
+          selected: category,
+          onSelected: onCategory,
+          shownCount: shown.length,
+          sortLabels: [for (final s in ApplianceSort.values) s.label],
+          sortIndex: sort.index,
+          onSortChanged: onSort,
+        ),
+        SizedBox(height: a.of(AuroraSpacing.space3)),
+        ApplianceRows(
+          appliances: shown,
+          taskCounts: counts,
+          today: now,
+          onOpen: onOpen,
+        ),
+        gap,
+        ApplianceSuggestions(
+          suggestions: ApplianceSuggestion.oftenForgotten,
+          onPick: onSuggest,
+        ),
+        gap,
+        DashedActionButton(
+          icon: Icons.photo_camera_outlined,
+          label: ApplianceCopy.scanToAdd,
+          onTap: onScan,
+        ),
+      ],
     );
   }
 }

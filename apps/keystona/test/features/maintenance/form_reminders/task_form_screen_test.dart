@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:keystona/core/router/app_router.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:keystona/core/widgets/aurora/aurora_button.dart';
 import 'package:keystona/core/widgets/error_view.dart';
@@ -45,6 +46,41 @@ Future<void> _pumpForm(
 TaskFormScreen _create() => TaskFormScreen(today: kToday);
 
 void main() {
+  group('opened from an item', () {
+    testWidgets('the system or appliance it was opened from is already picked', (
+      tester,
+    ) async {
+      await _pumpForm(
+        tester,
+        FakeTaskFormRepository(),
+        screen: TaskFormScreen(today: kToday, initialLinkId: 's-furnace'),
+      );
+      expect(find.text(TaskFormCopy.linkPlaceholder), findsNothing);
+      expect(find.text('Furnace'), findsWidgets);
+
+      // A name is all it takes: the item needs no picking.
+      await _type(tester, 0, 'Replace the filter');
+      expect(_saveEnabled(tester), isTrue);
+    });
+
+    testWidgets('an id that is not one of the options leaves it unpicked', (
+      tester,
+    ) async {
+      await _pumpForm(
+        tester,
+        FakeTaskFormRepository(),
+        screen: TaskFormScreen(today: kToday, initialLinkId: 'no-such-item'),
+      );
+      expect(find.text(TaskFormCopy.linkPlaceholder), findsOneWidget);
+      await _type(tester, 0, 'Replace the filter');
+      expect(_saveEnabled(tester), isFalse);
+    });
+
+    test('the create route carries the item id', () {
+      expect(AppRoutes.maintenanceCreateFor('s-furnace'), '/maintenance/create?link=s-furnace');
+    });
+  });
+
   group('create', () {
     testWidgets('Save stays off until there is a name and an item', (
       tester,

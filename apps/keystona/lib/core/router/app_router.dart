@@ -33,15 +33,19 @@ import '../../features/emergency/screens/emergency_hub_screen.dart';
 import '../../features/emergency/screens/insurance_form_screen.dart';
 import '../../features/emergency/screens/insurance_list_screen.dart';
 import '../../features/emergency/screens/shutoff_detail_screen.dart';
-import '../../features/home_profile/models/appliance.dart';
-import '../../features/home_profile/models/system.dart';
+import '../../features/home_profile/models/appliance_form_route.dart';
+import '../../features/home_profile/models/item_ref.dart';
 import '../../features/home_profile/screens/appliance_detail_screen.dart';
 import '../../features/home_profile/screens/appliance_form_screen.dart';
 import '../../features/home_profile/screens/appliances_screen.dart';
 import '../../features/home/screens/home_screen.dart';
+import '../../features/home_profile/screens/item_photos_screen.dart';
+import '../../features/home_profile/screens/item_reminders_screen.dart';
 import '../../features/home_profile/screens/item_tasks_screen.dart';
-import '../../features/home_profile/screens/lifespan_screen.dart';
-import '../../features/home_profile/screens/property_edit_screen.dart';
+import '../../features/home_profile/screens/home_edit_screen.dart';
+import '../../features/home_profile/screens/home_lifespan_screen.dart';
+import '../../features/home_profile/screens/home_profile_screen.dart';
+import '../../features/home_profile/screens/scan_flow_screen.dart';
 import '../../features/home_profile/screens/system_detail_screen.dart';
 import '../../features/projects/models/project.dart';
 import '../../features/projects/models/project_budget_item.dart';
@@ -145,6 +149,10 @@ abstract final class AppRoutes {
   // Tab 2 — Tasks
   static const maintenance = '/maintenance';
   static const maintenanceCreate = '/maintenance/create';
+
+  /// The add-task form with a system or appliance already linked.
+  static String maintenanceCreateFor(String itemId) =>
+      '$maintenanceCreate?link=$itemId';
   static const maintenanceReview = '/maintenance/review';
   static const maintenanceAll = '/maintenance/all';
   static const maintenanceEditTask = '/maintenance/edit/:taskId';
@@ -231,6 +239,17 @@ CupertinoPage<void> _buildPage(
       child: child,
       fullscreenDialog: fullscreenDialog,
     );
+
+/// The Add / Edit appliance screen for a route's `extra` (an appliance to edit,
+/// a scan to prefill from, a suggestion chip, or nothing).
+Widget _applianceForm(Object? extra) {
+  final args = ApplianceFormRoute.fromExtra(extra);
+  return ApplianceFormScreen(
+    existing: args.existing,
+    prefill: args.prefill,
+    suggestion: args.suggestion,
+  );
+}
 
 // ─── Router provider ───────────────────────────────────────────────────────
 
@@ -373,9 +392,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                         name: 'system-add',
                         pageBuilder: (_, state) => _buildPage(
                           state,
-                          SystemFormScreen(
-                            existingSystem: state.extra as HomeSystem?,
-                          ),
+                          SystemFormScreen.fromExtra(state.extra),
                           fullscreenDialog: true,
                         ),
                       ),
@@ -394,8 +411,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                             pageBuilder: (_, state) => _buildPage(
                               state,
                               ItemTasksScreen(
-                                systemId: state.pathParameters['systemId']!,
-                                itemName: state.extra as String? ?? 'System',
+                                item: ItemRef.system(
+                                  state.pathParameters['systemId']!,
+                                ),
                               ),
                             ),
                           ),
@@ -404,7 +422,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                             name: 'system-photos',
                             pageBuilder: (_, state) => _buildPage(
                               state,
-                              const PlaceholderScreen(name: 'System photos'),
+                              ItemPhotosScreen(
+                                item: ItemRef.system(
+                                  state.pathParameters['systemId']!,
+                                ),
+                              ),
                             ),
                           ),
                           GoRoute(
@@ -412,7 +434,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                             name: 'system-reminders',
                             pageBuilder: (_, state) => _buildPage(
                               state,
-                              const PlaceholderScreen(name: 'System reminders'),
+                              ItemRemindersScreen(
+                                item: ItemRef.system(
+                                  state.pathParameters['systemId']!,
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -429,9 +455,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                         name: 'appliance-add',
                         pageBuilder: (_, state) => _buildPage(
                           state,
-                          ApplianceFormScreen(
-                            existingAppliance: state.extra as Appliance?,
-                          ),
+                          _applianceForm(state.extra),
                           fullscreenDialog: true,
                         ),
                       ),
@@ -451,10 +475,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                             pageBuilder: (_, state) => _buildPage(
                               state,
                               ItemTasksScreen(
-                                applianceId:
-                                    state.pathParameters['applianceId']!,
-                                itemName:
-                                    state.extra as String? ?? 'Appliance',
+                                item: ItemRef.appliance(
+                                  state.pathParameters['applianceId']!,
+                                ),
                               ),
                             ),
                           ),
@@ -463,7 +486,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                             name: 'appliance-photos',
                             pageBuilder: (_, state) => _buildPage(
                               state,
-                              const PlaceholderScreen(name: 'Appliance photos'),
+                              ItemPhotosScreen(
+                                item: ItemRef.appliance(
+                                  state.pathParameters['applianceId']!,
+                                ),
+                              ),
                             ),
                           ),
                           GoRoute(
@@ -471,7 +498,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                             name: 'appliance-reminders',
                             pageBuilder: (_, state) => _buildPage(
                               state,
-                              const PlaceholderScreen(name: 'Appliance reminders'),
+                              ItemRemindersScreen(
+                                item: ItemRef.appliance(
+                                  state.pathParameters['applianceId']!,
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -483,7 +514,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                     name: 'home-profile',
                     pageBuilder: (_, state) => _buildPage(
                       state,
-                      const PlaceholderScreen(name: 'Home profile'),
+                      const HomeProfileScreen(),
                     ),
                   ),
                   GoRoute(
@@ -491,7 +522,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                     name: 'home-scan',
                     pageBuilder: (_, state) => _buildPage(
                       state,
-                      const PlaceholderScreen(name: 'Scan a label'),
+                      ScanFlowScreen.fromExtra(state.extra),
                       fullscreenDialog: true,
                     ),
                   ),
@@ -500,7 +531,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                     name: 'property-edit',
                     pageBuilder: (_, state) => _buildPage(
                       state,
-                      const PropertyEditScreen(),
+                      const HomeEditScreen(),
                       fullscreenDialog: true,
                     ),
                   ),
@@ -512,7 +543,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'lifespan',
                     pageBuilder: (_, state) =>
-                        _buildPage(state, const LifespanScreen()),
+                        _buildPage(state, const HomeLifespanScreen()),
                   ),
                 ],
               ),
@@ -645,7 +676,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                     name: 'task-create',
                     pageBuilder: (_, state) => _buildPage(
                       state,
-                      const TaskFormScreen(),
+                      TaskFormScreen(
+                        initialLinkId: state.uri.queryParameters['link'],
+                      ),
                       fullscreenDialog: true,
                     ),
                   ),

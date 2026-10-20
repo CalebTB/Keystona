@@ -1,36 +1,28 @@
+import '../lifespan/home_lifespan_data.dart';
+import 'home_item.dart';
 import 'property.dart';
 
-/// Composite view-model for the Home Profile overview screen.
-///
-/// Assembled in [HomeProfileNotifier._fetchOverview] — never persisted,
-/// so no Freezed / JSON needed. Same pattern as [TaskDetail] from Phase 2.
+/// The property, its systems and appliances, and the signed cover photo URL.
+/// Assembled in `HomeProfileNotifier`, never persisted. Item mutations
+/// elsewhere invalidate the provider, which refreshes everything here.
 class HomeProfileOverview {
-  const HomeProfileOverview({
+  HomeProfileOverview({
     required this.property,
-    required this.systemCount,
-    required this.systemsNearingEndOfLife,
-    required this.applianceCount,
+    this.items = const [],
     this.exteriorPhotoSignedUrl,
   });
 
-  /// The user's property record.
   final Property property;
 
-  /// Total active systems (status = 'active', not soft-deleted).
-  ///
-  /// Displayed as a badge on the Systems section row.
-  final int systemCount;
+  /// Systems and appliances in service.
+  final List<HomeItem> items;
 
-  /// Systems with a lifespan percentage ≥ 75 % — i.e., healthy → aging or worse.
-  ///
-  /// [#41] Drives the "X items nearing end of life" amber warning row.
-  /// [#48] Lifespan Tracking screen uses this same threshold — keep in sync.
-  final int systemsNearingEndOfLife;
-
-  /// Total active appliances.
-  final int applianceCount;
-
-  /// Time-limited signed URL for the property's exterior cover photo.
-  /// Null when no photo has been uploaded yet.
+  /// Null when there is no cover photo or it could not be signed.
   final String? exteriorPhotoSignedUrl;
+
+  /// Items ordered by life used, with the five-year forecast. Built once.
+  late final HomeLifespanData lifespan = HomeLifespanData.from(items);
+
+  int get systemCount => items.where((i) => i.isSystem).length;
+  int get applianceCount => items.where((i) => !i.isSystem).length;
 }

@@ -1,19 +1,30 @@
-import 'item_photo.dart';
 import 'system.dart';
 
-/// Composite view-model for the System Detail screen.
-///
-/// Assembled in [SystemDetailNotifier._fetchDetail] — never persisted,
-/// so no Freezed / JSON needed. Same pattern as [TaskDetail] from Phase 2.
+/// Composite view-model for the System Detail screen: the system plus what
+/// its photos say (count and the picture to show). Never persisted.
 class SystemDetail {
-  const SystemDetail({
-    required this.system,
-    required this.photos,
-    this.photoUrls = const {},
-  });
+  const SystemDetail({required this.system, required this.photos});
 
   final HomeSystem system;
-  final List<ItemPhoto> photos;
-  /// Signed URLs keyed by [ItemPhoto.filePath]. Valid for 1 hour.
-  final Map<String, String> photoUrls;
+  final SystemPhotoSummary photos;
+}
+
+/// An item's photos in brief: how many, and the hero picture.
+class SystemPhotoSummary {
+  const SystemPhotoSummary({
+    this.count = 0,
+    this.heroUrl,
+    this.heroType,
+  });
+
+  static const SystemPhotoSummary none = SystemPhotoSummary();
+
+  final int count;
+
+  /// Signed URL of the newest photo, null when there is none or it could not
+  /// be signed.
+  final String? heroUrl;
+
+  /// `photo_type` of the hero photo ("overview", "label"...).
+  final String? heroType;
 }

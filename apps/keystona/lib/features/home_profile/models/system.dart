@@ -36,6 +36,33 @@ enum SystemCategory {
         SystemCategory.garage => 'Garage',
         SystemCategory.other => 'Other',
       };
+
+  /// The filter group this category sits under on the Systems list.
+  SystemGroup get group => switch (this) {
+        SystemCategory.hvac => SystemGroup.heatingCooling,
+        SystemCategory.plumbing => SystemGroup.water,
+        SystemCategory.electrical => SystemGroup.electrical,
+        _ => SystemGroup.structure,
+      };
+
+  /// The category stored as [value], or [other] for anything unknown (a scan
+  /// can return a word the database does not have).
+  static SystemCategory fromValue(String? value) =>
+      SystemCategory.values.firstWhere(
+        (c) => c.value == value,
+        orElse: () => SystemCategory.other,
+      );
+}
+
+/// The Systems list filter chips: the database categories grouped for people.
+enum SystemGroup {
+  heatingCooling('Heating & cooling'),
+  water('Water'),
+  structure('Structure'),
+  electrical('Electrical');
+
+  const SystemGroup(this.label);
+  final String label;
 }
 
 /// Maps exactly to the Postgres `item_status` enum shared with Appliances.
@@ -155,12 +182,24 @@ abstract class HomeSystem with _$HomeSystem {
     /// Warranty provider name.
     String? warrantyProvider,
 
+    /// The Docs document that is this system's warranty (`linked_warranty_doc_id`).
+    String? linkedWarrantyDocId,
+
     // ── Replacement ──────────────────────────────────────────────────────────
 
     /// Estimated replacement cost.
     ///
     /// [#48] Lifespan Tracking shows this in the cost summary.
     double? estimatedReplacementCost,
+
+    /// The system that replaced this one (`replaced_by_system_id`).
+    String? replacedBySystemId,
+
+    // ── Specifications ────────────────────────────────────────────────────────
+
+    /// Per-type extras (FUEL, OUTPUT, FILTER...) as key / value text
+    /// (`specifications`, JSONB). Null when the column is empty.
+    Map<String, dynamic>? specifications,
 
     // ── Notes ─────────────────────────────────────────────────────────────────
 
@@ -171,6 +210,9 @@ abstract class HomeSystem with _$HomeSystem {
 
     required DateTime createdAt,
     required DateTime updatedAt,
+
+    /// Set when the system was removed (soft delete). Lists never return it.
+    DateTime? deletedAt,
   }) = _HomeSystem;
 
   factory HomeSystem.fromJson(Map<String, dynamic> json) =>

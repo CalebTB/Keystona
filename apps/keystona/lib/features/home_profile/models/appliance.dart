@@ -61,13 +61,26 @@ abstract class Appliance with _$Appliance {
     String? purchaseDate,
     String? warrantyExpiration,
     double? purchasePrice,
+
+    /// Where it was bought (`retailer`).
+    String? retailer,
     String? location,
     String? color,
     int? lifespanOverride,
+
+    /// Expected life range in years (`expected_lifespan_min` / `_max`), from
+    /// the label scan or the appliance-type default.
+    int? expectedLifespanMin,
+    int? expectedLifespanMax,
     String? warrantyProvider,
     String? linkedWarrantyDocId,
     String? notes,
     double? estimatedReplacementCost,
+
+    /// Type, capacity, spin speed, hookup, Energy Star (`specifications`,
+    /// JSONB). Read it through `ApplianceSpecs`.
+    Map<String, dynamic>? specifications,
+    String? replacedByApplianceId,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _Appliance;

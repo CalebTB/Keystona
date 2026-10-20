@@ -1,230 +1,180 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/aurora_colors.dart';
-import '../../../core/theme/aurora_spacing.dart';
-import '../../../core/theme/aurora_typography.dart';
 
 import '../../../core/router/app_router.dart';
-
-
-
+import '../../../core/theme/aurora_motion.dart';
+import '../../../core/theme/aurora_scale.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_view.dart';
+import '../../maintenance/widgets/reminders/reminders_centered_page.dart';
+import '../../maintenance/widgets/reminders/reminders_page.dart';
+import '../models/item_ref.dart';
+import '../models/scan_prefill.dart';
 import '../models/system.dart';
+import '../models/system_template.dart';
+import '../models/systems_list_view.dart';
+import '../providers/item_task_counts_provider.dart';
 import '../providers/systems_provider.dart';
-import '../widgets/system_card.dart';
-import '../widgets/system_list_skeleton.dart';
-import '../widgets/systems_empty_state.dart';
+import '../systems_copy.dart';
+import '../widgets/scan/scan_entry.dart';
+import '../widgets/shared/item_filter_bar.dart';
+import '../widgets/systems/systems_header.dart';
+import '../widgets/systems/systems_list_card.dart';
+import '../widgets/systems/systems_scan_button.dart';
+import '../widgets/systems/systems_skeleton.dart';
+import '../widgets/systems/systems_top_bar.dart';
+import '../widgets/systems/system_suggestions.dart';
+import '../../../core/theme/aurora_home_b.dart';
 
-/// Systems list screen — lives at [AppRoutes.homeSystems].
+/// Systems list (kit: HomeSystems). Route: `/home/systems`.
 ///
-/// Shows all home systems grouped by category.
-///
-/// Adaptive layout:
-///   iOS  → [CupertinoPageScaffold] + [CupertinoSliverNavigationBar]
-///           FAB via [Stack] + [Positioned]
-///   Android → [Scaffold] with [floatingActionButton]
-class SystemsScreen extends ConsumerWidget {
+/// Filter chips group the database categories (Heating & cooling, Water,
+/// Structure, Electrical); sort is "Oldest first" or A to Z.
+class SystemsScreen extends ConsumerStatefulWidget {
   const SystemsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    return isIOS ? const _IOSLayout() : const _AndroidLayout();
-  }
+  ConsumerState<SystemsScreen> createState() => _SystemsScreenState();
 }
 
-// ── iOS layout ─────────────────────────────────────────────────────────────────
+class _SystemsScreenState extends ConsumerState<SystemsScreen> {
+  SystemGroup? _group;
+  SystemSort _sort = SystemSort.oldestFirst;
 
-class _IOSLayout extends ConsumerWidget {
-  const _IOSLayout();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return CupertinoPageScaffold(
-      child: Stack(
-        children: [
-          CustomScrollView(
-            slivers: [
-              CupertinoSliverNavigationBar(
-                previousPageTitle: 'Home',
-                largeTitle: const Text('Systems'),
-              ),
-              CupertinoSliverRefreshControl(
-                onRefresh: () =>
-                    ref.read(systemsProvider.notifier).refresh(),
-              ),
-              const _SystemsContentSliver(),
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
-            ],
-          ),
-          // iOS FAB — Stack + Positioned pattern.
-          Positioned(
-            bottom: MediaQuery.of(context).padding.bottom + AuroraSpacing.space5,
-            right: AuroraSpacing.space5,
-            child: _AddFab(
-              onPressed: () => context.push(AppRoutes.homeSystemsAdd),
-            ),
-          ),
-        ],
-      ),
-    );
+  void _back() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(AppRoutes.homeProfile);
+    }
   }
-}
 
-// ── Android layout ─────────────────────────────────────────────────────────────
+  void _add() => ScanEntry.open(context, ref, kind: ScanKind.system);
 
-class _AndroidLayout extends ConsumerWidget {
-  const _AndroidLayout();
+  void _open(String id) =>
+      context.push(AppRoutes.homeSystemDetail.replaceFirst(':systemId', id));
+
+  void _addByHand() => context.push(AppRoutes.homeSystemsAdd);
+
+  Future<void> _refresh() async {
+    await ref.read(systemsProvider.notifier).refresh();
+  }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      backgroundColor: AuroraColors.paper,
-      body: RefreshIndicator(
-        color: AuroraColors.ink,
-        onRefresh: () => ref.read(systemsProvider.notifier).refresh(),
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              title: Text('Systems', style: AuroraType.h3),
-              floating: true,
-              backgroundColor: AuroraColors.paper,
-              scrolledUnderElevation: 0,
-              elevation: 0,
-            ),
-            const _SystemsContentSliver(),
-            const SliverToBoxAdapter(child: SizedBox(height: AuroraSpacing.space8)),
+  Widget build(BuildContext context) {
+    final systems = ref.watch(systemsProvider);
+    return systems.when(
+      loading: () => RemindersPage(
+        onRefresh: _refresh,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SystemsTopBar(onBack: _back, onAdd: _add),
+            SizedBox(height: context.aurora.of(AuroraSpacing.space3)),
+            const SystemsSkeleton(),
           ],
         ),
       ),
-      floatingActionButton: _AddFab(
-        onPressed: () => context.push(AppRoutes.homeSystemsAdd),
-      ),
-    );
-  }
-}
-
-// ── Content sliver ─────────────────────────────────────────────────────────────
-
-class _SystemsContentSliver extends ConsumerWidget {
-  const _SystemsContentSliver();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final systemsAsync = ref.watch(systemsProvider);
-
-    return systemsAsync.when(
-      loading: () => const SliverFillRemaining(
-        hasScrollBody: false,
-        child: SystemListSkeleton(),
-      ),
-      error: (_, _) => SliverFillRemaining(
-        hasScrollBody: false,
+      error: (_, _) => RemindersCenteredPage(
+        backLabel: SystemsCopy.homeBack,
+        onBack: _back,
         child: ErrorView(
-          message: "Couldn't load your systems.",
-          onRetry: () => ref.read(systemsProvider.notifier).refresh(),
+          message: SystemsCopy.loadError,
+          onRetry: () => ref.invalidate(systemsProvider),
         ),
       ),
-      data: (systems) {
-        if (systems.isEmpty) {
-          return SliverFillRemaining(
-            hasScrollBody: false,
-            child: SystemsEmptyState(
-              onAddSystem: () => context.push(AppRoutes.homeSystemsAdd),
-            ),
-          );
-        }
-        return _GroupedSystemsSliver(systems: systems);
-      },
+      data: (list) => list.isEmpty ? _empty() : _content(list),
     );
   }
-}
 
-// ── Grouped list ───────────────────────────────────────────────────────────────
+  Widget _empty() => RemindersCenteredPage(
+    backLabel: SystemsCopy.homeBack,
+    onBack: _back,
+    child: Center(
+      child: SingleChildScrollView(
+        child: EmptyState(
+          icon: Icons.home_repair_service_outlined,
+          title: SystemsCopy.emptyTitle,
+          subtitle: SystemsCopy.emptySubtitle,
+          actionLabel: SystemsCopy.emptyAction,
+          onAction: _addByHand,
+          secondaryLabel: SystemsCopy.emptyScan,
+          onSecondary: _add,
+        ),
+      ),
+    ),
+  );
 
-class _GroupedSystemsSliver extends StatelessWidget {
-  const _GroupedSystemsSliver({required this.systems});
-
-  final List<HomeSystem> systems;
-
-  /// Groups [systems] by category, preserving order.
-  Map<SystemCategory, List<HomeSystem>> get _grouped {
-    final map = <SystemCategory, List<HomeSystem>>{};
-    for (final s in systems) {
-      map.putIfAbsent(s.category, () => []).add(s);
-    }
-    return map;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final grouped = _grouped;
-
-    final children = <Widget>[];
-    for (final entry in grouped.entries) {
-      children.add(_CategoryHeader(category: entry.key));
-      for (final system in entry.value) {
-        children.add(Padding(
-          padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
-          child: SystemCard(system: system),
-        ));
-      }
-      children.add(const SizedBox(height: AuroraSpacing.space5));
-    }
-
-    return SliverPadding(
-      padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
-      sliver: SliverList.list(children: children),
+  Widget _content(List<HomeSystem> list) {
+    final a = context.aurora;
+    final counts = ref.watch(itemTaskCountsProvider);
+    final brief = ref.watch(propertyBriefProvider).value;
+    final present = SystemsListView.groupsPresent(list);
+    // A filter whose last system was removed falls back to "All".
+    final group = present.contains(_group) ? _group : null;
+    final items = SystemsListView.items(list, group: group, sort: _sort);
+    final suggestions = SystemTemplates.suggestionsFor(
+      yearBuilt: brief?.yearBuilt,
+      tracked: list,
+      limit: AuroraHomeBSizes.maxSuggestions,
     );
-  }
-}
+    final online = ScanEntry.isOnline(ref);
 
-class _CategoryHeader extends StatelessWidget {
-  const _CategoryHeader({required this.category});
-
-  final SystemCategory category;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
-      child: Row(
+    return RemindersPage(
+      onRefresh: _refresh,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            width: 7,
-            height: 7,
-            decoration: const BoxDecoration(
-              color: AuroraColors.inkSecondary,
-              borderRadius: BorderRadius.all(Radius.circular(2)),
+          SystemsTopBar(onBack: _back, onAdd: _add),
+          SizedBox(height: a.of(AuroraSpacing.space3)),
+          SystemsHeader(
+            eyebrow: SystemsCopy.listEyebrow(
+              address: brief?.addressLine1,
+              tracked: list.length,
+              aging: SystemsListView.agingCount(list),
             ),
           ),
-          const SizedBox(width: 6),
-          Text(
-            category.label.toUpperCase(),
-            style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
+          SizedBox(height: a.of(AuroraSpacing.space7)),
+          ItemFilterBar<SystemGroup?>(
+            horizontalInset: 0,
+            options: [
+              ItemFilterOption(
+                value: null,
+                label: SystemsCopy.filterAll(list.length),
+              ),
+              for (final g in present)
+                ItemFilterOption(value: g, label: g.label),
+            ],
+            selected: group,
+            onSelected: (g) => setState(() => _group = g),
+            shownCount: items.length,
+            sortLabels: const [SystemsCopy.sortOldest, SystemsCopy.sortAz],
+            sortIndex: _sort.index,
+            onSortChanged: (i) => setState(() => _sort = SystemSort.values[i]),
+          ),
+          SizedBox(height: a.of(AuroraSpacing.space5)),
+          SystemsListCard(
+            items: items,
+            taskCount: (id) => counts[ItemRef.system(id)] ?? 0,
+            onOpen: _open,
+          ),
+          if (suggestions.isNotEmpty) ...[
+            SizedBox(height: a.of(AuroraSpacing.space9)),
+            SystemSuggestions(
+              yearBuilt: brief?.yearBuilt,
+              templates: suggestions,
+              onPick: (t) => context.push(AppRoutes.homeSystemsAdd, extra: t),
+            ),
+          ],
+          SizedBox(height: a.of(AuroraSpacing.space8)),
+          Opacity(
+            opacity: online ? 1 : AuroraOpacity.disabled,
+            child: SystemsScanButton(onTap: _add),
           ),
         ],
       ),
-    );
-  }
-}
-
-// ── FAB ────────────────────────────────────────────────────────────────────────
-
-class _AddFab extends StatelessWidget {
-  const _AddFab({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return FloatingActionButton(
-      onPressed: onPressed,
-      backgroundColor: AuroraColors.coral,
-      foregroundColor: Colors.white,
-      child: const Icon(Icons.add),
     );
   }
 }

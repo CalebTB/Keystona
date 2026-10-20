@@ -1,149 +1,61 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../services/storage_service.dart';
-import '../../../services/supabase_service.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../models/home_item.dart';
 import '../models/home_profile_overview.dart';
-import '../models/property.dart';
+import '../models/property_edits.dart';
+import 'home_repositories.dart';
 
 part 'home_profile_provider.g.dart';
 
-/// Loads the Home Profile overview: property details + systems/appliances counts.
+/// The user's property with its items and cover photo URL.
 ///
-/// Auto-disposed when the Home Profile tab is not active.
-/// Invalidated by [SystemsNotifier] and [AppliancesNotifier] after any mutation
-/// so the system/appliance counts stay in sync (wired in #43 / #44).
+/// Kept alive so the Home tab, Settings and the Home profile screens share one
+/// load. Systems and appliances providers invalidate it after any change.
+/// It is cached per app session and re-read after a save.
 @riverpod
 class HomeProfileNotifier extends _$HomeProfileNotifier {
   @override
   Future<HomeProfileOverview> build() {
-    ref.keepAlive(); // don't re-fetch on every tab switch
-    return _fetchOverview();
+    ref.keepAlive();
+    // Per-user data: rebuild (and drop the cache) when the session changes.
+    if (!ref.watch(isAuthenticatedProvider)) {
+      return Future.error(const NoPropertyException());
+    }
+    return _fetch();
   }
 
-  /// Refetches from Supabase — used by pull-to-refresh.
-  Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchOverview);
-  }
-
-  Future<void> updateProperty(Map<String, dynamic> data) async {
-    final user = SupabaseService.client.auth.currentUser;
-    if (user == null) throw Exception('Not authenticated');
-
-    await SupabaseService.client
-        .from('properties')
-        .update(data)
-        .eq('user_id', user.id)
-        .isFilter('deleted_at', null);
-
-    ref.invalidateSelf();
-    await future;
-  }
-
-  // ── Private fetch ───────────────────────────────────────────────────────────
-
-  Future<HomeProfileOverview> _fetchOverview() async {
-    final user = SupabaseService.client.auth.currentUser;
-    if (user == null) throw Exception('Not authenticated');
-
-    // 1. Fetch the property row for this user.
-    final propertyRow = await SupabaseService.client
-        .from('properties')
-        .select(
-          'id, user_id, address_line1, address_line2, city, state, zip_code, '
-          'property_type, year_built, square_feet, bedrooms, bathrooms, '
-          'climate_zone, exterior_photo_path, created_at, updated_at',
-        )
-        .eq('user_id', user.id)
-        .isFilter('deleted_at', null)
-        .order('created_at', ascending: false)
-        .limit(1)
-        .maybeSingle();
-
-    if (propertyRow == null) throw _NoPropertyException();
-
-    final property = Property.fromJson(propertyRow);
-
-    // 2. In parallel: systems, appliances, and optional exterior photo URL.
-    final results = await Future.wait([
-      SupabaseService.client
-          .from('systems')
-          .select(
-            'id, installation_date, expected_lifespan_min, '
-            'expected_lifespan_max, lifespan_override',
-          )
-          .eq('property_id', property.id)
-          .eq('status', 'active')
-          .isFilter('deleted_at', null),
-      SupabaseService.client
-          .from('appliances')
-          .select('id')
-          .eq('property_id', property.id)
-          .isFilter('deleted_at', null),
-      if (property.exteriorPhotoPath != null)
-        StorageService()
-            .getSignedUrl(
-              bucket: 'property-photos',
-              path: property.exteriorPhotoPath!,
-            )
-            .then<dynamic>((url) => url)
-            .catchError((_) => null)
-      else
-        Future<dynamic>.value(null),
+  Future<HomeProfileOverview> _fetch() async {
+    final properties = ref.read(propertyRepositoryProvider);
+    final property = await properties.fetchProperty();
+    if (property == null) throw const NoPropertyException();
+    final path = property.exteriorPhotoPath;
+    final results = await Future.wait<Object?>([
+      ref.read(homeItemsRepositoryProvider).fetchItems(property.id),
+      if (path != null) properties.signedPhotoUrl(path),
     ]);
-
-    final systemRows = results[0] as List<dynamic>;
-    final applianceRows = results[1] as List<dynamic>;
-    final exteriorPhotoSignedUrl = results[2] as String?;
-
-    // 3. Classify nearing-end-of-life in Dart — matches #48 Lifespan Tracking
-    //    threshold (lifespan_percentage ≥ 75 %).
-    final nearingEndOfLife = systemRows
-        .cast<Map<String, dynamic>>()
-        .where(_isNearingEndOfLife)
-        .length;
-
     return HomeProfileOverview(
       property: property,
-      systemCount: systemRows.length,
-      systemsNearingEndOfLife: nearingEndOfLife,
-      applianceCount: applianceRows.length,
-      exteriorPhotoSignedUrl: exteriorPhotoSignedUrl,
+      items: results[0] as List<HomeItem>,
+      exteriorPhotoSignedUrl: path == null ? null : results[1] as String?,
     );
   }
 
-  /// Returns true when a system's lifespan percentage is ≥ 75 %.
-  ///
-  /// Uses the same formula as the `get_system_lifespan_overview` RPC so the
-  /// overview count always agrees with the lifespan screen (#48).
-  static bool _isNearingEndOfLife(Map<String, dynamic> row) {
-    final installRaw = row['installation_date'] as String?;
-    if (installRaw == null) return false;
-
-    final minLifespan = row['expected_lifespan_min'] as int? ?? 0;
-    final maxLifespan = row['expected_lifespan_max'] as int? ?? 0;
-    final override = row['lifespan_override'] as int?;
-
-    final avgLifespan =
-        override?.toDouble() ?? ((minLifespan + maxLifespan) / 2.0);
-    if (avgLifespan == 0) return false;
-
-    final install = DateTime.parse(installRaw);
-    final ageYears =
-        DateTime.now().difference(install).inDays / 365.25;
-
-    return (ageYears / avgLifespan) >= 0.75;
+  /// Writes the edits and re-reads the overview. Throws when the save fails;
+  /// the cached overview stays as it was.
+  Future<void> saveEdits(PropertyEdits edits) async {
+    final current = state.value;
+    if (current == null) throw const NoPropertyException();
+    await ref.read(propertyRepositoryProvider).save(
+      current.property.id,
+      edits,
+    );
+    ref.invalidateSelf();
+    await future;
   }
 }
 
-/// Sentinel exception thrown when the user has no property row yet.
-///
-/// Caught by the Home Profile surfaces to render an empty state instead
-/// of the generic error view.
-class _NoPropertyException implements Exception {
-  const _NoPropertyException();
+/// Thrown when the user has no property row yet.
+class NoPropertyException implements Exception {
+  const NoPropertyException();
 }
-
-/// Re-exported so the screen can `catch (_NoPropertyException)`.
-// ignore: library_private_types_in_public_api
-typedef NoPropertyException = _NoPropertyException;

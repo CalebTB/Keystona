@@ -27,9 +27,8 @@ class HomeScreen extends ConsumerWidget {
       backgroundColor: AuroraColors.paper,
       child: dashAsync.when(
         loading: () => const _DashboardSkeleton(),
-        error: (_, _) => _ErrorView(
-          onRetry: () => ref.invalidate(dashboardProvider),
-        ),
+        error: (_, _) =>
+            _ErrorView(onRetry: () => ref.invalidate(dashboardProvider)),
         data: (data) => CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
@@ -180,10 +179,7 @@ class _GreetingHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          '$_greeting, ${data.firstName}',
-          style: AuroraType.h1,
-        ),
+        Text('$_greeting, ${data.firstName}', style: AuroraType.h1),
         const SizedBox(height: AuroraSpacing.space1),
         Text(
           _subtitle,
@@ -202,10 +198,10 @@ class _ScoreHero extends StatelessWidget {
   final DashboardData data;
 
   String _trendLabel(String trend) => switch (trend) {
-        'improving' => '↗ Improving this month',
-        'declining' => '↘ Needs attention',
-        _ => '→ Stable this month',
-      };
+    'improving' => '↗ Improving this month',
+    'declining' => '↘ Needs attention',
+    _ => '→ Stable this month',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -219,33 +215,37 @@ class _ScoreHero extends StatelessWidget {
         if (data.property != null)
           Padding(
             padding: const EdgeInsets.only(bottom: AuroraSpacing.space3),
-            child: Row(
-              children: [
-                const Icon(
-                  CupertinoIcons.house,
-                  size: 12,
-                  color: AuroraColors.inkSecondary,
-                ),
-                const SizedBox(width: AuroraSpacing.space1),
-                Expanded(
-                  child: Text(
-                    data.property!.addressLine1,
-                    style: AuroraType.label.copyWith(
-                      color: AuroraColors.inkSecondary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => context.push(AppRoutes.homeEdit),
-                  child: const Icon(
-                    CupertinoIcons.settings,
-                    size: 16,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => context.push(AppRoutes.homeProfile),
+              child: Row(
+                children: [
+                  const Icon(
+                    CupertinoIcons.house,
+                    size: 12,
                     color: AuroraColors.inkSecondary,
                   ),
-                ),
-              ],
+                  const SizedBox(width: AuroraSpacing.space1),
+                  Expanded(
+                    child: Text(
+                      data.property!.addressLine1,
+                      style: AuroraType.label.copyWith(
+                        color: AuroraColors.inkSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => context.push(AppRoutes.homeEdit),
+                    child: const Icon(
+                      CupertinoIcons.settings,
+                      size: 16,
+                      color: AuroraColors.inkSecondary,
+                    ),
+                  ),
+                ],
+              ),
             ),
           )
         else
@@ -553,14 +553,13 @@ class _ErrorView extends StatelessWidget {
               const SizedBox(height: AuroraSpacing.space7),
               Text(
                 'Could not load your dashboard',
-                style: AuroraType.body.copyWith(color: AuroraColors.inkSecondary),
+                style: AuroraType.body.copyWith(
+                  color: AuroraColors.inkSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AuroraSpacing.space7),
-              GhostButton(
-                label: 'Try again',
-                onPressed: onRetry,
-              ),
+              GhostButton(label: 'Try again', onPressed: onRetry),
             ],
           ),
         ),
@@ -590,9 +589,10 @@ class _DashboardSkeletonState extends State<_DashboardSkeleton>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    _anim = Tween<double>(begin: 0.3, end: 0.7).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
+    _anim = Tween<double>(
+      begin: 0.3,
+      end: 0.7,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _ctrl.repeat(reverse: true);
     });
@@ -609,7 +609,9 @@ class _DashboardSkeletonState extends State<_DashboardSkeleton>
     return AnimatedBuilder(
       animation: _anim,
       builder: (_, _) {
-        final shimmer = AuroraColors.butter.withValues(alpha: _anim.value + 0.3);
+        final shimmer = AuroraColors.butter.withValues(
+          alpha: _anim.value + 0.3,
+        );
         return SafeArea(
           bottom: false,
           child: SingleChildScrollView(

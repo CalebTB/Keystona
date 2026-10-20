@@ -1,31 +1,64 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-
-
-
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/theme/aurora_colors.dart';
-import '../../../core/theme/aurora_radius.dart';
-import '../../../core/theme/aurora_spacing.dart';
-import '../../../core/theme/aurora_typography.dart';
-import '../../../core/widgets/aurora/aurora.dart';
 
-import '../../../core/widgets/scan_label_button.dart';
+import '../../../core/router/app_router.dart';
+import '../../../core/theme/aurora_motion.dart';
+import '../../../core/theme/aurora_scale.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/widgets/aurora/aurora_sheet.dart';
+import '../../../core/widgets/confirm_dialog.dart';
+import '../../../core/widgets/photo_picker.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../core/widgets/task_generation_sheet.dart';
-import '../../../services/label_scanner_service.dart';
-import '../../../services/supabase_service.dart';
+import '../../../core/widgets/upgrade_sheet.dart';
+import '../../../services/providers/service_providers.dart';
+import '../../emergency/widgets/document_link_picker.dart';
+import '../../subscription/providers/subscription_provider.dart';
+import '../appliance_copy.dart';
+import '../item_copy.dart';
+import '../lifespan/appliance_lifespan.dart';
 import '../models/appliance.dart';
-import '../providers/appliance_detail_provider.dart';
+import '../models/appliance_form_data.dart';
+import '../models/appliance_specs.dart';
+import '../models/appliance_suggestion.dart';
+import '../models/form_photo.dart';
+import '../models/item_photo_type.dart';
+import '../models/item_ref.dart';
+import '../models/scan_prefill.dart';
 import '../providers/appliances_provider.dart';
+import '../providers/item_photos_provider.dart';
+import '../widgets/appliance_form/appliance_form_controllers.dart';
+import '../widgets/appliance_form/appliance_form_footer.dart';
+import '../widgets/appliance_form/appliance_form_header.dart';
+import '../widgets/appliance_form/appliance_identification_section.dart';
+import '../widgets/appliance_form/appliance_identity_section.dart';
+import '../widgets/appliance_form/appliance_more_details_section.dart';
+import '../widgets/appliance_form/appliance_photos_section.dart';
+import '../widgets/appliance_form/appliance_purchase_section.dart';
+import '../widgets/appliance_form/appliance_scan_banner.dart';
+import '../widgets/appliance_form/appliance_specs_section.dart';
+import '../widgets/item/item_page.dart';
+import '../widgets/item/item_top_bar.dart';
 
+/// Add an appliance (kit: AddAppliance), and the same form to edit one.
+///
+/// - Add: nothing passed, a [prefill] from the label scan, or a [suggestion]
+///   from the list's "Often forgotten" chips.
+/// - Edit: pass [existing]. No scan banner, a "More details" section and
+///   Delete (with a 10 second Undo).
 class ApplianceFormScreen extends ConsumerStatefulWidget {
-  const ApplianceFormScreen({super.key, this.existingAppliance});
-  final Appliance? existingAppliance;
+  const ApplianceFormScreen({
+    super.key,
+    this.existing,
+    this.prefill,
+    this.suggestion,
+  });
+
+  final Appliance? existing;
+  final ScanPrefill? prefill;
+  final ApplianceSuggestion? suggestion;
 
   @override
   ConsumerState<ApplianceFormScreen> createState() =>
@@ -34,1031 +67,467 @@ class ApplianceFormScreen extends ConsumerStatefulWidget {
 
 class _ApplianceFormScreenState extends ConsumerState<ApplianceFormScreen> {
   final _formKey = GlobalKey<FormState>();
+  late final ApplianceFormControllers _c;
 
-  // Controllers
-  late final TextEditingController _nameCtrl;
-  late final TextEditingController _brandCtrl;
-  late final TextEditingController _modelCtrl;
-  late final TextEditingController _serialCtrl;
-  late final TextEditingController _locationCtrl;
-  late final TextEditingController _colorCtrl;
-  late final TextEditingController _warrantyProviderCtrl;
-  late final TextEditingController _notesCtrl;
-  late final TextEditingController _priceCtrl;
-  late final TextEditingController _lifespanCtrl;
-  late final TextEditingController _replacementCostCtrl;
-
-  // Enum state
-  late ApplianceCategory _category;
-  late ItemStatus _status;
-
-  // Date state
-  String? _purchaseDate;
-  String? _warrantyExpiration;
-
+  ApplianceCategory _category = ApplianceCategory.other;
+  ItemStatus _status = ItemStatus.active;
+  bool _hasWarranty = false;
+  String? _warrantyDocId;
+  bool _specsOpen = false;
+  String? _type;
+  bool _energyStar = false;
+  final List<FormPhoto> _photos = [];
   bool _saving = false;
-  XFile? _labelPhoto;
-  Future<List<SuggestedTask>>? _tasksFuture;
 
-  bool get _isEditing => widget.existingAppliance != null;
+  /// What the scan read, by field; a field wears the "from scan" edge while
+  /// it still holds this.
+  final Map<String, String> _scanned = {};
+  int _scanFieldCount = 0;
+
+  Appliance? get _existing => widget.existing;
+  bool get _isEditing => _existing != null;
 
   @override
   void initState() {
     super.initState();
-    final a = widget.existingAppliance;
-    _nameCtrl = TextEditingController(text: a?.name ?? '');
-    _brandCtrl = TextEditingController(text: a?.brand ?? '');
-    _modelCtrl = TextEditingController(text: a?.modelNumber ?? '');
-    _serialCtrl = TextEditingController(text: a?.serialNumber ?? '');
-    _locationCtrl = TextEditingController(text: a?.location ?? '');
-    _colorCtrl = TextEditingController(text: a?.color ?? '');
-    _warrantyProviderCtrl =
-        TextEditingController(text: a?.warrantyProvider ?? '');
-    _notesCtrl = TextEditingController(text: a?.notes ?? '');
-    _priceCtrl = TextEditingController(
-      text: a?.purchasePrice != null
-          ? a!.purchasePrice!.toStringAsFixed(2)
-          : '',
-    );
-    _lifespanCtrl = TextEditingController(
-      text: a?.lifespanOverride?.toString() ?? '',
-    );
-    _replacementCostCtrl = TextEditingController(
-      text: a?.estimatedReplacementCost != null
-          ? a!.estimatedReplacementCost!.toStringAsFixed(2)
-          : '',
-    );
-    _category = a?.category ?? ApplianceCategory.other;
-    _status = a?.status ?? ItemStatus.active;
-    _purchaseDate = a?.purchaseDate;
-    _warrantyExpiration = a?.warrantyExpiration;
+    final e = _existing;
+    _c = ApplianceFormControllers(existing: e)..addListener(_changed);
+    if (e != null) {
+      final specs = ApplianceSpecs.fromJson(e.specifications);
+      _category = e.category;
+      _status = e.status;
+      _hasWarranty =
+          e.warrantyExpiration != null || (e.warrantyProvider ?? '').isNotEmpty;
+      _warrantyDocId = e.linkedWarrantyDocId;
+      _type = specs.type;
+      _energyStar = specs.energyStar;
+    }
+    final s = widget.suggestion;
+    if (s != null) {
+      _c.name.text = s.name;
+      _category = s.category;
+    }
+    final scan = widget.prefill;
+    if (scan != null && e == null) _applyScan(scan);
   }
+
+  void _changed() => setState(() {});
+
+  void _applyScan(ScanPrefill scan) {
+    final r = scan.result;
+    var count = 0;
+    void read(String key, TextEditingController c, String? value) {
+      final v = value?.trim();
+      if (v == null || v.isEmpty) return;
+      c.text = v;
+      _scanned[key] = v;
+      count++;
+    }
+
+    read(ApplianceIdentificationSection.brandKey, _c.brand, r.brand);
+    read(ApplianceIdentificationSection.modelKey, _c.model, r.modelNumber);
+    read(ApplianceIdentificationSection.serialKey, _c.serial, r.serialNumber);
+    final name = r.name?.trim();
+    if (name != null && name.isNotEmpty) {
+      _c.name.text = name;
+      count++;
+    }
+    final cat = ApplianceCategory.values
+        .where((c) => c.value == r.category)
+        .firstOrNull;
+    if (cat != null) {
+      _category = cat;
+      count++;
+    }
+    final specs = ApplianceSpecs.fromScanNotes(r.notes);
+    if (specs.capacity != null) {
+      _c.capacity.text = specs.capacityNumber;
+      _scanned[_capacityKey] = specs.capacityNumber;
+      count++;
+    }
+    if (specs.type != null) {
+      _type = specs.type;
+      _scanned[_typeKey] = specs.type!;
+      count++;
+    }
+    if (specs.energyStar) {
+      _energyStar = true;
+      _scanned[_energyKey] = _energyKey;
+      count++;
+    }
+    _photos.add(FormPhoto(scan.photo, ItemPhotoType.label));
+    _scanFieldCount = count;
+  }
+
+  static const String _capacityKey = 'capacity';
+  static const String _typeKey = 'type';
+  static const String _energyKey = 'energy';
 
   @override
   void dispose() {
-    _nameCtrl.dispose();
-    _brandCtrl.dispose();
-    _modelCtrl.dispose();
-    _serialCtrl.dispose();
-    _locationCtrl.dispose();
-    _colorCtrl.dispose();
-    _warrantyProviderCtrl.dispose();
-    _notesCtrl.dispose();
-    _priceCtrl.dispose();
-    _lifespanCtrl.dispose();
-    _replacementCostCtrl.dispose();
+    _c.dispose();
     super.dispose();
   }
 
-  Future<void> _uploadLabelPhoto(String applianceId, XFile photo) async {
-    try {
-      final user = SupabaseService.client.auth.currentUser;
-      if (user == null) return;
-      final propertyId = await _fetchPropertyId();
-      if (propertyId == null) return;
-      final bytes = await photo.readAsBytes();
-      final ext = photo.name.split('.').last.toLowerCase();
-      final path =
-          '${user.id}/$propertyId/$applianceId/${DateTime.now().millisecondsSinceEpoch}_label.$ext';
-      final mime = switch (ext) {
-        'jpg' || 'jpeg' => 'image/jpeg',
-        'png' => 'image/png',
-        'heic' => 'image/heic',
-        _ => 'image/jpeg',
-      };
-      await SupabaseService.client.storage
-          .from('item-photos')
-          .uploadBinary(path, bytes, fileOptions: FileOptions(contentType: mime));
-      await SupabaseService.client.from('item_photos').insert({
-        'user_id': user.id,
-        'appliance_id': applianceId,
-        'file_path': path,
-        'photo_type': 'model_label',
-      });
-    } catch (_) {}
-  }
+  Set<String> get _fromScan => {
+    for (final e in _scanned.entries)
+      if (_current(e.key) == e.value) e.key,
+  };
 
-  Future<String?> _fetchPropertyId() async {
-    final user = SupabaseService.client.auth.currentUser;
-    if (user == null) return null;
-    final row = await SupabaseService.client
-        .from('properties')
-        .select('id')
-        .eq('user_id', user.id)
-        .isFilter('deleted_at', null)
-        .order('created_at', ascending: false)
-        .limit(1)
-        .maybeSingle();
-    return row?['id'] as String?;
-  }
+  String? _current(String key) => switch (key) {
+    ApplianceIdentificationSection.brandKey => _c.brand.text.trim(),
+    ApplianceIdentificationSection.modelKey => _c.model.text.trim(),
+    ApplianceIdentificationSection.serialKey => _c.serial.text.trim(),
+    _capacityKey => _c.capacity.text.trim(),
+    _typeKey => _type,
+    _energyKey => _energyStar ? _energyKey : null,
+    _ => null,
+  };
 
-  Map<String, dynamic> _buildFields() {
-    return {
-      'category': _category.value,
-      'appliance_type': _category.value,
-      'name': _nameCtrl.text.trim(),
-      'status': _status.value,
-      if (_brandCtrl.text.trim().isNotEmpty) 'brand': _brandCtrl.text.trim(),
-      if (_modelCtrl.text.trim().isNotEmpty)
-        'model': _modelCtrl.text.trim(),
-      if (_serialCtrl.text.trim().isNotEmpty)
-        'serial_number': _serialCtrl.text.trim(),
-      if (_locationCtrl.text.trim().isNotEmpty)
-        'location': _locationCtrl.text.trim(),
-      if (_colorCtrl.text.trim().isNotEmpty) 'color': _colorCtrl.text.trim(),
-      if (_warrantyProviderCtrl.text.trim().isNotEmpty)
-        'warranty_provider': _warrantyProviderCtrl.text.trim(),
-      if (_notesCtrl.text.trim().isNotEmpty) 'notes': _notesCtrl.text.trim(),
-      if (_priceCtrl.text.trim().isNotEmpty)
-        'purchase_price': double.tryParse(_priceCtrl.text.trim()),
-      if (_lifespanCtrl.text.trim().isNotEmpty)
-        'lifespan_override': int.tryParse(_lifespanCtrl.text.trim()),
-      if (_replacementCostCtrl.text.trim().isNotEmpty)
-        'estimated_replacement_cost':
-            double.tryParse(_replacementCostCtrl.text.trim()),
-      if (_purchaseDate != null) 'purchase_date': _purchaseDate,
-      if (_warrantyExpiration != null)
-        'warranty_expiration': _warrantyExpiration,
-    };
-  }
+  ApplianceFormData _data() => ApplianceFormData(
+    category: _category,
+    name: _c.name.text,
+    brand: _c.brand.text,
+    model: _c.model.text,
+    serial: _c.serial.text,
+    color: _c.color.text,
+    price: _c.price.text,
+    retailer: _c.retailer.text,
+    purchaseDate: _c.purchaseDate.text,
+    hasWarranty: _hasWarranty,
+    warrantyProvider: _c.warrantyProvider.text,
+    warrantyExpires: _c.warrantyExpires.text,
+    linkedWarrantyDocId: _warrantyDocId,
+    specs: ApplianceSpecs(
+      capacity: ApplianceSpecs.capacityFromInput(_c.capacity.text),
+      type: _type,
+      energyStar: _energyStar,
+    ),
+    location: _c.location.text,
+    status: _status,
+    lifespan: _c.lifespan.text,
+    notes: _c.notes.text,
+  );
 
-  Future<void> _save() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-    setState(() => _saving = true);
-    final fields = _buildFields();
-    try {
-      if (_isEditing) {
-        final notifier = ref.read(
-          applianceDetailProvider(widget.existingAppliance!.id).notifier,
-        );
-        await notifier.updateAppliance(fields);
-        if (!mounted) return;
-        SnackbarService.showSuccess(context, 'Appliance updated.');
-        context.pop();
-      } else {
-        final applianceId =
-            await ref.read(appliancesProvider.notifier).addAppliance(fields);
+  // ─── Navigation ───────────────────────────────────────────────────────────
 
-        if (_labelPhoto != null) {
-          _uploadLabelPhoto(applianceId, _labelPhoto!).ignore();
-        }
-
-        if (!mounted) return;
-
-        // Show task sheet BEFORE popping — context must still be alive.
-        if (_labelPhoto != null) {
-          final propertyId = await _fetchPropertyId();
-          if (mounted && propertyId != null) {
-            await showTaskGenerationSheet(
-              context: context,
-              ref: ref,
-              itemName: _nameCtrl.text.trim(),
-              brand: _brandCtrl.text.trim(),
-              category: _category.value,
-              formType: 'appliance',
-              linkedApplianceId: applianceId,
-              propertyId: propertyId,
-              prefetchedFuture: _tasksFuture,
-            );
-          }
-        }
-
-        if (!mounted) return;
-        SnackbarService.showSuccess(context, 'Appliance added.');
-        context.pop();
-      }
-    } catch (_) {
-      if (!mounted) return;
-      SnackbarService.showError(
-        context,
-        _isEditing
-            ? 'Failed to update appliance.'
-            : 'Failed to add appliance.',
-      );
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
-  }
-
-  // ── Date picker helpers ────────────────────────────────────────────────────
-
-  Future<void> _pickPurchaseDate(BuildContext context) async {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    if (isIOS) {
-      await _showIOSDatePicker(
-        context,
-        initial: _purchaseDate != null
-            ? DateTime.tryParse(_purchaseDate!) ?? DateTime.now()
-            : DateTime.now(),
-        onSelected: (d) => setState(
-          () => _purchaseDate = _formatDate(d),
-        ),
-      );
+  void _back() {
+    if (context.canPop()) {
+      context.pop();
     } else {
-      final picked = await showDatePicker(
-        context: context,
-        initialDate: _purchaseDate != null
-            ? DateTime.tryParse(_purchaseDate!) ?? DateTime.now()
-            : DateTime.now(),
-        firstDate: DateTime(1900),
-        lastDate: DateTime.now(),
-      );
-      if (picked != null) {
-        setState(() => _purchaseDate = _formatDate(picked));
-      }
+      context.go(AppRoutes.homeAppliances);
     }
   }
 
-  Future<void> _pickWarrantyExpiration(BuildContext context) async {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    if (isIOS) {
-      await _showIOSDatePicker(
-        context,
-        initial: _warrantyExpiration != null
-            ? DateTime.tryParse(_warrantyExpiration!) ?? DateTime.now()
-            : DateTime.now(),
-        onSelected: (d) => setState(
-          () => _warrantyExpiration = _formatDate(d),
-        ),
-      );
-    } else {
-      final picked = await showDatePicker(
-        context: context,
-        initialDate: _warrantyExpiration != null
-            ? DateTime.tryParse(_warrantyExpiration!) ?? DateTime.now()
-            : DateTime.now(),
-        firstDate: DateTime.now(),
-        lastDate: DateTime(2100),
-      );
-      if (picked != null) {
-        setState(() => _warrantyExpiration = _formatDate(picked));
-      }
-    }
-  }
+  void _rescan() =>
+      context.pushReplacement(AppRoutes.homeScan, extra: ItemKind.appliance);
 
-  Future<void> _showIOSDatePicker(
-    BuildContext context, {
-    required DateTime initial,
-    required ValueChanged<DateTime> onSelected,
-  }) async {
-    DateTime picked = initial;
-    await showCupertinoModalPopup<void>(
-      context: context,
-      builder: (_) => Container(
-        height: 260,
-        color: AuroraColors.paper,
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                CupertinoButton(
-                  child: const Text('Cancel'),
-                  onPressed: () =>
-                      Navigator.of(context, rootNavigator: true).pop(),
-                ),
-                CupertinoButton(
-                  child: const Text('Done'),
-                  onPressed: () {
-                    onSelected(picked);
-                    Navigator.of(context, rootNavigator: true).pop();
-                  },
-                ),
-              ],
-            ),
-            Expanded(
-              child: CupertinoDatePicker(
-                mode: CupertinoDatePickerMode.date,
-                initialDateTime: initial,
-                onDateTimeChanged: (d) => picked = d,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // ─── Pickers ──────────────────────────────────────────────────────────────
 
-  // ── iOS enum picker ────────────────────────────────────────────────────────
-
-  Future<void> _pickCategoryIOS(BuildContext context) async {
-    final result = await showCupertinoModalPopup<ApplianceCategory>(
-      context: context,
-      builder: (_) => CupertinoActionSheet(
-        title: const Text('Select Category'),
-        actions: ApplianceCategory.values
-            .map(
-              (c) => CupertinoActionSheetAction(
-                onPressed: () =>
-                    Navigator.of(context, rootNavigator: true).pop(c),
-                child: Text(c.label),
-              ),
-            )
-            .toList(),
-        cancelButton: CupertinoActionSheetAction(
-          isDestructiveAction: false,
-          onPressed: () =>
-              Navigator.of(context, rootNavigator: true).pop(),
-          child: const Text('Cancel'),
-        ),
-      ),
-    );
-    if (result != null) setState(() => _category = result);
-  }
-
-  Future<void> _pickStatusIOS(BuildContext context) async {
-    final result = await showCupertinoModalPopup<ItemStatus>(
-      context: context,
-      builder: (_) => CupertinoActionSheet(
-        title: const Text('Select Status'),
-        actions: ItemStatus.values
-            .map(
-              (s) => CupertinoActionSheetAction(
-                onPressed: () =>
-                    Navigator.of(context, rootNavigator: true).pop(s),
-                child: Text(s.label),
-              ),
-            )
-            .toList(),
-        cancelButton: CupertinoActionSheetAction(
-          isDestructiveAction: false,
-          onPressed: () =>
-              Navigator.of(context, rootNavigator: true).pop(),
-          child: const Text('Cancel'),
-        ),
-      ),
-    );
-    if (result != null) setState(() => _status = result);
-  }
-
-  String _formatDate(DateTime d) =>
-      '${d.year.toString().padLeft(4, '0')}-'
-      '${d.month.toString().padLeft(2, '0')}-'
-      '${d.day.toString().padLeft(2, '0')}';
-
-  // ── Build ─────────────────────────────────────────────────────────────────
-
-  @override
-  Widget build(BuildContext context) {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    final title = _isEditing ? 'Edit Appliance' : 'Add Appliance';
-
-    if (isIOS) {
-      return CupertinoPageScaffold(
-        navigationBar: CupertinoNavigationBar(
-          previousPageTitle: _isEditing ? 'Appliance' : 'Appliances',
-          middle: Text(title),
-          trailing: CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: _saving ? null : _save,
-            child: _saving
-                ? const CupertinoActivityIndicator()
-                : Text(
-                    'Save',
-                    style: AuroraType.label.copyWith(
-                      color: AuroraColors.cobalt,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-          ),
-        ),
-        child: SafeArea(
-          bottom: false,
-          child: Form(
-            key: _formKey,
-            child: _FormBody(
-              isIOS: true,
-              category: _category,
-              status: _status,
-              purchaseDate: _purchaseDate,
-              warrantyExpiration: _warrantyExpiration,
-              nameCtrl: _nameCtrl,
-              brandCtrl: _brandCtrl,
-              modelCtrl: _modelCtrl,
-              serialCtrl: _serialCtrl,
-              locationCtrl: _locationCtrl,
-              colorCtrl: _colorCtrl,
-              warrantyProviderCtrl: _warrantyProviderCtrl,
-              notesCtrl: _notesCtrl,
-              priceCtrl: _priceCtrl,
-              lifespanCtrl: _lifespanCtrl,
-              replacementCostCtrl: _replacementCostCtrl,
-              onCategoryChanged: (v) => setState(() => _category = v),
-              onStatusChanged: (v) => setState(() => _status = v),
-              onPickPurchaseDate: () => _pickPurchaseDate(context),
-              onClearPurchaseDate: () => setState(() => _purchaseDate = null),
-              onPickWarrantyExpiration: () => _pickWarrantyExpiration(context),
-              onClearWarrantyExpiration: () =>
-                  setState(() => _warrantyExpiration = null),
-              onPickCategoryIOS: () => _pickCategoryIOS(context),
-              onPickStatusIOS: () => _pickStatusIOS(context),
-              onPurchaseDateFromScan: (date) =>
-                  setState(() => _purchaseDate = date),
-              onPhotoReady: (photo) {
-                setState(() => _labelPhoto = photo);
-                _tasksFuture = prefetchItemTasks(
-                  itemName: _nameCtrl.text.trim(),
-                  brand: _brandCtrl.text.trim(),
-                  category: _category.value,
-                  formType: 'appliance',
-                );
-              },
-            ),
-          ),
-        ),
-      );
-    }
-    return Scaffold(
-      backgroundColor: AuroraColors.paper,
-      appBar: AppBar(
-        backgroundColor: AuroraColors.paper,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: Text(title, style: AuroraType.h3),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: AuroraSpacing.space3),
-            child: SaveButton(
-              label: 'Save',
-              loading: _saving,
-              onPressed: _saving ? null : _save,
-            ),
-          ),
-        ],
-      ),
-      body: Form(
-        key: _formKey,
-        child: _FormBody(
-          isIOS: false,
-          category: _category,
-          status: _status,
-          purchaseDate: _purchaseDate,
-          warrantyExpiration: _warrantyExpiration,
-          nameCtrl: _nameCtrl,
-          brandCtrl: _brandCtrl,
-          modelCtrl: _modelCtrl,
-          serialCtrl: _serialCtrl,
-          locationCtrl: _locationCtrl,
-          colorCtrl: _colorCtrl,
-          warrantyProviderCtrl: _warrantyProviderCtrl,
-          notesCtrl: _notesCtrl,
-          priceCtrl: _priceCtrl,
-          lifespanCtrl: _lifespanCtrl,
-          replacementCostCtrl: _replacementCostCtrl,
-          onCategoryChanged: (v) => setState(() => _category = v),
-          onStatusChanged: (v) => setState(() => _status = v),
-          onPickPurchaseDate: () => _pickPurchaseDate(context),
-          onClearPurchaseDate: () => setState(() => _purchaseDate = null),
-          onPickWarrantyExpiration: () => _pickWarrantyExpiration(context),
-          onClearWarrantyExpiration: () =>
-              setState(() => _warrantyExpiration = null),
-          onPickCategoryIOS: () => _pickCategoryIOS(context),
-          onPickStatusIOS: () => _pickStatusIOS(context),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Shared form body ─────────────────────────────────────────────────────────
-
-class _FormBody extends StatelessWidget {
-  const _FormBody({
-    required this.isIOS,
-    required this.category,
-    required this.status,
-    required this.purchaseDate,
-    required this.warrantyExpiration,
-    required this.nameCtrl,
-    required this.brandCtrl,
-    required this.modelCtrl,
-    required this.serialCtrl,
-    required this.locationCtrl,
-    required this.colorCtrl,
-    required this.warrantyProviderCtrl,
-    required this.notesCtrl,
-    required this.priceCtrl,
-    required this.lifespanCtrl,
-    required this.replacementCostCtrl,
-    required this.onCategoryChanged,
-    required this.onStatusChanged,
-    required this.onPickPurchaseDate,
-    required this.onClearPurchaseDate,
-    required this.onPickWarrantyExpiration,
-    required this.onClearWarrantyExpiration,
-    required this.onPickCategoryIOS,
-    required this.onPickStatusIOS,
-    this.onPurchaseDateFromScan,
-    this.onPhotoReady,
-  });
-
-  final bool isIOS;
-  final ApplianceCategory category;
-  final ItemStatus status;
-  final String? purchaseDate;
-  final String? warrantyExpiration;
-  final TextEditingController nameCtrl;
-  final TextEditingController brandCtrl;
-  final TextEditingController modelCtrl;
-  final TextEditingController serialCtrl;
-  final TextEditingController locationCtrl;
-  final TextEditingController colorCtrl;
-  final TextEditingController warrantyProviderCtrl;
-  final TextEditingController notesCtrl;
-  final TextEditingController priceCtrl;
-  final TextEditingController lifespanCtrl;
-  final TextEditingController replacementCostCtrl;
-  final ValueChanged<ApplianceCategory> onCategoryChanged;
-  final ValueChanged<ItemStatus> onStatusChanged;
-  final VoidCallback onPickPurchaseDate;
-  final VoidCallback onClearPurchaseDate;
-  final VoidCallback onPickWarrantyExpiration;
-  final VoidCallback onClearWarrantyExpiration;
-  final VoidCallback onPickCategoryIOS;
-  final VoidCallback onPickStatusIOS;
-  final void Function(String date)? onPurchaseDateFromScan;
-  final void Function(XFile)? onPhotoReady;
-
-  static ApplianceCategory? _applianceCategoryFromString(String raw) {
-    return switch (raw.trim().toLowerCase()) {
-      'kitchen' => ApplianceCategory.kitchen,
-      'laundry' => ApplianceCategory.laundry,
-      'climate' => ApplianceCategory.climate,
-      'cleaning' => ApplianceCategory.cleaning,
-      'outdoor' => ApplianceCategory.outdoor,
-      'bathroom' => ApplianceCategory.bathroom,
-      _ => ApplianceCategory.other,
-    };
-  }
-
-  /// Infers a category string from the product name when Claude doesn't
-  /// return one. Returns null if no match — caller falls back to default.
-  static String? _inferApplianceCategory(String? name) {
-    if (name == null) return null;
-    final n = name.toLowerCase();
-    if (n.contains('fridge') ||
-        n.contains('refrigerator') ||
-        n.contains('dishwasher') ||
-        n.contains('oven') ||
-        n.contains('microwave') ||
-        n.contains('range') ||
-        n.contains('freezer') ||
-        n.contains('cooktop')) { return 'kitchen'; }
-    if (n.contains('washer') ||
-        n.contains('dryer') ||
-        n.contains('laundry')) { return 'laundry'; }
-    if (n.contains('air conditioner') ||
-        n.contains('heater') ||
-        n.contains('air purifier') ||
-        n.contains('dehumidifier') ||
-        n.contains('humidifier')) { return 'climate'; }
-    if (n.contains('vacuum') || n.contains('steam cleaner')) { return 'cleaning'; }
-    if (n.contains('mower') ||
-        n.contains('generator') ||
-        n.contains('pressure washer')) { return 'outdoor'; }
-    if (n.contains('toilet') ||
-        n.contains('shower') ||
-        n.contains('hair dryer')) { return 'bathroom'; }
-    return null;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
-      children: [
-        // ── Label scanner ──────────────────────────────────────────────────
-        ScanLabelButton(
-          isAppliance: true,
-          onResult: (LabelScanResult r) {
-            if (r.brand != null) brandCtrl.text = r.brand!;
-            if (r.name != null && nameCtrl.text.isEmpty) {
-              nameCtrl.text = r.name!;
-            }
-            if (r.modelNumber != null) modelCtrl.text = r.modelNumber!;
-            if (r.serialNumber != null) serialCtrl.text = r.serialNumber!;
-            // Use category from Claude, or infer from product name as fallback.
-            final rawCat = r.category ?? _inferApplianceCategory(r.name);
-            if (rawCat != null) {
-              onCategoryChanged(_applianceCategoryFromString(rawCat)!);
-            }
-            if (r.estimatedLifespanYears != null) {
-              lifespanCtrl.text = r.estimatedLifespanYears.toString();
-            }
-            if (r.estimatedReplacementCostUsd != null) {
-              replacementCostCtrl.text =
-                  r.estimatedReplacementCostUsd.toString();
-            }
-            if (r.notes != null) notesCtrl.text = r.notes!;
-            if (r.manufactureDate != null) {
-              final parts = r.manufactureDate!.split('-');
-              final normalised = parts.length == 2
-                  ? '${parts[0]}-${parts[1]}-01'
-                  : '${parts[0]}-01-01';
-              onPurchaseDateFromScan?.call(normalised);
-            } else if (r.estimatedYear != null) {
-              onPurchaseDateFromScan?.call('${r.estimatedYear}-01-01');
-            }
-          },
-          onPhotoReady: onPhotoReady,
-        ),
-        const SizedBox(height: AuroraSpacing.space5),
-
-        // ── Category & Identity ────────────────────────────────────────────
-        const _SectionLabel(label: 'Category & Identity'),
-        _PickerField(
-          label: 'Category',
-          value: category.label,
-          onTap: isIOS ? onPickCategoryIOS : null,
-          trailing: isIOS
-              ? null
-              : DropdownButtonHideUnderline(
-                  child: DropdownButton<ApplianceCategory>(
-                    value: category,
-                    onChanged: (v) {
-                      if (v != null) onCategoryChanged(v);
-                    },
-                    items: ApplianceCategory.values
-                        .map(
-                          (c) => DropdownMenuItem(
-                            value: c,
-                            child: Text(c.label),
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ),
-        ),
-        const SizedBox(height: AuroraSpacing.space3),
-        _TextField(
-          controller: nameCtrl,
-          label: 'Name',
-          hint: 'e.g. Samsung Refrigerator',
-          validator: (v) =>
-              (v == null || v.trim().isEmpty) ? 'Name is required' : null,
-        ),
-        const SizedBox(height: AuroraSpacing.space3),
-        _TextField(
-          controller: brandCtrl,
-          label: 'Brand',
-          hint: 'e.g. Samsung',
-        ),
-        const SizedBox(height: AuroraSpacing.space3),
-        _TextField(
-          controller: modelCtrl,
-          label: 'Model Number',
-          hint: 'e.g. RF28R7351SR',
-        ),
-        const SizedBox(height: AuroraSpacing.space3),
-        _TextField(
-          controller: serialCtrl,
-          label: 'Serial Number',
-          hint: 'Optional',
-        ),
-        const SizedBox(height: AuroraSpacing.space5),
-
-        // ── Location & Status ──────────────────────────────────────────────
-        const _SectionLabel(label: 'Location & Status'),
-        _TextField(
-          controller: locationCtrl,
-          label: 'Location',
-          hint: 'e.g. Kitchen, Laundry Room',
-        ),
-        const SizedBox(height: AuroraSpacing.space3),
-        _TextField(
-          controller: colorCtrl,
-          label: 'Color',
-          hint: 'e.g. Stainless Steel',
-        ),
-        const SizedBox(height: AuroraSpacing.space3),
-        _PickerField(
-          label: 'Status',
-          value: status.label,
-          onTap: isIOS ? onPickStatusIOS : null,
-          trailing: isIOS
-              ? null
-              : DropdownButtonHideUnderline(
-                  child: DropdownButton<ItemStatus>(
-                    value: status,
-                    onChanged: (v) {
-                      if (v != null) onStatusChanged(v);
-                    },
-                    items: ItemStatus.values
-                        .map(
-                          (s) => DropdownMenuItem(
-                            value: s,
-                            child: Text(s.label),
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ),
-        ),
-        const SizedBox(height: AuroraSpacing.space5),
-
-        // ── Purchase ───────────────────────────────────────────────────────
-        const _SectionLabel(label: 'Purchase'),
-        _DateField(
-          label: 'Purchase Date',
-          value: purchaseDate,
-          onTap: onPickPurchaseDate,
-          onClear: onClearPurchaseDate,
-        ),
-        const SizedBox(height: AuroraSpacing.space3),
-        _TextField(
-          controller: priceCtrl,
-          label: 'Purchase Price',
-          hint: '0.00',
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          prefix: '\$',
-        ),
-        const SizedBox(height: AuroraSpacing.space5),
-
-        // ── Lifespan ───────────────────────────────────────────────────────
-        const _SectionLabel(label: 'Lifespan'),
-        _TextField(
-          controller: lifespanCtrl,
-          label: 'Expected Lifespan (years)',
-          hint: 'e.g. 12',
-          keyboardType: TextInputType.number,
-        ),
-        const SizedBox(height: AuroraSpacing.space3),
-        _TextField(
-          controller: replacementCostCtrl,
-          label: 'Estimated Replacement Cost',
-          hint: '0.00',
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          prefix: '\$',
-        ),
-        const SizedBox(height: AuroraSpacing.space5),
-
-        // ── Warranty ───────────────────────────────────────────────────────
-        const _SectionLabel(label: 'Warranty'),
-        _DateField(
-          label: 'Warranty Expiration',
-          value: warrantyExpiration,
-          onTap: onPickWarrantyExpiration,
-          onClear: onClearWarrantyExpiration,
-        ),
-        const SizedBox(height: AuroraSpacing.space3),
-        _TextField(
-          controller: warrantyProviderCtrl,
-          label: 'Warranty Provider',
-          hint: 'e.g. Extended Warranty Co.',
-        ),
-        const SizedBox(height: AuroraSpacing.space5),
-
-        // ── Notes ──────────────────────────────────────────────────────────
-        const _SectionLabel(label: 'Notes'),
-        _TextField(
-          controller: notesCtrl,
-          label: 'Notes',
-          hint: 'Any additional notes about this appliance...',
-          maxLines: 4,
-        ),
-        const SizedBox(height: AuroraSpacing.space8),
+  Future<void> _pickCategory() async {
+    final choice = await AuroraSheet.actionSheet(
+      context,
+      title: ApplianceCopy.category,
+      actions: [
+        for (final c in ApplianceCategory.values)
+          AuroraSheetAction(label: c.label),
       ],
     );
-  }
-}
-
-// ── Form sub-widgets ─────────────────────────────────────────────────────────
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.label});
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: AuroraSpacing.space8, bottom: AuroraSpacing.space3),
-      child: Row(
-        children: [
-          Container(
-            width: 7,
-            height: 7,
-            decoration: const BoxDecoration(
-              color: AuroraColors.cobalt,
-              borderRadius: AuroraRadius.xs,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            label.toUpperCase(),
-            style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TextField extends StatelessWidget {
-  const _TextField({
-    required this.controller,
-    required this.label,
-    this.hint,
-    this.validator,
-    this.keyboardType,
-    this.maxLines = 1,
-    this.prefix,
-  });
-
-  final TextEditingController controller;
-  final String label;
-  final String? hint;
-  final FormFieldValidator<String>? validator;
-  final TextInputType? keyboardType;
-  final int maxLines;
-  final String? prefix;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      validator: validator,
-      keyboardType: keyboardType,
-      maxLines: maxLines,
-      style: AuroraType.body,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        prefixText: prefix,
-        filled: true,
-        fillColor: AuroraColors.paper,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AuroraSpacing.space5,
-          vertical: AuroraSpacing.space5,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: const BorderSide(color: AuroraColors.inkBorder),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: const BorderSide(color: AuroraColors.inkBorder),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: const BorderSide(color: AuroraColors.coral),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
-        ),
-      ),
-    );
-  }
-}
-
-class _PickerField extends StatelessWidget {
-  const _PickerField({
-    required this.label,
-    required this.value,
-    this.onTap,
-    this.trailing,
-  });
-
-  final String label;
-  final String value;
-  final VoidCallback? onTap;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    if (trailing != null) {
-      // Android: show inline dropdown
-      return InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          filled: true,
-          fillColor: AuroraColors.paper,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: AuroraSpacing.space5,
-            vertical: AuroraSpacing.space1,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: AuroraRadius.md,
-            borderSide: const BorderSide(color: AuroraColors.inkBorder),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: AuroraRadius.md,
-            borderSide: const BorderSide(color: AuroraColors.inkBorder),
-          ),
-        ),
-        child: trailing!,
-      );
+    if (choice != null) {
+      setState(() => _category = ApplianceCategory.values[choice]);
     }
-    // iOS: tappable row that opens action sheet
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AuroraSpacing.space5,
-          vertical: AuroraSpacing.space5,
+  }
+
+  Future<void> _pickStatus() async {
+    final choice = await AuroraSheet.actionSheet(
+      context,
+      title: ApplianceCopy.status,
+      actions: [
+        for (final s in ItemStatus.values) AuroraSheetAction(label: s.label),
+      ],
+    );
+    if (choice != null) setState(() => _status = ItemStatus.values[choice]);
+  }
+
+  Future<void> _linkWarranty() async {
+    final doc = await showDocumentLinkPicker(context);
+    if (doc != null && mounted) setState(() => _warrantyDocId = doc.id);
+  }
+
+  // ─── Photos ───────────────────────────────────────────────────────────────
+
+  int get _slots {
+    final premium = ref.read(isPremiumProvider);
+    if (!premium) return kFreeItemPhotoLimit;
+    return _photos.length < kFreeItemPhotoLimit
+        ? kFreeItemPhotoLimit
+        : _photos.length + 1;
+  }
+
+  Future<void> _addPhoto() async {
+    if (!ref.read(isPremiumProvider) && _photos.length >= kFreeItemPhotoLimit) {
+      await UpgradeSheet.show(
+        context,
+        config: const UpgradeSheetConfig(
+          headline: ItemCopy.upgradeHeadline,
+          reason: ItemCopy.upgradeReason,
+          features: ItemCopy.upgradeFeatures,
+          triggerKey: ItemCopy.upgradeKey,
         ),
-        decoration: BoxDecoration(
-          color: AuroraColors.paper,
-          borderRadius: AuroraRadius.md,
-          border: Border.all(color: AuroraColors.inkBorder),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: AuroraType.bodySm
-                        .copyWith(color: AuroraColors.inkSecondary),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(value, style: AuroraType.body),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.chevron_right,
-              size: 18,
-              color: AuroraColors.inkSecondary,
-            ),
-          ],
-        ),
-      ),
+      );
+      return;
+    }
+    final file = await PhotoPicker.showPicker(context);
+    if (file == null || !mounted) return;
+    setState(
+      () => _photos.add(FormPhoto(XFile(file.path), ItemPhotoType.unit)),
     );
   }
-}
 
-class _DateField extends StatelessWidget {
-  const _DateField({
-    required this.label,
-    required this.value,
-    required this.onTap,
-    required this.onClear,
-  });
+  Future<void> _openPhoto(int index) async {
+    final choice = await AuroraSheet.actionSheet(
+      context,
+      title: ApplianceCopy.photos,
+      actions: [
+        AuroraSheetAction(label: ApplianceCopy.photoRemove, destructive: true),
+      ],
+    );
+    if (choice == 0 && mounted) setState(() => _photos.removeAt(index));
+  }
 
-  final String label;
-  final String? value;
-  final VoidCallback onTap;
-  final VoidCallback onClear;
+  // ─── Save ─────────────────────────────────────────────────────────────────
+
+  Future<void> _save() async {
+    if (_saving) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    final data = _data();
+    if (!data.canSave) return;
+    setState(() => _saving = true);
+    final notifier = ref.read(appliancesProvider.notifier);
+    try {
+      final existing = _existing;
+      if (existing != null) {
+        await notifier.updateAppliance(
+          existing.id,
+          data.toFields(existing: existing),
+        );
+        if (!mounted) return;
+        SnackbarService.showSuccess(context, ApplianceCopy.updated);
+        context.pop();
+        return;
+      }
+      final life =
+          widget.prefill?.result.estimatedLifespanYears ??
+          ApplianceLifespanDefaults.years(data.name, data.category);
+      final id = await notifier.addAppliance(
+        data.toFields(defaultLifespanYears: life),
+      );
+      await _uploadPhotos(id);
+      if (!mounted) return;
+      if (widget.prefill != null) await _offerTasks(id, data);
+      if (!mounted) return;
+      context.pushReplacement(
+        AppRoutes.homeApplianceDetail.replaceFirst(':applianceId', id),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      SnackbarService.showError(context, ApplianceCopy.saveError);
+    }
+  }
+
+  /// The photos are secondary: a failed one never blocks the save.
+  Future<void> _uploadPhotos(String id) async {
+    final repository = ref.read(itemPhotosRepositoryProvider);
+    for (final p in _photos) {
+      try {
+        await repository.add(ItemRef.appliance(id), p.file, p.type);
+      } catch (_) {
+        // Add it again from the appliance's Photos screen.
+      }
+    }
+  }
+
+  /// Offers the suggested upkeep tasks before leaving the form.
+  Future<void> _offerTasks(String id, ApplianceFormData data) async {
+    try {
+      final saved = await ref.read(appliancesRepositoryProvider).get(id);
+      if (saved == null || !mounted) return;
+      await showTaskGenerationSheet(
+        context: context,
+        ref: ref,
+        itemName: data.name.trim(),
+        brand: data.brand.trim(),
+        category: data.category.value,
+        formType: 'appliance',
+        linkedApplianceId: id,
+        propertyId: saved.propertyId,
+      );
+    } catch (_) {
+      // Suggestions are a bonus; the appliance is already saved.
+    }
+  }
+
+  // ─── Delete ───────────────────────────────────────────────────────────────
+
+  Future<void> _delete() async {
+    final existing = _existing;
+    if (existing == null) return;
+    final notifier = ref.read(appliancesProvider.notifier);
+    final container = ProviderScope.containerOf(context);
+    final toast = Navigator.of(context, rootNavigator: true).context;
+    final sure = await ConfirmDialog.show(
+      context,
+      title: ApplianceCopy.deleteTitle,
+      message: ApplianceCopy.deleteBody(existing.name),
+      confirmLabel: ApplianceCopy.deleteConfirm,
+      onConfirm: () {},
+    );
+    if (sure != true || !mounted) return;
+    try {
+      await notifier.softDelete(existing.id);
+    } catch (_) {
+      if (toast.mounted) {
+        SnackbarService.showError(toast, ApplianceCopy.deleteError);
+      }
+      return;
+    }
+    if (!mounted) return;
+    context.go(AppRoutes.homeAppliances);
+    if (!toast.mounted) return;
+    SnackbarService.showUndo(
+      toast,
+      message: ApplianceCopy.deleted(existing.name),
+      duration: AuroraDurations.undoDelete,
+      onUndo: () => _restore(container, toast, existing.id),
+    );
+  }
+
+  Future<void> _restore(
+    ProviderContainer container,
+    BuildContext toast,
+    String id,
+  ) async {
+    try {
+      await container.read(appliancesProvider.notifier).restore(id);
+    } catch (_) {
+      if (toast.mounted) {
+        SnackbarService.showError(toast, ApplianceCopy.restoreError);
+      }
+    }
+  }
+
+  // ─── Build ────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AuroraSpacing.space5,
-          vertical: AuroraSpacing.space5,
-        ),
-        decoration: BoxDecoration(
-          color: AuroraColors.paper,
-          borderRadius: AuroraRadius.md,
-          border: Border.all(color: AuroraColors.inkBorder),
-        ),
-        child: Row(
+    final a = context.aurora;
+    final gap = SizedBox(height: a.of(AuroraSpacing.space8));
+    final scanned = _fromScan;
+    final hasScan = widget.prefill != null && !_isEditing;
+    final premium = ref.watch(isPremiumProvider);
+    final photoNote = premium
+        ? ApplianceCopy.premiumNote
+        : [
+            ApplianceCopy.freeNote,
+            if (hasScan) ApplianceCopy.labelSaved,
+          ].join(' · ');
+    return ItemPage(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: AuroraType.bodySm
-                        .copyWith(color: AuroraColors.inkSecondary),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    value ?? 'Select date',
-                    style: AuroraType.body.copyWith(
-                      color: value != null
-                          ? AuroraColors.ink
-                          : AuroraColors.inkSecondary,
-                    ),
-                  ),
-                ],
-              ),
+            ItemTopBar(
+              backLabel: _isEditing
+                  ? ApplianceCopy.cancel
+                  : hasScan
+                  ? ApplianceCopy.backToScan
+                  : ApplianceCopy.backToList,
+              onBack: _back,
             ),
-            if (value != null)
-              GestureDetector(
-                onTap: onClear,
-                child: Icon(
-                  Icons.clear,
-                  size: 18,
-                  color: AuroraColors.inkSecondary,
-                ),
+            SizedBox(height: a.of(AuroraSpacing.space3)),
+            ApplianceFormHeader(
+              eyebrow: _isEditing
+                  ? ApplianceCopy.editEyebrow
+                  : ApplianceCopy.addEyebrow,
+              title: _isEditing
+                  ? ApplianceCopy.editTitle(_existing!.name)
+                  : ApplianceCopy.addTitle,
+            ),
+            gap,
+            if (hasScan) ...[
+              ApplianceScanBanner(
+                fieldCount: _scanFieldCount,
+                onRescan: _rescan,
+              ),
+              gap,
+            ],
+            ApplianceIdentitySection(
+              category: _category,
+              name: _c.name,
+              onPickCategory: _pickCategory,
+            ),
+            ApplianceIdentificationSection(
+              brand: _c.brand,
+              model: _c.model,
+              serial: _c.serial,
+              color: _c.color,
+              fromScan: scanned,
+            ),
+            AppliancePurchaseSection(
+              price: _c.price,
+              retailer: _c.retailer,
+              purchaseDate: _c.purchaseDate,
+              hasWarranty: _hasWarranty,
+              onWarranty: (v) => setState(() => _hasWarranty = v),
+              warrantyProvider: _c.warrantyProvider,
+              warrantyExpires: _c.warrantyExpires,
+              linkedDocName: _warrantyDocId == null
+                  ? null
+                  : ApplianceCopy.warrantyDocFallback,
+              onLinkWarranty: _linkWarranty,
+            ),
+            ApplianceSpecsSection(
+              expanded: _specsOpen,
+              onToggle: () => setState(() => _specsOpen = !_specsOpen),
+              scannedCount: const [_capacityKey, _typeKey, _energyKey]
+                  .where(_scanned.containsKey)
+                  .length,
+              capacity: _c.capacity,
+              capacityFromScan: scanned.contains(_capacityKey),
+              type: _type,
+              typeFromScan: scanned.contains(_typeKey),
+              showType: _category == ApplianceCategory.laundry,
+              onType: (t) => setState(() => _type = t),
+              energyStar: _energyStar,
+              energyFromScan: scanned.contains(_energyKey),
+              onEnergyStar: (v) => setState(() => _energyStar = v),
+            ),
+            if (_isEditing)
+              ApplianceMoreDetailsSection(
+                location: _c.location,
+                status: _status,
+                onPickStatus: _pickStatus,
+                lifespan: _c.lifespan,
+                notes: _c.notes,
               )
             else
-              Icon(
-                Icons.calendar_today_outlined,
-                size: 18,
-                color: AuroraColors.inkSecondary,
+              AppliancePhotosSection(
+                photos: _photos,
+                slots: _slots,
+                note: photoNote,
+                onAdd: _addPhoto,
+                onOpen: _openPhoto,
               ),
+            gap,
+            ApplianceFormFooter(
+              saveLabel: _isEditing ? ApplianceCopy.saveEdit : ApplianceCopy.save,
+              onCancel: _back,
+              onSave: _data().canSave ? _save : null,
+              saving: _saving,
+              onDelete: _isEditing ? _delete : null,
+            ),
           ],
         ),
       ),

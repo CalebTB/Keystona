@@ -25,7 +25,13 @@ import '../widgets/form/task_form_skeleton.dart';
 /// - Create: nothing passed; saves a new task for the home.
 /// - Edit: pass [existingTask], or only its [taskId] to load it.
 class TaskFormScreen extends ConsumerStatefulWidget {
-  const TaskFormScreen({super.key, this.existingTask, this.taskId, this.today});
+  const TaskFormScreen({
+    super.key,
+    this.existingTask,
+    this.taskId,
+    this.today,
+    this.initialLinkId,
+  });
 
   /// The task to edit, when the caller already has it.
   final MaintenanceTask? existingTask;
@@ -35,6 +41,10 @@ class TaskFormScreen extends ConsumerStatefulWidget {
 
   /// Today's date; tests pass a fixed one.
   final DateTime? today;
+
+  /// Create mode: the system or appliance (by id) the new task starts linked to,
+  /// e.g. "Add a task" opened from that item's screen. Ignored when editing.
+  final String? initialLinkId;
 
   @override
   ConsumerState<TaskFormScreen> createState() => _TaskFormScreenState();
@@ -93,6 +103,12 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
 
   TaskLinkOption? _linkFor(MaintenanceTask task, List<TaskLinkOption> options) {
     final id = task.linkedSystemId ?? task.linkedApplianceId;
+    if (id == null) return null;
+    return options.where((o) => o.id == id).firstOrNull;
+  }
+
+  TaskLinkOption? _initialLink(List<TaskLinkOption> options) {
+    final id = widget.initialLinkId;
     if (id == null) return null;
     return options.where((o) => o.id == id).firstOrNull;
   }
@@ -168,7 +184,7 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
     TaskDraft? draft = _edited;
     if (draft == null && data != null && !waitingForTask) {
       draft = loadedTask == null
-          ? const TaskDraft()
+          ? TaskDraft(link: _initialLink(data.options))
           : TaskDraft.fromTask(
               loadedTask,
               link: _linkFor(loadedTask, data.options),

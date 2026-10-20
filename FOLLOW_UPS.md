@@ -7,10 +7,8 @@ Newest context first. Delete a line when it is done.
 
 | Screen | Route | Should be opened from | Fix in |
 |---|---|---|---|
-| Around-the-house reminders | `/home/reminders` (`AppRoutes.homeReminders`) | Home profile → "Around the house" | Sprint 3 (Home profile) |
 | Turned-off reminders safety net | `/settings/reminders` (`AppRoutes.settingsReminders`) | Settings hub → "Turned-off reminders" | Sprint 7 (Settings) |
 | Review your reminders (setup step 2) | `/maintenance/review` (`AppRoutes.maintenanceReview`) | Onboarding checklist step 2 (copy is fixed "Step 2 of 4") | Onboarding polish |
-| Item reminders | — | System / appliance detail → ItemReminders | Sprint 3 |
 | "Your categories" | `/documents/categories` | Reached only from the add-document category picker ("Manage" / "New category"); the Docs tab has no link | Sprint 1 polish |
 | New users → onboarding | `/onboarding/resume` | After sign-up the router sends everyone to Home. Needs a gate: signed-in + no property + onboarding not finished → resume. Deliberately deferred to near launch | Launch prep |
 
@@ -94,6 +92,27 @@ Chosen 2026-10-20 ("go with the defaults"). Details and the full kit-vs-schema a
 - **Home health:** only the maintenance score is shown; records and emergency sub-scores, and the "up N since Sep" trend, wait for Sprint 6 (no source or history table yet).
 - **Home History Report card:** hidden until Sprint 9.
 - **Item task rows:** long-press menu, no edit/delete icon buttons (kit rule).
+
+## Sprint 3 (Home profile) leftovers
+
+Built 2026-10-20/21: HomeProfile, HomeEdit, HomeLifespan; HomeSystems, ScanFlow, AddSystem (+ edit), SystemDetail, the repair-log sheet; HomeAppliances, AddAppliance (+ edit), ApplianceDetail; ItemTasks / ItemPhotos / ItemReminders for both kinds. Home tab address row opens the profile; the profile links to Around the house; "Add a task" from an item opens the task form with that item already picked.
+
+Open:
+
+- [ ] **Scan-label Edge Function** (needs approval to change): the kit wants auto-detect ("Label found · hold still"), per-field confidence, structured specs (FUEL/OUTPUT/FILTER for systems; type/capacity/Energy Star for appliances) and an install date, none of which it returns. Today the camera is the native picker (no live viewfinder, flash or edge detection; same package gap as the document camera).
+- [ ] `get_system_lifespan_overview` (systems-only RPC) is no longer called; drop it if nothing else uses it.
+- [ ] Item history rows are not tappable: `LogServiceSheet(editing:)` and remove-with-Undo exist and are tested but have no trigger in the timeline.
+- [ ] ItemTasks "Done" tab shows task completions only, not `item_service_log` entries (the kit's "Replaced the igniter" row).
+- [ ] `ItemNextUpList` (shared) has no `onLongPress`, so SystemDetail and ApplianceDetail compose `AuroraTaskRow` directly (`SystemNextUp`, `ApplianceNextUp`); add it to the shared list and delete both.
+- [ ] Hand-added appliances get an invented default lifespan by type (`lifespan/appliance_lifespan.dart`); real values needed.
+- [ ] Changing "year built" shows the kit's note but nothing recomputes reminders or lifespans.
+- [ ] Climate stores only the zone number; "4A · mixed-humid" is derived at runtime from the stand-in lookup. `garage_type` is free text.
+- [ ] Omitted for lack of a source: Records/Emergency rings, "up N since Sep", Project and Recently cards on the profile (History Report card waits for Sprint 9).
+- [ ] The "What to set aside" table carries a Premium tag but is not gated.
+- [ ] The first full `dart run build_runner build` after big changes takes ~16 minutes; later runs are fast.
+- [ ] Three near-identical page frames (`ItemPage`, `RemindersPage`, `home_common`) and two form-photo models (`FormPhoto`, `models/form_photo.dart`): consolidate when core widgets are approved.
+
+Decisions still open (Sprint 3): should the callout on the profile also show at "aging" (75-90%) or only 90%+? Where should "no home yet" send people (today onboarding's property step)? Several photos on Edit Home (today one)? "Add by hand" from the scan chooser: which kind? Should HomeSystems "+ Add" show the chooser first (today it opens the system camera)? Photo limit during the trial? Should an item screen allow deleting a task (kit has no delete UI)? "HEALTHY" = status + lifespan band (as built).
 
 ## Copy to review
 

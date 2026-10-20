@@ -1,1028 +1,351 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
-
-
-
-
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/theme/aurora_colors.dart';
-import '../../../core/theme/aurora_radius.dart';
-import '../../../core/theme/aurora_spacing.dart';
-import '../../../core/theme/aurora_typography.dart';
-import '../../../core/widgets/aurora/aurora.dart';
 
-import '../../../core/widgets/scan_label_button.dart';
+import '../../../core/router/app_router.dart';
+import '../../../core/theme/aurora_motion.dart';
+import '../../../core/theme/aurora_scale.dart';
+import '../../../core/theme/aurora_spacing.dart';
+import '../../../core/widgets/aurora/aurora_button.dart';
+import '../../../core/widgets/aurora/aurora_sheet.dart';
+import '../../../core/widgets/confirm_dialog.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../core/widgets/task_generation_sheet.dart';
-import '../../../services/label_scanner_service.dart';
-import '../../../services/supabase_service.dart';
+import '../../../core/widgets/upgrade_sheet.dart';
+import '../../../services/providers/service_providers.dart';
+import '../../subscription/providers/subscription_provider.dart';
+import '../forms/form_photo.dart';
+import '../forms/system_form_controller.dart';
+import '../models/scan_prefill.dart';
 import '../models/system.dart';
+import '../models/system_template.dart';
+import '../providers/scan_providers.dart';
 import '../providers/system_detail_provider.dart';
+import '../providers/system_repositories_provider.dart';
 import '../providers/systems_provider.dart';
+import '../systems_copy.dart';
+import '../widgets/system_form/scan_banner.dart';
+import '../widgets/system_form/system_basics_section.dart';
+import '../widgets/system_form/system_form_footer.dart';
+import '../widgets/system_form/system_form_header.dart';
+import '../widgets/system_form/system_form_page.dart';
+import '../widgets/system_form/system_identification_section.dart';
+import '../widgets/system_form/system_install_section.dart';
+import '../widgets/system_form/system_more_details_section.dart';
+import '../widgets/system_form/system_photos_section.dart';
 
-/// Form screen for creating or editing a home system.
-///
-/// - Create mode: [existingSystem] = null. Inserts a new row on save
-///   and triggers `generate-maintenance-tasks`.
-/// - Edit mode: [existingSystem] supplied. Updates the existing row on save.
-///
-/// Route: `/home/systems/add` (create) or pushed with extra = [HomeSystem] (edit).
-///
-/// Adaptive layout:
-///   iOS  → [CupertinoPageScaffold] with [CupertinoNavigationBar]
-///   Android → [Scaffold] with [AppBar]
+/// Add a system (kit: AddSystem) and its edit mode. Route:
+/// `/home/systems/add`, with [existingSystem] for edit, [prefill] from a scan
+/// or [template] from a suggestion chip.
 class SystemFormScreen extends ConsumerStatefulWidget {
-  const SystemFormScreen({super.key, this.existingSystem});
+  const SystemFormScreen({
+    super.key,
+    this.existingSystem,
+    this.prefill,
+    this.template,
+  });
 
-  /// The system to edit, or null when creating a new system.
+  /// Reads a route's `extra`: an [ItemFormArgs] (edit and/or scan), a
+  /// [SystemTemplate] (suggestion chip), a bare [HomeSystem], or nothing.
+  factory SystemFormScreen.fromExtra(Object? extra) => switch (extra) {
+    ItemFormArgs(:final existingSystem, :final prefill) => SystemFormScreen(
+      existingSystem: existingSystem,
+      prefill: prefill,
+    ),
+    final SystemTemplate t => SystemFormScreen(template: t),
+    final HomeSystem s => SystemFormScreen(existingSystem: s),
+    _ => const SystemFormScreen(),
+  };
+
   final HomeSystem? existingSystem;
+  final ScanPrefill? prefill;
+  final SystemTemplate? template;
 
   @override
   ConsumerState<SystemFormScreen> createState() => _SystemFormScreenState();
 }
 
 class _SystemFormScreenState extends ConsumerState<SystemFormScreen> {
-  final _formKey = GlobalKey<FormState>();
-
-  // ── Controllers ─────────────────────────────────────────────────────────────
-
-  late final TextEditingController _nameCtrl;
-  late final TextEditingController _systemTypeCtrl;
-  late final TextEditingController _brandCtrl;
-  late final TextEditingController _modelCtrl;
-  late final TextEditingController _serialCtrl;
-  late final TextEditingController _locationCtrl;
-  late final TextEditingController _installerCtrl;
-  late final TextEditingController _purchasePriceCtrl;
-  late final TextEditingController _lifespanMinCtrl;
-  late final TextEditingController _lifespanMaxCtrl;
-  late final TextEditingController _lifespanOverrideCtrl;
-  late final TextEditingController _warrantyProviderCtrl;
-  late final TextEditingController _replacementCostCtrl;
-  late final TextEditingController _notesCtrl;
-
-  // ── Local state ─────────────────────────────────────────────────────────────
-
-  late SystemCategory _category;
-  late ItemStatus _status;
-
-  /// Installation date as "YYYY-MM-DD" string or null.
-  String? _installationDate;
-
-  /// Warranty expiration as "YYYY-MM-DD" string or null.
-  String? _warrantyExpiration;
-
+  late final SystemFormController _form;
+  Future<List<SuggestedTask>>? _tasks;
   bool _saving = false;
 
-  /// Label photo captured during scan — uploaded after save.
-  XFile? _labelPhoto;
-
-  /// Task generation started immediately on scan confirm so it runs in
-  /// parallel while the user reviews the pre-filled form.
-  Future<List<SuggestedTask>>? _tasksFuture;
-
-  // ── Helpers ─────────────────────────────────────────────────────────────────
-
-  bool get _isEditing => widget.existingSystem != null;
+  bool get _editing => widget.existingSystem != null;
 
   @override
   void initState() {
     super.initState();
-    final s = widget.existingSystem;
-
-    _nameCtrl = TextEditingController(text: s?.name ?? '');
-    _systemTypeCtrl = TextEditingController(text: s?.systemType ?? '');
-    _brandCtrl = TextEditingController(text: s?.brand ?? '');
-    _modelCtrl = TextEditingController(text: s?.modelNumber ?? '');
-    _serialCtrl = TextEditingController(text: s?.serialNumber ?? '');
-    _locationCtrl = TextEditingController(text: s?.location ?? '');
-    _installerCtrl = TextEditingController(text: s?.installer ?? '');
-    _purchasePriceCtrl = TextEditingController(
-      text: s?.purchasePrice != null
-          ? s!.purchasePrice!.toStringAsFixed(2)
-          : '',
+    _form = SystemFormController(
+      existing: widget.existingSystem,
+      prefill: widget.prefill,
+      template: widget.template,
     );
-    _lifespanMinCtrl = TextEditingController(
-      text: s?.expectedLifespanMin?.toString() ?? '',
-    );
-    _lifespanMaxCtrl = TextEditingController(
-      text: s?.expectedLifespanMax?.toString() ?? '',
-    );
-    _lifespanOverrideCtrl = TextEditingController(
-      text: s?.lifespanOverride?.toString() ?? '',
-    );
-    _warrantyProviderCtrl =
-        TextEditingController(text: s?.warrantyProvider ?? '');
-    _replacementCostCtrl = TextEditingController(
-      text: s?.estimatedReplacementCost != null
-          ? s!.estimatedReplacementCost!.toStringAsFixed(2)
-          : '',
-    );
-    _notesCtrl = TextEditingController(text: s?.notes ?? '');
-
-    _category = s?.category ?? SystemCategory.hvac;
-    _status = s?.status ?? ItemStatus.active;
-    _installationDate = s?.installationDate;
-    _warrantyExpiration = s?.warrantyExpiration;
+    // Suggestions start loading as soon as a scan fills the form, so they are
+    // ready by the time Save is tapped.
+    if (widget.prefill != null) {
+      _tasks = prefetchItemTasks(
+        itemName: _form.name.text.trim(),
+        brand: _form.brand.text.trim(),
+        category: _form.category.value,
+        formType: 'system',
+      );
+    }
   }
 
   @override
   void dispose() {
-    _nameCtrl.dispose();
-    _systemTypeCtrl.dispose();
-    _brandCtrl.dispose();
-    _modelCtrl.dispose();
-    _serialCtrl.dispose();
-    _locationCtrl.dispose();
-    _installerCtrl.dispose();
-    _purchasePriceCtrl.dispose();
-    _lifespanMinCtrl.dispose();
-    _lifespanMaxCtrl.dispose();
-    _lifespanOverrideCtrl.dispose();
-    _warrantyProviderCtrl.dispose();
-    _replacementCostCtrl.dispose();
-    _notesCtrl.dispose();
+    _form.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    final title = _isEditing ? 'Edit System' : 'Add System';
-
-    if (isIOS) {
-      return CupertinoPageScaffold(
-        navigationBar: CupertinoNavigationBar(
-          previousPageTitle: _isEditing ? 'System' : 'Systems',
-          middle: Text(title),
-          leading: CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: _saving ? null : () => context.pop(),
-            child: const Text('Cancel'),
-          ),
-          trailing: CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: _saving ? null : _handleSave,
-            child: _saving
-                ? const CupertinoActivityIndicator()
-                : Text(
-                    _isEditing ? 'Save' : 'Add',
-                    style: AuroraType.label.copyWith(
-                      color: AuroraColors.cobalt,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-          ),
-        ),
-        child: SafeArea(
-          bottom: false,
-          child: _FormBody(
-            formKey: _formKey,
-            nameCtrl: _nameCtrl,
-            systemTypeCtrl: _systemTypeCtrl,
-            brandCtrl: _brandCtrl,
-            modelCtrl: _modelCtrl,
-            serialCtrl: _serialCtrl,
-            locationCtrl: _locationCtrl,
-            installerCtrl: _installerCtrl,
-            purchasePriceCtrl: _purchasePriceCtrl,
-            lifespanMinCtrl: _lifespanMinCtrl,
-            lifespanMaxCtrl: _lifespanMaxCtrl,
-            lifespanOverrideCtrl: _lifespanOverrideCtrl,
-            warrantyProviderCtrl: _warrantyProviderCtrl,
-            replacementCostCtrl: _replacementCostCtrl,
-            notesCtrl: _notesCtrl,
-            category: _category,
-            status: _status,
-            installationDate: _installationDate,
-            warrantyExpiration: _warrantyExpiration,
-            onCategoryChanged: (v) => setState(() => _category = v),
-            onStatusChanged: (v) => setState(() => _status = v),
-            onInstallationDateChanged: (v) =>
-                setState(() => _installationDate = v),
-            onWarrantyExpirationChanged: (v) =>
-                setState(() => _warrantyExpiration = v),
-            isIOS: true,
-            onPhotoReady: (photo) {
-              setState(() => _labelPhoto = photo);
-              _tasksFuture = prefetchItemTasks(
-                itemName: _nameCtrl.text.trim(),
-                brand: _brandCtrl.text.trim(),
-                category: _category.value,
-                formType: 'system',
-              );
-            },
-          ),
-        ),
-      );
+  void _back() {
+    if (_editing) {
+      context.pop();
+      return;
     }
-
-    return Scaffold(
-      backgroundColor: AuroraColors.paper,
-      appBar: AppBar(
-        title: Text(title, style: AuroraType.h3),
-        backgroundColor: AuroraColors.paper,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: _saving ? null : () => context.pop(),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: AuroraSpacing.space3),
-            child: SaveButton(
-              label: _isEditing ? 'Save' : 'Add',
-              loading: _saving,
-              onPressed: _saving ? null : _handleSave,
-            ),
-          ),
-        ],
-      ),
-      body: _FormBody(
-        formKey: _formKey,
-        nameCtrl: _nameCtrl,
-        systemTypeCtrl: _systemTypeCtrl,
-        brandCtrl: _brandCtrl,
-        modelCtrl: _modelCtrl,
-        serialCtrl: _serialCtrl,
-        locationCtrl: _locationCtrl,
-        installerCtrl: _installerCtrl,
-        purchasePriceCtrl: _purchasePriceCtrl,
-        lifespanMinCtrl: _lifespanMinCtrl,
-        lifespanMaxCtrl: _lifespanMaxCtrl,
-        lifespanOverrideCtrl: _lifespanOverrideCtrl,
-        warrantyProviderCtrl: _warrantyProviderCtrl,
-        replacementCostCtrl: _replacementCostCtrl,
-        notesCtrl: _notesCtrl,
-        category: _category,
-        status: _status,
-        installationDate: _installationDate,
-        warrantyExpiration: _warrantyExpiration,
-        onCategoryChanged: (v) => setState(() => _category = v),
-        onStatusChanged: (v) => setState(() => _status = v),
-        onInstallationDateChanged: (v) =>
-            setState(() => _installationDate = v),
-        onWarrantyExpirationChanged: (v) =>
-            setState(() => _warrantyExpiration = v),
-        isIOS: false,
-        onPhotoReady: (photo) => setState(() => _labelPhoto = photo),
-      ),
-    );
+    _rescan();
   }
 
-  // ── Label photo + property helpers ───────────────────────────────────────────
+  void _rescan() {
+    if (!(ref.read(isOnlineProvider).value ?? true)) {
+      SnackbarService.showInfo(context, SystemsCopy.scanOffline);
+      return;
+    }
+    context.pushReplacement(AppRoutes.homeScan, extra: ScanKind.system);
+  }
 
-  Future<void> _uploadLabelPhoto(String systemId, XFile photo) async {
-    try {
-      final user = SupabaseService.client.auth.currentUser;
-      if (user == null) return;
-      final propertyId = await _fetchPropertyId();
-      if (propertyId == null) return;
-
-      final bytes = await photo.readAsBytes();
-      final ext = photo.name.split('.').last.toLowerCase();
-      final path =
-          '${user.id}/$propertyId/$systemId/${DateTime.now().millisecondsSinceEpoch}_label.$ext';
-      final mime = switch (ext) {
-        'jpg' || 'jpeg' => 'image/jpeg',
-        'png' => 'image/png',
-        'heic' => 'image/heic',
-        _ => 'image/jpeg',
-      };
-
-      await SupabaseService.client.storage
-          .from('item-photos')
-          .uploadBinary(path, bytes, fileOptions: FileOptions(contentType: mime));
-
-      await SupabaseService.client.from('item_photos').insert({
-        'user_id': user.id,
-        'system_id': systemId,
-        'file_path': path,
-        'photo_type': 'model_label',
-      });
-    } catch (_) {
-      // Non-fatal — photo upload failure should not block form completion.
+  void _cancel() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(AppRoutes.homeSystems);
     }
   }
 
-  Future<String?> _fetchPropertyId() async {
-    final user = SupabaseService.client.auth.currentUser;
-    if (user == null) return null;
-    final row = await SupabaseService.client
-        .from('properties')
-        .select('id')
-        .eq('user_id', user.id)
-        .isFilter('deleted_at', null)
-        .order('created_at', ascending: false)
-        .limit(1)
-        .maybeSingle();
-    return row?['id'] as String?;
-  }
-
-  // ── Save handler ─────────────────────────────────────────────────────────────
-
-  Future<void> _handleSave() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-
-    setState(() => _saving = true);
-
-    final data = <String, dynamic>{
-      'category': _category.value,
-      'system_type': _systemTypeCtrl.text.trim(),
-      'name': _nameCtrl.text.trim(),
-      'status': _status.value,
-      if (_brandCtrl.text.isNotEmpty) 'brand': _brandCtrl.text.trim(),
-      if (_modelCtrl.text.isNotEmpty) 'model': _modelCtrl.text.trim(),
-      if (_serialCtrl.text.isNotEmpty)
-        'serial_number': _serialCtrl.text.trim(),
-      if (_locationCtrl.text.isNotEmpty) 'location': _locationCtrl.text.trim(),
-      if (_installerCtrl.text.isNotEmpty)
-        'installer': _installerCtrl.text.trim(),
-      if (_purchasePriceCtrl.text.isNotEmpty)
-        'purchase_price':
-            double.tryParse(_purchasePriceCtrl.text.replaceAll(',', '')),
-      if (_installationDate != null) 'installation_date': _installationDate,
-      if (_lifespanMinCtrl.text.isNotEmpty)
-        'expected_lifespan_min': int.tryParse(_lifespanMinCtrl.text),
-      if (_lifespanMaxCtrl.text.isNotEmpty)
-        'expected_lifespan_max': int.tryParse(_lifespanMaxCtrl.text),
-      if (_lifespanOverrideCtrl.text.isNotEmpty)
-        'lifespan_override': int.tryParse(_lifespanOverrideCtrl.text),
-      if (_warrantyExpiration != null)
-        'warranty_expiration': _warrantyExpiration,
-      if (_warrantyProviderCtrl.text.isNotEmpty)
-        'warranty_provider': _warrantyProviderCtrl.text.trim(),
-      if (_replacementCostCtrl.text.isNotEmpty)
-        'estimated_replacement_cost':
-            double.tryParse(_replacementCostCtrl.text.replaceAll(',', '')),
-      if (_notesCtrl.text.isNotEmpty) 'notes': _notesCtrl.text.trim(),
-    };
-
-    try {
-      if (_isEditing) {
-        await ref
-            .read(systemDetailProvider(widget.existingSystem!.id).notifier)
-            .updateSystem(data);
-        if (!mounted) return;
-        SnackbarService.showSuccess(context, 'System updated.');
-        context.pop();
-      } else {
-        final systemId =
-            await ref.read(systemsProvider.notifier).addSystem(data);
-
-        // Upload label photo if captured during scan.
-        if (_labelPhoto != null) {
-          _uploadLabelPhoto(systemId, _labelPhoto!).ignore();
-        }
-
-        if (!mounted) return;
-
-        // Show task sheet BEFORE popping — context must still be alive.
-        if (_labelPhoto != null) {
-          final propertyId = await _fetchPropertyId();
-          if (mounted && propertyId != null) {
-            await showTaskGenerationSheet(
-              context: context,
-              ref: ref,
-              itemName: _nameCtrl.text.trim(),
-              brand: _brandCtrl.text.trim(),
-              category: _category.value,
-              formType: 'system',
-              linkedSystemId: systemId,
-              propertyId: propertyId,
-              prefetchedFuture: _tasksFuture,
-            );
-          }
-        }
-
-        if (!mounted) return;
-        SnackbarService.showSuccess(context, 'System added.');
-        context.pop();
-      }
-    } catch (e) {
-      if (!mounted) return;
-      SnackbarService.showError(
+  Future<void> _addPhoto() async {
+    final premium = ref.read(isPremiumProvider);
+    if (!premium && _form.photos.length >= kFreeItemPhotoLimit) {
+      await UpgradeSheet.show(
         context,
-        _isEditing
-            ? "Couldn't update system. Try again."
-            : "Couldn't add system. Try again.",
+        config: const UpgradeSheetConfig(
+          headline: SystemsCopy.photoLimitHeadline,
+          reason: SystemsCopy.photoLimitReason,
+          features: SystemsCopy.photoLimitFeatures,
+          triggerKey: SystemsCopy.photoLimitKey,
+        ),
       );
+      return;
+    }
+    final source = ref.read(photoSourceProvider);
+    final choice = await AuroraSheet.actionSheet(
+      context,
+      title: SystemsCopy.photoSheet,
+      actions: const [
+        AuroraSheetAction(
+          label: SystemsCopy.photoTake,
+          icon: Icons.photo_camera_outlined,
+        ),
+        AuroraSheetAction(
+          label: SystemsCopy.photoChoose,
+          icon: Icons.photo_library_outlined,
+        ),
+      ],
+    );
+    if (choice == null) return;
+    final file = await source(
+      choice == 0 ? ImageSource.camera : ImageSource.gallery,
+    );
+    if (file != null && mounted) _form.addPhoto(FormPhoto(file: file));
+  }
+
+  Future<void> _photoTapped(FormPhoto photo) async {
+    final choice = await AuroraSheet.actionSheet(
+      context,
+      title: SystemsCopy.photoRemove,
+      actions: const [
+        AuroraSheetAction(label: SystemsCopy.photoRemove, destructive: true),
+      ],
+    );
+    if (choice == 0) _form.removePhoto(photo);
+  }
+
+  Future<void> _save() async {
+    if (_saving || !_form.canSave || _form.priceInvalid) return;
+    setState(() => _saving = true);
+    try {
+      if (_editing) {
+        await _saveEdit();
+      } else {
+        await _saveNew();
+      }
+    } catch (_) {
+      if (!mounted) return;
+      SnackbarService.showError(context, SystemsCopy.saveFailed);
       setState(() => _saving = false);
     }
   }
-}
 
-// ── Form body (shared between iOS and Android) ────────────────────────────────
-
-class _FormBody extends StatelessWidget {
-  const _FormBody({
-    required this.formKey,
-    required this.nameCtrl,
-    required this.systemTypeCtrl,
-    required this.brandCtrl,
-    required this.modelCtrl,
-    required this.serialCtrl,
-    required this.locationCtrl,
-    required this.installerCtrl,
-    required this.purchasePriceCtrl,
-    required this.lifespanMinCtrl,
-    required this.lifespanMaxCtrl,
-    required this.lifespanOverrideCtrl,
-    required this.warrantyProviderCtrl,
-    required this.replacementCostCtrl,
-    required this.notesCtrl,
-    required this.category,
-    required this.status,
-    required this.installationDate,
-    required this.warrantyExpiration,
-    required this.onCategoryChanged,
-    required this.onStatusChanged,
-    required this.onInstallationDateChanged,
-    required this.onWarrantyExpirationChanged,
-    required this.isIOS,
-    this.onPhotoReady,
-  });
-
-  final GlobalKey<FormState> formKey;
-  final TextEditingController nameCtrl;
-  final TextEditingController systemTypeCtrl;
-  final TextEditingController brandCtrl;
-  final TextEditingController modelCtrl;
-  final TextEditingController serialCtrl;
-  final TextEditingController locationCtrl;
-  final TextEditingController installerCtrl;
-  final TextEditingController purchasePriceCtrl;
-  final TextEditingController lifespanMinCtrl;
-  final TextEditingController lifespanMaxCtrl;
-  final TextEditingController lifespanOverrideCtrl;
-  final TextEditingController warrantyProviderCtrl;
-  final TextEditingController replacementCostCtrl;
-  final TextEditingController notesCtrl;
-  final SystemCategory category;
-  final ItemStatus status;
-  final String? installationDate;
-  final String? warrantyExpiration;
-  final ValueChanged<SystemCategory> onCategoryChanged;
-  final ValueChanged<ItemStatus> onStatusChanged;
-  final ValueChanged<String?> onInstallationDateChanged;
-  final ValueChanged<String?> onWarrantyExpirationChanged;
-  final bool isIOS;
-  final void Function(XFile)? onPhotoReady;
-
-  static SystemCategory? _categoryFromString(String raw) {
-    return switch (raw.toLowerCase()) {
-      'hvac' => SystemCategory.hvac,
-      'plumbing' => SystemCategory.plumbing,
-      'electrical' => SystemCategory.electrical,
-      'roofing' => SystemCategory.roofing,
-      'foundation' => SystemCategory.foundation,
-      'siding' => SystemCategory.siding,
-      'windows_doors' || 'windows' || 'doors' => SystemCategory.windowsDoors,
-      'insulation' => SystemCategory.insulation,
-      'garage' => SystemCategory.garage,
-      _ => SystemCategory.other,
-    };
+  Future<void> _saveEdit() async {
+    final id = widget.existingSystem!.id;
+    await ref.read(systemDetailProvider(id).notifier).updateSystem(_form.toRow());
+    if (!mounted) return;
+    SnackbarService.showSuccess(context, SystemsCopy.updated);
+    context.pop();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Form(
-      key: formKey,
-      child: SingleChildScrollView(
-        padding: EdgeInsets.only(
-          left: AuroraSpacing.screenPadH,
-          right: AuroraSpacing.screenPadH,
-          top: AuroraSpacing.space5,
-          bottom: MediaQuery.of(context).viewInsets.bottom + AuroraSpacing.space8,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Label scanner ─────────────────────────────────────────────────
-            ScanLabelButton(
-              onResult: (LabelScanResult r) {
-                if (r.brand != null) brandCtrl.text = r.brand!;
-                // name from the label = system type (e.g. "Central Air Conditioner")
-                if (r.name != null) systemTypeCtrl.text = r.name!;
-                // Only pre-fill the display name if the user hasn't typed one
-                if (r.name != null && nameCtrl.text.isEmpty) {
-                  nameCtrl.text = r.name!;
-                }
-                if (r.modelNumber != null) modelCtrl.text = r.modelNumber!;
-                if (r.serialNumber != null) serialCtrl.text = r.serialNumber!;
-                if (r.category != null) {
-                  final cat = _categoryFromString(r.category!);
-                  if (cat != null) onCategoryChanged(cat);
-                }
-                if (r.estimatedLifespanYears != null) {
-                  lifespanMinCtrl.text = r.estimatedLifespanYears.toString();
-                  lifespanMaxCtrl.text =
-                      (r.estimatedLifespanYears! + 5).toString();
-                }
-                if (r.estimatedReplacementCostUsd != null) {
-                  replacementCostCtrl.text =
-                      r.estimatedReplacementCostUsd.toString();
-                }
-                if (r.notes != null) notesCtrl.text = r.notes!;
-                if (r.manufactureDate != null) {
-                  final parts = r.manufactureDate!.split('-');
-                  final normalised = parts.length == 2
-                      ? '${parts[0]}-${parts[1]}-01'
-                      : '${parts[0]}-01-01';
-                  onInstallationDateChanged(normalised);
-                } else if (r.estimatedYear != null) {
-                  onInstallationDateChanged('${r.estimatedYear}-01-01');
-                }
-              },
-              onPhotoReady: onPhotoReady,
-            ),
-            const SizedBox(height: AuroraSpacing.space5),
-
-            // ── Required fields ───────────────────────────────────────────────
-            _FormSectionLabel(label: 'Required'),
-
-            // Category picker.
-            _FieldLabel(label: 'Category'),
-            _CategoryDropdown(
-              value: category,
-              onChanged: onCategoryChanged,
-            ),
-            const SizedBox(height: AuroraSpacing.space5),
-
-            // Display name.
-            _FieldLabel(label: 'Name'),
-            _TextField(
-              controller: nameCtrl,
-              hint: 'e.g. Main Furnace',
-              validator: (v) => (v == null || v.trim().isEmpty)
-                  ? 'Name is required'
-                  : null,
-            ),
-            const SizedBox(height: AuroraSpacing.space5),
-
-            // System type.
-            _FieldLabel(label: 'System Type'),
-            _TextField(
-              controller: systemTypeCtrl,
-              hint: 'e.g. Gas Furnace, Central AC',
-              validator: (v) => (v == null || v.trim().isEmpty)
-                  ? 'System type is required'
-                  : null,
-            ),
-            const SizedBox(height: AuroraSpacing.space7),
-
-            // ── Identification ────────────────────────────────────────────────
-            _FormSectionLabel(label: 'Identification'),
-            _FieldLabel(label: 'Brand'),
-            _TextField(
-              controller: brandCtrl,
-              hint: 'e.g. Carrier, Rheem',
-            ),
-            const SizedBox(height: AuroraSpacing.space5),
-
-            _FieldLabel(label: 'Model Number'),
-            _TextField(
-              controller: modelCtrl,
-              hint: 'From the unit label',
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9\-_\. ]')),
-              ],
-            ),
-            const SizedBox(height: AuroraSpacing.space5),
-
-            _FieldLabel(label: 'Serial Number'),
-            _TextField(
-              controller: serialCtrl,
-              hint: 'From the unit label',
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9\-_]')),
-              ],
-            ),
-            const SizedBox(height: AuroraSpacing.space5),
-
-            _FieldLabel(label: 'Location'),
-            _TextField(
-              controller: locationCtrl,
-              hint: 'e.g. Basement, Attic, Garage',
-            ),
-            const SizedBox(height: AuroraSpacing.space7),
-
-            // ── Installation ──────────────────────────────────────────────────
-            _FormSectionLabel(label: 'Installation'),
-            _FieldLabel(label: 'Installation Date'),
-            _DatePickerField(
-              value: installationDate,
-              hint: 'Select date',
-              onChanged: onInstallationDateChanged,
-            ),
-            const SizedBox(height: AuroraSpacing.space5),
-
-            _FieldLabel(label: 'Installer'),
-            _TextField(
-              controller: installerCtrl,
-              hint: 'Company or person who installed',
-            ),
-            const SizedBox(height: AuroraSpacing.space5),
-
-            _FieldLabel(label: 'Purchase Price'),
-            _TextField(
-              controller: purchasePriceCtrl,
-              hint: '0.00',
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-              ],
-            ),
-            const SizedBox(height: AuroraSpacing.space7),
-
-            // ── Lifespan ──────────────────────────────────────────────────────
-            _FormSectionLabel(label: 'Lifespan'),
-            Row(
-              children: [
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _FieldLabel(label: 'Min (years)'),
-                      _TextField(
-                        controller: lifespanMinCtrl,
-                        hint: '10',
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AuroraSpacing.space5),
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _FieldLabel(label: 'Max (years)'),
-                      _TextField(
-                        controller: lifespanMaxCtrl,
-                        hint: '20',
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AuroraSpacing.space5),
-
-            _FieldLabel(label: 'Custom Lifespan Override (years)'),
-            _TextField(
-              controller: lifespanOverrideCtrl,
-              hint: 'Overrides min/max average',
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            ),
-            const SizedBox(height: AuroraSpacing.space5),
-
-            _FieldLabel(label: 'Estimated Replacement Cost'),
-            _TextField(
-              controller: replacementCostCtrl,
-              hint: '0',
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-              ],
-            ),
-            const SizedBox(height: AuroraSpacing.space7),
-
-            // ── Warranty ──────────────────────────────────────────────────────
-            _FormSectionLabel(label: 'Warranty'),
-            _FieldLabel(label: 'Warranty Expiration'),
-            _DatePickerField(
-              value: warrantyExpiration,
-              hint: 'Select date',
-              onChanged: onWarrantyExpirationChanged,
-            ),
-            const SizedBox(height: AuroraSpacing.space5),
-
-            _FieldLabel(label: 'Warranty Provider'),
-            _TextField(
-              controller: warrantyProviderCtrl,
-              hint: 'e.g. Carrier, HomeServe',
-            ),
-            const SizedBox(height: AuroraSpacing.space7),
-
-            // ── Status ────────────────────────────────────────────────────────
-            _FormSectionLabel(label: 'Status'),
-            _StatusDropdown(
-              value: status,
-              onChanged: onStatusChanged,
-            ),
-            const SizedBox(height: AuroraSpacing.space7),
-
-            // ── Notes ─────────────────────────────────────────────────────────
-            _FormSectionLabel(label: 'Notes'),
-            _TextField(
-              controller: notesCtrl,
-              hint: 'Any additional notes about this system',
-              maxLines: 4,
-            ),
-          ],
-        ),
-      ),
+  Future<void> _saveNew() async {
+    // Everything needed after the awaits is read first: the screen may close.
+    final systems = ref.read(systemsProvider.notifier);
+    final photos = ref.read(systemPhotosRepositoryProvider);
+    final online = ref.read(isOnlineProvider).value ?? true;
+    final id = await systems.addSystem(_form.toRow());
+    var photoFailed = false;
+    for (final p in _form.photos) {
+      try {
+        await photos.upload(id, p.file, photoType: p.photoType);
+      } catch (_) {
+        photoFailed = true;
+      }
+    }
+    if (!mounted) return;
+    if (_form.addTasks && online) await _reviewTasks(id);
+    if (!mounted) return;
+    if (photoFailed) {
+      SnackbarService.showWarning(context, SystemsCopy.photoFailed);
+    } else {
+      SnackbarService.showSuccess(context, SystemsCopy.added);
+    }
+    context.pushReplacement(
+      AppRoutes.homeSystemDetail.replaceFirst(':systemId', id),
     );
   }
-}
 
-// ── Form field helpers ────────────────────────────────────────────────────────
-
-class _FormSectionLabel extends StatelessWidget {
-  const _FormSectionLabel({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: AuroraSpacing.space8, bottom: AuroraSpacing.space3),
-      child: Row(
-        children: [
-          Container(
-            width: 7,
-            height: 7,
-            decoration: const BoxDecoration(
-              color: AuroraColors.cobalt,
-              borderRadius: AuroraRadius.xs,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            label.toUpperCase(),
-            style: AuroraType.label.copyWith(
-              color: AuroraColors.inkSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FieldLabel extends StatelessWidget {
-  const _FieldLabel({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Text(
-        label.toUpperCase(),
-        style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
-      ),
-    );
-  }
-}
-
-class _TextField extends StatelessWidget {
-  const _TextField({
-    required this.controller,
-    required this.hint,
-    this.validator,
-    this.keyboardType,
-    this.inputFormatters,
-    this.maxLines = 1,
-  });
-
-  final TextEditingController controller;
-  final String hint;
-  final FormFieldValidator<String>? validator;
-  final TextInputType? keyboardType;
-  final List<TextInputFormatter>? inputFormatters;
-  final int maxLines;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      validator: validator,
-      keyboardType: keyboardType,
-      inputFormatters: inputFormatters,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: AuroraType.body.copyWith(
-          color: AuroraColors.inkTertiary,
-        ),
-        filled: true,
-        fillColor: AuroraColors.paper,
-        border: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: const BorderSide(color: AuroraColors.inkBorder),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: const BorderSide(color: AuroraColors.inkBorder),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: const BorderSide(color: AuroraColors.coral),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AuroraSpacing.space5,
-          vertical: AuroraSpacing.space3,
-        ),
-      ),
-    );
-  }
-}
-
-class _CategoryDropdown extends StatelessWidget {
-  const _CategoryDropdown({required this.value, required this.onChanged});
-
-  final SystemCategory value;
-  final ValueChanged<SystemCategory> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownButtonFormField<SystemCategory>(
-      initialValue: value,
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: AuroraColors.paper,
-        border: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: const BorderSide(color: AuroraColors.inkBorder),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: const BorderSide(color: AuroraColors.inkBorder),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AuroraSpacing.space5,
-          vertical: AuroraSpacing.space3,
-        ),
-      ),
-      items: SystemCategory.values
-          .map(
-            (c) => DropdownMenuItem(
-              value: c,
-              child: Text(c.label, style: AuroraType.body),
-            ),
-          )
-          .toList(),
-      onChanged: (v) {
-        if (v != null) onChanged(v);
-      },
-    );
-  }
-}
-
-class _StatusDropdown extends StatelessWidget {
-  const _StatusDropdown({required this.value, required this.onChanged});
-
-  final ItemStatus value;
-  final ValueChanged<ItemStatus> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownButtonFormField<ItemStatus>(
-      initialValue: value,
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: AuroraColors.paper,
-        border: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: const BorderSide(color: AuroraColors.inkBorder),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: const BorderSide(color: AuroraColors.inkBorder),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: AuroraRadius.md,
-          borderSide: const BorderSide(color: AuroraColors.coral, width: 2),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AuroraSpacing.space5,
-          vertical: AuroraSpacing.space3,
-        ),
-      ),
-      items: ItemStatus.values
-          .map(
-            (s) => DropdownMenuItem(
-              value: s,
-              child: Text(s.label, style: AuroraType.body),
-            ),
-          )
-          .toList(),
-      onChanged: (v) {
-        if (v != null) onChanged(v);
-      },
-    );
-  }
-}
-
-/// Tappable date field that shows a [showDatePicker] dialog.
-///
-/// DATE columns are stored as "YYYY-MM-DD" strings — the picker converts
-/// between [DateTime] and the string format.
-class _DatePickerField extends StatelessWidget {
-  const _DatePickerField({
-    required this.value,
-    required this.hint,
-    required this.onChanged,
-  });
-
-  final String? value;
-  final String hint;
-  final ValueChanged<String?> onChanged;
-
-  String get _display {
-    if (value == null) return hint;
+  /// "Review your reminders" for the new system. The system is already saved,
+  /// so nothing here may fail the save: any error just skips the sheet.
+  Future<void> _reviewTasks(String systemId) async {
     try {
-      final dt = DateTime.parse(value!);
-      return DateFormat('MMMM d, y').format(dt);
+      final brief = await ref.read(propertyBriefProvider.future);
+      if (!mounted || brief == null) return;
+      // Shown before leaving: the context must still be alive.
+      await showTaskGenerationSheet(
+        context: context,
+        ref: ref,
+        itemName: _form.name.text.trim(),
+        brand: _form.brand.text.trim(),
+        category: _form.category.value,
+        formType: 'system',
+        linkedSystemId: systemId,
+        propertyId: brief.id,
+        prefetchedFuture: _tasks,
+      );
     } catch (_) {
-      return value!;
+      // Tasks can be added later from the system's task list.
     }
+  }
+
+  Future<void> _delete() async {
+    final system = widget.existingSystem!;
+    final notifier = ref.read(systemsProvider.notifier);
+    final container = ProviderScope.containerOf(context);
+    final confirmed = await ConfirmDialog.show(
+      context,
+      title: SystemsCopy.deleteTitle(system.name),
+      message: SystemsCopy.deleteBody,
+      confirmLabel: SystemsCopy.deleteConfirm,
+      onConfirm: () {},
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await notifier.deleteSystem(system.id);
+    } catch (_) {
+      if (mounted) {
+        SnackbarService.showError(context, SystemsCopy.deleteFailed);
+      }
+      return;
+    }
+    if (!mounted) return;
+    SnackbarService.showUndo(
+      context,
+      message: SystemsCopy.deleted,
+      duration: AuroraDurations.undoDelete,
+      onUndo: () => container
+          .read(systemsProvider.notifier)
+          .restoreSystem(system.id)
+          .catchError((_) {}),
+    );
+    context.go(AppRoutes.homeSystems);
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => _pick(context),
-      child: Container(
-        height: 48.0,
-        padding: const EdgeInsets.symmetric(horizontal: AuroraSpacing.space5),
-        decoration: BoxDecoration(
-          color: AuroraColors.paper,
-          borderRadius: AuroraRadius.xl,
-          border: Border.all(color: AuroraColors.inkBorder),
-        ),
-        child: Row(
+    final a = context.aurora;
+    final online = ref.watch(isOnlineProvider).value ?? true;
+    final premium = ref.watch(isPremiumProvider);
+    final gap = SizedBox(height: a.of(AuroraSpacing.space9));
+    return SystemFormPage(
+      child: ListenableBuilder(
+        listenable: _form,
+        builder: (context, _) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: Text(
-                _display,
-                style: value != null
-                    ? AuroraType.body
-                    : AuroraType.body.copyWith(
-                        color: AuroraColors.inkTertiary,
-                      ),
+            SystemFormHeader(
+              backLabel: systemFormBackLabel(
+                editing: _editing,
+                name: widget.existingSystem?.name,
               ),
+              onBack: _back,
+              eyebrow: _editing
+                  ? SystemsCopy.eyebrowEdit
+                  : SystemsCopy.eyebrowNew,
+              title: _editing
+                  ? SystemsCopy.titleEdit(widget.existingSystem!.name)
+                  : SystemsCopy.titleNew,
             ),
-            const Icon(
-              Icons.calendar_today_outlined,
-              size: 18,
-              color: AuroraColors.inkSecondary,
+            if (!_editing && _form.scan.count > 0) ...[
+              SizedBox(height: a.of(AuroraSpacing.space8)),
+              ScanBanner(count: _form.scan.count, onRescan: _rescan),
+            ],
+            SizedBox(height: a.of(AuroraSpacing.space8)),
+            SystemBasicsSection(form: _form),
+            SystemIdentificationSection(
+              form: _form,
+              onRescan: _editing ? null : _rescan,
             ),
+            SystemInstallSection(
+              form: _form,
+              online: online,
+              showTasksSwitch: !_editing,
+              onOfflineTasks: () =>
+                  SnackbarService.showInfo(context, SystemsCopy.addTasksOffline),
+            ),
+            if (_editing)
+              SystemMoreDetailsSection(form: _form)
+            else
+              SystemPhotosSection(
+                photos: _form.photos,
+                premium: premium,
+                onAdd: _addPhoto,
+                onPhotoTap: _photoTapped,
+              ),
+            gap,
+            SystemFormFooter(
+              saveLabel: _editing ? SystemsCopy.saveEdit : SystemsCopy.saveNew,
+              saving: _saving,
+              onCancel: _cancel,
+              onSave: _form.canSave && !_form.priceInvalid ? _save : null,
+            ),
+            if (_editing) ...[
+              SizedBox(height: a.of(AuroraSpacing.space8)),
+              SecondaryButton(
+                label: SystemsCopy.delete,
+                onPressed: _saving ? null : _delete,
+                expand: true,
+              ),
+            ],
           ],
         ),
       ),
     );
-  }
-
-  Future<void> _pick(BuildContext context) async {
-    final now = DateTime.now();
-    final initial = value != null ? DateTime.tryParse(value!) ?? now : now;
-
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime(1950),
-      lastDate: DateTime(2100),
-      builder: (context, child) => Theme(
-        data: ThemeData.light().copyWith(
-          colorScheme: const ColorScheme.light(primary: AuroraColors.ink),
-        ),
-        child: child!,
-      ),
-    );
-
-    if (picked != null) {
-      // DATE column — send "YYYY-MM-DD" only, no time component.
-      onChanged(picked.toIso8601String().split('T')[0]);
-    }
   }
 }

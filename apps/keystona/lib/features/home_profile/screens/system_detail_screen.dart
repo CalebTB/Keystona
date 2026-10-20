@@ -1,1214 +1,292 @@
-import 'package:flutter/cupertino.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
-import '../../../core/theme/aurora_colors.dart';
-import '../../../core/theme/aurora_radius.dart';
-import '../../../core/theme/aurora_shadows.dart';
-import '../../../core/theme/aurora_spacing.dart';
-import '../../../core/theme/aurora_typography.dart';
-import '../../../core/widgets/aurora/aurora.dart';
 
 import '../../../core/router/app_router.dart';
-
-
-
+import '../../../core/theme/aurora_home_b.dart';
+import '../../../core/theme/aurora_scale.dart';
+import '../../../core/theme/aurora_spacing.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/snackbar_service.dart';
-import '../../maintenance/models/maintenance_task.dart';
+import '../../maintenance/models/task_schedule.dart';
 import '../../maintenance/providers/maintenance_tasks_provider.dart';
+import '../../maintenance/widgets/actions/task_menu.dart';
+import '../../maintenance/widgets/actions/task_quick_done.dart';
+import '../../maintenance/widgets/reminders/reminders_centered_page.dart';
+import '../../maintenance/widgets/reminders/reminders_page.dart';
+import '../models/item_ref.dart';
+import '../models/scan_prefill.dart';
 import '../models/system.dart';
 import '../models/system_detail.dart';
+import '../models/system_document.dart';
+import '../models/system_reading.dart';
+import '../presenters/system_detail_view.dart';
+import '../providers/item_service_log_provider.dart';
+import '../providers/item_task_counts_provider.dart';
 import '../providers/system_detail_provider.dart';
-import '../widgets/system_photo_strip.dart';
+import '../providers/warranty_check.dart';
+import '../systems_copy.dart';
+import '../widgets/service/log_service_sheet.dart';
+import '../widgets/shared/item_documents_card.dart';
+import '../widgets/shared/item_hero.dart';
+import '../widgets/shared/item_key_value_card.dart';
+import '../widgets/system_detail/detail_section.dart';
+import '../widgets/system_detail/detail_top_bar.dart';
+import '../widgets/system_detail/system_detail_skeleton.dart';
+import '../widgets/system_detail/system_history_section.dart';
+import '../widgets/system_detail/system_lifespan_card.dart';
+import '../widgets/system_detail/system_next_up.dart';
+import '../widgets/system_detail/system_status_chip.dart';
+import '../widgets/system_detail/system_warranty_card.dart';
+import '../widgets/system_detail/warranty_check_card.dart';
 
-/// System Detail screen — lives at `/home/systems/:systemId`.
-///
-/// Shows all system fields, attached photos, and action buttons (edit, delete).
-///
-/// Adaptive layout:
-///   iOS  → [CupertinoPageScaffold] with [CupertinoNavigationBar]
-///   Android → [Scaffold] with [AppBar]
-class SystemDetailScreen extends ConsumerWidget {
+/// System detail (kit: SystemDetail). Route: `/home/systems/:systemId`.
+class SystemDetailScreen extends ConsumerStatefulWidget {
   const SystemDetailScreen({super.key, required this.systemId});
 
   final String systemId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    return isIOS
-        ? _IOSLayout(systemId: systemId)
-        : _AndroidLayout(systemId: systemId);
-  }
+  ConsumerState<SystemDetailScreen> createState() => _SystemDetailScreenState();
 }
 
-// ── iOS layout ─────────────────────────────────────────────────────────────────
+class _SystemDetailScreenState extends ConsumerState<SystemDetailScreen> {
+  bool _warrantyBusy = false;
 
-class _IOSLayout extends ConsumerWidget {
-  const _IOSLayout({required this.systemId});
+  ItemRef get _item => ItemRef.system(widget.systemId);
 
-  final String systemId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final detailAsync = ref.watch(systemDetailProvider(systemId));
-
-    return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        previousPageTitle: 'Systems',
-        middle: detailAsync.maybeWhen(
-          data: (d) => Text(d.system.name, overflow: TextOverflow.ellipsis),
-          orElse: () => const Text('System'),
-        ),
-        trailing: detailAsync.maybeWhen(
-          data: (_) => CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: () {
-              final detail = detailAsync.value;
-              if (detail != null) {
-                context.push(
-                  AppRoutes.homeSystemsAdd,
-                  extra: detail.system,
-                );
-              }
-            },
-            child: const Text('Edit'),
-          ),
-          orElse: () => null,
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: _DetailBody(systemId: systemId, detailAsync: detailAsync),
-      ),
-    );
-  }
-}
-
-// ── Android layout ─────────────────────────────────────────────────────────────
-
-class _AndroidLayout extends ConsumerWidget {
-  const _AndroidLayout({required this.systemId});
-
-  final String systemId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final detailAsync = ref.watch(systemDetailProvider(systemId));
-
-    return Scaffold(
-      backgroundColor: AuroraColors.paper,
-      appBar: AppBar(
-        title: detailAsync.maybeWhen(
-          data: (d) => Text(d.system.name, style: AuroraType.h3),
-          orElse: () => Text('System', style: AuroraType.h3),
-        ),
-        backgroundColor: AuroraColors.paper,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        actions: [
-          if (detailAsync.hasValue)
-            IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              onPressed: () {
-                final detail = detailAsync.value;
-                if (detail != null) {
-                  context.push(AppRoutes.homeSystemsAdd, extra: detail.system);
-                }
-              },
-            ),
-        ],
-      ),
-      body: _DetailBody(systemId: systemId, detailAsync: detailAsync),
-    );
-  }
-}
-
-// ── Detail body ────────────────────────────────────────────────────────────────
-
-class _DetailBody extends ConsumerWidget {
-  const _DetailBody({required this.systemId, required this.detailAsync});
-
-  final String systemId;
-  final AsyncValue<SystemDetail> detailAsync;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return detailAsync.when(
-      loading: () => const _DetailSkeleton(),
-      error: (_, _) => ErrorView(
-        message: "Couldn't load system details.",
-        onRetry: () => ref.invalidate(systemDetailProvider(systemId)),
-      ),
-      data: (detail) => _DetailContent(
-        systemId: systemId,
-        detail: detail,
-      ),
-    );
-  }
-}
-
-// ── Skeleton ───────────────────────────────────────────────────────────────────
-
-class _DetailSkeleton extends StatefulWidget {
-  const _DetailSkeleton();
-
-  @override
-  State<_DetailSkeleton> createState() => _DetailSkeletonState();
-}
-
-class _DetailSkeletonState extends State<_DetailSkeleton>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _opacity;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
-    _opacity = Tween<double>(begin: 0.3, end: 0.7).animate(_ctrl);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _ctrl.repeat(reverse: true);
-    });
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _opacity,
-      builder: (_, _) => Opacity(
-        opacity: _opacity.value,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: AuroraSpacing.space5),
-              _SkeletonBar(widthFactor: 0.6, height: 16),
-              const SizedBox(height: AuroraSpacing.space3),
-              _SkeletonBar(widthFactor: 0.4, height: 12),
-              const SizedBox(height: AuroraSpacing.space7),
-              _SkeletonBar(widthFactor: 1.0, height: 80),
-              const SizedBox(height: AuroraSpacing.space5),
-              _SkeletonBar(widthFactor: 1.0, height: 80),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SkeletonBar extends StatelessWidget {
-  const _SkeletonBar({required this.widthFactor, required this.height});
-
-  final double widthFactor;
-  final double height;
-
-  @override
-  Widget build(BuildContext context) {
-    return FractionallySizedBox(
-      alignment: Alignment.centerLeft,
-      widthFactor: widthFactor,
-      child: Container(
-        height: height,
-        decoration: BoxDecoration(
-          color: AuroraColors.inkBorder,
-          borderRadius: AuroraRadius.sm,
-        ),
-      ),
-    );
-  }
-}
-
-// ── Main content ───────────────────────────────────────────────────────────────
-
-class _DetailContent extends ConsumerStatefulWidget {
-  const _DetailContent({required this.systemId, required this.detail});
-
-  final String systemId;
-  final SystemDetail detail;
-
-  @override
-  ConsumerState<_DetailContent> createState() => _DetailContentState();
-}
-
-class _DetailContentState extends ConsumerState<_DetailContent> {
-  bool _deleting = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final system = widget.detail.system;
-    final photos = widget.detail.photos;
-
-    final tasksAsync = ref.watch(maintenanceTasksProvider);
-    final allTasks = tasksAsync.value ?? <MaintenanceTask>[];
-    final linkedTasks = allTasks
-        .where((t) =>
-            t.linkedSystemId == system.id &&
-            t.status != TaskStatus.completed &&
-            t.status != TaskStatus.skipped)
-        .toList();
-    final taskCount = linkedTasks.length;
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final dueCount = linkedTasks
-        .where((t) =>
-            !t.dueDate.isAfter(today) ||
-            t.status == TaskStatus.overdue ||
-            t.status == TaskStatus.due)
-        .length;
-
-    final photoCount = photos.length;
-
-    // Parse notes into spec rows.
-    final specRows = _parseSpecRows(system.notes);
-
-    final icon = _systemIcon(system.category);
-    final categoryColor = _systemCategoryColor(system.category);
-
-    // Stats: Installed year / Lifespan % / Years left
-    final installedVal = system.installationDate != null
-        ? _yearFromDate(system.installationDate!)
-        : '—';
-    final effectiveLifespan = system.lifespanOverride ??
-        (system.expectedLifespanMin != null && system.expectedLifespanMax != null
-            ? ((system.expectedLifespanMin! + system.expectedLifespanMax!) / 2)
-                .round()
-            : null);
-    final pctVal = _sysLifespanPct(system.installationDate, effectiveLifespan);
-    final pctStr = pctVal != null ? '${pctVal.round()}%' : '—';
-    final yearsLeft =
-        _sysYearsLeft(system.installationDate, effectiveLifespan);
-    final untilEndStr = yearsLeft != null
-        ? '${yearsLeft.toStringAsFixed(0)} yr'
-        : '—';
-
-    // Hero health
-    final (healthLabel, healthColor, ageLabel) =
-        _computeSystemHealth(system.installationDate, effectiveLifespan);
-    final eyebrow =
-        '${healthLabel.toUpperCase()} · $ageLabel'.toUpperCase();
-
-    final subtitle = [
-      if (system.brand != null) system.brand!,
-      if (system.modelNumber != null) system.modelNumber!,
-    ].join(' · ');
-
-    return Column(
-      children: [
-        Expanded(
-          child: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ── 1. Hero Card (white + category accent) ────────────
-                    Container(
-                      margin: const EdgeInsets.fromLTRB(
-                          AuroraSpacing.screenPadH, 0,
-                          AuroraSpacing.screenPadH, 12),
-                      decoration: BoxDecoration(
-                        color: AuroraColors.paper,
-                        borderRadius: AuroraRadius.xl,
-                        border: Border.all(
-                            color: AuroraColors.inkBorder, width: 1.5),
-                        boxShadow: AuroraShadows.card,
-                      ),
-                      child: ClipRRect(
-                        borderRadius: AuroraRadius.xl,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Colored top accent strip
-                            Container(height: 3, color: categoryColor),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 46,
-                                  height: 46,
-                                  decoration: BoxDecoration(
-                                    color: categoryColor.withAlpha(28),
-                                    borderRadius: AuroraRadius.md,
-                                  ),
-                                  child: Icon(icon, color: categoryColor, size: 24),
-                                ),
-                                const SizedBox(width: AuroraSpacing.space4),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        eyebrow,
-                                        style: AuroraType.label.copyWith(
-                                          letterSpacing: 1.2,
-                                          color: healthColor,
-                                        ),
-                                      ),
-                                      const SizedBox(height: AuroraSpacing.space1),
-                                      Text(
-                                        system.name,
-                                        style: AuroraType.h1
-                                            .copyWith(
-                                          color: AuroraColors.ink,
-                                          fontSize: 21,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      if (subtitle.isNotEmpty) ...[
-                                        const SizedBox(height: AuroraSpacing.space1),
-                                        Text(
-                                          subtitle,
-                                          style: AuroraType.bodySm.copyWith(
-                                            color: AuroraColors.inkSecondary,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Stats row — butter AuroraTile grid
-                          Container(
-                            decoration: const BoxDecoration(
-                              color: AuroraColors.butter,
-                              borderRadius: BorderRadius.vertical(
-                                bottom: Radius.circular(16),
-                              ),
-                              border: Border(
-                                top: BorderSide(
-                                  color: AuroraColors.inkBorder,
-                                  width: 0.5,
-                                ),
-                              ),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            child: IntrinsicHeight(
-                              child: Row(
-                                children: [
-                                  if (system.installationDate != null) ...[
-                                    Expanded(
-                                      child: _StatCell2(
-                                          label: 'INSTALLED',
-                                          value: installedVal),
-                                    ),
-                                    const VerticalDivider(
-                                      color: AuroraColors.inkBorder,
-                                      width: 1,
-                                      thickness: 0.5,
-                                    ),
-                                  ],
-                                  Expanded(
-                                    child: _StatCell2(
-                                        label: 'LIFESPAN',
-                                        value: pctStr),
-                                  ),
-                                  const VerticalDivider(
-                                    color: AuroraColors.inkBorder,
-                                    width: 1,
-                                    thickness: 0.5,
-                                  ),
-                                  Expanded(
-                                    child: _StatCell2(
-                                        label: 'UNTIL END',
-                                        value: untilEndStr),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // ── 2. Warranty Callout Card ───────────────────────────
-                    if (system.warrantyExpiration != null ||
-                        system.warrantyProvider != null)
-                      Padding(
-                        padding:
-                            const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                        child: _WarrantyCalloutCard2(
-                          warrantyExpiration: system.warrantyExpiration,
-                          warrantyProvider: system.warrantyProvider,
-                        ),
-                      ),
-
-                    // ── 3. Quick-Action Row ────────────────────────────────
-                    Padding(
-                      padding:
-                          const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                      child: _QuickActionRow2(
-                        taskCount: taskCount,
-                        dueCount: dueCount,
-                        photoCount: photoCount,
-                        onAddPhoto: _pickPhoto,
-                        systemId: system.id,
-                        systemName: system.name,
-                      ),
-                    ),
-
-                    // ── 4 + 5. Identification Card ─────────────────────────
-                    _SectionLabel2('IDENTIFICATION'),
-                    Padding(
-                      padding:
-                          const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                      child: _InfoCard2(rows: [
-                        if (system.brand != null)
-                          _InfoRow2Data('Brand', system.brand!),
-                        if (system.modelNumber != null)
-                          _InfoRow2Data('Model', system.modelNumber!,
-                              copyable: true),
-                        if (system.serialNumber != null)
-                          _InfoRow2Data('Serial', system.serialNumber!,
-                              copyable: true),
-                        if (system.location != null)
-                          _InfoRow2Data('Location', system.location!),
-                        if (system.installer != null)
-                          _InfoRow2Data(
-                              'Installer', system.installer!),
-                      ]),
-                    ),
-
-                    // ── 6. Specifications Card (parsed notes) ──────────────
-                    if (specRows.isNotEmpty) ...[
-                      _SectionLabel2('SPECIFICATIONS'),
-                      Padding(
-                        padding:
-                            const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                        child: _InfoCard2(
-                          rows: specRows
-                              .map((r) => _InfoRow2Data(r.$1, r.$2))
-                              .toList(),
-                        ),
-                      ),
-                    ],
-
-                    // ── 7. Photos section ──────────────────────────────────
-                    _SectionLabel2('PHOTOS'),
-                    SystemPhotoStrip(
-                      photos: photos,
-                      onAddPhoto: _pickPhoto,
-                      photoUrlBuilder: (path) =>
-                          widget.detail.photoUrls[path] ?? path,
-                    ),
-                    const SizedBox(height: AuroraSpacing.space8),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // ── Delete bar ──────────────────────────────────────────────────────
-        _DeleteBar(
-          isDeleting: _deleting,
-          onDelete: _confirmDelete,
-        ),
-      ],
-    );
-  }
-
-  // ── Actions ──────────────────────────────────────────────────────────────────
-
-  Future<void> _pickPhoto() async {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    final source = await _PhotoSourceSheet.show(context, isIOS: isIOS);
-    if (source == null || !mounted) return;
-
-    final picker = ImagePicker();
-    final notifier = ref.read(systemDetailProvider(widget.systemId).notifier);
-
-    final XFile? photo = source == ImageSource.camera
-        ? await picker.pickImage(source: ImageSource.camera, imageQuality: 85)
-        : await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
-
-    if (photo == null || !mounted) return;
-
-    try {
-      await notifier.uploadPhoto(photo);
-      if (mounted) {
-        SnackbarService.showSuccess(context, 'Photo added.');
-      }
-    } catch (_) {
-      if (mounted) {
-        SnackbarService.showError(context, "Couldn't upload photo. Try again.");
-      }
-    }
-  }
-
-  Future<void> _confirmDelete() async {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    final confirmed = await _DeleteConfirmSheet.show(
-      context,
-      systemName: widget.detail.system.name,
-      isIOS: isIOS,
-    );
-    if (confirmed != true || !mounted) return;
-
-    setState(() => _deleting = true);
-    try {
-      await ref
-          .read(systemDetailProvider(widget.systemId).notifier)
-          .deleteSystem();
-      if (!mounted) return;
+  void _back() {
+    if (context.canPop()) {
       context.pop();
+    } else {
+      context.go(AppRoutes.homeSystems);
+    }
+  }
+
+  String _route(String template) =>
+      template.replaceFirst(':systemId', widget.systemId);
+
+  Future<void> _refresh() async {
+    ref
+      ..invalidate(itemServiceLogProvider(_item))
+      ..invalidate(systemDocumentsProvider(widget.systemId))
+      ..invalidate(maintenanceTasksProvider);
+    ref.invalidate(systemDetailProvider(widget.systemId));
+    await ref.read(systemDetailProvider(widget.systemId).future);
+  }
+
+  void _edit(HomeSystem system) => context.push(
+    AppRoutes.homeSystemsAdd,
+    extra: ItemFormArgs(existingSystem: system),
+  );
+
+  Future<void> _toggleWarrantyCheck(HomeSystem system, DateTime ends) async {
+    setState(() => _warrantyBusy = true);
+    final tasks = ref.read(maintenanceTasksProvider).value ?? const [];
+    final existing = WarrantyCheck.taskFor(tasks, system.id);
+    try {
+      if (existing != null) {
+        await WarrantyCheck.remove(ref, existing.id);
+      } else {
+        await WarrantyCheck.add(
+          ref,
+          system: system,
+          warrantyEnds: ends,
+          taskName: SystemsCopy.warrantyCheckTask(system.name),
+        );
+      }
     } catch (_) {
-      if (!mounted) return;
-      SnackbarService.showError(context, "Couldn't delete system. Try again.");
-      setState(() => _deleting = false);
+      if (mounted) {
+        SnackbarService.showError(context, SystemsCopy.warrantyCheckFailed);
+      }
     }
+    if (mounted) setState(() => _warrantyBusy = false);
   }
-}
 
-// ── Delete bar ─────────────────────────────────────────────────────────────────
-
-class _DeleteBar extends StatelessWidget {
-  const _DeleteBar({required this.isDeleting, required this.onDelete});
-
-  final bool isDeleting;
-  final VoidCallback onDelete;
+  void _openTask(String id) =>
+      context.push(AppRoutes.maintenanceTaskDetail.replaceFirst(':taskId', id));
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        AuroraSpacing.screenPadH,
-        AuroraSpacing.space5,
-        AuroraSpacing.screenPadH,
-        AuroraSpacing.screenPadH + MediaQuery.of(context).padding.bottom,
-      ),
-      decoration: BoxDecoration(
-        color: AuroraColors.paper,
-        border: const Border(top: BorderSide(color: AuroraColors.inkBorder, width: 0.5)),
-      ),
-      child: SizedBox(
-        width: double.infinity,
-        height: 44,
-        child: isDeleting
-            ? const Center(
-                child: CupertinoActivityIndicator(
-                  color: AuroraColors.coral,
-                ),
-              )
-            : GhostButton(
-                label: 'Remove System',
-                onPressed: onDelete,
-              ),
-      ),
-    );
-  }
-}
-
-// ── Photo source sheet ─────────────────────────────────────────────────────────
-
-class _PhotoSourceSheet {
-  static Future<ImageSource?> show(
-    BuildContext context, {
-    required bool isIOS,
-  }) async {
-    if (isIOS) {
-      return showCupertinoModalPopup<ImageSource>(
-        context: context,
-        builder: (_) => CupertinoActionSheet(
-          title: const Text('Add Photo'),
-          actions: [
-            CupertinoActionSheetAction(
-              onPressed: () =>
-                  Navigator.of(context, rootNavigator: true)
-                      .pop(ImageSource.camera),
-              child: const Text('Take Photo'),
-            ),
-            CupertinoActionSheetAction(
-              onPressed: () =>
-                  Navigator.of(context, rootNavigator: true)
-                      .pop(ImageSource.gallery),
-              child: const Text('Choose from Library'),
-            ),
-          ],
-          cancelButton: CupertinoActionSheetAction(
-            isDestructiveAction: false,
-            onPressed: () =>
-                Navigator.of(context, rootNavigator: true).pop(),
-            child: const Text('Cancel'),
-          ),
-        ),
-      );
-    }
-
-    return showModalBottomSheet<ImageSource>(
-      context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: AuroraSheet.topRadius(context),
-      ),
-      builder: (_) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: AuroraSpacing.space3),
-          ListTile(
-            leading: const Icon(Icons.camera_alt_outlined),
-            title: const Text('Take Photo'),
-            onTap: () => context.pop(ImageSource.camera),
-          ),
-          ListTile(
-            leading: const Icon(Icons.photo_library_outlined),
-            title: const Text('Choose from Library'),
-            onTap: () => context.pop(ImageSource.gallery),
-          ),
-          SizedBox(height: MediaQuery.of(context).padding.bottom + AuroraSpacing.space3),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Delete confirm sheet ───────────────────────────────────────────────────────
-
-class _DeleteConfirmSheet {
-  static Future<bool?> show(
-    BuildContext context, {
-    required String systemName,
-    required bool isIOS,
-  }) async {
-    if (isIOS) {
-      return showCupertinoModalPopup<bool>(
-        context: context,
-        builder: (_) => CupertinoActionSheet(
-          title: const Text('Remove System'),
-          message: Text(
-            '"$systemName" will be removed from your home profile. '
-            'This cannot be undone.',
-          ),
-          actions: [
-            CupertinoActionSheetAction(
-              isDestructiveAction: true,
-              onPressed: () =>
-                  Navigator.of(context, rootNavigator: true).pop(true),
-              child: const Text('Remove System'),
-            ),
-          ],
-          cancelButton: CupertinoActionSheetAction(
-            onPressed: () =>
-                Navigator.of(context, rootNavigator: true).pop(false),
-            child: const Text('Cancel'),
-          ),
-        ),
-      );
-    }
-
-    return showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Remove System'),
-        content: Text(
-          '"$systemName" will be removed from your home profile. '
-          'This cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => ctx.pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: AuroraColors.coral),
-            onPressed: () => ctx.pop(true),
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── New dashboard widgets (system-specific) ────────────────────────────────────
-
-class _StatCell2 extends StatelessWidget {
-  const _StatCell2({required this.label, required this.value});
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: AuroraType.labelSm.copyWith(
-              letterSpacing: 0.8,
-              color: AuroraColors.inkTertiary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AuroraSpacing.space1),
-          Text(
-            value,
-            style: AuroraType.body.copyWith(fontWeight: FontWeight.w600).copyWith(
-              color: AuroraColors.ink,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _WarrantyCalloutCard2 extends StatelessWidget {
-  const _WarrantyCalloutCard2({
-    this.warrantyExpiration,
-    this.warrantyProvider,
-  });
-  final String? warrantyExpiration;
-  final String? warrantyProvider;
-
-  @override
-  Widget build(BuildContext context) {
-    final (statusLabel, expiryCaption) =
-        _warrantyStatus2(warrantyExpiration);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: AuroraColors.limeDim,
-        borderRadius: AuroraRadius.lg,
-        border: Border.all(
-          color: AuroraColors.lime.withAlpha(51),
-        ),
-      ),
-      padding: const EdgeInsets.all(14),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: AuroraColors.lime.withAlpha(38),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.shield_outlined,
-              color: AuroraColors.lime,
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: AuroraSpacing.space2),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'MANUFACTURER WARRANTY',
-                  style: AuroraType.labelSm.copyWith(
-                    letterSpacing: 0.8,
-                    color: AuroraColors.inkTertiary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  statusLabel,
-                  style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
-                ),
-                if (expiryCaption.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    expiryCaption,
-                    style: AuroraType.bodySm,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _QuickActionRow2 extends StatelessWidget {
-  const _QuickActionRow2({
-    required this.taskCount,
-    required this.dueCount,
-    required this.photoCount,
-    required this.onAddPhoto,
-    required this.systemId,
-    required this.systemName,
-  });
-  final int taskCount;
-  final int dueCount;
-  final int photoCount;
-  final VoidCallback onAddPhoto;
-  final String systemId;
-  final String systemName;
-
-  @override
-  Widget build(BuildContext context) {
-    final taskSub =
-        dueCount > 0 ? '$taskCount · $dueCount due' : '$taskCount';
-    const docSub = 'None';
-    final photoSub = photoCount > 0 ? '$photoCount photo${photoCount == 1 ? '' : 's'}' : '+ Add';
-
-    return Container(
-      decoration: BoxDecoration(
-        color: AuroraColors.paper,
-        borderRadius: AuroraRadius.xl,
-        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            Expanded(
-              child: _QuickActionCell2(
-                icon: Icons.task_alt_outlined,
-                label: 'Tasks',
-                subtitle: taskSub,
-                onTap: () => context.push(
-                  '/home/systems/$systemId/tasks',
-                  extra: systemName,
-                ),
-              ),
-            ),
-            VerticalDivider(
-              color: AuroraColors.inkBorder,
-              width: 1,
-              thickness: 1,
-            ),
-            Expanded(
-              child: _QuickActionCell2(
-                icon: Icons.description_outlined,
-                label: 'Docs',
-                subtitle: docSub,
-                onTap: null,
-              ),
-            ),
-            VerticalDivider(
-              color: AuroraColors.inkBorder,
-              width: 1,
-              thickness: 1,
-            ),
-            Expanded(
-              child: _QuickActionCell2(
-                icon: Icons.photo_camera_outlined,
-                label: 'Photos',
-                subtitle: photoSub,
-                onTap: onAddPhoto,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _QuickActionCell2 extends StatelessWidget {
-  const _QuickActionCell2({
-    required this.icon,
-    required this.label,
-    required this.subtitle,
-    this.onTap,
-  });
-  final IconData icon;
-  final String label;
-  final String subtitle;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AuroraSpacing.space4),
+    final detail = ref.watch(systemDetailProvider(widget.systemId));
+    return detail.when(
+      loading: () => RemindersPage(
+        onRefresh: _refresh,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Icon(icon, size: 24, color: AuroraColors.ink),
-            const SizedBox(height: AuroraSpacing.space2),
-            Text(label.toUpperCase(), style: AuroraType.labelSm),
-            const SizedBox(height: AuroraSpacing.space1),
-            Text(
-              subtitle,
-              style: AuroraType.bodySm.copyWith(
-                color: AuroraColors.inkTertiary,
-              ),
-              textAlign: TextAlign.center,
-            ),
+            DetailTopBar(onBack: _back),
+            SizedBox(height: context.aurora.of(AuroraSpacing.space5)),
+            const SystemDetailSkeleton(),
           ],
         ),
       ),
+      error: (_, _) => RemindersCenteredPage(
+        backLabel: SystemsCopy.systemsBack,
+        onBack: _back,
+        child: ErrorView(
+          message: SystemsCopy.loadDetailError,
+          onRetry: () => ref.invalidate(systemDetailProvider(widget.systemId)),
+        ),
+      ),
+      data: _content,
     );
   }
-}
 
-class _SectionLabel2 extends StatelessWidget {
-  const _SectionLabel2(this.title);
-  final String title;
+  Widget _content(SystemDetail detail) {
+    final a = context.aurora;
+    final system = detail.system;
+    final today = TaskSchedule.dayOf(DateTime.now());
+    final reading = system.reading(now: today);
+    final tasks = SystemDetailView.openTasks(
+      ref.watch(maintenanceTasksProvider).value ?? const [],
+      system.id,
+    );
+    final taskTotal = ref.watch(itemTaskCountsProvider)[_item] ?? tasks.length;
+    final log = ref.watch(itemServiceLogProvider(_item)).value ?? const [];
+    final docs =
+        ref.watch(systemDocumentsProvider(system.id)).value ??
+        const <SystemDocument>[];
+    final identification = SystemDetailView.identification(system);
+    final history = SystemDetailView.history(system, log);
+    final total = SystemDetailView.historyTotal(system, log);
+    final nextUp = tasks
+        .take(AuroraHomeBSizes.nextUpShown)
+        .map((t) => SystemDetailView.nextUp(t, today))
+        .toList();
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-      child: Row(
+    return RemindersPage(
+      onRefresh: _refresh,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            width: 7,
-            height: 7,
-            decoration: BoxDecoration(
-              color: AuroraColors.inkSecondary,
-              borderRadius: AuroraRadius.xs,
+          DetailTopBar(onBack: _back, onEdit: () => _edit(system)),
+          SizedBox(height: a.of(AuroraSpacing.space5)),
+          ItemHero(
+            eyebrow: SystemsCopy.detailEyebrow(system.category),
+            statusChip: SystemStatusChip(
+              chip: SystemDetailView.chip(system, reading),
+            ),
+            title: system.name,
+            subtitle: system.subtitle,
+            photoTag: SystemDetailView.photoTag(detail.photos.heroType),
+            photoImage: detail.photos.heroUrl == null
+                ? null
+                : CachedNetworkImage(
+                    imageUrl: detail.photos.heroUrl!,
+                    fit: BoxFit.cover,
+                    errorWidget: (_, _, _) => const SizedBox.shrink(),
+                  ),
+            photoBadge: SystemsCopy.photosBadge(detail.photos.count),
+            onPhotoBadgeTap: () =>
+                context.push(_route(AppRoutes.homeSystemPhotos)),
+            onPhotoTap: () => context.push(_route(AppRoutes.homeSystemPhotos)),
+          ),
+          DetailSection(
+            label: SystemsCopy.lifespanSection,
+            child: SystemLifespanCard(system: system, now: today),
+          ),
+          if (nextUp.isNotEmpty)
+            DetailSection(
+              label: '${SystemsCopy.nextUpSection} · ${nextUp.length}',
+              child: SystemNextUp(
+                entries: nextUp,
+                allLabel: SystemsCopy.allTasks(taskTotal, system.category),
+                onTap: _openTask,
+                onToggle: (id) => TaskQuickDone.run(
+                  context,
+                  ref,
+                  tasks.firstWhere((t) => t.id == id),
+                ),
+                onLongPress: (id) =>
+                    TaskMenu.show(context, ref, tasks.firstWhere((t) => t.id == id)),
+                onAll: () => context.push(_route(AppRoutes.homeSystemTasks)),
+              ),
+            ),
+          ..._warranty(system, docs, today),
+          if (identification.isNotEmpty)
+            DetailSection(
+              label: SystemsCopy.identificationSection,
+              child: ItemKeyValueCard(rows: identification),
+            ),
+          DetailSection(
+            label: SystemsCopy.historySection(history.length),
+            trailing: total == null
+                ? null
+                : SystemsCopy.historyTotal(total.total, total.sinceYear),
+            child: SystemHistoryBody(
+              rows: history,
+              onLog: () => LogServiceSheet.show(context, ref, _item),
             ),
           ),
-          const SizedBox(width: AuroraSpacing.space2),
-          Text(
-            title,
-            style: AuroraType.label.copyWith(color: AuroraColors.inkSecondary),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoRow2Data {
-  const _InfoRow2Data(this.label, this.value, {this.copyable = false});
-  final String label;
-  final String value;
-  final bool copyable;
-}
-
-class _InfoCard2 extends StatefulWidget {
-  const _InfoCard2({required this.rows});
-  final List<_InfoRow2Data> rows;
-
-  @override
-  State<_InfoCard2> createState() => _InfoCard2State();
-}
-
-class _InfoCard2State extends State<_InfoCard2> {
-  int? _copiedIndex;
-
-  void _handleCopy(int i) {
-    Clipboard.setData(ClipboardData(text: widget.rows[i].value));
-    setState(() => _copiedIndex = i);
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      if (mounted) setState(() => _copiedIndex = null);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (widget.rows.isEmpty) return const SizedBox.shrink();
-    return Container(
-      decoration: BoxDecoration(
-        color: AuroraColors.paper,
-        borderRadius: AuroraRadius.xl,
-        border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
-      ),
-      child: Column(
-        children: [
-          for (var i = 0; i < widget.rows.length; i++) ...[
-            if (i > 0)
-              const Divider(height: 1, thickness: 0.5, indent: 0),
-            GestureDetector(
-              onTap: widget.rows[i].copyable ? () => _handleCopy(i) : null,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 11),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 110,
-                      child: Text(
-                        widget.rows[i].label,
-                        style: AuroraType.bodySm.copyWith(
-                          color: AuroraColors.inkSecondary,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        widget.rows[i].value,
-                        style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    if (widget.rows[i].copyable)
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
-                        child: _copiedIndex == i
-                            ? const Icon(
-                                Icons.check_circle,
-                                key: ValueKey('check'),
-                                size: 14,
-                                color: AuroraColors.lime,
-                              )
-                            : const Icon(
-                                Icons.copy_outlined,
-                                key: ValueKey('copy'),
-                                size: 14,
-                                color: AuroraColors.inkTertiary,
-                              ),
-                      ),
-                  ],
+          if (docs.isNotEmpty)
+            DetailSection(
+              label: '${SystemsCopy.documentsSection} · ${docs.length}',
+              child: ItemDocumentsCard(
+                rows: [for (final d in docs) SystemDetailView.document(d)],
+                onTap: (id) => context.push(
+                  AppRoutes.documentDetail.replaceFirst(':documentId', id),
                 ),
               ),
             ),
-          ],
         ],
       ),
     );
   }
-}
 
-// ── Pure helper functions ──────────────────────────────────────────────────────
-
-IconData _systemIcon(SystemCategory cat) => switch (cat) {
-      SystemCategory.hvac => Icons.hvac_outlined,
-      SystemCategory.plumbing => Icons.plumbing_outlined,
-      SystemCategory.electrical => Icons.electrical_services_outlined,
-      SystemCategory.roofing => Icons.roofing_outlined,
-      SystemCategory.foundation => Icons.foundation_outlined,
-      SystemCategory.siding => Icons.home_outlined,
-      SystemCategory.windowsDoors => Icons.window_outlined,
-      SystemCategory.insulation => Icons.layers_outlined,
-      SystemCategory.garage => Icons.garage_outlined,
-      SystemCategory.other => Icons.handyman_outlined,
-    };
-
-Color _systemCategoryColor(SystemCategory cat) => switch (cat) {
-      SystemCategory.hvac => AuroraColors.yellowDeep,
-      SystemCategory.plumbing => AuroraColors.cobalt,
-      SystemCategory.electrical => AuroraColors.yellow,
-      SystemCategory.roofing => AuroraColors.cobalt,
-      SystemCategory.foundation => AuroraColors.inkTertiary,
-      SystemCategory.siding => AuroraColors.yellow,
-      SystemCategory.windowsDoors => AuroraColors.lime,
-      SystemCategory.insulation => AuroraColors.cobalt,
-      SystemCategory.garage => AuroraColors.inkTertiary,
-      SystemCategory.other => AuroraColors.inkTertiary,
-    };
-
-List<(String, String)> _parseSpecRows(String? notes) {
-  if (notes == null || notes.isEmpty) return const [];
-  final rows = <(String, String)>[];
-  for (final line in notes.split('\n')) {
-    final idx = line.indexOf(':');
-    if (idx <= 0) continue;
-    final label = line.substring(0, idx).trim();
-    final value = line.substring(idx + 1).trim();
-    if (label.isNotEmpty && value.isNotEmpty) {
-      rows.add((label, value));
-    }
-  }
-  return rows;
-}
-
-(String, Color, String) _computeSystemHealth(
-    String? installDateStr, int? lifespanYears) {
-  if (installDateStr == null) {
-    return ('Good', AuroraColors.inkSecondary, '—');
-  }
-  final DateTime install;
-  try {
-    install = DateTime.parse(installDateStr);
-  } catch (_) {
-    return ('Good', AuroraColors.inkSecondary, '—');
-  }
-  final ageYears = DateTime.now().difference(install).inDays / 365.25;
-  final ageLabel = '${ageYears.toStringAsFixed(1)} yr old';
-
-  if (lifespanYears == null || lifespanYears <= 0) {
-    return ('Good', AuroraColors.inkTertiary, ageLabel);
-  }
-  final pct = ageYears / lifespanYears * 100;
-  if (pct < 50) {
-    return ('Healthy', AuroraColors.lime, ageLabel);
-  } else if (pct <= 75) {
-    return ('Aging', AuroraColors.yellowDeep, ageLabel);
-  } else {
-    return ('Near End', AuroraColors.coral, ageLabel);
-  }
-}
-
-String _yearFromDate(String dateStr) {
-  try {
-    return DateTime.parse(dateStr).year.toString();
-  } catch (_) {
-    return dateStr;
-  }
-}
-
-double? _sysLifespanPct(String? installDateStr, int? lifespanYears) {
-  if (installDateStr == null || lifespanYears == null || lifespanYears <= 0) {
-    return null;
-  }
-  try {
-    final install = DateTime.parse(installDateStr);
-    final ageYears = DateTime.now().difference(install).inDays / 365.25;
-    return (ageYears / lifespanYears * 100).clamp(0, 999);
-  } catch (_) {
-    return null;
-  }
-}
-
-double? _sysYearsLeft(String? installDateStr, int? lifespanYears) {
-  if (installDateStr == null || lifespanYears == null || lifespanYears <= 0) {
-    return null;
-  }
-  try {
-    final install = DateTime.parse(installDateStr);
-    final ageYears = DateTime.now().difference(install).inDays / 365.25;
-    final left = lifespanYears - ageYears;
-    return left < 0 ? 0 : left;
-  } catch (_) {
-    return null;
-  }
-}
-
-(String, String) _warrantyStatus2(String? warrantyExpirationStr) {
-  if (warrantyExpirationStr == null) {
-    return ('Warranty on file', '');
-  }
-  final DateTime expiry;
-  try {
-    expiry = DateTime.parse(warrantyExpirationStr);
-  } catch (_) {
-    return ('Warranty on file', warrantyExpirationStr);
-  }
-  final now = DateTime.now();
-  final diff = expiry.difference(now);
-  final fmt = DateFormat('MMM d, yyyy').format(expiry);
-  if (diff.isNegative) {
-    final yearsAgo = (diff.inDays.abs() / 365.25).round();
-    final label = yearsAgo == 1 ? '1 yr ago' : '$yearsAgo yrs ago';
-    return ('Expired · $label', 'Expired $fmt');
-  } else {
-    final yearsLeft = diff.inDays / 365.25;
-    final label = yearsLeft < 1
-        ? '< 1 yr remaining'
-        : '${yearsLeft.round()} yrs remaining';
-    return ('Active · $label', 'Expires $fmt');
+  List<Widget> _warranty(
+    HomeSystem system,
+    List<SystemDocument> docs,
+    DateTime today,
+  ) {
+    final ends = system.warrantyEndsOn;
+    if (ends == null) return const [];
+    final a = context.aurora;
+    final active = !ends.isBefore(today);
+    final days = ends.difference(today).inDays;
+    final docId = system.linkedWarrantyDocId;
+    final doc = docs.where((d) => d.id == docId).firstOrNull;
+    final checkTask = WarrantyCheck.taskFor(
+      ref.watch(maintenanceTasksProvider).value ?? const [],
+      system.id,
+    );
+    return [
+      DetailSection(
+        label: SystemsCopy.warrantySection,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SystemWarrantyCard(
+              title: doc?.name ?? SystemsCopy.warrantyDefaultTitle,
+              meta: SystemsCopy.warrantyMeta(
+                system.warrantyProvider,
+                ends,
+                active,
+              ),
+              active: active,
+              onTap: docId == null
+                  ? null
+                  : () => context.push(
+                      AppRoutes.documentDetail.replaceFirst(
+                        ':documentId',
+                        docId,
+                      ),
+                    ),
+            ),
+            if (active && days <= AuroraHomeBSizes.warrantyCheckWindowDays) ...[
+              SizedBox(height: a.of(AuroraSpacing.space5)),
+              WarrantyCheckCard(
+                daysLeft: days,
+                ends: ends,
+                addedDue: checkTask?.dueDate,
+                busy: _warrantyBusy,
+                onToggle: () => _toggleWarrantyCheck(system, ends),
+              ),
+            ],
+          ],
+        ),
+      ),
+    ];
   }
 }

@@ -1,152 +1,78 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../services/supabase_service.dart';
+import '../models/property_brief.dart';
 import '../models/system.dart';
 import 'home_profile_provider.dart';
+import 'system_repositories_provider.dart';
 
 part 'systems_provider.g.dart';
 
-/// Manages the list of home systems for the authenticated user's property.
+/// The property facts the Systems screens show (street, year built).
+@riverpod
+Future<PropertyBrief?> propertyBrief(Ref ref) =>
+    ref.read(systemsRepositoryProvider).property();
+
+/// The list of home systems for the user's property, and the changes the
+/// screens make to it.
 ///
-/// Kept alive (ref.keepAlive) so fast scrolling on the Home Profile screen
-/// does not dispose and re-fetch the list.
-/// Invalidates [homeProfileProvider] after any mutation so the overview
-/// system count stays in sync.
+/// Kept alive so other features (the document link picker) read the same
+/// cached list. A change that writes (add, edit) refetches the list; delete
+/// and its Undo are optimistic. The state never goes to loading around a
+/// write. Overview counts ([homeProfileProvider]) are refreshed after every
+/// change.
 @riverpod
 class SystemsNotifier extends _$SystemsNotifier {
   @override
   Future<List<HomeSystem>> build() {
     ref.keepAlive();
-    return _fetchSystems();
+    return ref.read(systemsRepositoryProvider).list();
   }
 
-  // ── Public interface ───────────────────────────────────────────────────────
+  List<HomeSystem> get _systems => state.value ?? const [];
 
-  /// Refetches systems from Supabase — used by pull-to-refresh.
+  /// Refetches the list. Keeps showing the current list while it loads.
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchSystems);
+    state = await AsyncValue.guard(ref.read(systemsRepositoryProvider).list);
   }
 
-  /// Inserts a new system row and triggers the `generate-maintenance-tasks`
-  /// Edge Function to create initial maintenance tasks.
-  ///
-  /// The Edge Function call is NON-FATAL: if it fails the system is still
-  /// added and the list is refreshed. The user can generate tasks later.
-  Future<String> addSystem(Map<String, dynamic> data) async {
-    final user = SupabaseService.client.auth.currentUser;
-    if (user == null) throw StateError('Not authenticated');
+  /// Inserts a system and returns its id.
+  Future<String> addSystem(Map<String, dynamic> fields) async {
+    final id = await ref.read(systemsRepositoryProvider).create(fields);
+    await _refreshAfterWrite();
+    return id;
+  }
 
-    final propertyRow = await SupabaseService.client
-        .from('properties')
-        .select('id')
-        .eq('user_id', user.id)
-        .isFilter('deleted_at', null)
-        .order('created_at', ascending: false)
-        .limit(1)
-        .maybeSingle();
+  /// Updates columns of one system.
+  Future<void> updateSystem(String id, Map<String, dynamic> fields) async {
+    await ref.read(systemsRepositoryProvider).update(id, fields);
+    await _refreshAfterWrite();
+  }
 
-    if (propertyRow == null) throw StateError('No property found');
-
-    final propertyId = propertyRow['id'] as String;
-
-    final row = await SupabaseService.client
-        .from('systems')
-        .insert({
-          'property_id': propertyId,
-          'user_id': user.id,
-          ...data,
-        })
-        .select('id')
-        .single();
-
-    final systemId = row['id'] as String;
-
-    // Trigger task generation — non-fatal.
+  /// Soft-deletes [id] (`soft_delete_system`). The row leaves the list at
+  /// once; a failed write puts it back and rethrows. Undo with [restoreSystem].
+  Future<void> deleteSystem(String id) async {
+    final before = _systems;
+    state = AsyncData([
+      for (final s in before)
+        if (s.id != id) s,
+    ]);
     try {
-      final session = SupabaseService.client.auth.currentSession;
-      if (session != null) {
-        await SupabaseService.client.functions.invoke(
-          'generate-maintenance-tasks',
-          body: {
-            'property_id': propertyId,
-            'system_id': systemId,
-          },
-          headers: {'Authorization': 'Bearer ${session.accessToken}'},
-        );
-      }
+      await ref.read(systemsRepositoryProvider).softDelete(id);
     } catch (_) {
-      // Non-fatal: system added successfully, tasks generated later.
+      state = AsyncData(before);
+      rethrow;
     }
-
-    // Sync the overview count and re-fetch list.
     ref.invalidate(homeProfileProvider);
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchSystems);
-
-    return systemId;
   }
 
-  /// Updates an existing system row.
-  Future<void> updateSystem(String systemId, Map<String, dynamic> data) async {
-    await SupabaseService.client
-        .from('systems')
-        .update(data)
-        .eq('id', systemId);
-
-    ref.invalidate(homeProfileProvider);
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchSystems);
+  /// Undo of [deleteSystem] (`restore_system`).
+  Future<void> restoreSystem(String id) async {
+    await ref.read(systemsRepositoryProvider).restore(id);
+    await _refreshAfterWrite();
   }
 
-  /// Soft-deletes a system by setting `deleted_at`.
-  ///
-  /// The row is preserved in the database; RLS ensures it is never returned
-  /// in subsequent queries.
-  Future<void> deleteSystem(String systemId) async {
-    await SupabaseService.client
-        .from('systems')
-        .update({'deleted_at': DateTime.now().toIso8601String()})
-        .eq('id', systemId);
-
+  Future<void> _refreshAfterWrite() async {
     ref.invalidate(homeProfileProvider);
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchSystems);
-  }
-
-  // ── Private fetch ──────────────────────────────────────────────────────────
-
-  Future<List<HomeSystem>> _fetchSystems() async {
-    final user = SupabaseService.client.auth.currentUser;
-    if (user == null) throw StateError('Not authenticated');
-
-    final propertyRow = await SupabaseService.client
-        .from('properties')
-        .select('id')
-        .eq('user_id', user.id)
-        .isFilter('deleted_at', null)
-        .order('created_at', ascending: false)
-        .limit(1)
-        .maybeSingle();
-
-    if (propertyRow == null) return [];
-
-    final rows = await SupabaseService.client
-        .from('systems')
-        .select(
-          'id, property_id, user_id, category, system_type, name, status, '
-          'brand, model, serial_number, installation_date, purchase_price, '
-          'installer, location, expected_lifespan_min, expected_lifespan_max, '
-          'lifespan_override, warranty_expiration, warranty_provider, '
-          'estimated_replacement_cost, notes, created_at, updated_at',
-        )
-        .eq('property_id', propertyRow['id'] as String)
-        .isFilter('deleted_at', null)
-        .order('category')
-        .order('name');
-
-    return rows
-        .map((r) => HomeSystem.fromJson(Map<String, dynamic>.from(r as Map)))
-        .toList();
+    await refresh();
   }
 }

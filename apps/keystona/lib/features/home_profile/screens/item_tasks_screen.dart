@@ -1,621 +1,225 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
-import '../../../core/theme/aurora_colors.dart';
-import '../../../core/theme/aurora_radius.dart';
+
+import '../../../core/router/app_router.dart';
+import '../../../core/theme/aurora_home_c.dart';
+import '../../../core/theme/aurora_scale.dart';
 import '../../../core/theme/aurora_spacing.dart';
-import '../../../core/theme/aurora_typography.dart';
-
-
-
-
-import '../../../services/supabase_service.dart';
-import '../../maintenance/models/maintenance_task.dart';
+import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/error_view.dart';
+import '../../maintenance/models/task_schedule.dart';
 import '../../maintenance/providers/maintenance_tasks_provider.dart';
-import '../../maintenance/repositories/task_rows.dart';
-import '../../maintenance/services/reminder_switch.dart';
+import '../../maintenance/providers/tasks_today_provider.dart';
+import '../item_copy.dart';
+import '../models/item_completion.dart';
+import '../models/item_ref.dart';
+import '../models/item_summary.dart';
+import '../models/item_tasks.dart';
+import '../providers/item_data_providers.dart';
+import '../providers/item_summary_provider.dart';
+import '../widgets/item/item_header.dart';
+import '../widgets/item/item_page.dart';
+import '../widgets/item/item_skeleton.dart';
+import '../widgets/item/item_top_bar.dart';
+import '../widgets/item/item_top_bar_action.dart';
+import '../widgets/item_tasks/item_tasks_done_list.dart';
+import '../widgets/item_tasks/item_tasks_open_list.dart';
+import '../widgets/item_tasks/item_tasks_tabs.dart';
 
-/// Displays and manages maintenance tasks linked to a specific system or
-/// appliance. Accessible from the Tasks quick-action cell on detail screens.
+/// A system's or appliance's tasks: "Coming up" and "Done" (kit: ItemTasks).
+/// Routes: `/home/systems/:systemId/tasks`,
+/// `/home/appliances/:applianceId/tasks`. The item's name is loaded by id.
 class ItemTasksScreen extends ConsumerStatefulWidget {
-  const ItemTasksScreen({
-    super.key,
-    this.systemId,
-    this.applianceId,
-    required this.itemName,
-  });
+  const ItemTasksScreen({super.key, required this.item});
 
-  final String? systemId;
-  final String? applianceId;
-  final String itemName;
+  final ItemRef item;
 
   @override
   ConsumerState<ItemTasksScreen> createState() => _ItemTasksScreenState();
 }
 
 class _ItemTasksScreenState extends ConsumerState<ItemTasksScreen> {
-  // ── Helpers ────────────────────────────────────────────────────────────────
+  static const int _upTab = 0;
 
-  List<MaintenanceTask> _filterTasks(List<MaintenanceTask> all) {
-    final linked = all.where((t) {
-      if (widget.systemId != null && t.linkedSystemId == widget.systemId) {
-        return true;
-      }
-      if (widget.applianceId != null &&
-          t.linkedApplianceId == widget.applianceId) {
-        return true;
-      }
-      return false;
-    }).toList();
+  int _tab = _upTab;
+  bool _showAllDone = false;
 
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
+  ItemRef get _item => widget.item;
 
-    linked.sort((a, b) {
-      // Overdue first.
-      final aOverdue = _isOverdue(a, today);
-      final bOverdue = _isOverdue(b, today);
-      if (aOverdue && !bOverdue) return -1;
-      if (!aOverdue && bOverdue) return 1;
-      return a.dueDate.compareTo(b.dueDate);
-    });
+  String get _detailRoute => _item.isSystem
+      ? AppRoutes.homeSystemDetail.replaceFirst(':systemId', _item.id)
+      : AppRoutes.homeApplianceDetail.replaceFirst(':applianceId', _item.id);
 
-    return linked;
-  }
-
-  bool _isOverdue(MaintenanceTask t, DateTime today) {
-    if (t.status == TaskStatus.completed || t.status == TaskStatus.skipped) {
-      return false;
-    }
-    return t.status == TaskStatus.overdue || t.dueDate.toLocal().isBefore(today);
-  }
-
-  Future<void> _onRefresh() async => ref.invalidate(maintenanceTasksProvider);
-
-  // ── Actions ────────────────────────────────────────────────────────────────
-
-  Future<void> _toggleTask(MaintenanceTask task, bool enabled) async {
-    await ref.read(maintenanceTasksProvider.notifier).updateTask(
-      task.id,
-      ReminderSwitch.columns(enabled: enabled),
-    );
-  }
-
-  Future<void> _confirmDelete(MaintenanceTask task) async {
-    HapticFeedback.lightImpact();
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    bool confirmed = false;
-
-    if (isIOS) {
-      final result = await showCupertinoDialog<bool>(
-        context: context,
-        builder: (_) => CupertinoAlertDialog(
-          title: const Text('Remove Task?'),
-          content: const Text(
-            'This task will be permanently removed.',
-          ),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () =>
-                  Navigator.of(context, rootNavigator: true).pop(false),
-              child: const Text('Cancel'),
-            ),
-            CupertinoDialogAction(
-              isDestructiveAction: true,
-              onPressed: () =>
-                  Navigator.of(context, rootNavigator: true).pop(true),
-              child: const Text('Remove'),
-            ),
-          ],
-        ),
-      );
-      confirmed = result ?? false;
+  void _back() {
+    if (context.canPop()) {
+      context.pop();
     } else {
-      final result = await showDialog<bool>(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Remove Task?'),
-          content: const Text(
-            'This task will be permanently removed.',
+      context.go(_detailRoute);
+    }
+  }
+
+  void _manage() => context.push(
+    _item.isSystem
+        ? AppRoutes.homeSystemReminders.replaceFirst(':systemId', _item.id)
+        : AppRoutes.homeApplianceReminders.replaceFirst(
+            ':applianceId',
+            _item.id,
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              style: TextButton.styleFrom(
-                  foregroundColor: AuroraColors.coral),
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Remove'),
-            ),
-          ],
-        ),
-      );
-      confirmed = result ?? false;
-    }
+  );
 
-    if (!confirmed || !mounted) return;
+  void _addTask() => context.push(AppRoutes.maintenanceCreateFor(_item.id));
 
-    try {
-      await SupabaseService.client.rpc(
-        TaskRpc.softDelete,
-        params: TaskRpc.args(task.id),
-      );
-      if (!mounted) return;
-      ref.invalidate(maintenanceTasksProvider);
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Couldn't remove task. Try again."),
-          behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 4),
-        ),
-      );
-    }
+  Future<void> _refresh() async {
+    ref.invalidate(itemSummaryProvider(_item));
+    ref.invalidate(itemCompletionsProvider(_item));
+    await ref.read(maintenanceTasksProvider.notifier).refresh();
   }
-
-  void _addTask() {
-    context.push(
-      '/maintenance/create',
-      extra: <String, dynamic>{
-        if (widget.systemId != null) 'linked_system_id': widget.systemId,
-        if (widget.applianceId != null)
-          'linked_appliance_id': widget.applianceId,
-      },
-    );
-  }
-
-  // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    final tasksAsync = ref.watch(maintenanceTasksProvider);
+    final summary = ref.watch(itemSummaryProvider(_item));
+    final tasks = ref.watch(maintenanceTasksProvider);
+    final done = ref.watch(itemCompletionsProvider(_item));
+    final today = ref.watch(tasksTodayProvider);
+    final gap = SizedBox(height: context.aurora.of(AuroraSpacing.space7));
 
-    final tasks = tasksAsync.when(
-      loading: () => null,
-      error: (_, _) => <MaintenanceTask>[],
-      data: _filterTasks,
-    );
-
-    if (isIOS) {
-      return CupertinoPageScaffold(
-        navigationBar: CupertinoNavigationBar(
-          middle: Text(
-            widget.itemName,
-            overflow: TextOverflow.ellipsis,
-          ),
+    if (summary.hasError || tasks.hasError) {
+      return ItemPage(
+        onRefresh: _refresh,
+        fill: ErrorView(
+          message: ItemCopy.loadError,
+          onRetry: () {
+            ref.invalidate(itemSummaryProvider(_item));
+            ref.invalidate(maintenanceTasksProvider);
+          },
         ),
-        child: SafeArea(
-          bottom: false,
-          child: _buildBody(context, tasks, isIOS: true),
+        child: ItemTopBar(backLabel: ItemCopy.back, onBack: _back),
+      );
+    }
+    final info = summary.value;
+    final all = tasks.value;
+    if (summary.hasValue && info == null) {
+      return ItemPage(
+        fill: const EmptyState(
+          icon: Icons.search_off_outlined,
+          title: ItemCopy.notFoundTitle,
+          subtitle: ItemCopy.notFoundBody,
         ),
+        child: ItemTopBar(backLabel: ItemCopy.back, onBack: _back),
       );
     }
-
-    return Scaffold(
-      backgroundColor: AuroraColors.paper,
-      appBar: AppBar(
-        backgroundColor: AuroraColors.paper,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: Text(widget.itemName, style: AuroraType.h3),
-      ),
-      floatingActionButton: tasks != null && tasks.isNotEmpty
-          ? FloatingActionButton(
-              onPressed: _addTask,
-              backgroundColor: AuroraColors.coral,
-              child: const Icon(Icons.add, color: Colors.white),
-            )
-          : null,
-      body: RefreshIndicator(
-        onRefresh: _onRefresh,
-        child: _buildBody(context, tasks, isIOS: false),
-      ),
-    );
-  }
-
-  Widget _buildBody(
-    BuildContext context,
-    List<MaintenanceTask>? tasks, {
-    required bool isIOS,
-  }) {
-    if (tasks == null) {
-      return const Center(
-        child: CupertinoActivityIndicator(),
-      );
-    }
-
-    if (tasks.isEmpty) {
-      return Stack(
-        children: [
-          _EmptyState(onAdd: _addTask),
-          if (isIOS)
-            Positioned(
-              bottom: AuroraSpacing.space7 + MediaQuery.of(context).padding.bottom,
-              right: AuroraSpacing.space5,
-              child: CupertinoButton(
-                padding: EdgeInsets.zero,
-                onPressed: _addTask,
-                child: Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: AuroraColors.coral,
-                    borderRadius: BorderRadius.circular(999),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AuroraColors.coral.withValues(alpha: 0.35),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.add,
-                    color: Colors.white,
-                    size: 26,
-                  ),
-                ),
-              ),
-            ),
-        ],
-      );
-    }
-
-    final fab = Positioned(
-      bottom: AuroraSpacing.space7 + MediaQuery.of(context).padding.bottom,
-      right: AuroraSpacing.space5,
-      child: CupertinoButton(
-        padding: EdgeInsets.zero,
-        onPressed: _addTask,
-        child: Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            color: AuroraColors.ink,
-            borderRadius: BorderRadius.circular(999),
-            boxShadow: [
-              const BoxShadow(
-                color: Color(0x59FF3B62),
-                blurRadius: 12,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: const Icon(Icons.add, color: Colors.white, size: 26),
-        ),
-      ),
-    );
-
-    if (isIOS) {
-      return Stack(
-        children: [
-          CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              CupertinoSliverRefreshControl(onRefresh: _onRefresh),
-              SliverPadding(
-                padding: EdgeInsets.fromLTRB(
-                  AuroraSpacing.screenPadH,
-                  AuroraSpacing.space5,
-                  AuroraSpacing.screenPadH,
-                  AuroraSpacing.space9 + MediaQuery.of(context).padding.bottom,
-                ),
-                sliver: SliverList.builder(
-                  itemCount: tasks.length,
-                  itemBuilder: (context, index) => _ItemTaskRow(
-                    task: tasks[index],
-                    onDelete: () => _confirmDelete(tasks[index]),
-                    onEdit: () =>
-                        context.push('/maintenance/${tasks[index].id}'),
-                    onToggle: (enabled) =>
-                        _toggleTask(tasks[index], enabled),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          fab,
-        ],
-      );
-    }
-
-    return ListView.builder(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(
-        AuroraSpacing.screenPadH,
-        AuroraSpacing.space5,
-        AuroraSpacing.screenPadH,
-        AuroraSpacing.space9 + MediaQuery.of(context).padding.bottom,
-      ),
-      itemCount: tasks.length,
-      itemBuilder: (context, index) => _ItemTaskRow(
-        task: tasks[index],
-        onDelete: () => _confirmDelete(tasks[index]),
-        onEdit: () => context.push('/maintenance/${tasks[index].id}'),
-        onToggle: (enabled) => _toggleTask(tasks[index], enabled),
-      ),
-    );
-  }
-}
-
-// ── Empty state ────────────────────────────────────────────────────────────────
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.onAdd});
-  final VoidCallback onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: AuroraSpacing.screenPadH),
+    if (info == null || all == null) {
+      return ItemPage(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(
-              Icons.task_alt_outlined,
-              size: AuroraSpacing.space9,
-              color: AuroraColors.inkTertiary,
-            ),
-            const SizedBox(height: AuroraSpacing.space5),
-            Text(
-              'No tasks yet',
-              style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AuroraSpacing.space1),
-            Text(
-              'Tap + to add a task linked to this item.',
-              style: AuroraType.bodySm.copyWith(
-                color: AuroraColors.inkSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Task row ───────────────────────────────────────────────────────────────────
-
-class _ItemTaskRow extends StatelessWidget {
-  const _ItemTaskRow({
-    required this.task,
-    required this.onDelete,
-    required this.onEdit,
-    required this.onToggle,
-  });
-
-  final MaintenanceTask task;
-  final VoidCallback onDelete;
-  final VoidCallback onEdit;
-  final ValueChanged<bool> onToggle;
-
-  @override
-  Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final accentColor = _accentColor(task, today);
-
-    final enabled = task.notificationsEnabled;
-
-    return Opacity(
-      opacity: enabled ? 1.0 : 0.5,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: AuroraColors.paper,
-          borderRadius: AuroraRadius.xl,
-          border: Border.all(color: AuroraColors.inkBorder, width: 1.5),
-        ),
-        child: ClipRRect(
-          borderRadius: AuroraRadius.xl,
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Left accent stripe (grey when disabled)
-                Container(
-                    width: 4,
-                    color: enabled ? accentColor : AuroraColors.inkBorder),
-                // Content
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          task.name,
-                          style: AuroraType.body.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 4),
-                        if (!enabled)
-                          Text(
-                            'Hidden from Tasks tab',
-                            style: AuroraType.bodySm.copyWith(
-                              color: AuroraColors.inkTertiary,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          )
-                        else
-                          Row(
-                            children: [
-                              _StatusBadge(status: task.status),
-                              if (task.recurrence != RecurrenceType.none) ...[
-                                const SizedBox(width: 6),
-                                _RecurrenceBadge(
-                                    recurrence: task.recurrence),
-                              ],
-                              const SizedBox(width: 8),
-                              Text(
-                                DateFormat('MMM d').format(task.dueDate),
-                                style: AuroraType.bodySm.copyWith(
-                                  color: AuroraColors.inkSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-                // Right: toggle + action buttons
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 6, vertical: 8),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Transform.scale(
-                        scale: 0.75,
-                        child: CupertinoSwitch(
-                          value: enabled,
-                          activeTrackColor: AuroraColors.lime,
-                          onChanged: onToggle,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _IconBtn(
-                            icon: Icons.edit_outlined,
-                            color: AuroraColors.inkSecondary,
-                            onTap: onEdit,
-                          ),
-                          _IconBtn(
-                            icon: Icons.delete_outline,
-                            color: AuroraColors.coral,
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              onDelete();
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+            ItemTopBar(backLabel: ItemCopy.back, onBack: _back),
+            gap,
+            const ItemSkeleton(
+              heights: [
+                AuroraHomeCSizes.skeletonHero,
+                AuroraHomeCSizes.skeletonTab,
+                AuroraHomeCSizes.skeletonCard,
+                AuroraHomeCSizes.skeletonCard,
               ],
             ),
+          ],
+        ),
+      );
+    }
+
+    final open = ItemTasks.open(all, _item);
+    final completions = done.value;
+    final overdue = open.any((t) => TaskSchedule.isOverdue(t, today));
+    final Widget? fill = _fill(info, open.isEmpty, done);
+
+    return ItemPage(
+      onRefresh: _refresh,
+      fill: fill,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ItemTopBar(
+            backLabel: info.name,
+            onBack: _back,
+            trailing: ItemTopBarAction(
+              label: ItemCopy.manage,
+              onTap: _manage,
+            ),
           ),
-        ),
+          gap,
+          ItemHeader(
+            eyebrow: info.eyebrow,
+            title: ItemCopy.tasksTitle(info),
+          ),
+          gap,
+          ItemTasksTabs(
+            labels: [
+              ItemCopy.comingUpTab(open.length),
+              ItemCopy.doneTab(completions?.length ?? 0),
+            ],
+            selected: _tab,
+            onSelected: (i) => setState(() => _tab = i),
+          ),
+          gap,
+          if (fill == null && _tab == _upTab)
+            ItemTasksOpenList(
+              cards: [for (final t in open) ItemTasks.card(t, today)],
+              addLabel: ItemCopy.addTask(info),
+              onAdd: _addTask,
+            )
+          else if (fill == null && completions != null)
+            ItemTasksDoneList(
+              completions: completions,
+              today: today,
+              onSchedule: !overdue,
+              expanded: _showAllDone,
+              onExpand: () => setState(() => _showAllDone = true),
+            )
+          else if (fill == null)
+            const ItemSkeleton(
+              heights: [
+                AuroraHomeCSizes.skeletonCard,
+                AuroraHomeCSizes.skeletonCard,
+              ],
+            ),
+        ],
       ),
     );
   }
-}
 
-Color _accentColor(MaintenanceTask task, DateTime today) {
-  if (task.status == TaskStatus.completed ||
-      task.status == TaskStatus.skipped) {
-    return AuroraColors.lime;
-  }
-  if (task.status == TaskStatus.overdue ||
-      task.dueDate.toLocal().isBefore(today)) {
-    return AuroraColors.coral;
-  }
-  final sevenDays = today.add(const Duration(days: 7));
-  if (task.dueDate.toLocal().isBefore(sevenDays)) {
-    return AuroraColors.yellow;
-  }
-  return AuroraColors.cobalt;
-}
-
-// ── Status badge ───────────────────────────────────────────────────────────────
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.status});
-  final TaskStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    final (bg, fg, label) = switch (status) {
-      TaskStatus.overdue => (AuroraColors.coralDim, AuroraColors.coral, 'Overdue'),
-      TaskStatus.due => (AuroraColors.yellowDim, AuroraColors.yellow, 'Due'),
-      TaskStatus.scheduled =>
-        (AuroraColors.paper, AuroraColors.inkSecondary, 'Scheduled'),
-      TaskStatus.completed =>
-        (AuroraColors.limeDim, AuroraColors.lime, 'Completed'),
-      TaskStatus.skipped =>
-        (AuroraColors.inkBorder, AuroraColors.inkTertiary, 'Skipped'),
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          color: fg,
-        ),
-      ),
-    );
-  }
-}
-
-// ── Recurrence badge ───────────────────────────────────────────────────────────
-
-class _RecurrenceBadge extends StatelessWidget {
-  const _RecurrenceBadge({required this.recurrence});
-  final RecurrenceType recurrence;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: AuroraColors.cobaltDim,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        recurrence.label,
-        style: const TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-          color: AuroraColors.cobalt,
-        ),
-      ),
-    );
-  }
-}
-
-// ── Icon button ────────────────────────────────────────────────────────────────
-
-class _IconBtn extends StatelessWidget {
-  const _IconBtn({
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.all(6),
-        child: Icon(icon, size: 20, color: color),
-      ),
-    );
+  /// The state that takes the page under the tabs: empty tab or failed Done
+  /// tab. Null when the tab has content (or is still loading).
+  Widget? _fill(
+    ItemSummary info,
+    bool noOpen,
+    AsyncValue<List<ItemCompletion>> done,
+  ) {
+    if (_tab == _upTab) {
+      if (!noOpen) return null;
+      return EmptyState(
+        icon: Icons.checklist_outlined,
+        title: ItemCopy.upEmptyTitle,
+        subtitle: ItemCopy.upEmptyBody(info),
+        actionLabel: ItemCopy.addTask(info),
+        onAction: _addTask,
+      );
+    }
+    if (done.hasError) {
+      return ErrorView(
+        message: ItemCopy.loadError,
+        onRetry: () => ref.invalidate(itemCompletionsProvider(_item)),
+      );
+    }
+    final list = done.value;
+    if (list != null && list.isEmpty) {
+      return EmptyState(
+        icon: Icons.history_outlined,
+        title: ItemCopy.doneEmptyTitle,
+        subtitle: ItemCopy.doneEmptyBody(info),
+      );
+    }
+    return null;
   }
 }

@@ -1,98 +1,86 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../services/supabase_service.dart';
 import '../models/appliance.dart';
+import '../repositories/appliances_repository.dart';
+import '../repositories/supabase_appliances_repository.dart';
+import 'appliance_detail_provider.dart';
 import 'home_profile_provider.dart';
 
 part 'appliances_provider.g.dart';
 
-const _kColumns =
-    'id, property_id, user_id, category, name, status, brand, model, '
-    'serial_number, purchase_date, warranty_expiration, purchase_price, '
-    'location, color, lifespan_override, warranty_provider, '
-    'linked_warranty_doc_id, notes, estimated_replacement_cost, '
-    'created_at, updated_at';
+/// The data source behind the appliance screens. Tests override it.
+final appliancesRepositoryProvider = Provider<AppliancesRepository>(
+  (ref) => SupabaseAppliancesRepository(SupabaseService.client),
+);
 
+/// First line of the home's address, for the Appliances eyebrow.
+final homeAddressLineProvider = FutureProvider.autoDispose<String?>(
+  (ref) => ref.watch(appliancesRepositoryProvider).addressLine(),
+);
+
+/// The home's appliances, plus the changes the appliance screens make to
+/// them. The list is cached across screens (the Docs link picker reads it).
+///
+/// A write never sets the state to loading: the list updates, the write
+/// follows, and a failed write puts the list back and rethrows.
 @riverpod
 class AppliancesNotifier extends _$AppliancesNotifier {
   @override
   Future<List<Appliance>> build() {
     ref.keepAlive();
-    return _fetchAppliances();
+    return ref.read(appliancesRepositoryProvider).list();
   }
 
+  AppliancesRepository get _repository => ref.read(appliancesRepositoryProvider);
+
+  List<Appliance> get _items => state.value ?? const [];
+
+  /// Refetches the list. Keeps showing the current list while it loads.
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchAppliances);
+    state = await AsyncValue.guard(_repository.list);
   }
 
+  /// Adds an appliance and returns its id.
   Future<String> addAppliance(Map<String, dynamic> fields) async {
-    final user = SupabaseService.client.auth.currentUser;
-    if (user == null) throw Exception('Not authenticated');
-    final propertyId = await _resolvePropertyId(user.id);
-    final row = await SupabaseService.client
-        .from('appliances')
-        .insert({...fields, 'user_id': user.id, 'property_id': propertyId})
-        .select('id')
-        .single();
+    final id = await _repository.add(fields);
     ref.invalidate(homeProfileProvider);
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchAppliances);
-    return row['id'] as String;
+    await refresh();
+    return id;
   }
 
+  /// Writes the changed [fields] of [id] and refreshes everything that shows
+  /// it.
   Future<void> updateAppliance(String id, Map<String, dynamic> fields) async {
-    await SupabaseService.client
-        .from('appliances')
-        .update({...fields, 'updated_at': DateTime.now().toIso8601String()})
-        .eq('id', id);
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchAppliances);
-  }
-
-  Future<void> softDelete(String id) async {
-    await SupabaseService.client
-        .from('appliances')
-        .update({'deleted_at': DateTime.now().toIso8601String()})
-        .eq('id', id);
+    await _repository.update(id, fields);
+    ref.invalidate(applianceDetailProvider(id));
     ref.invalidate(homeProfileProvider);
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchAppliances);
+    await refresh();
   }
 
-  Future<List<Appliance>> _fetchAppliances() async {
-    final user = SupabaseService.client.auth.currentUser;
-    if (user == null) throw Exception('Not authenticated');
-    final propertyRow = await SupabaseService.client
-        .from('properties')
-        .select('id')
-        .eq('user_id', user.id)
-        .isFilter('deleted_at', null)
-        .order('created_at', ascending: false)
-        .limit(1)
-        .maybeSingle();
-    if (propertyRow == null) return [];
-    final propertyId = propertyRow['id'] as String;
-    final rows = await SupabaseService.client
-        .from('appliances')
-        .select(_kColumns)
-        .eq('property_id', propertyId)
-        .isFilter('deleted_at', null)
-        .order('category')
-        .order('name');
-    return rows.map(Appliance.fromJson).toList();
+  /// Deletes [id]. The row leaves the list at once. Pass the same id to
+  /// [restore] to undo.
+  Future<void> softDelete(String id) async {
+    final before = _items;
+    state = AsyncData([
+      for (final a in before)
+        if (a.id != id) a,
+    ]);
+    try {
+      await _repository.softDelete(id);
+    } catch (_) {
+      state = AsyncData(before);
+      rethrow;
+    }
+    ref.invalidate(homeProfileProvider);
   }
 
-  Future<String> _resolvePropertyId(String userId) async {
-    final row = await SupabaseService.client
-        .from('properties')
-        .select('id')
-        .eq('user_id', userId)
-        .isFilter('deleted_at', null)
-        .order('created_at', ascending: false)
-        .limit(1)
-        .maybeSingle();
-    if (row == null) throw Exception('No property found for user');
-    return row['id'] as String;
+  /// Undo of [softDelete].
+  Future<void> restore(String id) async {
+    await _repository.restore(id);
+    ref.invalidate(applianceDetailProvider(id));
+    ref.invalidate(homeProfileProvider);
+    await refresh();
   }
 }
