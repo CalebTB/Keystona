@@ -75,6 +75,22 @@ Left open on purpose (decide later):
 - `ScanBadge` option for "from scan" (unchosen in the kit); Home History Report scope (launch or v2.0); shopping path in or out of launch.
 - Free-plan limit is 25 documents; the kit PNGs say 50 (code wins for now).
 
+## Sprint 3 (Home profile) assumptions: revisit if any cause trouble
+
+Chosen 2026-10-20 ("go with the defaults"). Details and the full kit-vs-schema analysis are in `design/SPRINT3_PREFLIGHT.md`.
+
+- **System categories:** the Add System list uses the database's real ten (hvac, plumbing, electrical, roofing, foundation, siding, windows/doors, insulation, garage, other), not the kit's Exterior/Interior/Climate/Safety/Water. Chosen because a database enum value can never be removed. If the kit's list is wanted, map it or add enum values.
+- **Scan install date:** "Installed" is pre-filled from the label's *manufacture* date, marked "from scan", editable. A manufacture date is not an install date (can be years earlier).
+- **Edit mode:** the add form in edit mode has no scan banner and a "More details" section (location, installer, price, warranty, notes) for fields the kit omits; delete uses the confirm dialog with Undo, via `soft_delete_system` / `soft_delete_appliance`.
+- **Appliance lifespan:** age counts from `purchase_date`; expected life from `expected_lifespan_min/max` (scan or type default); no date shows "unknown".
+- **Lifespan bands:** the kit's 75 / 90 / 100 percent of ONE expected life (override, else the midpoint of min and max), computed in the app from systems and appliances together. The existing `get_system_lifespan_overview` RPC (systems only, different thresholds) is no longer the source; remove it if nothing else uses it.
+- **New tables/columns (applied, tested):** `item_service_log` (repairs/services/installed/purchased per item), `systems.specifications` (JSONB), `properties.has_basement`.
+- **Home profile:** one cover photo (existing column); garage = type + number of spaces; purchase date = month/year picker; a ZIP change rechecks climate with the stand-in lookup; task counts per item are computed in the app.
+- **Photos:** free plan limit of 4 per item, enforced in the app only (no server limit).
+- **Home health:** only the maintenance score is shown; records and emergency sub-scores, and the "up N since Sep" trend, wait for Sprint 6 (no source or history table yet).
+- **Home History Report card:** hidden until Sprint 9.
+- **Item task rows:** long-press menu, no edit/delete icon buttons (kit rule).
+
 ## Copy to review
 
 The agents wrote copy where the kit had none. Review in one pass: documents (`docs_copy.dart`, `categories_copy.dart`), tasks (`tasks_copy.dart`, `task_form_copy.dart`, `reminders_copy.dart`), auth (`auth_copy.dart`), onboarding, and error/empty/snackbar strings generally.
