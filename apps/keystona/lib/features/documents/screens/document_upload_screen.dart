@@ -28,8 +28,8 @@ import '../widgets/upload/upload_progress_bar.dart';
 /// Opened once a file has been picked from the add-from sheet; opened with no
 /// file (e.g. from the onboarding checklist) it shows Scan, Photos and Files.
 ///
-/// With [renewDocumentId] it renews that document: the form starts from the
-/// old one and, once saved, the old one is marked replaced.
+/// With [renewDocumentId] it renews that document in place: the form starts
+/// from it, and saving puts the new file and end date on the same document.
 class DocumentUploadScreen extends ConsumerStatefulWidget {
   const DocumentUploadScreen({super.key, this.renewDocumentId});
 
@@ -171,16 +171,12 @@ class _DocumentUploadScreenState extends ConsumerState<DocumentUploadScreen> {
         next.phase != UploadPhase.success) {
       return;
     }
-    final id = next.uploadedDocument?.id;
+    final id = next.savedDocumentId;
     HapticFeedback.mediumImpact();
-    SnackbarService.showSuccess(context, 'Document saved');
-    if (next.renewalMarkFailed) {
-      SnackbarService.showWarning(
-        context,
-        DocsCopy.renewalMarkFailed,
-        subtitle: DocsCopy.renewalMarkFailedHint,
-      );
-    }
+    SnackbarService.showSuccess(
+      context,
+      next.isRenewal ? DocsCopy.renewalSaved : 'Document saved',
+    );
     DocumentFlow.reset(ref);
     if (id == null) {
       context.pop();

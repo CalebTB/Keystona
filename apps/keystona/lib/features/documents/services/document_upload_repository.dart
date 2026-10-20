@@ -1,13 +1,14 @@
 import 'dart:io';
 
-import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
 import 'package:uuid/uuid.dart';
 
 import '../../../services/supabase_service.dart';
 import '../../subscription/providers/subscription_provider.dart';
 import '../models/document.dart';
+import '../models/document_quota.dart';
+import '../repositories/document_quota_repository.dart';
+import 'upload_files.dart';
 
 /// Everything the vault needs to store one new document.
 class DocumentUploadRequest {
@@ -51,12 +52,12 @@ abstract interface class DocumentUploadRepository {
 
 /// [DocumentUploadRepository] backed by Supabase.
 class SupabaseDocumentUploadRepository implements DocumentUploadRepository {
-  const SupabaseDocumentUploadRepository();
+  const SupabaseDocumentUploadRepository({
+    this.quota = const SupabaseDocumentQuotaRepository(),
+  });
 
-  /// Photos larger than this are compressed before upload.
-  static const int _compressAboveBytes = 2 * 1024 * 1024;
-  static const int _compressQuality = 80;
-  static const int _compressMaxEdge = 1920;
+  /// Counts the documents that use up the free plan.
+  final DocumentQuotaRepository quota;
 
   static const String _bucket = 'documents';
   static const String _columns =
@@ -91,24 +92,20 @@ class SupabaseDocumentUploadRepository implements DocumentUploadRepository {
     // 2. Free plan gate.
     onProgress(0.1);
     if (enforceFreeLimit) {
-      final existing = await client
-          .from('documents')
-          .select('id')
-          .eq('property_id', propertyId)
-          .isFilter('deleted_at', null);
-      if (existing.length >= kFreeDocumentLimit) {
+      final used = await quota.usedFor(propertyId);
+      if (DocumentQuota.isFull(used)) {
         throw const DocumentLimitException();
       }
     }
 
     // 3. Shrink big photos.
     onProgress(0.2);
-    final uploadFile = await _prepare(request.file, request.mimeType);
+    final uploadFile = await UploadFiles.prepare(request.file, request.mimeType);
 
     // 4. File to the private bucket.
     onProgress(0.4);
     final path =
-        '${user.id}/$propertyId/${const Uuid().v4()}${_extension(request.mimeType)}';
+        '${user.id}/$propertyId/${const Uuid().v4()}${UploadFiles.extension(request.mimeType)}';
     await client.storage
         .from(_bucket)
         .uploadBinary(
@@ -177,30 +174,6 @@ class SupabaseDocumentUploadRepository implements DocumentUploadRepository {
   /// DATE columns take `YYYY-MM-DD`, not a timestamp.
   static String _dateOnly(DateTime date) =>
       date.toIso8601String().split('T').first;
-
-  Future<File> _prepare(File file, String mimeType) async {
-    if (mimeType.startsWith('application/')) return file;
-    if (await file.length() <= _compressAboveBytes) return file;
-    final dir = await getTemporaryDirectory();
-    final target =
-        '${dir.path}/upload_${DateTime.now().millisecondsSinceEpoch}.jpg';
-    final shrunk = await FlutterImageCompress.compressAndGetFile(
-      file.absolute.path,
-      target,
-      quality: _compressQuality,
-      minWidth: _compressMaxEdge,
-      minHeight: _compressMaxEdge,
-    );
-    return shrunk == null ? file : File(shrunk.path);
-  }
-
-  String _extension(String mime) => switch (mime) {
-    'application/pdf' => '.pdf',
-    'image/jpeg' => '.jpg',
-    'image/png' => '.png',
-    'image/heic' => '.heic',
-    _ => '',
-  };
 
   void _requestOcr(String documentId) {
     try {

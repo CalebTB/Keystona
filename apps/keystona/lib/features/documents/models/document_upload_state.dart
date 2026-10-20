@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../core/theme/aurora_docs_b.dart';
-import 'document.dart';
 import 'renewal_source.dart';
 
 part 'document_upload_state.freezed.dart';
@@ -89,26 +88,27 @@ abstract class DocumentUploadState with _$DocumentUploadState {
     // ── Save ───────────────────────────────────────────────────────────────
     @Default(0.0) double progress,
     UploadFailure? failure,
-    Document? uploadedDocument,
+
+    /// The saved document: the new one, or the renewed one (same id).
+    String? savedDocumentId,
 
     // ── Renewal ────────────────────────────────────────────────────────────
     /// The document this one renews; null for an ordinary new document.
     RenewalSource? renewal,
-
-    /// The new document was saved but the old one could not be marked
-    /// replaced.
-    @Default(false) bool renewalMarkFailed,
   }) = _DocumentUploadState;
 
   bool get hasFile => file != null;
 
   bool get isRenewal => renewal != null;
 
-  /// "It expires": the user's choice, else on for categories that usually
-  /// expire.
+  /// "It expires": always for a renewal (the new end date is the point), else
+  /// the user's choice, else on for categories that usually expire.
   bool get expires =>
-      expiresChoice ??
-      AuroraUploadRules.expiringCategories.contains(categoryName.toLowerCase());
+      isRenewal ||
+      (expiresChoice ??
+          AuroraUploadRules.expiringCategories.contains(
+            categoryName.toLowerCase(),
+          ));
 
   bool get isSaving => phase == UploadPhase.uploading;
 

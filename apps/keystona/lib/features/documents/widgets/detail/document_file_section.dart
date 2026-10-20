@@ -30,11 +30,7 @@ class DocumentFileSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final a = context.aurora;
     final isPremium = ref.watch(isPremiumProvider);
-    final count = ref
-        .watch(documentCategoryCountsProvider)
-        .value
-        ?.values
-        .fold<int>(0, (sum, c) => sum + c);
+    final count = ref.watch(documentQuotaCountProvider).value;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

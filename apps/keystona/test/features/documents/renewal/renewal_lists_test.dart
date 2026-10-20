@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
@@ -13,39 +15,25 @@ import 'package:keystona/features/documents/models/document_renewal.dart';
 import 'package:keystona/features/documents/models/expiring_document.dart';
 import 'package:keystona/features/documents/models/expiring_groups.dart';
 import 'package:keystona/features/documents/providers/document_repositories_provider.dart';
+import 'package:keystona/features/documents/providers/document_upload_provider.dart';
+import 'package:keystona/features/documents/providers/expiring_documents_provider.dart';
+import 'package:keystona/features/documents/repositories/expiring_documents_repository.dart';
 import 'package:keystona/features/documents/screens/documents_expiring_screen.dart';
 import 'package:keystona/features/documents/screens/documents_screen.dart';
-import 'package:keystona/features/documents/widgets/expiration_badge.dart';
+import 'package:keystona/features/subscription/providers/subscription_provider.dart';
 import 'package:keystona/features/documents/widgets/expiring/expiring_ended_section.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../detail_search/detail_search_support.dart' as detail;
 import '../tab/docs_tab_test_support.dart';
+import 'renewal_support.dart';
 
-final DateTime _replacedOn = DateTime(2025, 10, 4);
-
-DocsTabItem _replaced(String id, String name, {int expiresInDays = 9}) =>
-    DocsTabItem(
-      id: id,
-      name: name,
-      createdAt: DateTime.now().subtract(const Duration(days: 100)),
-      categoryName: 'Insurance',
-      expirationDate: inDays(expiresInDays),
-      replacedAt: _replacedOn,
-    );
-
-ExpiringDocument _exp(
-  String id,
-  String name,
-  int days, {
-  DateTime? replacedAt,
-}) => ExpiringDocument(
+ExpiringDocument _exp(String id, String name, int days) => ExpiringDocument(
   id: id,
   name: name,
   categoryName: 'Insurance',
   categoryIcon: 'shield',
   expirationDate: detail.daysFromNow(days),
-  replacedAt: replacedAt,
 );
 
 /// Routes the screen under test at `/` and records every upload location.
@@ -64,10 +52,6 @@ class _Harness extends StatelessWidget {
                visited.add(state.uri.toString());
                return const Scaffold(body: Text('upload route'));
              },
-           ),
-           GoRoute(
-             path: AppRoutes.documentsExpiring,
-             builder: (_, _) => const Scaffold(body: Text('expiring route')),
            ),
          ],
        );
@@ -98,102 +82,15 @@ Future<void> _settle(WidgetTester tester) async {
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  group('route', () {
-    test('location carries the id in the renew query parameter', () {
-      final uri = Uri.parse(
-        DocumentRenewal.location(AppRoutes.documentsUpload, 'old 1'),
-      );
-      expect(uri.path, AppRoutes.documentsUpload);
-      expect(uri.queryParameters, {DocumentRenewal.queryParam: 'old 1'});
-    });
-
-    test('replaced metadata merges in and keeps every other key', () {
-      final merged = DocumentRenewal.withReplaced(
-        {'tags': ['a'], 'provider': 'Statewide Mutual'},
-        on: DateTime(2026, 10, 6, 15, 30),
-        by: 'new-1',
-      );
-      expect(merged, {
-        'tags': ['a'],
-        'provider': 'Statewide Mutual',
-        'replaced_at': '2026-10-06',
-        'replaced_by': 'new-1',
-      });
-      expect(DocumentRenewal.replacedAt(merged), DateTime(2026, 10, 6));
-      expect(DocumentRenewal.replacedBy(merged), 'new-1');
-      expect(DocumentRenewal.replacedAt(const {}), isNull);
-      expect(DocumentRenewal.replacedAt(null), isNull);
-      expect(DocumentRenewal.withReplaced(null, on: _replacedOn, by: 'x'), {
-        'replaced_at': '2025-10-04',
-        'replaced_by': 'x',
-      });
-    });
+  test('the route carries the document id in the renew query parameter', () {
+    final uri = Uri.parse(
+      DocumentRenewal.location(AppRoutes.documentsUpload, 'old 1'),
+    );
+    expect(uri.path, AppRoutes.documentsUpload);
+    expect(uri.queryParameters, {DocumentRenewal.queryParam: 'old 1'});
   });
 
   group('Docs tab', () {
-    final data = DocsTabData(
-      totalCount: 12,
-      recent: [item('x', 'Fresh receipt'), _replaced('old', 'Old policy')],
-      expiring: [
-        _replaced('old', 'Old policy'),
-        item('dish', 'Bosch dishwasher warranty', expiresInDays: 45),
-      ],
-    );
-
-    test('replaced documents drop out of active, soon and urgent', () {
-      expect(data.active.map((d) => d.id), ['dish']);
-      expect(data.soon().map((d) => d.id), ['dish']);
-      expect(data.urgent(), isEmpty);
-      expect(data.expiring, hasLength(2));
-    });
-
-    testWidgets('no urgent card, no urgency count, no badge on the old one', (
-      tester,
-    ) async {
-      _tall(tester);
-      final visited = <String>[];
-      await tester.pumpWidget(
-        _Harness(
-          home: const DocumentsScreen(),
-          overrides: tabOverrides(FakeDocsTabRepository(data)),
-          visited: visited,
-        ),
-      );
-      await _settle(tester);
-
-      expect(find.text('EXPIRING SOON'), findsNothing);
-      expect(find.text(DocsCopy.uploadRenewal), findsNothing);
-      expect(find.textContaining('expiring soon'), findsNothing);
-      expect(find.text('All expiring dates · 1'), findsOneWidget);
-      // Recently added still lists it, with no urgency pill.
-      expect(find.text('Old policy'), findsOneWidget);
-      expect(find.byType(ExpirationBadge), findsNothing);
-    });
-
-    testWidgets('the hero is the next document that is still in force', (
-      tester,
-    ) async {
-      _tall(tester);
-      final urgent = item('ins', 'Auto policy', expiresInDays: 12);
-      final withBoth = DocsTabData(
-        totalCount: 3,
-        recent: [urgent],
-        expiring: [_replaced('old', 'Old policy', expiresInDays: 2), urgent],
-      );
-      await tester.pumpWidget(
-        _Harness(
-          home: const DocumentsScreen(),
-          overrides: tabOverrides(FakeDocsTabRepository(withBoth)),
-          visited: [],
-        ),
-      );
-      await _settle(tester);
-      expect(find.text('1 expiring soon'), findsOneWidget);
-      expect(find.text('12 DAYS LEFT'), findsOneWidget);
-      expect(find.textContaining('more ·'), findsNothing);
-      expect(find.text('All expiring dates · 1'), findsOneWidget);
-    });
-
     testWidgets('Upload renewal opens the add flow for that document', (
       tester,
     ) async {
@@ -227,36 +124,41 @@ void main() {
       await _settle(tester);
       expect(visited, ['/documents/upload']);
     });
+
+    testWidgets('Upload renewal is never stopped by a full free vault', (
+      tester,
+    ) async {
+      _tall(tester);
+      final visited = <String>[];
+      final data = populatedData();
+      final full = DocsTabData(
+        totalCount: kFreeDocumentLimit,
+        recent: data.recent,
+        expiring: data.expiring,
+      );
+      await tester.pumpWidget(
+        _Harness(
+          home: const DocumentsScreen(),
+          overrides: tabOverrides(FakeDocsTabRepository(full)),
+          visited: visited,
+        ),
+      );
+      await _settle(tester);
+      await tester.tap(find.text(DocsCopy.uploadRenewal));
+      await _settle(tester);
+      expect(visited, ['/documents/upload?renew=ins']);
+      expect(find.text(DocsCopy.limitSheet.headline), findsNothing);
+    });
   });
 
   group('Expiring', () {
     final list = [
       _exp('ins', 'Homeowners insurance policy', 8),
       _exp('wash', 'Halden washer warranty', 65),
-      _exp('replaced-future', 'Renewed umbrella policy', 20, replacedAt: _replacedOn),
       _exp('old1', 'Calder water heater warranty', -400),
-      _exp(
-        'replaced-past',
-        'Previous homeowners policy',
-        -300,
-        replacedAt: _replacedOn,
-      ),
     ];
 
-    test('replaced documents are never upcoming, only ended', () {
-      final groups = ExpiringGroups.of(list, ExpiringRange.all);
-      final upcoming = [
-        for (final g in groups.upcoming) ...g.documents.map((d) => d.id),
-      ];
-      expect(upcoming, ['ins', 'wash']);
-      expect(groups.ended.map((d) => d.id).toSet(), {
-        'replaced-future',
-        'old1',
-        'replaced-past',
-      });
-    });
-
-    testWidgets('groups and counts leave replaced documents out', (
+    testWidgets('ended documents read as ended, with the ordinary text', (
       tester,
     ) async {
       _tall(tester);
@@ -272,30 +174,15 @@ void main() {
         ),
       );
       await _settle(tester);
-
-      expect(find.text('NEXT 30 DAYS'), findsOneWidget);
-      expect(find.text('1 ITEM'), findsWidgets);
-      expect(find.text('Renewed umbrella policy'), findsOneWidget);
-      // The replaced one sits only in "Already ended", never as a card.
-      expect(find.text('ALREADY ENDED · 3'), findsOneWidget);
-      expect(find.text(DocsCopy.uploadRenewal), findsOneWidget);
-
-      final replacedMeta = DocsCopy.endedMeta(
-        endedOn: detail.daysFromNow(-300),
-        replacedAt: _replacedOn,
-      );
+      expect(find.text('ALREADY ENDED · 1'), findsOneWidget);
       expect(
-        replacedMeta,
-        'REPLACED ${DocumentFormat.monthYearUpper(_replacedOn)} · '
-        'KEPT FOR CLAIMS HISTORY',
-      );
-      expect(find.text(replacedMeta), findsNWidgets(2));
-      expect(
-        find.text(
-          'ENDED ${DocumentFormat.monthYearUpper(detail.daysFromNow(-400))}'
-          ' · KEPT FOR YOUR RECORD',
-        ),
+        find.text(DocsCopy.endedMeta(detail.daysFromNow(-400))),
         findsOneWidget,
+      );
+      expect(
+        DocsCopy.endedMeta(detail.daysFromNow(-400)),
+        'ENDED ${DocumentFormat.monthYearUpper(detail.daysFromNow(-400))}'
+        ' · KEPT FOR YOUR RECORD',
       );
     });
 
@@ -306,18 +193,13 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ExpiringEndedSection(
-              documents: [list.last],
-              onOpen: (_) {},
-            ),
+            body: ExpiringEndedSection(documents: [list.last], onOpen: (_) {}),
           ),
         ),
       );
       final width = tester.view.physicalSize.width;
-      final name = tester.getRect(find.text('Previous homeowners policy'));
-      final meta = tester.getRect(
-        find.textContaining('REPLACED').first,
-      );
+      final name = tester.getRect(find.text('Calder water heater warranty'));
+      final meta = tester.getRect(find.textContaining('ENDED').last);
       final chevron = tester.getRect(find.byType(Icon));
       expect(meta.top, greaterThan(name.bottom - 1));
       expect(meta.left, closeTo(name.left, 0.5));
@@ -352,9 +234,7 @@ void main() {
       expect(button.left, lessThan(name.left));
     });
 
-    testWidgets('Upload renewal passes the card\'s document id', (
-      tester,
-    ) async {
+    testWidgets("Upload renewal passes the card's document id", (tester) async {
       _tall(tester);
       final visited = <String>[];
       await tester.pumpWidget(
@@ -374,4 +254,68 @@ void main() {
       expect(visited, ['/documents/upload?renew=ins']);
     });
   });
+
+  group('after a renewal the document leaves "expiring"', () {
+    test('its new end date moves it out of the 90-day groups', () async {
+      var days = 8;
+      final expiringFetches = <int>[];
+      final renewals = FakeRenewalRepository(
+        source: kInsurance,
+        onRenew: (request) => days = 400,
+      );
+      final container = ProviderContainer(
+        overrides: [
+          ...renewalOverrides(renewals: renewals),
+          expiringDocumentsRepositoryProvider.overrideWithValue(
+            _MovingExpiring(() => [_exp('old-1', 'Policy', days)], expiringFetches),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      var groups = ExpiringGroups.of(
+        await container.read(expiringDocumentsProvider.future),
+        ExpiringRange.days90,
+      );
+      expect(groups.upcoming.single.documents.single.id, 'old-1');
+
+      final notifier = container.read(documentUploadProvider.notifier)
+        ..applyRenewal(kInsurance)
+        ..setPickedFile(
+          file: File('/nonexistent/renewal.pdf'),
+          mimeType: 'application/pdf',
+          sizeBytes: 10,
+          name: 'renewal.pdf',
+        )
+        ..setExpirationDate(detail.daysFromNow(400));
+      await notifier.submit();
+
+      // The list was invalidated and refetched without a pull-to-refresh.
+      groups = ExpiringGroups.of(
+        await container.read(expiringDocumentsProvider.future),
+        ExpiringRange.days90,
+      );
+      expect(expiringFetches.length, 2);
+      expect(groups.upcoming, isEmpty);
+      expect(groups.ended, isEmpty);
+      final all = ExpiringGroups.of(
+        await container.read(expiringDocumentsProvider.future),
+        ExpiringRange.all,
+      );
+      expect(all.upcoming.single.band, ExpiringBand.later);
+    });
+  });
+}
+
+class _MovingExpiring implements ExpiringDocumentsRepository {
+  _MovingExpiring(this._docs, this._fetches);
+
+  final List<ExpiringDocument> Function() _docs;
+  final List<int> _fetches;
+
+  @override
+  Future<List<ExpiringDocument>> fetch() async {
+    _fetches.add(_fetches.length);
+    return _docs();
+  }
 }

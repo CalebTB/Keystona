@@ -11,7 +11,7 @@ import '../models/document_tags.dart';
 import '../models/document_upload_state.dart';
 import '../models/renewal_source.dart';
 import '../../subscription/providers/subscription_provider.dart';
-import '../services/document_renewal_repository.dart';
+import '../services/document_renewer.dart';
 import '../services/document_upload_repository.dart';
 import 'document_categories_provider.dart';
 import 'document_detail_provider.dart';
@@ -96,10 +96,10 @@ class DocumentUploadNotifier extends _$DocumentUploadNotifier {
     );
   }
 
-  /// Starts the form as a renewal of [source]: name, category, tags and link
-  /// come from the old document, the new end date is left empty and required,
-  /// notes stay empty. Smart scan never overwrites what was carried over.
-  /// Does nothing when this renewal is already applied.
+  /// Starts the form as a renewal of [source]: name, category, tags, notes and
+  /// link come from the existing document, the new end date is left empty and
+  /// required. Smart scan never overwrites what was carried over. Does nothing
+  /// when this renewal is already applied.
   void applyRenewal(RenewalSource source) {
     if (state.renewal?.id == source.id) return;
     state = state.copyWith(
@@ -109,7 +109,7 @@ class DocumentUploadNotifier extends _$DocumentUploadNotifier {
       categoryName: source.categoryName,
       tags: source.tags,
       link: source.link,
-      notes: '',
+      notes: source.notes,
       expiresChoice: true,
       expirationDate: null,
       edited: {
@@ -205,13 +205,18 @@ class DocumentUploadNotifier extends _$DocumentUploadNotifier {
     UploadField.category,
   );
 
-  void setExpires(bool value) => state = _touch(
-    state.copyWith(
-      expiresChoice: value,
-      expirationDate: value ? state.expirationDate : null,
-    ),
-    UploadField.expiration,
-  );
+  /// "It expires" switch. A renewal always expires: it exists to set the new
+  /// end date, so the switch cannot clear it.
+  void setExpires(bool value) {
+    if (state.isRenewal) return;
+    state = _touch(
+      state.copyWith(
+        expiresChoice: value,
+        expirationDate: value ? state.expirationDate : null,
+      ),
+      UploadField.expiration,
+    );
+  }
 
   void setExpirationDate(DateTime value) => state = _touch(
     state.copyWith(expirationDate: value),
@@ -249,8 +254,10 @@ class DocumentUploadNotifier extends _$DocumentUploadNotifier {
 
   // ── Save ───────────────────────────────────────────────────────────────────
 
-  /// Uploads the file and creates the document. On failure the form stays as
-  /// it was, with [DocumentUploadState.failure] set, so Save can be tried again.
+  /// Saves the form. An ordinary add uploads the file and creates a document;
+  /// a renewal puts the new file and end date on the existing document. On
+  /// failure the form stays as it was, with [DocumentUploadState.failure] set,
+  /// so Save can be tried again.
   Future<void> submit() async {
     final file = state.file;
     final categoryId = state.categoryId;
@@ -260,11 +267,20 @@ class DocumentUploadNotifier extends _$DocumentUploadNotifier {
         categoryId == null) {
       return;
     }
-    final repository = ref.read(documentUploadRepositoryProvider);
-    final enforceLimit = !ref.read(isPremiumProvider);
-    final link = state.link;
     final renewal = state.renewal;
+    final link = state.link;
+    final systemId = link != null && !link.isAppliance ? link.id : null;
+    final applianceId = link != null && link.isAppliance ? link.id : null;
+    final mimeType = state.mimeType ?? 'application/octet-stream';
+    void onProgress(double progress) {
+      if (ref.mounted) state = state.copyWith(progress: progress);
+    }
+
+    // Read before the first await: the screen may unmount during the save.
     final renewals = ref.read(documentRenewalRepositoryProvider);
+    final uploads = ref.read(documentUploadRepositoryProvider);
+    final enforceLimit = !ref.read(isPremiumProvider);
+    final expirationDate = state.expires ? state.expirationDate : null;
 
     state = state.copyWith(
       phase: UploadPhase.uploading,
@@ -272,34 +288,49 @@ class DocumentUploadNotifier extends _$DocumentUploadNotifier {
       failure: null,
     );
     try {
-      final saved = await repository.upload(
-        DocumentUploadRequest(
-          file: file,
-          mimeType: state.mimeType ?? 'application/octet-stream',
-          name: state.name,
-          categoryId: categoryId,
-          pageCount: state.pageCount,
-          tags: state.tags,
-          expirationDate: state.expires ? state.expirationDate : null,
-          notes: state.notes,
-          linkedSystemId: link != null && !link.isAppliance ? link.id : null,
-          linkedApplianceId: link != null && link.isAppliance ? link.id : null,
-        ),
-        enforceFreeLimit: enforceLimit,
-        onProgress: (progress) {
-          if (ref.mounted) state = state.copyWith(progress: progress);
-        },
-      );
-      if (!ref.mounted) return;
-      final markFailed =
-          renewal != null &&
-          !await _markReplaced(renewals, renewal.id, saved.id);
+      final String savedId;
+      if (renewal == null) {
+        final saved = await uploads.upload(
+          DocumentUploadRequest(
+            file: file,
+            mimeType: mimeType,
+            name: state.name,
+            categoryId: categoryId,
+            pageCount: state.pageCount,
+            tags: state.tags,
+            expirationDate: expirationDate,
+            notes: state.notes,
+            linkedSystemId: systemId,
+            linkedApplianceId: applianceId,
+          ),
+          enforceFreeLimit: enforceLimit,
+          onProgress: onProgress,
+        );
+        savedId = saved.id;
+      } else {
+        await renewals.renew(
+          DocumentRenewalRequest(
+            documentId: renewal.id,
+            mimeType: mimeType,
+            name: state.name,
+            categoryId: categoryId,
+            pageCount: state.pageCount,
+            tags: state.tags,
+            expirationDate: expirationDate!,
+            notes: state.notes,
+            linkedSystemId: systemId,
+            linkedApplianceId: applianceId,
+          ),
+          file,
+          onProgress: onProgress,
+        );
+        savedId = renewal.id;
+      }
       if (!ref.mounted) return;
       state = state.copyWith(
         phase: UploadPhase.success,
         progress: 1,
-        uploadedDocument: saved,
-        renewalMarkFailed: markFailed,
+        savedDocumentId: savedId,
       );
       invalidateDocumentLists(ref.invalidate);
       if (renewal != null) ref.invalidate(documentDetailProvider(renewal.id));
@@ -315,25 +346,6 @@ class DocumentUploadNotifier extends _$DocumentUploadNotifier {
         phase: UploadPhase.editing,
         failure: UploadFailure.generic,
       );
-    }
-  }
-
-  /// Marks the renewed document replaced. A secondary write: the new document
-  /// is already saved, so a failure is reported as false, never thrown.
-  Future<bool> _markReplaced(
-    DocumentRenewalRepository renewals,
-    String oldId,
-    String newId,
-  ) async {
-    try {
-      await renewals.markReplaced(
-        documentId: oldId,
-        replacedById: newId,
-        on: DateTime.now(),
-      );
-      return true;
-    } catch (_) {
-      return false;
     }
   }
 

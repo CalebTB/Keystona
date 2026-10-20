@@ -9,7 +9,6 @@ class DocsTabItem {
     this.categoryName,
     this.categoryIcon,
     this.expirationDate,
-    this.replacedAt,
   });
 
   final String id;
@@ -20,14 +19,6 @@ class DocsTabItem {
   /// Key into `CategoryIcons`.
   final String? categoryIcon;
   final DateTime? expirationDate;
-
-  /// When a newer copy replaced this document; null when it has not been.
-  final DateTime? replacedAt;
-
-  bool get isReplaced => replacedAt != null;
-
-  /// The end date that still counts: none once the document is replaced.
-  DateTime? get activeExpiration => isReplaced ? null : expirationDate;
 }
 
 /// Everything the Docs tab shows, loaded in one go.
@@ -39,14 +30,14 @@ class DocsTabData {
     this.emptyCategoryNames = const [],
   });
 
-  /// Documents in the vault (drives "12 OF 25" and "See all 12").
+  /// Documents in the vault (drives "12 OF 25", the limit gate and "See all
+  /// 12").
   final int totalCount;
 
   /// The newest documents, newest first.
   final List<DocsTabItem> recent;
 
-  /// Every document with an expiration date, soonest first. Replaced
-  /// documents are included; use [active] for what is still in force.
+  /// Every document with an expiration date, soonest first.
   final List<DocsTabItem> expiring;
 
   /// Standard categories with no documents, in display order.
@@ -54,18 +45,13 @@ class DocsTabData {
 
   bool get isEmpty => totalCount == 0;
 
-  /// Documents with an expiration date that has not been replaced, soonest
-  /// first. Drives every expiring count and list on the tab.
-  List<DocsTabItem> get active =>
-      expiring.where((d) => !d.isReplaced).toList();
-
   /// Documents that expire within the soon window, soonest first.
-  List<DocsTabItem> soon({DateTime? now}) => active
+  List<DocsTabItem> soon({DateTime? now}) => expiring
       .where((d) => DocsExpiry.of(d.expirationDate!, now: now).isSoon)
       .toList();
 
   /// Documents that need action now (30 days or fewer, or already expired).
-  List<DocsTabItem> urgent({DateTime? now}) => active
+  List<DocsTabItem> urgent({DateTime? now}) => expiring
       .where(
         (d) =>
             DocsExpiry.of(d.expirationDate!, now: now).tone ==

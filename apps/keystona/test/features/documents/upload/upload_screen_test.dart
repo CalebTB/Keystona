@@ -382,6 +382,25 @@ void main() {
     expect(repo.calls, 2);
   });
 
+  testWidgets('the header shows where this document puts the user', (
+    tester,
+  ) async {
+    await _pumpFlow(tester, overrides: uploadOverrides(quotaUsed: 8));
+    expect(find.text('9 OF 25 · FREE PLAN'), findsOneWidget);
+  });
+
+  testWidgets('a plain add at the limit still offers the upgrade', (
+    tester,
+  ) async {
+    final repo = FakeUploadRepository()..used = kFreeDocumentLimit;
+    await _pumpFlow(tester, container: _pickedContainer(repo: repo));
+    await tester.tap(_save);
+    await tester.pumpAndSettle();
+    expect(repo.enforced, isTrue);
+    expect(find.text('Unlock Unlimited Documents'), findsOneWidget);
+    expect(find.text('New document.'), findsOneWidget);
+  });
+
   testWidgets('a full free plan offers the upgrade', (tester) async {
     final repo = FakeUploadRepository()..error = const DocumentLimitException();
     await _pumpFlow(tester, container: _pickedContainer(repo: repo));

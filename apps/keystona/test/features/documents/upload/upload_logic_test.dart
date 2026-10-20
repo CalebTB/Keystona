@@ -257,7 +257,7 @@ void main() {
         await n.submit();
         final s = c.read(documentUploadProvider);
         expect(s.phase, UploadPhase.success);
-        expect(s.uploadedDocument?.id, 'doc-1');
+        expect(s.savedDocumentId, 'doc-1');
         expect(repo.last?.categoryId, 'c-warranty');
         expect(repo.last?.expirationDate, DateTime(2031, 3, 15));
         expect(repo.last?.linkedApplianceId, 'app-1');

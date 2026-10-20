@@ -8,7 +8,9 @@ import 'package:go_router/go_router.dart';
 import 'package:keystona/features/documents/models/document.dart';
 import 'package:keystona/features/documents/models/document_category.dart';
 import 'package:keystona/features/documents/models/document_ocr.dart';
+import 'package:keystona/features/documents/models/document_quota.dart';
 import 'package:keystona/features/documents/models/document_scan.dart';
+import 'package:keystona/features/subscription/providers/subscription_provider.dart' show DocumentLimitException;
 import 'package:keystona/features/documents/providers/document_categories_provider.dart';
 import 'package:keystona/features/documents/providers/document_upload_services_provider.dart';
 import 'package:keystona/features/documents/providers/documents_provider.dart';
@@ -42,6 +44,9 @@ final List<DocumentCategory> kCategories = [
 
 const Map<String, int> kCounts = {'c-warranty': 9, 'c-insurance': 1};
 
+/// Live documents the form shows against the free plan: the same as [kCounts].
+const int kQuotaUsed = 10;
+
 class FakeCategories extends DocumentCategoriesNotifier {
   FakeCategories({this.gate, this.fail = false});
 
@@ -60,6 +65,10 @@ class FakeCategories extends DocumentCategoriesNotifier {
 class FakeUploadRepository implements DocumentUploadRepository {
   DocumentUploadRequest? last;
   bool? enforced;
+
+  /// Live documents on the free plan; when set, the fake refuses an
+  /// enforced upload at the limit, as the real repository does.
+  int? used;
   Object? error;
   Completer<void>? gate;
   int calls = 0;
@@ -73,6 +82,10 @@ class FakeUploadRepository implements DocumentUploadRepository {
     calls++;
     last = request;
     enforced = enforceFreeLimit;
+    final counted = used;
+    if (enforceFreeLimit && counted != null && DocumentQuota.isFull(counted)) {
+      throw const DocumentLimitException();
+    }
     onProgress(0.4);
     if (gate != null) await gate!.future;
     final e = error;
@@ -181,6 +194,7 @@ List<Override> uploadOverrides({
   bool categoriesFail = false,
   String? forwardingAddress,
   DocumentCategoriesNotifier Function()? categories,
+  int quotaUsed = kQuotaUsed,
 }) => [
   isPremiumProvider.overrideWithValue(premium),
   documentCategoriesProvider.overrideWith(
@@ -188,6 +202,7 @@ List<Override> uploadOverrides({
         () => FakeCategories(gate: categoriesGate, fail: categoriesFail),
   ),
   documentCategoryCountsProvider.overrideWith((ref) async => kCounts),
+  documentQuotaCountProvider.overrideWith((ref) async => quotaUsed),
   documentUploadRepositoryProvider.overrideWithValue(
     repo ?? FakeUploadRepository(),
   ),

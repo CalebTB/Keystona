@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:keystona/core/theme/aurora_motion.dart';
 import 'package:keystona/core/widgets/aurora/aurora_pressable.dart';
 import 'package:keystona/features/documents/categories_copy.dart';
 import 'package:keystona/features/documents/models/deleted_category.dart';
@@ -252,6 +253,14 @@ void main() {
       await _tap(tester, find.text('Undo'));
       expect(repo.calls.last, 'restore:c2');
       expect(_inList('Pool & spa'), findsOneWidget);
+    });
+
+    testWidgets('the delete Undo stays for ten seconds', (tester) async {
+      await openPanel(tester, _repo());
+      await _tap(tester, find.text('Delete & move'));
+      final bar = tester.widget<SnackBar>(find.byType(SnackBar));
+      expect(bar.duration, AuroraDurations.undoDelete);
+      expect(bar.duration, isNot(AuroraDurations.undo));
     });
 
     testWidgets('moves to the chosen category', (tester) async {

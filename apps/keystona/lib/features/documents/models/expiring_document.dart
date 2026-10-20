@@ -9,7 +9,6 @@ class ExpiringDocument {
     required this.categoryIcon,
     required this.expirationDate,
     this.provider,
-    this.replacedAt,
   });
 
   final String id;
@@ -22,11 +21,6 @@ class ExpiringDocument {
 
   /// Issuer or provider name from the document's metadata, when known.
   final String? provider;
-
-  /// When a newer copy replaced this document; null when it has not been.
-  final DateTime? replacedAt;
-
-  bool get isReplaced => replacedAt != null;
 
   DocsExpiry expiry([DateTime? now]) => DocsExpiry.of(expirationDate, now: now);
 

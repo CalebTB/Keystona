@@ -4,9 +4,11 @@ import '../../../features/subscription/providers/subscription_provider.dart';
 import '../../../services/providers/service_providers.dart';
 import '../../../services/supabase_service.dart';
 import '../models/document.dart';
+import '../models/document_quota.dart';
 import 'docs_tab_provider.dart';
 import 'document_categories_provider.dart';
 import 'document_removal.dart';
+import 'document_repositories_provider.dart';
 
 part 'documents_provider.g.dart';
 
@@ -15,6 +17,12 @@ part 'documents_provider.g.dart';
 @riverpod
 Future<Map<String, int>> documentCategoryCounts(Ref ref) =>
     ref.watch(documentCategoriesRepositoryProvider).documentCounts();
+
+/// Live documents, counted against the free plan's limit. Drives every
+/// "N OF 25" label. Invalidated with the other document lists.
+@riverpod
+Future<int> documentQuotaCount(Ref ref) =>
+    ref.watch(documentQuotaRepositoryProvider).used();
 
 /// Loads the Document Vault list for the authenticated user, newest first.
 ///
@@ -84,19 +92,21 @@ class DocumentsNotifier extends _$DocumentsNotifier {
     if (!isPremium) {
       final propertyId = data['property_id'] as String?;
       if (propertyId != null) {
-        final countResult = await SupabaseService.client
-            .from('documents')
-            .select('id')
-            .eq('property_id', propertyId)
-            .isFilter('deleted_at', null);
-        if (countResult.length >= kFreeDocumentLimit) {
+        final used = await ref
+            .read(documentQuotaRepositoryProvider)
+            .usedFor(propertyId);
+        if (DocumentQuota.isFull(used)) {
           throw const DocumentLimitException();
         }
       }
     }
 
+    // A provider may not invalidate itself through the shared list helper,
+    // so refresh this list with invalidateSelf and the rest through it.
     ref.invalidateSelf();
-    invalidateDocumentLists(ref.invalidate);
+    invalidateDocumentLists((p) {
+      if (p != documentsProvider) ref.invalidate(p);
+    });
     await future;
     final docs = state.value ?? [];
     if (docs.isEmpty) throw StateError('No documents after add');

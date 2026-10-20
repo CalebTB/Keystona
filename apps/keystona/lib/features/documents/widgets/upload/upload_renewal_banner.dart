@@ -9,7 +9,7 @@ import '../../../../core/theme/aurora_typography.dart';
 import '../../docs_copy.dart';
 
 /// "Renewing Homeowners insurance policy": which document this form renews,
-/// and that the old copy is kept.
+/// and that saving replaces the old file.
 class UploadRenewalBanner extends StatelessWidget {
   const UploadRenewalBanner({super.key, required this.documentName});
 
@@ -55,7 +55,7 @@ class UploadRenewalBanner extends StatelessWidget {
                       style: AuroraType.h3,
                     ),
                     SizedBox(height: a.of(AuroraSpacing.space1)),
-                    Text(DocsCopy.renewalKept, style: AuroraType.meta),
+                    Text(DocsCopy.renewalReplacesFile, style: AuroraType.meta),
                   ],
                 ),
               ),

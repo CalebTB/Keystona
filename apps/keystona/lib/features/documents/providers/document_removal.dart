@@ -13,6 +13,7 @@ import 'expiring_documents_provider.dart';
 void invalidateDocumentLists(void Function(ProviderOrFamily) invalidate) {
   invalidate(documentsProvider);
   invalidate(documentCategoryCountsProvider);
+  invalidate(documentQuotaCountProvider);
   invalidate(docsTabProvider);
   invalidate(expiringDocumentsProvider);
   invalidate(documentSearchProvider);

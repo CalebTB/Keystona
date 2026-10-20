@@ -1,6 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../models/document_renewal.dart';
 import '../models/expiring_document.dart';
 import 'current_property.dart';
 
@@ -58,7 +57,6 @@ class SupabaseExpiringDocumentsRepository
       categoryIcon: (category?['icon'] as String?) ?? _fallbackIcon,
       expirationDate: DateTime.parse(row['expiration_date'] as String),
       provider: _providerOf(metadata),
-      replacedAt: DocumentRenewal.replacedAt(metadata),
     );
   }
 

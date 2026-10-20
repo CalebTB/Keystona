@@ -1,6 +1,5 @@
 import '../../../services/supabase_service.dart';
 import '../models/docs_tab_data.dart';
-import '../models/document_renewal.dart';
 
 /// Data access for the Docs tab.
 abstract interface class DocsTabRepository {
@@ -23,7 +22,7 @@ class SupabaseDocsTabRepository implements DocsTabRepository {
   static const int recentLimit = 5;
 
   static const String _itemColumns =
-      'id, name, created_at, expiration_date, metadata, '
+      'id, name, created_at, expiration_date, '
       'category:document_categories(name, icon)';
 
   @override
@@ -101,9 +100,6 @@ class SupabaseDocsTabRepository implements DocsTabRepository {
       categoryName: category?['name'] as String?,
       categoryIcon: category?['icon'] as String?,
       expirationDate: expires == null ? null : DateTime.parse(expires),
-      replacedAt: DocumentRenewal.replacedAt(
-        row['metadata'] as Map<String, dynamic>?,
-      ),
     );
   }
 }

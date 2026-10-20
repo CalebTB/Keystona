@@ -65,6 +65,7 @@ void main() {
     await _open(tester, address: 'caleb.elmhollow@docs.keystona.app');
     expect(find.text('Add a document'), findsOneWidget);
     expect(find.text('10 OF 25 ON FREE'), findsOneWidget);
+    expect(find.text('8 OF 25 ON FREE'), findsNothing);
     expect(find.text('Take a photo'), findsOneWidget);
     expect(
       find.text('Snap a paper document · several pages is fine'),

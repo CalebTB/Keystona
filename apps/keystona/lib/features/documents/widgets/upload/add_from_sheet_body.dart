@@ -73,9 +73,8 @@ class _PlanLine extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isPremium = ref.watch(isPremiumProvider);
-    final counts = ref.watch(documentCategoryCountsProvider).value;
-    if (isPremium || counts == null) return const SizedBox.shrink();
-    final used = counts.values.fold<int>(0, (sum, n) => sum + n);
+    final used = ref.watch(documentQuotaCountProvider).value;
+    if (isPremium || used == null) return const SizedBox.shrink();
     return Padding(
       padding: EdgeInsets.only(top: context.aurora.of(AuroraSpacing.space1)),
       child: Text(

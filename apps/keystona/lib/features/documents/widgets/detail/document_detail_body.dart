@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/aurora_docs_c.dart';
 import '../../../../core/theme/aurora_scale.dart';
 import '../../models/document_tags.dart';
 import '../../models/coverage_info.dart';
 import '../../models/document.dart';
-import '../../models/document_renewal.dart';
 import '../../providers/document_links_provider.dart';
 import 'document_coverage_section.dart';
 import 'document_detail_actions.dart';
@@ -18,7 +15,6 @@ import 'document_linked_section.dart';
 import 'document_notes_section.dart';
 import 'document_tags_row.dart';
 import 'document_preview_card.dart';
-import 'document_replaced_note.dart';
 
 /// The sections of a loaded document, in kit order. Pure composition: every
 /// action is a callback the screen provides.
@@ -49,9 +45,7 @@ class DocumentDetailBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final a = context.aurora;
-    final replaced = DocumentRenewal.replacedAt(document.metadata) != null;
-    final newerId = DocumentRenewal.replacedBy(document.metadata);
-    final coverage = replaced ? null : CoverageInfo.of(document);
+    final coverage = CoverageInfo.of(document);
     final tags = DocumentTags.of(document);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -59,19 +53,7 @@ class DocumentDetailBody extends StatelessWidget {
         DocumentDetailHeader(document: document),
         SizedBox(height: a.of(AuroraDocsCSizes.sectionGap)),
         DocumentPreviewCard(document: document, onOpen: onOpenFile),
-        if (replaced) ...[
-          SizedBox(height: a.of(AuroraDocsCSizes.sectionGap)),
-          DocumentReplacedNote(
-            onOpenNewer: newerId == null
-                ? null
-                : () => context.push(
-                    AppRoutes.documentDetail.replaceFirst(
-                      ':documentId',
-                      newerId,
-                    ),
-                  ),
-          ),
-        ] else if (coverage != null) ...[
+        if (coverage != null) ...[
           SizedBox(height: a.of(AuroraDocsCSizes.sectionGap)),
           DocumentCoverageSection(coverage: coverage),
         ],

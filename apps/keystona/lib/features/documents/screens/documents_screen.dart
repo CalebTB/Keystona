@@ -10,9 +10,9 @@ import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/snackbar_service.dart';
 import '../../../core/widgets/upgrade_sheet.dart';
 import '../../../services/providers/service_providers.dart';
-import '../../subscription/providers/subscription_provider.dart';
 import '../docs_copy.dart';
 import '../models/docs_tab_data.dart';
+import '../models/document_quota.dart';
 import '../models/document_renewal.dart';
 import '../providers/docs_tab_provider.dart';
 import '../widgets/docs_scroll_page.dart';
@@ -54,7 +54,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
   }
 
   Future<void> _add(int count) async {
-    if (!ref.read(isPremiumProvider) && count >= kFreeDocumentLimit) {
+    if (!ref.read(isPremiumProvider) && DocumentQuota.isFull(count)) {
       await UpgradeSheet.show(context, config: DocsCopy.limitSheet);
       return;
     }
@@ -149,7 +149,6 @@ class _Content extends StatelessWidget {
 
     final soon = data.soon();
     final urgent = data.urgent();
-    final active = data.active;
     final hintName = data.emptyCategoryNames
         .where((name) => DocsCopy.hintFor(name) != null)
         .firstOrNull;
@@ -167,11 +166,11 @@ class _Content extends StatelessWidget {
         ),
         gap,
         DocsSearchField(onTap: onSearch),
-        if (active.isNotEmpty) ...[
+        if (data.expiring.isNotEmpty) ...[
           gap,
           DocsExpiringSection(
             soon: soon,
-            expiryCount: active.length,
+            expiryCount: data.expiring.length,
             showCard: urgent.isNotEmpty,
             onUploadRenewal: onUploadRenewal,
             onRemind: onRemind,

@@ -7,9 +7,7 @@ import '../../../../core/theme/aurora_spacing.dart';
 import '../../../../core/theme/aurora_typography.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../models/document.dart';
-import '../../docs_copy.dart';
 import '../../models/document_format.dart';
-import '../../models/document_renewal.dart';
 import '../../models/docs_expiry.dart';
 import '../../models/expiry_labels.dart';
 
@@ -22,10 +20,7 @@ class DocumentDetailHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final a = context.aurora;
-    final replacedAt = DocumentRenewal.replacedAt(document.metadata);
-    final badge = replacedAt != null
-        ? StatusBadge.neutral(DocsCopy.replacedChip(replacedAt))
-        : _badge(document.expirationDate);
+    final badge = _badge(document.expirationDate);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

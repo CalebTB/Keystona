@@ -4,6 +4,7 @@ import '../../../services/supabase_service.dart';
 import '../repositories/document_file_actions.dart';
 import '../repositories/document_mutations_repository.dart';
 import '../repositories/document_files_repository.dart';
+import '../repositories/document_quota_repository.dart';
 import '../repositories/document_search_repository.dart';
 import '../repositories/expiring_documents_repository.dart';
 
@@ -18,6 +19,10 @@ DocumentSearchRepository documentSearchRepository(Ref ref) =>
       fullText: SupabaseFullTextSearchRepository(SupabaseService.client),
       byName: SupabaseNameSearchRepository(SupabaseService.client),
     );
+
+@riverpod
+DocumentQuotaRepository documentQuotaRepository(Ref ref) =>
+    const SupabaseDocumentQuotaRepository();
 
 @riverpod
 DocumentMutationsRepository documentMutationsRepository(Ref ref) =>

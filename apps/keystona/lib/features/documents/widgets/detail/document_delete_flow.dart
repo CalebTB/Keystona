@@ -1,11 +1,13 @@
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/aurora_motion.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../core/widgets/snackbar_service.dart';
+import '../../docs_copy.dart';
 
 /// Delete with a safety net: confirm, remove, leave the screen, then offer
-/// Undo for five seconds.
+/// Undo for ten seconds.
 ///
 /// The screen's notifier is gone by the time Undo is tapped, so [restore]
 /// must not depend on it.
@@ -37,7 +39,8 @@ abstract final class DocumentDeleteFlow {
     SnackbarService.showUndo(
       context,
       message: 'Document deleted',
-      subtitle: 'Undo within 5 seconds.',
+      subtitle: DocsCopy.deleteUndoHint,
+      duration: AuroraDurations.undoDelete,
       // The screen is gone when Undo is tapped, so there is no context left
       // to toast on: the document simply reappears in the list. A failure
       // surfaces through the global error handler.

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/aurora_colors.dart';
 import '../../../core/theme/aurora_docs_a.dart';
+import '../../../core/theme/aurora_motion.dart';
 import '../../../core/theme/aurora_scale.dart';
 import '../../../core/theme/aurora_sizes.dart';
 import '../../../core/theme/aurora_spacing.dart';
@@ -117,6 +118,7 @@ class _DocumentCategoriesScreenState
         context,
         message: CategoriesCopy.deleted,
         subtitle: category.name,
+        duration: AuroraDurations.undoDelete,
         onUndo: () async {
           try {
             await notifier.restoreCategory(deleted);

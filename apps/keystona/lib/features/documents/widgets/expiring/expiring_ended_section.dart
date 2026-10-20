@@ -76,8 +76,7 @@ class _EndedRow extends StatelessWidget {
     final a = context.aurora;
     return AuroraPressable(
       onTap: onTap,
-      semanticLabel:
-          '${document.name}, ${document.isReplaced ? 'replaced' : 'ended'}',
+      semanticLabel: '${document.name}, ended',
       child: ConstrainedBox(
         constraints: BoxConstraints(
           minHeight: a.minControl(AuroraDocsCSizes.endedRowMinHeight),
@@ -101,10 +100,7 @@ class _EndedRow extends StatelessWidget {
                     ),
                     SizedBox(height: a.of(AuroraSpacing.space1)),
                     Text(
-                      DocsCopy.endedMeta(
-                        endedOn: document.expirationDate,
-                        replacedAt: document.replacedAt,
-                      ),
+                      DocsCopy.endedMeta(document.expirationDate),
                       style: AuroraType.meta,
                     ),
                   ],

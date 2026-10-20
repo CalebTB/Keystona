@@ -68,38 +68,23 @@ abstract final class DocsCopy {
   static String moreLine(int more, String name, DateTime date) =>
       '$more more · $name ends ${DateFormat('MMM d').format(date)}';
 
-  // ─── Ended and replaced ─────────────────────────────────────────────────────
+  // ─── Ended ──────────────────────────────────────────────────────────────────
 
   /// Meta line of an "Already ended" row: "ENDED JUN 2024 · KEPT FOR YOUR
-  /// RECORD", or, once a newer copy replaced it, "REPLACED OCT 2025 · KEPT FOR
-  /// CLAIMS HISTORY".
-  static String endedMeta({required DateTime endedOn, DateTime? replacedAt}) =>
-      replacedAt == null
-      ? 'ENDED ${DocumentFormat.monthYearUpper(endedOn)} · KEPT FOR YOUR RECORD'
-      : 'REPLACED ${DocumentFormat.monthYearUpper(replacedAt)} · '
-            'KEPT FOR CLAIMS HISTORY';
-
-  /// Quiet status on a replaced document's detail screen.
-  static String replacedChip(DateTime replacedAt) =>
-      'Replaced ${DateFormat.yMMM().format(replacedAt)}';
-
-  static const String replacedNote =
-      'A newer copy replaced this one. It stays here for your claims history.';
-  static const String seeNewerCopy = 'See the newer copy';
+  /// RECORD".
+  static String endedMeta(DateTime endedOn) =>
+      'ENDED ${DocumentFormat.monthYearUpper(endedOn)} · KEPT FOR YOUR RECORD';
 
   // ─── Renewal ────────────────────────────────────────────────────────────────
 
   static String renewing(String name) => 'Renewing $name';
-  static const String renewalKept =
-      'The old copy is kept for your claims history once you save.';
+  static const String renewalReplacesFile =
+      'Saving replaces the old file with the new one.';
   static const String renewalDateHelp = 'Pick the new end date';
+  static const String renewalSaved = 'Document renewed';
   static const String renewalLoadError =
       "We couldn't load the document you're renewing. "
       'Check your connection and try again.';
-  static const String renewalMarkFailed =
-      "Saved, but the old copy wasn't marked as replaced.";
-  static const String renewalMarkFailedHint =
-      'It may still show as expiring.';
 
   // ─── Recently added ─────────────────────────────────────────────────────────
 
@@ -169,6 +154,12 @@ abstract final class DocsCopy {
       meta: 'WARRANTIES · ALERTS BEFORE IT ENDS',
     ),
   ];
+
+  // ─── Delete ─────────────────────────────────────────────────────────────────
+
+  /// Subtitle of the Undo snackbar after a delete; matches
+  /// `AuroraDurations.undoDelete`.
+  static const String deleteUndoHint = 'Undo within 10 seconds.';
 
   // ─── Free-plan limit ────────────────────────────────────────────────────────
 

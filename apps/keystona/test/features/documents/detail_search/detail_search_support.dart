@@ -268,6 +268,7 @@ List<Override> detailOverrides({
   Future<Map<String, int>> Function(Ref ref)? counts,
   List<DocumentLinkEntry> links = const [],
   FakeActions? actions,
+  int quotaUsed = 9,
 }) =>
     [
       documentsProvider.overrideWith(() => FakeDocuments(documents)),
@@ -278,6 +279,7 @@ List<Override> detailOverrides({
       documentCategoryCountsProvider.overrideWith(
         counts ?? (ref) async => kCounts,
       ),
+      documentQuotaCountProvider.overrideWith((ref) async => quotaUsed),
       documentLinksProvider.overrideWith(() => FakeLinks(links)),
       documentFilesRepositoryProvider.overrideWithValue(FakeFiles()),
       documentFileActionsProvider.overrideWithValue(actions ?? FakeActions()),
@@ -292,6 +294,7 @@ List<Override> searchOverrides({
       documentSearchRepositoryProvider.overrideWithValue(repository),
       documentCategoriesProvider.overrideWith(FakeCategories.new),
       documentCategoryCountsProvider.overrideWith((ref) async => kCounts),
+      documentQuotaCountProvider.overrideWith((ref) async => 9),
       isPremiumProvider.overrideWithValue(premium),
     ];
 

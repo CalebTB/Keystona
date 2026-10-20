@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:keystona/core/theme/aurora_motion.dart';
 import 'package:keystona/core/widgets/error_view.dart';
 import 'package:keystona/features/documents/models/document_edit.dart';
 import 'package:keystona/features/documents/providers/document_links_provider.dart';
@@ -178,6 +179,40 @@ void main() {
     await tester.pump();
 
     expect(docs.restored, ['doc-1']);
+  });
+
+  testWidgets('the delete Undo stays ten seconds and says so', (tester) async {
+    await openScreen(
+      tester,
+      _screen(),
+      detailOverrides(documents: _warranty()),
+    );
+    await tester.pump();
+    await tester.tap(find.text('Delete document'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(Dialog),
+        matching: find.text('Delete document'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final bar = tester.widget<SnackBar>(find.byType(SnackBar));
+    expect(bar.duration, AuroraDurations.undoDelete);
+    expect(bar.duration, isNot(AuroraDurations.undo));
+    expect(find.text('Undo within 10 seconds.'), findsOneWidget);
+    expect(find.textContaining('5 seconds'), findsNothing);
+  });
+
+  testWidgets('storage shows how many documents are used', (tester) async {
+    await openScreen(
+      tester,
+      _screen(),
+      detailOverrides(documents: _warranty(), quotaUsed: 7),
+    );
+    await tester.pump();
+    expect(find.text('Encrypted · 7 of 25 used'), findsOneWidget);
   });
 
   testWidgets('cancelling the confirm dialog deletes nothing', (tester) async {

@@ -198,13 +198,13 @@ class _UploadFormBodyState extends ConsumerState<UploadFormBody> {
   }
 
   /// "13 OF 25 · FREE PLAN": where this document will put the user on the free
-  /// plan. Premium has no limit to show.
+  /// plan. A renewal adds no document, so it shows nothing; neither does
+  /// Premium, which has no limit.
   String? _planLabel(bool isPremium) {
-    if (isPremium) return null;
-    final counts = ref.watch(documentCategoryCountsProvider).value;
-    if (counts == null) return null;
-    final next = counts.values.fold<int>(0, (sum, n) => sum + n) + 1;
-    return '$next OF $kFreeDocumentLimit · FREE PLAN';
+    if (isPremium || ref.watch(documentUploadProvider).isRenewal) return null;
+    final used = ref.watch(documentQuotaCountProvider).value;
+    if (used == null) return null;
+    return '${used + 1} OF $kFreeDocumentLimit · FREE PLAN';
   }
 }
 

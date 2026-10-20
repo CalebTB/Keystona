@@ -41,15 +41,14 @@ class ExpiringGroup {
 }
 
 /// Pure grouping for the Expiring screen: by urgency, soonest first, with
-/// documents whose end date has passed, or that were replaced by a newer
-/// copy, set apart.
+/// documents whose end date has passed set apart.
 class ExpiringGroups {
   const ExpiringGroups({required this.upcoming, required this.ended});
 
   /// Non-empty bands in [range], soonest band first.
   final List<ExpiringGroup> upcoming;
 
-  /// Documents already past their end date or replaced, most recent first.
+  /// Documents already past their end date, most recent first.
   final List<ExpiringDocument> ended;
 
   factory ExpiringGroups.of(
@@ -65,7 +64,7 @@ class ExpiringGroups {
     final upcoming = <ExpiringBand, List<ExpiringDocument>>{};
     final ended = <ExpiringDocument>[];
     for (final item in dated) {
-      if (item.doc.isReplaced || item.info.expired) {
+      if (item.info.expired) {
         ended.add(item.doc);
       } else if (limit == null || item.info.days <= limit) {
         upcoming.putIfAbsent(ExpiringBand.of(item.info), () => []).add(item.doc);

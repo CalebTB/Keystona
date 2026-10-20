@@ -82,7 +82,7 @@ class DocsRecentSection extends StatelessWidget {
                       items[i].categoryName,
                       items[i].createdAt,
                     ),
-                    expirationDate: items[i].activeExpiration,
+                    expirationDate: items[i].expirationDate,
                     onTap: () => onOpen(items[i]),
                   ),
                 ],
